@@ -1,6 +1,16 @@
 /*	Public domain	*/
 
 /*
+ * WARNING: Do not include this header directly! This is an unwindable header
+ * designed be included from <begin.h> files (e.g., <gui/begin.h>). Definitions
+ * without an "AG_" prefix are unwound by including <core/close_types.h>.
+ *
+ * Unless compiling with _USE_AGAR_TYPES (or _AGAR_INTERNAL), unwinding will
+ * cause non "AG_" prefixed definitions (such as "Uint8") to be removed such
+ * that no conflicts or namespace pollution takes place.
+ */
+
+/*
  * Agar memory model
  */
 #define AG_SMALL  16   /*  8-/16-bit CPU with KBs of RAM, 12-bit color */

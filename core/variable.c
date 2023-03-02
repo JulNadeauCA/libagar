@@ -227,11 +227,7 @@ AG_GetVariable(void *pObj, const char *name, void **p)
 	
 	AG_ObjectLock(obj);
 	if ((V = AG_AccessVariable(obj, name)) == NULL) {
-#ifdef AG_VERBOSITY
-		AG_FatalErrorF("%s: No \"%s\"", obj->name, name);
-#else
 		AG_FatalErrorV("E20", "No such variable");
-#endif
 	}
 	*p = (agVariableTypes[V->type].indirLvl > 0) ? V->data.p :
 	                                               (void *)&V->data;
@@ -328,15 +324,9 @@ AG_Unset(void *pObj, const char *name)
 	if (OBJECT(obj)->flags & AG_OBJECT_BOUND_EVENTS) \
 		AG_PostEvent((obj), "bound", "%p", (V))
 
-#ifdef AG_VERBOSITY
-# define FN_VARIABLE_GET_ACCESS_VARIABLE				\
-	if ((V = AG_AccessVariable(obj,name)) == NULL) 			\
-		AG_FatalErrorF("%s: No \"%s\"", OBJECT(obj)->name, name)
-#else
-# define FN_VARIABLE_GET_ACCESS_VARIABLE				\
-	if ((V = AG_AccessVariable(obj,name)) == NULL) 			\
+#define FN_VARIABLE_GET_ACCESS_VARIABLE				\
+	if ((V = AG_AccessVariable(obj,name)) == NULL) 		\
 		AG_FatalErrorV("E20", "No such variable")
-#endif
 
 /* Body of AG_GetFoo() routines. */
 #undef  FN_VARIABLE_GET
@@ -1141,7 +1131,7 @@ AG_GetPointer(void *obj, const char *name)
 #ifdef AG_TYPE_SAFETY
 	if ((V->info.pFlags & AG_VARIABLE_P_READONLY))
 		AG_FatalErrorV("E30", "Pointer is const. "
-		                      "Did you mean AG_CONST_PTR()?");
+		                      "Did you mean AG_cPTR()?");
 #endif
 	p = V->data.p;
 	AG_UnlockVariable(V);
@@ -1281,11 +1271,7 @@ AG_GetString(void *pObj, const char *name, char *dst, AG_Size dstSize)
 	AG_ObjectLock(obj);
 
 	if ((V = AG_AccessVariable(obj, name)) == NULL) {
-#ifdef AG_VERBOSITY
-		AG_FatalErrorF("%s: No \"%s\"", obj->name, name);
-#else
 		AG_FatalErrorV("E20", "No such variable");
-#endif
 	}
 #ifdef AG_DEBUG
 	if (!V->data.s) { AG_FatalError("!V->data.s"); }
@@ -1307,11 +1293,7 @@ AG_GetStringDup(void *pObj, const char *name)
 
 	AG_ObjectLock(obj);
 	if ((V = AG_AccessVariable(obj, name)) == NULL) {
-#ifdef AG_VERBOSITY
-		AG_FatalErrorF("%s: No \"%s\"", obj->name, name);
-#else
 		AG_FatalErrorV("E20", "No such variable");
-#endif
 	}
 	s = TryStrdup(V->data.s);
 	AG_UnlockVariable(V);
@@ -1331,11 +1313,7 @@ AG_GetStringP(void *pObj, const char *name)
 	char *s;
 
 	if ((V = AG_AccessVariable(obj, name)) == NULL) {
-#ifdef AG_VERBOSITY
-		AG_FatalErrorF("%s: No \"%s\"", obj->name, name);
-#else
 		AG_FatalErrorV("E20", "No such variable");
-#endif
 	}
 	s = V->data.s;
 	AG_UnlockVariable(V);

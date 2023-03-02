@@ -3,6 +3,7 @@
 --                          A G A R . O B J E C T                           --
 --                                 S p e c                                  --
 ------------------------------------------------------------------------------
+with Agar.Classes;
 with Agar.Data_Source;
 with Agar.Event;
 with Agar.Timer;
@@ -28,6 +29,7 @@ with System;
 package Agar.Object is
   package C renames Interfaces.C;
   package CS renames Interfaces.C.Strings;
+  package AGC renames Agar.Classes;
   package DS renames Agar.Data_Source;
   package EV renames Agar.Event;
   package TMR renames Agar.Timer;
@@ -73,16 +75,13 @@ package Agar.Object is
   -------------------------------
   -- Serialized Object version --
   -------------------------------
-  type Version_t is record
-    Major : Interfaces.Unsigned_32;
-    Minor : Interfaces.Unsigned_32;
-#if AG_MODEL = AG_MEDIUM
-    C_Pad : Interfaces.Unsigned_32;
-#end if;
-  end record
-    with Convention => C;
-  type Version_Access is access all Version_t
-    with Convention => C;
+  type Version_Rec is record
+    Major    : Interfaces.Unsigned_32;  -- Major version number
+    Minor    : Interfaces.Unsigned_32;  -- Minor version number
+    Class_ID : Interfaces.Unsigned_32;  -- Class ID
+    Unicode  : Interfaces.Unsigned_32;  -- Icon (UCS-4 Unicode value)
+  end record with Convention => C;
+  type Version_Access is access all Version_Rec with Convention => C;
   
   --------------------------
   -- Agar Object Instance --
@@ -92,8 +91,7 @@ package Agar.Object is
   subtype Object_not_null_Access is not null Object_Access;
   
   type Object_Tag is array (1 .. 8) of aliased c.char with Convention => C;
-  type Object_Name is array (1 .. NAME_MAX) of
-    aliased c.char with Convention => C;
+  type Object_Name is array (1 .. NAME_MAX) of aliased c.char with Convention => C;
   
   type Class;
   type Class_Access is access all Class with Convention => C;
@@ -102,60 +100,48 @@ package Agar.Object is
   type Event_List is limited record
     First : EV.Event_Access;
     Last  : access EV.Event_Access;
-  end record
-    with Convention => C;
+  end record with Convention => C;
+
   type Timer_List is limited record
     First : TMR.Timer_Access;
     Last  : access TMR.Timer_Access;
-  end record
-    with Convention => C;
+  end record with Convention => C;
+
   type Variable_List is limited record
     First : Variable_Access;
     Last  : access Variable_Access;
-  end record
-    with Convention => C;
+  end record with Convention => C;
+
   type Children_List is limited record
     First : Object_Access;
     Last  : access Object_Access;
-  end record
-    with Convention => C;
-  type Entry_in_Parent_t is limited record
-    Next : Object_Access;
-    Prev : access Object_Access;
-  end record
-    with Convention => C;
-  type Entry_in_TimerQ_t is limited record
-    Next : Object_Access;
-    Prev : access Object_Access;
-  end record
-    with Convention => C;
+  end record with Convention => C;
 
-  type Object_Mutex is array (1 .. $SIZEOF_AG_MUTEX) of
-    aliased Interfaces.Unsigned_8 with Convention => C;
+  type Entry_in_Parent_Object is limited record
+    Next : Object_Access;
+    Prev : access Object_Access;
+  end record with Convention => C;
+
+  type Entry_in_Timer_Queue is limited record
+    Next : Object_Access;
+    Prev : access Object_Access;
+  end record with Convention => C;
+
+  type Object_Mutex is array (1 .. $SIZEOF_AG_MUTEX) of aliased Unsigned_8
+    with Convention => C;
   for Object_Mutex'Size use $SIZEOF_AG_MUTEX * System.Storage_Unit;
   
-  OBJECT_FLOATING_VARIABLES    : constant C.unsigned := 16#0_0001#;
-  OBJECT_NON_PERSISTENT        : constant C.unsigned := 16#0_0002#;
-  OBJECT_INDESTRUCTIBLE        : constant C.unsigned := 16#0_0004#;
-  OBJECT_RESIDENT              : constant C.unsigned := 16#0_0008#;
-  OBJECT_PRESERVE_DEPENDENCIES : constant C.unsigned := 16#0_0010#;
-  OBJECT_STATIC                : constant C.unsigned := 16#0_0020#;
-  OBJECT_READ_ONLY             : constant C.unsigned := 16#0_0040#;
-  OBJECT_WAS_RESIDENT          : constant C.unsigned := 16#0_0080#;
-  OBJECT_REOPEN_ON_LOAD        : constant C.unsigned := 16#0_0200#;
-  OBJECT_REMAIN_DATA           : constant C.unsigned := 16#0_0400#;
-  OBJECT_DEBUG                 : constant C.unsigned := 16#0_0800#;
-  OBJECT_NAME_ON_ATTACH        : constant C.unsigned := 16#0_1000#;
-  OBJECT_CHILD_AUTO_SAVE       : constant C.unsigned := 16#0_2000#;
-  OBJECT_DEBUG_DATA            : constant C.unsigned := 16#0_4000#;
-  OBJECT_IN_ATTACH_ROUTINE     : constant C.unsigned := 16#0_8000#;
-  OBJECT_IN_DETACH_ROUTINE     : constant C.unsigned := 16#1_0000#;
-  OBJECT_BOUND_EVENTS          : constant C.unsigned := 16#2_0000#;
+  OBJECT_STATIC            : constant C.unsigned := 16#01#;
+  OBJECT_INDESTRUCTIBLE    : constant C.unsigned := 16#02#;
+  OBJECT_READ_ONLY         : constant C.unsigned := 16#04#;
+  OBJECT_DEBUG             : constant C.unsigned := 16#08#;
+  OBJECT_DEBUG_DATA        : constant C.unsigned := 16#10#;
+  OBJECT_NAME_ON_ATTACH    : constant C.unsigned := 16#20#;
+  OBJECT_BOUND_EVENTS      : constant C.unsigned := 16#40#;
 
   type Object is limited record
-#if AG_TYPE_SAFETY
-    Tag             : Object_Tag;
-#end if;
+    Tag             : Unsigned_32;
+    Class_ID        : AGC.AG_Class;
     Name            : Object_Name;
     Flags           : C.unsigned;
     Class           : Class_not_null_Access;
@@ -165,11 +151,11 @@ package Agar.Object is
 #end if;
     Variables       : Variable_List;
     Children        : Children_List;
-    Entry_in_Parent : Entry_in_Parent_t;
+    Entry_in_Parent : Entry_in_Parent_Object;
     Parent          : Object_Access;
     Root            : Object_Access;
 #if AG_TIMERS
-    Entry_in_TimerQ : Entry_in_TimerQ_t;
+    Entry_in_TimerQ : Entry_in_Timer_Queue;
 #end if;
     Lock            : Object_Mutex;
   end record
@@ -201,25 +187,37 @@ package Agar.Object is
     with Convention => C;
   type Class_Hierarchy is array (1 .. HIER_MAX) of aliased c.char
     with Convention => C;
-  type Class_Private is array (1 .. $SIZEOF_AG_ObjectClassPvt) of
-    aliased Interfaces.Unsigned_8 with Convention => C;
-  for Class_Private'Size use $SIZEOF_AG_ObjectClassPvt * System.Storage_Unit;
-  type Class_Private_Access is access all Class_Private with Convention => C;
+  type Class_Libraries is array (1 .. LIBS_MAX) of aliased c.char
+    with Convention => C;
+
+  type Class_List is limited record
+    First : Class_Access;
+    Last  : access Class_Access;
+  end record
+    with Convention => C;
+
+  type Entry_in_Classes is limited record
+    Next : Class_Access;
+    Prev : access Class_Access;
+  end record
+    with Convention => C;
 
   type Class is limited record
-    Hierarchy    : Class_Hierarchy;
-    Size         : AG_Size;
-    Version      : Version_t;
-    Init_Func    : Init_Func_Access;
-    Reset_Func   : Reset_Func_Access;
-    Destroy_Func : Destroy_Func_Access;
-    Load_Func    : Load_Func_Access;
-    Save_Func    : Save_Func_Access;
-    Edit_Func    : Edit_Func_Access;
+    Hierarchy    : Class_Hierarchy;     -- Full inheritance hierarchy / modules
+    Size         : AG_Size;             -- Size of instance structure
+    Version      : Version_Rec;         -- Version, Class ID and Unicode
+    Init_Func    : Init_Func_Access;    -- Initialization
+    Reset_Func   : Reset_Func_Access;   -- Pre-Load and Pre-Finalization
+    Destroy_Func : Destroy_Func_Access; -- Finalization
+    Load_Func    : Load_Func_Access;    -- Deserialization
+    Save_Func    : Save_Func_Access;    -- Serialization
+    Edit_Func    : Edit_Func_Access;    -- User-defined routine
     -- Generated fields --
-    Name         : Class_Name;
-    Superclass   : Class_Access;
-    Private_Data : Class_Private;
+    Name                : Class_Name;        -- The name of this class only
+    Superclass          : Class_Access;      -- Description of the superclass
+    Libs                : Class_Libraries;   -- Dynamically-loadable modules
+    Subclasses          : Class_List;        -- List of direct subclasses
+    Entry_in_Subclasses : Entry_in_Classes;  -- Entry in parent's Subclasses
   end record
     with Convention => C;
  
@@ -227,7 +225,7 @@ package Agar.Object is
   -- Serialized Object Signature --
   ---------------------------------
   type Object_Header is array (1 .. $SIZEOF_AG_ObjectHeader) of
-    aliased Interfaces.Unsigned_8 with Convention => C;
+    aliased Unsigned_8 with Convention => C;
   for Object_Header'Size use $SIZEOF_AG_ObjectHeader * System.Storage_Unit;
   type Header_Access is access all Object_Header with Convention => C;
   subtype Header_not_null_Access is not null Header_Access;
@@ -523,11 +521,6 @@ package Agar.Object is
      Pattern : in String) return Boolean;
 
   --
-  -- Test if an object is being referenced by another object in the same VFS.
-  --
-  function In_Use (Object : in Object_not_null_Access) return Boolean;
-
-  --
   -- Free an Object instance from memory.
   --
   procedure Destroy (Object : in Object_not_null_Access)
@@ -617,12 +610,6 @@ package Agar.Object is
      Header : in Header_Access) return Boolean;
 
   --
-  -- Page the data of an object in or out of serialized storage.
-  --
-  function Page_In (Object : in Object_not_null_Access) return Boolean;
-  function Page_Out (Object : in Object_not_null_Access) return Boolean;
-
-  --
   -- Set a callback routine for handling an event. The function forms
   -- returns an Event access which can be used to specify arguments
   -- (see Agar.Event). Set_Event does not allow more than one callback
@@ -687,7 +674,7 @@ package Agar.Object is
   function Add_Timer
     (Object   : in Object_Access;
      Timer    : in TMR.Timer_not_null_Access;
-     Interval : in Interfaces.Unsigned_32;
+     Interval : in Unsigned_32;
      Func     : in TMR.Timer_Callback) return Boolean;
   
   --
@@ -696,7 +683,7 @@ package Agar.Object is
   --
   function Add_Timer
     (Object   : in Object_Access;
-     Interval : in Interfaces.Unsigned_32;
+     Interval : in Unsigned_32;
      Func     : in TMR.Timer_Callback) return TMR.Timer_Access;
  
   --
@@ -872,9 +859,6 @@ package Agar.Object is
      Pattern : in CS.chars_ptr) return C.int
     with Import, Convention => C, Link_Name => "ag_of_class";
 
-  function AG_ObjectInUse (Object : in Object_not_null_Access) return C.int
-    with Import, Convention => C, Link_Name => "AG_ObjectInUse";
-
   function AG_ObjectLoad (Object : in Object_not_null_Access) return C.int
     with Import, Convention => C, Link_Name => "AG_ObjectLoad";
 
@@ -925,12 +909,6 @@ package Agar.Object is
      Header : in Header_Access) return C.int
     with Import, Convention => C, Link_Name => "AG_ObjectReadHeader";
 
-  function AG_ObjectPageIn (Object : in Object_not_null_Access) return C.int
-    with Import, Convention => C, Link_Name => "AG_ObjectPageIn";
-
-  function AG_ObjectPageOut (Object : in Object_not_null_Access) return C.int
-    with Import, Convention => C, Link_Name => "AG_ObjectPageOut";
-  
   procedure AG_Debug
     (Object  : in Object_Access;
      Format  : in CS.chars_ptr;
@@ -992,7 +970,7 @@ package Agar.Object is
   function AG_AddTimer
     (Object   : in Object_Access;
      Timer    : in TMR.Timer_not_null_Access;
-     Interval : in Interfaces.Unsigned_32;
+     Interval : in Unsigned_32;
      Func     : in TMR.Timer_Callback;
      Flags    : in C.unsigned;
      Format   : in CS.chars_ptr) return C.int
@@ -1000,7 +978,7 @@ package Agar.Object is
   
   function AG_AddTimerAuto
     (Object   : in Object_Access;
-     Interval : in Interfaces.Unsigned_32;
+     Interval : in Unsigned_32;
      Func     : in TMR.Timer_Callback;
      Format   : in CS.chars_ptr) return TMR.Timer_Access
     with Import, Convention => C, Link_Name => "AG_AddTimerAuto";
@@ -1024,26 +1002,26 @@ package Agar.Object is
      Name   : in System.Address)
     with Import, Convention => C, Link_Name => "AG_Unset";
 
-  procedure AG_GetUint8
+  function AG_GetUint8
     (Object : in Object_not_null_Access;
-     Name   : in System.Address)
+     Name   : in System.Address) return Unsigned_8
     with Import, Convention => C, Link_Name => "AG_GetUint8";
 
   function AG_SetUint8
     (Object : in System.Address;
      Name   : in System.Address;
-     Value  : in Interfaces.Unsigned_8) return Variable_not_null_Access
+     Value  : in Unsigned_8) return Variable_not_null_Access
     with Import, Convention => C, Link_Name => "AG_SetUint8";
 
   function AG_BindUint8
     (Object : in System.Address;
      Name   : in System.Address;
-     Value  : access Interfaces.Unsigned_8) return Variable_not_null_Access
+     Value  : access Unsigned_8) return Variable_not_null_Access
     with Import, Convention => C, Link_Name => "AG_BindUint8";
 
   function AG_GetSint8
     (Object : in System.Address;
-     Name   : in System.Address) return Variable_not_null_Access
+     Name   : in System.Address) return Signed_8
     with Import, Convention => C, Link_Name => "AG_GetSint8";
 
   function AG_SetSint8
@@ -1058,26 +1036,26 @@ package Agar.Object is
      Value  : access Signed_8) return Variable_not_null_Access
     with Import, Convention => C, Link_Name => "AG_BindSint8";
 
-  procedure AG_GetUint16
+  function AG_GetUint16
     (Object : in System.Address;
-     Name   : in System.Address)
+     Name   : in System.Address) return Unsigned_16
     with Import, Convention => C, Link_Name => "AG_GetUint16";
 
   function AG_SetUint16
     (Object : in System.Address;
      Name   : in System.Address;
-     Value  : in Interfaces.Unsigned_16) return Variable_not_null_Access
+     Value  : in Unsigned_16) return Variable_not_null_Access
     with Import, Convention => C, Link_Name => "AG_SetUint16";
 
   function AG_BindUint16
     (Object : in System.Address;
      Name   : in System.Address;
-     Value  : access Interfaces.Unsigned_16) return Variable_not_null_Access
+     Value  : access Unsigned_16) return Variable_not_null_Access
     with Import, Convention => C, Link_Name => "AG_BindUint16";
 
   function AG_GetSint16
     (Object : in System.Address;
-     Name   : in System.Address) return Variable_not_null_Access
+     Name   : in System.Address) return Signed_16
     with Import, Convention => C, Link_Name => "AG_GetSint16";
 
   function AG_SetSint16
@@ -1092,26 +1070,26 @@ package Agar.Object is
      Value  : access Signed_16) return Variable_not_null_Access
     with Import, Convention => C, Link_Name => "AG_BindSint16";
 
-  procedure AG_GetUint32
+  function AG_GetUint32
     (Object : in System.Address;
-     Name   : in System.Address)
+     Name   : in System.Address) return Unsigned_32
     with Import, Convention => C, Link_Name => "AG_GetUint32";
 
   function AG_SetUint32
     (Object : in System.Address;
      Name   : in System.Address;
-     Value  : in Interfaces.Unsigned_32) return Variable_not_null_Access
+     Value  : in Unsigned_32) return Variable_not_null_Access
     with Import, Convention => C, Link_Name => "AG_SetUint32";
 
   function AG_BindUint32
     (Object : in System.Address;
      Name   : in System.Address;
-     Value  : access Interfaces.Unsigned_32) return Variable_not_null_Access
+     Value  : access Unsigned_32) return Variable_not_null_Access
     with Import, Convention => C, Link_Name => "AG_BindUint32";
 
   function AG_GetSint32
     (Object : in System.Address;
-     Name   : in System.Address) return Variable_not_null_Access
+     Name   : in System.Address) return Signed_32
     with Import, Convention => C, Link_Name => "AG_GetSint32";
 
   function AG_SetSint32
@@ -1127,26 +1105,26 @@ package Agar.Object is
     with Import, Convention => C, Link_Name => "AG_BindSint32";
 
 #if HAVE_64BIT
-  procedure AG_GetUint64
+  function AG_GetUint64
     (Object : in System.Address;
-     Name   : in System.Address)
+     Name   : in System.Address) return Unsigned_64
     with Import, Convention => C, Link_Name => "AG_GetUint64";
 
   function AG_SetUint64
     (Object : in System.Address;
      Name   : in System.Address;
-     Value  : in Interfaces.Unsigned_64) return Variable_not_null_Access
+     Value  : in Unsigned_64) return Variable_not_null_Access
     with Import, Convention => C, Link_Name => "AG_SetUint64";
 
   function AG_BindUint64
     (Object : in System.Address;
      Name   : in System.Address;
-     Value  : access Interfaces.Unsigned_64) return Variable_not_null_Access
+     Value  : access Unsigned_64) return Variable_not_null_Access
     with Import, Convention => C, Link_Name => "AG_BindUint64";
 
   function AG_GetSint64
     (Object : in System.Address;
-     Name   : in System.Address) return Variable_not_null_Access
+     Name   : in System.Address) return Signed_64
     with Import, Convention => C, Link_Name => "AG_GetSint64";
 
   function AG_SetSint64
@@ -1165,7 +1143,7 @@ package Agar.Object is
 #if HAVE_FLOAT
   function AG_GetFloat
     (Object : in System.Address;
-     Name   : in System.Address) return Variable_not_null_Access
+     Name   : in System.Address) return Float
     with Import, Convention => C, Link_Name => "AG_GetFloat";
 
   function AG_SetFloat
@@ -1182,7 +1160,7 @@ package Agar.Object is
 
   function AG_GetDouble
     (Object : in System.Address;
-     Name   : in System.Address) return Variable_not_null_Access
+     Name   : in System.Address) return Double
     with Import, Convention => C, Link_Name => "AG_GetDouble";
 
   function AG_SetDouble

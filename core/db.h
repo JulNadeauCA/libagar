@@ -55,15 +55,17 @@ typedef struct ag_db {
 	Uint32 _pad;
 } AG_Db;
 
-#define AGDB(p)              ((AG_Db *)(p))
-#define AGCDB(p)             ((const AG_Db *)(p))
-#define AGDB_CLASS(db)       ((AG_DbClass *)AGOBJECT(db)->cls)
-#define AG_DB_SELF()          AGDB( AG_OBJECT(0,"AG_Db:*") )
-#define AG_DB_PTR(n)          AGDB( AG_OBJECT((n),"AG_Db:*") )
-#define AG_DB_NAMED(n)        AGDB( AG_OBJECT_NAMED((n),"AG_Db:*") )
-#define AG_CONST_DB_SELF()   AGCDB( AG_CONST_OBJECT(0,"AG_Db:*") )
-#define AG_CONST_DB_PTR(n)   AGCDB( AG_CONST_OBJECT((n),"AG_Db:*") )
-#define AG_CONST_DB_NAMED(n) AGCDB( AG_CONST_OBJECT_NAMED((n),"AG_Db:*") )
+#define   AGDB(o)        ((AG_Db *)(o))
+#define  AGcDB(o)        ((const AG_Db *)(o))
+#define  AG_DB_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x03)
+#define  AG_DB_SELF()    AGDB(  AG_OBJECT(0,         "AG_Db:*") )
+#define  AG_DB_PTR(n)    AGDB(  AG_OBJECT((n),       "AG_Db:*") )
+#define  AG_DB_NAMED(n)  AGDB(  AG_OBJECT_NAMED((n), "AG_Db:*") )
+#define AG_cDB_SELF()   AGcDB( AG_cOBJECT(0,         "AG_Db:*") )
+#define AG_cDB_PTR(n)   AGcDB( AG_cOBJECT((n),       "AG_Db:*") )
+#define AG_cDB_NAMED(n) AGcDB( AG_cOBJECT_NAMED((n), "AG_Db:*") )
+
+#define AGDB_CLASS(o) ((AG_DbClass *)AGOBJECT(o)->cls)
 
 __BEGIN_DECLS
 extern AG_DbClass agDbClass;

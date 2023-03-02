@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -533,11 +533,11 @@ void  *AG_GenericMismatch(const char *s) { AG_FatalErrorF("Illegal access: %s", 
 # else
 void  *AG_GenericMismatch(const char *s) { AG_FatalErrorV("E29", s); }
 # endif
-void  *AG_PtrMismatch(void) { AG_FatalErrorV("E290", "Illegal AG_PTR() / AG_CONST_PTR() access"); }
+void  *AG_PtrMismatch(void) { AG_FatalErrorV("E290", "Illegal AG_PTR() / AG_cPTR() access"); }
 char  *AG_StringMismatch(void) { AG_FatalErrorV("E291", "Illegal AG_STRING() access"); }
 int    AG_IntMismatch(void) { AG_FatalErrorV("E292", "Illegal AG_INT() / AG_UINT() access"); }
 long   AG_LongMismatch(void) { AG_FatalErrorV("E293", "Illegal AG_LONG() / AG_ULONG() access"); }
 float  AG_FloatMismatch(void) { AG_FatalErrorV("E294", "Illegal AG_FLOAT() access"); }
 double AG_DoubleMismatch(void) { AG_FatalErrorV("E295", "Illegal AG_DOUBLE() access"); }
-void  *AG_ObjectMismatch(void) { AG_FatalErrorV("E296", "Illegal AG_OBJECT() / AG_CONST_OBJECT() access"); }
+void  *AG_ObjectMismatch(void) { AG_FatalErrorV("E296", "Illegal AG_OBJECT() / AG_cOBJECT() access"); }
 #endif /* AG_TYPE_SAFETY */

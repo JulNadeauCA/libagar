@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,7 @@
 #include <agar/config/have_getpwuid.h>
 #include <agar/config/have_getuid.h>
 #include <agar/config/have_csidl.h>
+
 #ifdef AG_THREADS
 # include <agar/config/have_pthreads_xopen.h>
 # include <agar/config/have_pthread_mutex_recursive.h>
@@ -56,6 +57,15 @@
 #ifndef _WIN32
 # include <unistd.h>
 #endif
+
+#if defined(__FreeBSD__) && defined(HAVE_CLOCK_GETTIME)
+# include <time.h>
+#elif defined(HAVE_GETTIMEOFDAY)
+# include <sys/time.h>
+#endif
+
+/* Print the object validity signature on initialization. */
+/* #define DEBUG_SIGNATURE */
 
 #ifdef AG_THREADS
 pthread_mutexattr_t agRecursiveMutexAttr;	/* Recursive mutex attributes */
@@ -166,6 +176,50 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_SetTimeOps(&agTimeOps_dummy);
 #endif
 
+#if defined(__FreeBSD__) && defined(HAVE_CLOCK_GETTIME)
+	{
+		struct timespec t;
+
+		clock_gettime(CLOCK_SECOND, &t);
+# if AG_BYTEORDER == AG_BIG_ENDIAN
+		agObjectSignature = (t.tv_sec << 1) *
+		                    (t.tv_sec & 0xff000000);
+		agNonObjectSignature = (t.tv_sec << 1) *
+		                       (t.tv_sec & 0xf0000000);
+# else
+		agObjectSignature = (t.tv_sec << 1) *
+		                    (t.tv_sec & 0x000000ff);
+		agNonObjectSignature = (t.tv_sec << 1) *
+		                       (t.tv_sec & 0x0000000f);
+# endif
+	}
+#elif defined(HAVE_GETTIMEOFDAY)
+	{
+		struct timeval t;
+
+		gettimeofday(&t, NULL);
+# if AG_BYTEORDER == AG_BIG_ENDIAN
+		agObjectSignature = (t.tv_sec << 1) *
+		                    (t.tv_sec & 0xff000000);
+		agNonObjectSignature = (t.tv_sec << 1) *
+		                       (t.tv_sec & 0xf0000000);
+# else
+		agObjectSignature = (t.tv_sec << 1) *
+		                    (t.tv_sec & 0x000000ff);
+		agNonObjectSignature = (t.tv_sec << 1) *
+		                       (t.tv_sec & 0x0000000f);
+# endif
+	}
+#else
+	/* TODO */
+	agObjectSignature = 0x2A538247;
+	agNonObjectSignature = 0x5B317CF4;
+#endif
+
+#ifdef DEBUG_SIGNATURE
+	Debug(NULL, "Signature (object)    = 0x%08x\n", agObjectSignature);
+	Debug(NULL, "Signature (nonobject) = 0x%08x\n", agNonObjectSignature);
+#endif
 	/*
 	 * Set the user info access method. Select the fastest method that can
 	 * provide us with a path to some writeable home directory (for example,

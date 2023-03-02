@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2012-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -185,7 +185,7 @@ AG_DbClass agDbClass = {
 	{
 		"AG_Db",
 		sizeof(AG_Db),
-		{ 0,0 },
+		{ 1,0, AGC_DB, 0xE030 },
 		Init,
 		NULL,		/* free */
 		NULL,		/* destroy */

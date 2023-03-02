@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  */
 
 /*
- * Base object class.
+ * The base class of the Agar object system.
  */
 
 #include <agar/core/core.h>
@@ -40,24 +40,42 @@
 /* Extra debugging output related to serialization. */
 /* #define DEBUG_SERIALIZATION */
 
+/* Debug class registration and module linking */
+/* #define AG_DEBUG_CLASSES */
+
 AG_ObjectClass agObjectClass = {
 	"AG_Object",
 	sizeof(AG_Object),
-	{ 7,3 },
-	NULL,	/* init */
-	NULL,	/* reset */
-	NULL,	/* destroy */
-	NULL,	/* load */
-	NULL,	/* save */
-	NULL	/* edit */
+	{ 7,3, AGC_OBJECT, 0xE027 },
+	NULL,  /* init */
+	NULL,  /* reset */
+	NULL,  /* destroy */
+	NULL,  /* load */
+	NULL,  /* save */
+	NULL   /* edit */
 };
 
+Uint32 agObjectSignature = 0;           /* Object validity signature */
+Uint32 agNonObjectSignature = 0;        /* Non-Object validity signature */
+
 #ifdef AG_SERIALIZATION
-const AG_Version agPropTblVer = { 2, 1 };
-	
-int agObjectIgnoreDataErrors = 0;  /* Don't fail on a data load failure. */
-int agObjectIgnoreUnknownObjs = 0; /* Don't fail on unknown object types. */
-int agObjectBackups = 1;	   /* Backup object save files. */
+int agObjectIgnoreUnknownObjs = 0;      /* Don't fail on unknown object types. */
+int agObjectBackups = 1;	        /* Backup object save files. */
+#endif
+
+#ifdef AG_THREADS
+AG_Mutex         agClassLock;           /* Lock on class tables */
+#endif
+AG_ObjectClass **agClasses;		/* Class table (flat array) */
+Uint             agClassCount = 0;
+AG_Tbl          *agClassTbl = NULL;	/* Class table (hash) */
+#ifdef AG_NAMESPACES
+AG_Namespace *agNamespaceTbl = NULL;	/* Namespace table */
+int           agNamespaceCount = 0;
+#endif
+#ifdef AG_ENABLE_DSO
+char **agModuleDirs = NULL;		/* Module search directories */
+int    agModuleDirCount = 0;
 #endif
 
 /* Import inlinables */
@@ -69,19 +87,20 @@ void
 AG_ObjectInit(void *pObj, void *pClass)
 {
 	AG_Object *ob = pObj;
-	AG_ObjectClass *cl = (pClass != NULL) ? AGCLASS(pClass) : &agObjectClass;
+	AG_ObjectClass *C = (pClass != NULL) ? AGOBJECTCLASS(pClass) :
+	                                       &agObjectClass;
 	AG_ObjectClass **hier;
 	int i, nHier;
 	
-#ifdef AG_TYPE_SAFETY
-	Strlcpy(ob->tag, AG_OBJECT_TYPE_TAG, sizeof(ob->tag));
-#endif
+	ob->tag = agObjectSignature;
+	ob->cid = C->ver.cid;
+
 #ifdef AG_DEBUG
 	memset(ob->name, '\0', sizeof(ob->name));
 #else
 	ob->name[0] = '\0';
 #endif
-	ob->cls = cl;
+	ob->cls = C;
 	ob->parent = NULL;
 	ob->root = ob;
 	ob->flags = 0;
@@ -304,64 +323,6 @@ AG_ObjectInitNamed(void *obj, void *cl, const char *name)
 	}
 }
 #endif /* !AG_SMALL */
-
-#ifdef AG_SERIALIZATION
-/*
- * Search an object and its children for a dependency upon robj.
- * The object's VFS must be locked.
- */
-static int _Pure_Attribute_If_Unthreaded
-FindObjectInUse(void *_Nonnull obj, void *_Nonnull robj)
-{
-	AG_Object *ob = obj;
-	AG_Variable *V;
-
-	AG_ObjectLock(ob);
-	TAILQ_FOREACH(V, &ob->vars, vars) {
-		switch (V->type) {
-		case AG_VARIABLE_P_OBJECT:
-		case AG_VARIABLE_P_VARIABLE:
-			if (V->data.p == robj) {
-				goto used;
-			}
-			break;
-		default:
-			break;
-		}
-	}
-	AG_ObjectUnlock(ob);
-	return (0);
-used:
-	AG_ObjectUnlock(ob);
-	return (1);
-}
-
-/*
- * Return 1 if the given object or one of its children is being referenced.
- * Return value is only valid as long as the VFS is locked.
- */
-int
-AG_ObjectInUse(void *p)
-{
-	AG_Object *ob = p, *cob;
-	AG_Object *root;
-
-	AG_LockVFS(ob);
-	root = AG_ObjectRoot(ob);
-	if (FindObjectInUse(root, ob)) {
-		goto used;
-	}
-	TAILQ_FOREACH(cob, &ob->children, cobjs) {
-		if (AG_ObjectInUse(cob))
-			goto used;
-	}
-	AG_UnlockVFS(ob);
-	return (0);
-used:
-	AG_UnlockVFS(ob);
-	return (1);
-}
-#endif /* AG_SERIALIZATION */
 
 /*
  * Set a variable which is a pointer to a function (with optional arguments).
@@ -740,10 +701,9 @@ AG_ObjectFreeChildren(void *pObj)
 {
 	AG_Object *obj = pObj;
 
-#ifdef AG_TYPE_SAFETY
 	if (!AG_OBJECT_VALID(obj))
-		AG_FatalError("Parent object invalid");
-#endif
+		return;
+
 	AG_ObjectLock(obj);
 	AG_ObjectFreeChildrenLockless(obj);
 	AG_ObjectUnlock(obj);
@@ -861,17 +821,13 @@ AG_ObjectDestroy(void *p)
 		free(ev);
 	}
 
+	/* Invalidate the validity tag and class ID. */
+	ob->tag = 0;
+	ob->cid = 0;
+
 	/* Release the object's locking device. */
 	AG_MutexDestroy(&ob->lock);
 
-#ifdef AG_TYPE_SAFETY
-	/* Invalidate the structure's signature tag. */
-	memcpy(ob->tag, "FreeMem", 7);
-# ifdef AG_DEBUG
-	memcpy(ob->name, "invalid", 7);
-	ob->cls = NULL;
-# endif
-#endif
 	/* Release the object structure (if dynamically allocated). */
 	if ((ob->flags & AG_OBJECT_STATIC) == 0)
 		free(ob);
@@ -919,12 +875,7 @@ AG_ObjectCopyFilename(void *p, char *path, AG_Size pathSize)
 		if (AG_FileExists(path))
 			goto out;
 	}
-# ifdef AG_VERBOSITY
-	AG_SetError(_("File not found: %s%c%s.%s (not in load-path)"),
-	    name, AG_PATHSEPCHAR, ob->name, ob->cls->name);
-# else
-	AG_SetErrorS("E5");
-# endif
+	AG_SetErrorV("E5", _("File not found"));
 	AG_ObjectUnlock(ob);
 	return (-1);
 out:
@@ -952,85 +903,17 @@ AG_ObjectCopyDirname(void *p, char *path, AG_Size pathSize)
 	     	Strlcpy(tp, loadPath->s, sizeof(tp));
 		Strlcat(tp, name, sizeof(tp));
 
-		/* TODO: check if directory */
-		/* TODO: check directory contents and signature */
 		if (AG_FileExists(tp)) {
 			Strlcpy(path, tp, pathSize);
 			goto out;
 		}
 	}
-#ifdef AG_VERBOSITY
-	AG_SetError(_("The %s directory is not in load-path."), name);
-#else
-	AG_SetErrorS("E6");
-#endif
+	AG_SetErrorV("E6", _("Directory is not in load-path."));
 	AG_ObjectUnlock(ob);
 	return (-1);
 out:
 	AG_ObjectUnlock(ob);
 	return (0);
-}
-
-/*
- * Load an object's data into memory and mark it resident. If the object
- * is either marked non-persistent or no data can be found in storage,
- * just mark the object resident.
- */
-int
-AG_ObjectPageIn(void *p)
-{
-	AG_Object *ob = p;
-	int dataFound;
-
-	AG_ObjectLock(ob);
-	if (!OBJECT_RESIDENT(ob) &&
-	    AG_ObjectLoadData(ob, &dataFound) == -1) {
-		if (dataFound == 0) {
-			ob->flags |= AG_OBJECT_RESIDENT;
-			AG_ObjectUnlock(ob);
-			return (0);
-		} else {
-			AG_ObjectUnlock(ob);
-			return (-1);
-		}
-	}
-	AG_ObjectUnlock(ob);
-	return (0);
-}
-
-/*
- * If the given object is persistent and no longer referenced, save
- * its data and free it from memory. The object must be resident.
- */
-int
-AG_ObjectPageOut(void *p)
-{
-	AG_Object *ob = p;
-	
-	AG_ObjectLock(ob);
-	if (!OBJECT_PERSISTENT(ob)) {
-		goto out;
-	}
-	if (!AG_ObjectInUse(ob)) {
-		AG_Event *ev;
-
-		if ((ev = AG_FindEventHandler(ob->root, "object-page-out"))) {
-			AG_PostEventByPtr(ob->root, ev, "%p", ob);
-		} else {
-			if (AG_ObjectSave(ob) == -1)
-				goto fail;
-		}
-		if ((ob->flags & AG_OBJECT_REMAIN_DATA) == 0) {
-			AG_ObjectReset(ob);
-			ob->flags &= ~(AG_OBJECT_RESIDENT);
-		}
-	}
-out:
-	AG_ObjectUnlock(ob);
-	return (0);
-fail:
-	AG_ObjectUnlock(ob);
-	return (-1);
 }
 
 /* Load both the generic part and the dataset of an object from file. */
@@ -1124,17 +1007,15 @@ AG_ObjectReadHeader(AG_DataSource *ds, AG_ObjectHeader *oh)
 int
 AG_ObjectLoadVariables(void *p, AG_DataSource *ds)
 {
+	const AG_Version propTblVer = { 2, 1 };
 	AG_Object *ob = p;
 	Uint count, i, j;
 
 	/* TODO 2.0 remove this redundant signature */
-	if (AG_ReadVersion(ds, "AG_PropTbl", &agPropTblVer, NULL) == -1)
+	if (AG_ReadVersion(ds, "AG_PropTbl", &propTblVer, NULL) == -1)
 		return (-1);
 
 	AG_ObjectLock(ob);
-
-	if (ob->flags & AG_OBJECT_FLOATING_VARS)
-		AG_ObjectFreeVariables(ob);
 
 	count = (Uint)AG_ReadUint32(ds);
 #if AG_MODEL != AG_SMALL
@@ -1149,27 +1030,19 @@ AG_ObjectLoadVariables(void *p, AG_DataSource *ds)
 		char *s;
 
 		if (AG_CopyString(key, ds, sizeof(key)) >= sizeof(key)) {
-#ifdef AG_VERBOSITY
-			AG_SetError(_("Variable name too long: %s"), key);
-#else
-			AG_SetErrorS("E8");
-#endif
+			AG_SetErrorV("E8", _("Variable name is too long"));
 			goto fail;
 		}
 		code = (Sint8)AG_ReadSint32(ds);		/* XXX */
-#if 0
-		Verbose("%s: %s (code %d)\n", ob->name, key, (int)code);
+#ifdef DEBUG_SERIALIZATION
+		Debug(ob, "key \"%s\" = code %d\n", key, code)
 #endif
 		for (j = 0; j < AG_VARIABLE_TYPE_LAST; j++) {
 			if (agVariableTypes[j].code == code)
 				break;
 		}
 		if (j == AG_VARIABLE_TYPE_LAST) {
-#ifdef AG_VERBOSITY
-			AG_SetError(_("Unknown variable code: %u"), (Uint)code);
-#else
-			AG_SetErrorS("E9");
-#endif
+			AG_SetErrorV("E9", _("Unknown variable type"));
 			goto fail;
 		}
 		switch (agVariableTypes[j].typeTgt) {
@@ -1204,12 +1077,7 @@ AG_ObjectLoadVariables(void *p, AG_DataSource *ds)
 			}
 			break;
 		default:
-#ifdef AG_VERBOSITY
-			AG_SetError(_("Attempt to load variable of type %s"),
-			    agVariableTypes[j].name);
-#else
-			AG_SetErrorS("E10");
-#endif
+			AG_SetErrorV("E10", _("Incompatible variable type"));
 			goto fail;
 		}
 	}
@@ -1224,13 +1092,14 @@ fail:
 void
 AG_ObjectSaveVariables(void *pObj, AG_DataSource *ds)
 {
+	const AG_Version propTblVer = { 2, 1 };
 	AG_Object *ob = pObj;
 	AG_Offset countOffs;
 	Uint32 count = 0;
 	AG_Variable *V;
 
 	/* TODO 2.0 remove this redundant signature */
-	AG_WriteVersion(ds, "AG_PropTbl", &agPropTblVer);
+	AG_WriteVersion(ds, "AG_PropTbl", &propTblVer);
 	countOffs = AG_Tell(ds);
 	AG_WriteUint32(ds, 0);
 	
@@ -1311,10 +1180,6 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 	AG_DataSource *ds;
 	Uint32 count, i;
 	
-	if (!OBJECT_PERSISTENT(ob)) {
-		AG_SetErrorV("E11", _("Object is non-persistent"));
-		return (-1);
-	}
 	AG_LockVFS(ob);
 	AG_ObjectLock(ob);
 
@@ -1376,20 +1241,10 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 			if (strcmp(chld->cls->hier, hier) != 0) {
 #ifdef AG_VERBOSITY
 				AG_SetError(_("Archived object `%s' clashes with "
-				              "existing object of different type"),
+				              "existing object of incompatible type"),
 					      cname);
 #else
 				AG_SetErrorS("E12");
-#endif
-				goto fail;
-			}
-			if (!OBJECT_PERSISTENT(chld)) {
-#ifdef AG_VERBOSITY
-				AG_SetError(_("Archived object `%s' clashes with "
-				              "existing non-persistent object"),
-					      cname);
-#else
-				AG_SetErrorS("E13");
 #endif
 				goto fail;
 			}
@@ -1459,9 +1314,6 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	AG_LockVFS(ob);
 	AG_ObjectLock(ob);
 
-	if (!OBJECT_PERSISTENT(ob)) {
-		goto out;
-	}
 	*dataFound = 1;
 
 	/* Open the file. */
@@ -1506,8 +1358,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 			continue;
 		if (hier[i]->load(ob, ds, &ver) == -1) {
 #ifdef AG_VERBOSITY
-			AG_SetError("<0x%x>: %s", (Uint)AG_Tell(ds),
-			    AG_GetError());
+			AG_SetError("<0x%x>: %s", (Uint)AG_Tell(ds), AG_GetError());
 #else
 			AG_SetErrorS("E16");
 #endif
@@ -1519,7 +1370,6 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 
 	AG_CloseFile(ds);
 	AG_PostEvent(ob->root, "object-post-load", "%p,%s", ob, path);
-out:
 	AG_ObjectUnlock(ob);
 	AG_UnlockVFS(ob);
 	return (0);
@@ -1557,10 +1407,6 @@ AG_ObjectSaveAll(void *p)
 	}
 	TAILQ_FOREACH(cobj, &obj->children, cobjs) {
 		AG_ObjectLock(cobj);
-		if (!OBJECT_PERSISTENT(cobj)) {
-			AG_ObjectUnlock(cobj);
-			continue;
-		}
 		if (AG_ObjectSaveAll(cobj) == -1) {
 			AG_ObjectUnlock(cobj);
 			goto fail;
@@ -1582,9 +1428,7 @@ int
 AG_ObjectSerialize(void *p, AG_DataSource *ds)
 {
 	AG_Object *ob = p;
-	AG_Offset countOffs, dataOffs;
-	Uint32 count;
-	AG_Object *chld;
+	AG_Offset dataOffs;
 	AG_ObjectClass **hier;
 	int i, nHier;
 #ifdef AG_DEBUG
@@ -1596,7 +1440,7 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 	AG_WriteVersion(ds, agObjectClass.name, &agObjectClass.ver);
 	AG_WriteString(ds, ob->cls->hier);
 #ifdef AG_ENABLE_DSO
-	AG_WriteString(ds, ob->cls->pvt.libs);
+	AG_WriteString(ds, ob->cls->libs);
 #else
 	AG_WriteString(ds, "");
 #endif
@@ -1604,29 +1448,14 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 	AG_WriteUint32(ds, 0);					/* Data offs */
 	AG_WriteUint32(ds, (Uint32)(ob->flags & AG_OBJECT_SAVED_FLAGS));
 
-	/* No legacy (pre-1.6) dependency table. */
+	/* Legacy (pre-1.6) dependency table. */
 	AG_WriteUint32(ds, 0);
 
 	/* Persistent object variables */
 	AG_ObjectSaveVariables(ob, ds);
 	
-	/* Table of child objects */
-	if (ob->flags & AG_OBJECT_CHLD_AUTOSAVE) {
-		countOffs = AG_Tell(ds);
-		AG_WriteUint32(ds, 0);
-		count = 0;
-		TAILQ_FOREACH(chld, &ob->children, cobjs) {
-			if (!OBJECT_PERSISTENT(chld)) {
-				continue;
-			}
-			AG_WriteString(ds, chld->name);
-			AG_WriteString(ds, chld->cls->hier);
-			count++;
-		}
-		AG_WriteUint32At(ds, count, countOffs);
-	} else {
-		AG_WriteUint32(ds, 0);
-	}
+	/* Legacy (pre-1.7) child object metadata */
+	AG_WriteUint32(ds, 0);
 
 	/* Dataset */
 	AG_WriteUint32At(ds, AG_Tell(ds), dataOffs);
@@ -1656,13 +1485,15 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 	free(hier);
 
 #ifdef AG_DEBUG
-	if (ob->flags & AG_OBJECT_DEBUG_DATA) AG_SetSourceDebug(ds, debugSave);
+	if (ob->flags & AG_OBJECT_DEBUG_DATA)
+		AG_SetSourceDebug(ds, debugSave);
 #endif
 	AG_ObjectUnlock(ob);
 	return (0);
 fail:
 #ifdef AG_DEBUG
-	if (ob->flags & AG_OBJECT_DEBUG_DATA) AG_SetSourceDebug(ds, debugSave);
+	if (ob->flags & AG_OBJECT_DEBUG_DATA)
+		AG_SetSourceDebug(ds, debugSave);
 #endif
 	AG_ObjectUnlock(ob);
 	return (-1);
@@ -1747,13 +1578,15 @@ AG_ObjectUnserialize(void *p, AG_DataSource *ds)
 	free(hier);
 
 #ifdef AG_DEBUG
-	if (ob->flags & AG_OBJECT_DEBUG_DATA) AG_SetSourceDebug(ds, debugSave);
+	if (ob->flags & AG_OBJECT_DEBUG_DATA)
+		AG_SetSourceDebug(ds, debugSave);
 #endif
 	AG_ObjectUnlock(ob);
 	return (0);
 fail_dbg:
 #ifdef AG_DEBUG
-	if (ob->flags & AG_OBJECT_DEBUG_DATA) AG_SetSourceDebug(ds, debugSave);
+	if (ob->flags & AG_OBJECT_DEBUG_DATA)
+		AG_SetSourceDebug(ds, debugSave);
 #endif
 fail:
 	AG_ObjectReset(ob);
@@ -1774,11 +1607,6 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 
 	AG_LockVFS(ob);
 	AG_ObjectLock(ob);
-
-	if (!OBJECT_PERSISTENT(ob)) {
-		AG_SetErrorV("E19", _("Non-persistent object"));
-		goto fail_unlock;
-	}
 
 	AG_ObjectCopyName(ob, name, sizeof(name));
 	hasArchivePath = AG_Defined(ob, "archive-path");
@@ -2000,7 +1828,6 @@ AG_ObjectMoveToHead(void *p)
 	}
 	AG_UnlockVFS(parent);
 }
-#endif /* !AG_SMALL */
 
 /* Move an object to the tail of its parent's children list. */
 void
@@ -2016,6 +1843,7 @@ AG_ObjectMoveToTail(void *p)
 	}
 	AG_UnlockVFS(parent);
 }
+#endif /* !AG_SMALL */
 
 #ifdef AG_SERIALIZATION
 /*
@@ -2097,9 +1925,6 @@ AG_ObjectChanged(void *p)
 
 	AG_ObjectLock(ob);
 
-	if (!OBJECT_PERSISTENT(ob)) {
-		goto out;
-	}
 	AG_ObjectCopyFilename(ob, pathLast, sizeof(pathLast));
 	if ((fLast = fopen(pathLast, "r")) == NULL) {
 		rv = 1;
@@ -2231,3 +2056,667 @@ AG_ObjectSetArchivePath(void *obj, const char *path)
 	AG_SetString(obj, "archive-path", path);
 }
 #endif /* !AG_LEGACY */
+
+static void
+InitClass(AG_ObjectClass *_Nonnull C, const char *_Nonnull hier)
+{
+	const char *c;
+	AG_Size rv;
+
+	if (Strlcpy(C->hier, hier, sizeof(C->hier)) >= sizeof(C->hier))
+		goto too_big;
+
+	if ((c = strrchr(hier, ':')) != NULL && c[1] != '\0') {
+		rv = Strlcpy(C->name, &c[1], sizeof(C->name));
+	} else {
+		rv = Strlcpy(C->name, hier, sizeof(C->name));
+	}
+	if (rv >= sizeof(C->name)) {
+		goto too_big;
+	}
+	TAILQ_INIT(&C->sub);
+	return;
+too_big:
+	AG_FatalError("Class name overflow");
+}
+
+/*
+ * Initialize the object class description table.
+ * Invoked internally by AG_InitCore().
+ */
+void
+AG_InitClassTbl(void)
+{
+	AG_Variable V;
+
+#ifdef AG_NAMESPACES
+	agNamespaceTbl = Malloc(sizeof(AG_Namespace));
+	agNamespaceCount = 0;
+	AG_RegisterNamespace("Agar", "AG_", "https://libagar.org/");
+#endif
+#ifdef AG_ENABLE_DSO
+	agModuleDirs = Malloc(sizeof(char *));
+	agModuleDirCount = 0;
+#endif
+	/* Initialize the class tree */
+	InitClass(&agObjectClass, "AG_Object");
+#ifdef AG_ENABLE_DSO
+	agObjectClass.libs[0] = '\0';
+#endif
+	/* Initialize the class table. */
+	agClassTbl = AG_TblNew(AG_OBJECT_CLASSTBLSIZE, 0);
+
+	/* AG_Object -> agObjectClass */
+	AG_InitPointer(&V, &agObjectClass);
+	if (AG_TblInsert(agClassTbl, "AG_Object", &V) == -1)
+		AG_FatalError(NULL);
+
+	AG_MutexInitRecursive(&agClassLock);
+}
+
+/*
+ * Release the object class description table.
+ * Invoked internally by AG_Destroy().
+ */
+void
+AG_DestroyClassTbl(void)
+{
+#ifdef AG_NAMESPACES
+	free(agNamespaceTbl);
+	agNamespaceTbl = NULL;
+	agNamespaceCount = 0;
+#endif
+#ifdef AG_ENABLE_DSO
+	{
+		int i;
+
+		for (i = 0; i < agModuleDirCount; i++) {
+			free(agModuleDirs[i]);
+		}
+		free(agModuleDirs);
+		agModuleDirs = NULL;
+		agModuleDirCount = 0;
+	}
+#endif
+	AG_TblDestroy(agClassTbl);
+	free(agClassTbl); agClassTbl = NULL;
+	
+	AG_MutexDestroy(&agClassLock);
+}
+
+#ifdef AG_NAMESPACES
+/*
+ * Parse a class specification string either in the conventional form
+ * "AG_Class1:AG_Class2:...[@lib]", or in "Agar(Class1:Class2:...)[@lib]"
+ * format if NAMESPACE is supported.
+ */
+int
+AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
+{
+	char buf[AG_OBJECT_HIER_MAX], *pBuf, *pTok;
+	char nsName[AG_OBJECT_HIER_MAX], *pNsName = nsName;
+	const char *s, *p, *pOpen = NULL;
+	char *c;
+	AG_Namespace *ns;
+	AG_Size rv;
+	int iTok, i=0, len=0;
+
+	cs->hier[0] = '\0';
+	cs->name[0] = '\0';
+# ifdef AG_ENABLE_DSO
+	cs->libs[0] = '\0';
+# endif
+	*pNsName = '\0';
+	for (s = &spec[0]; *s != '\0'; s++) {
+		if (++len >= AG_OBJECT_HIER_MAX) {
+			AG_SetErrorV("E22", _("Class is too long"));
+			return (-1);
+		}
+		if (s[0] == '(' && s[1] != '\0') {
+			if (pOpen || nsName[0] == '\0') {
+				AG_SetErrorV("E23", _("Class syntax error"));
+				return (-1);
+			}
+			pOpen = &s[1];
+			continue;
+		}
+		if (pOpen == NULL) {
+			if (*s != ':') {
+				*pNsName = *s;
+				pNsName++;
+			}
+# ifdef AG_ENABLE_DSO
+			if (s[0] == '@' && s[1] != '\0')
+				if (Strlcpy(cs->libs, &s[1], sizeof(cs->libs))
+				    >= sizeof(cs->libs))
+					AG_FatalError("DSO name overflow");
+# endif
+		}
+		if (*s == ')') {
+			if ((s - pOpen) == 0) {
+				pOpen = NULL;
+				continue;
+			}
+			*pNsName = '\0';
+			pNsName = &nsName[0];
+			if ((ns = AG_GetNamespace(nsName)) == NULL) {
+				AG_SetErrorV("E24", _("No such namespace"));
+				return (-1);
+			}
+			for (p = pOpen, iTok = 0;
+			     (p < s) && (iTok < sizeof(buf)-1);
+			     p++, iTok++) {
+				buf[iTok] = *p;
+			}
+			buf[iTok] = '\0';
+			for (pBuf = buf;
+			     (pTok = Strsep(&pBuf, ":")) != NULL; ) {
+				i += Strlcpy(&cs->hier[i], ns->pfx, sizeof(cs->hier)-i);
+				i += Strlcpy(&cs->hier[i], pTok, sizeof(cs->hier)-i);
+				i += Strlcpy(&cs->hier[i], ":", sizeof(cs->hier)-i);
+			}
+			pOpen = NULL;
+			continue;
+		}
+	}
+
+	/* Fill in the "hier" (full hierarchy) field. */
+	if (i > 0 && cs->hier[i-1] == ':') {
+		cs->hier[i-1] = '\0';                     /* Strip last ':' */
+	}
+	if (i == 0) {                                        /* Flat format */
+#ifdef AG_DEBUG
+		if (Strlcpy(cs->hier, spec, sizeof(cs->hier)) >= sizeof(cs->hier))
+			AG_FatalError("Class hierarchy overflow");
+#else
+		Strlcpy(cs->hier, spec, sizeof(cs->hier));
+#endif
+	} else {
+		cs->hier[i] = '\0';
+	}
+	if ((c = strrchr(cs->hier, '@')) != NULL)
+		*c = '\0';
+
+	/* Fill in the "name" (short name) field. */
+	if ((c = strrchr(cs->hier, ':')) != NULL && c[1] != '\0') {
+		rv = Strlcpy(cs->name, &c[1], sizeof(cs->name));
+	} else {
+		rv = Strlcpy(cs->name, cs->hier, sizeof(cs->name));
+	}
+	if (rv >= sizeof(cs->name)) {
+		AG_FatalError("Class name overflow");
+	}
+	if ((c = strrchr(cs->name, '@')) != NULL) {
+		*c = '\0';
+	}
+	
+	/* Fill in the "spec" (full hierarchy + @libs) field. */
+	Strlcpy(cs->spec, cs->hier, sizeof(cs->spec));
+
+	/* Fill in the "libs" (DSO modules) field. */
+# ifdef AG_ENABLE_DSO
+	if (cs->libs[0] != '\0')
+		if (Strlcat(cs->spec, cs->libs, sizeof(cs->spec)) >=
+		    sizeof(cs->spec))
+			AG_FatalError("DSO name overflow");
+# endif
+	return (0);
+}
+#else /* !AG_NAMESPACES */
+/*
+ * Parse a class specification string only in the conventional format
+ * "AG_Class1:AG_Class2:...[@lib]" (no namespace support).
+ */
+int
+AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
+{
+	char *c;
+
+	Strlcpy(cs->hier, spec, sizeof(cs->hier));
+	Strlcpy(cs->spec, spec, sizeof(cs->spec));
+	
+	if ((c = strchr(cs->hier, '@')) != NULL) {
+# ifdef AG_ENABLE_DSO
+		Strlcpy(cs->libs, &c[1], sizeof(cs->libs));
+# endif
+		*c = '\0';
+	}
+# ifdef AG_ENABLE_DSO
+	else {
+		cs->libs[0] = '\0';
+	}
+# endif
+	if ((c = strrchr(spec, ':')) != NULL && c[1] != '\0') {
+		Strlcpy(cs->name, &c[1], sizeof(cs->name));
+	} else {
+		Strlcpy(cs->name, spec, sizeof(cs->name));
+	}
+	return (0);
+}
+#endif /* !AG_NAMESPACES */
+
+/* Register object class as described by the given AG_ObjectClass structure. */
+void
+AG_RegisterClass(void *p)
+{
+	AG_ObjectClass *C = p;
+	AG_ObjectClassSpec cs;
+	AG_Variable V;
+	char *s;
+	
+	if (AG_ParseClassSpec(&cs, C->hier) == -1) {
+		AG_FatalError(NULL);
+	}
+	InitClass(C, cs.hier);
+#ifdef AG_ENABLE_DSO
+	Strlcpy(C->libs, cs.libs, sizeof(C->libs));
+#endif
+#ifdef AG_DEBUG_CLASSES
+	Debug(NULL, "[ Register %s (%s) ]\n", cs.name, cs.hier);
+#endif
+	AG_MutexLock(&agClassLock);
+
+	/* Insert into the class tree. */
+	if ((s = strrchr(cs.hier, ':')) != NULL) {
+		*s = '\0';
+		if ((C->super = AG_LookupClass(cs.hier)) == NULL)
+			AG_FatalError(NULL);
+	} else {
+		C->super = &agObjectClass;	/* Base AG_Object class */
+	}
+	TAILQ_INSERT_TAIL(&C->super->sub, C, subclasses);
+
+	/* Insert into the class table. */
+	AG_InitPointer(&V, C);
+	if (AG_TblInsert(agClassTbl, C->hier, &V) == -1)
+		AG_FatalError(NULL);
+
+	AG_MutexUnlock(&agClassLock);
+}
+
+/* Unregister an object class. */
+void
+AG_UnregisterClass(void *p)
+{
+	AG_ObjectClass *C = p;
+	AG_ObjectClass *Csuper = C->super;
+	Uint h;
+
+	AG_MutexLock(&agClassLock);
+	h = AG_TblHash(agClassTbl, C->hier);
+	if (AG_TblExistsHash(agClassTbl, h, C->hier)) {
+#ifdef AG_DEBUG_CLASSES
+		Debug(NULL, "[ Unregister %s ]\n", C->name);
+#endif
+		/* Remove from the class tree. */
+		TAILQ_REMOVE(&Csuper->sub, C, subclasses);
+		C->super = NULL;
+
+		/* Remove from the class table. */
+		AG_TblDeleteHash(agClassTbl, h, C->hier);
+	}
+	AG_MutexUnlock(&agClassLock);
+}
+
+#if AG_MODEL != AG_SMALL
+/*
+ * Allocate, initialize and zero an AG_ObjectClass (or derivative thereof).
+ *
+ * This gives an alternative to passing a statically-initialized AG_ObjectClass
+ * to AG_RegisterClass(). Here we auto-allocate it instead,
+ * and the methods can be set using AG_ClassSet{Init,Reset,Destroy,...}().
+ */
+void *
+AG_CreateClass(const char *hier, AG_Size objectSize, AG_Size classSize,
+    Uint major, Uint minor)
+{
+	AG_ObjectClass *C;
+
+	if ((C = TryMalloc(classSize)) == NULL) {
+		return (NULL);
+	}
+	memset(C, 0, classSize);
+	if (Strlcpy(C->hier, hier, sizeof(C->hier)) >= sizeof(C->hier)) {
+		AG_FatalError("Class hierarchy overflow");
+	}
+	C->size = objectSize;
+	C->ver.major = major;
+	C->ver.minor = minor;
+	AG_RegisterClass(C);
+	return (C);
+}
+
+/* Set Object class operations procedurally. */
+#define AG_CLASS_SET_FN_BODY(fnName, fnType, op) \
+fnType fnName (void *Cp, fnType fn) { \
+	AG_ObjectClass *C = (AG_ObjectClass *)Cp; \
+	fnType fnOrig = C->op; \
+	C->op = fn; \
+	return (fnOrig); \
+}
+AG_CLASS_SET_FN_BODY(AG_ClassSetInit,    AG_ObjectInitFn,    init);
+AG_CLASS_SET_FN_BODY(AG_ClassSetReset,   AG_ObjectResetFn,   reset);
+AG_CLASS_SET_FN_BODY(AG_ClassSetDestroy, AG_ObjectDestroyFn, destroy);
+AG_CLASS_SET_FN_BODY(AG_ClassSetLoad,    AG_ObjectLoadFn,    load);
+AG_CLASS_SET_FN_BODY(AG_ClassSetSave,    AG_ObjectSaveFn,    save);
+AG_CLASS_SET_FN_BODY(AG_ClassSetEdit,    AG_ObjectEditFn,    edit);
+#undef AG_CLASS_SET_FN_BODY
+
+/* Unregister and free an auto-allocated AG_ObjectClass (or derivative thereof) */
+void
+AG_DestroyClass(void *C)
+{
+	AG_UnregisterClass(C);
+	free(C);
+}
+#endif /* !AG_SMALL */
+
+/*
+ * Lookup information about a registered object class.
+ * Return a normalized class description (or NULL if no such class exists).
+ */
+AG_ObjectClass *
+AG_LookupClass(const char *inSpec)
+{
+	AG_ObjectClassSpec cs;
+	AG_Variable *V;
+
+	if (inSpec[0] == '\0' ||
+#ifdef AG_NAMESPACES
+	    strcmp(inSpec, "Agar(Object)") == 0 ||
+#endif
+	    strcmp(inSpec, "AG_Object") == 0)
+		return (&agObjectClass);
+
+	if (AG_ParseClassSpec(&cs, inSpec) == -1)
+		return (NULL);
+
+	/* Look up the class table. */
+	AG_MutexLock(&agClassLock);
+	if ((V = AG_TblLookup(agClassTbl, cs.hier)) != NULL) {
+		AG_MutexUnlock(&agClassLock);
+		return ((AG_ObjectClass *)V->data.p);
+	}
+	AG_MutexUnlock(&agClassLock);
+
+	AG_SetErrorV("E25", _("No such class"));
+	return (NULL);
+}
+
+#ifdef AG_ENABLE_DSO
+/*
+ * Transform "PFX_Foo" string to "pfxFooClass".
+ */
+static int
+GetClassSymbol(char *_Nonnull sym, AG_Size len,
+    const AG_ObjectClassSpec *_Nonnull cs)
+{
+	char *d;
+	const char *c;
+	int inPfx = 1;
+	AG_Size l = 0;
+
+	for (c = &cs->name[0], d = &sym[0];
+	     *c != '\0';
+	     c++) {
+		if (*c == '_') {
+			inPfx = 0;
+			continue;
+		}
+		if ((l+2) >= len) {
+			goto toolong;
+		}
+		*d = inPfx ? (char) tolower((int) *c) : *c;
+		d++;
+		l++;
+	}
+	*d = '\0';
+	if (Strlcat(sym, "Class", len) >= len) {
+		goto toolong;
+	}
+	return (0);
+toolong:
+	AG_SetErrorS(_("Symbol is too long"));
+	return (-1);
+}
+
+/*
+ * Look for a "@libs" string in the class specification and scan module
+ * directories for the required libraries. If they are found, bring them
+ * into the current process's address space. If successful, look up the
+ * "pfxFooClass" symbol and register the class.
+ *
+ * Multiple libraries can be specified with commas. The "pfxFooClass"
+ * symbol is assumed to be defined in the first library in the list.
+ */
+AG_ObjectClass *
+AG_LoadClass(const char *classSpec)
+{
+	AG_ObjectClassSpec cs;
+	AG_ObjectClass *C;
+	char *s, *lib;
+	char sym[AG_OBJECT_HIER_MAX];
+	AG_DSO *dso;
+	void *pClass = NULL;
+	int i;
+
+	if (AG_ParseClassSpec(&cs, classSpec) == -1)
+		return (NULL);
+	
+	AG_MutexLock(&agClassLock);
+
+	if ((C = AG_LookupClass(cs.hier)) != NULL) {
+		AG_MutexUnlock(&agClassLock);
+		return (C);                     /* Found a registered class */
+	}
+	if (cs.libs[0] == '\0') {
+		AG_SetError(_("Class " AGSI_BR_CYAN "%s" AGSI_RST " not found."),
+		    cs.hier);
+		goto fail;
+	}
+	for (i = 0, s = cs.libs;                 /* Attempt dynamic linking */
+	    (lib = Strsep(&s, ", ")) != NULL;
+	    i++) {
+# ifdef AG_DEBUG_CLASSES
+		Debug(NULL, "<%s>: Linking %s...", classSpec, lib);
+# endif
+		if ((dso = AG_LoadDSO(lib, 0)) == NULL) {
+			AG_SetError("DSO(%s): %s", classSpec, AG_GetError());
+			goto fail;
+		}
+		/* Look up "pfxFooClass" in the first library. */
+		if (i == 0) {
+			if (GetClassSymbol(sym, sizeof(sym), &cs) == -1) {
+				goto fail;
+			}
+			if (AG_SymDSO(dso, sym, &pClass) == -1) {
+				AG_UnloadDSO(dso);
+				/* XXX TODO undo other DSOs we just loaded */
+				goto fail;
+			}
+		}
+# ifdef AG_DEBUG_CLASSES
+		Debug(NULL, "OK\n");
+# endif
+	}
+	if (pClass == NULL) {
+		AG_SetError(_("<%s>: No library specified"), classSpec);
+		goto fail;
+	}
+	AG_RegisterClass(pClass);
+
+	AG_MutexUnlock(&agClassLock);
+	return (pClass);
+fail:
+# ifdef AG_DEBUG_CLASSES
+	Debug(NULL, "%s\n", AG_GetError());
+# endif
+	AG_MutexUnlock(&agClassLock);
+	return (pClass);
+}
+
+/*
+ * Unregister the given class and decrement the reference count / unload
+ * related dynamically-linked libraries.
+ */
+void
+AG_UnloadClass(AG_ObjectClass *C)
+{
+	char *s, *lib;
+	AG_DSO *dso;
+	
+	AG_UnregisterClass(C);
+
+	for (s = C->libs; (lib = Strsep(&s, ", ")) != NULL; ) {
+		if ((dso = AG_LookupDSO(lib)) != NULL)
+			AG_UnloadDSO(dso);
+	}
+}
+#endif /* AG_ENABLE_DSO */
+
+#ifdef AG_NAMESPACES
+/* Register a new namespace. */
+AG_Namespace *
+AG_RegisterNamespace(const char *name, const char *pfx, const char *url)
+{
+	AG_Namespace *ns;
+
+	agNamespaceTbl = Realloc(agNamespaceTbl,
+	    (agNamespaceCount+1)*sizeof(AG_Namespace));
+	ns = &agNamespaceTbl[agNamespaceCount++];
+	ns->name = name;
+	ns->pfx = pfx;
+	ns->url = url;
+	return (ns);
+}
+
+/* Unregister a namespace. */
+void
+AG_UnregisterNamespace(const char *name)
+{
+	int i;
+
+	for (i = 0; i < agNamespaceCount; i++) {
+		if (strcmp(agNamespaceTbl[i].name, name) == 0)
+			break;
+	}
+	if (i < agNamespaceCount) {
+		if (i < agNamespaceCount-1) {
+			memmove(&agNamespaceTbl[i], &agNamespaceTbl[i+1],
+			    (agNamespaceCount-i-1)*sizeof(AG_Namespace));
+		}
+		agNamespaceCount--;
+	}
+}
+#endif /* AG_NAMESPACES */
+
+#ifdef AG_ENABLE_DSO
+/* Register a new module directory path. */
+void
+AG_RegisterModuleDirectory(const char *path)
+{
+	char *s, *p;
+
+	agModuleDirs = Realloc(agModuleDirs,
+	    (agModuleDirCount+1)*sizeof(char *));
+	agModuleDirs[agModuleDirCount++] = s = Strdup(path);
+	if (*(p = &s[strlen(s)-1]) == AG_PATHSEPCHAR)
+		*p = '\0';
+}
+
+/* Unregister a module directory path. */
+void
+AG_UnregisterModuleDirectory(const char *path)
+{
+	int i;
+
+	for (i = 0; i < agModuleDirCount; i++) {
+		if (strcmp(agModuleDirs[i], path) == 0)
+			break;
+	}
+	if (i < agModuleDirCount) {
+		free(agModuleDirs[i]);
+		if (i < agModuleDirCount-1) {
+			memmove(&agModuleDirs[i], &agModuleDirs[i+1],
+			    (agModuleDirCount-i-1)*sizeof(char *));
+		}
+		agModuleDirCount--;
+	}
+}
+#endif /* AG_ENABLE_DSO */
+
+/* General case fallback for AG_ClassIsNamed() */
+int
+AG_ClassIsNamedGeneral(const AG_ObjectClass *C, const char *cn)
+{
+	char cname[AG_OBJECT_HIER_MAX], *cp, *c;
+	char nname[AG_OBJECT_HIER_MAX], *np, *s;
+
+	Strlcpy(cname, cn, sizeof(cname));
+	Strlcpy(nname, C->hier, sizeof(nname));
+	cp = cname;
+	np = nname;
+
+	while ((c = Strsep(&cp, ":")) != NULL &&
+	       (s = Strsep(&np, ":")) != NULL) {
+		if (c[0] == '*' && c[1] == '\0')
+			continue;
+		if (strcmp(c, s) != 0)
+			return (0);
+	}
+	return (1);
+}
+
+/*
+ * Return an array of class description pointers ("AG_ObjectClass *") for
+ * each class in the inheritance hierarchy of obj. For example:
+ *
+ *   "AG_Widget:AG_Box:AG_Titlebar" -> { &agWidgetClass,
+ *                                       &agBoxClass,
+ *                                       &agTitlebarClass }
+ *
+ * The caller should release the returned array using free() after use.
+ */
+int
+AG_ObjectGetInheritHier(void *obj, AG_ObjectClass ***hier, int *nHier)
+{
+	char cname[AG_OBJECT_HIER_MAX], *c;
+	AG_ObjectClass *C, **pHier;
+	int i, stop = 0;
+
+	if (AGOBJECT(obj)->cls->hier[0] == '\0') {
+		(*nHier) = 0;
+		return (0);
+	}
+	(*nHier) = 1;
+	Strlcpy(cname, AGOBJECT(obj)->cls->hier, sizeof(cname));
+	for (c = &cname[0]; *c != '\0'; c++) {
+		if (*c == ':')
+			(*nHier)++;
+	}
+	pHier = (*hier) = Malloc((*nHier)*sizeof(AG_ObjectClass *));
+	for (c = &cname[0], i = 0; ; c++) {
+		if (*c != ':' && *c != '\0') {
+			continue;
+		}
+		if (*c == '\0') {
+			stop++;
+		} else {
+			*c = '\0';
+		}
+		if ((C = AG_LookupClass(cname)) == NULL) {
+			AG_SetError(
+			    _("No such class " AGSI_BR_CYAN "%s" AGSI_RST ". "
+			      "Missing AG_RegisterClass(3) call?"),
+			    AGOBJECT(obj)->cls->hier);
+			free(pHier);
+			return (-1);
+		}
+		*c = ':';
+		pHier[i++] = C;
+		
+		if (stop)
+			break;
+	}
+	return (0);
+}

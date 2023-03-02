@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2012-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -263,7 +263,7 @@ AG_DbClass agDbHashClass = {
 	{
 		"AG_Db:AG_DbHash",
 		sizeof(AG_DbHashBT),
-		{ 0,0 },
+		{ 1,0, AGC_DB_HASH, 0xE030 },
 		Init,
 		NULL,		/* free */
 		NULL,		/* destroy */
@@ -288,7 +288,7 @@ AG_DbClass agDbBtreeClass = {
 	{
 		"AG_Db:AG_DbBtree",
 		sizeof(AG_DbHashBT),
-		{ 0,0 },
+		{ 1,0, AGC_DB_BTREE, 0xE01C },
 		Init,
 		NULL,		/* free */
 		NULL,		/* destroy */

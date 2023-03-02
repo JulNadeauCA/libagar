@@ -658,11 +658,6 @@ with type checking in Debug builds (and no checking in Release builds).
 .Ft "int"
 .Fn AG_ObjectReadHeader "AG_DataSource *ds" "AG_ObjectHeader *header"
 .Pp
-.Ft "int"
-.Fn AG_ObjectPageIn "AG_Object *obj"
-.Pp
-.Ft "int"
-.Fn AG_ObjectPageOut "AG_Object *obj"
 .Pp
 .nr nS 0
 These functions implement serialization, or archiving of the state of an
@@ -756,19 +751,6 @@ typedef struct ag_object_header {
 	Uint flags;                         /* Object flags */
 } AG_ObjectHeader;
 .Ed
-.Pp
-The
-.Fn AG_ObjectPageIn
-function loads an object's data into memory and sets the
-.Dv AG_OBJECT_RESIDENT
-flag.
-.Fn AG_ObjectPageOut
-checks whether an object is referenced by another object and if that is
-not the case, the data is serialized to permanent storage, freed from
-memory and
-.Dv AG_OBJECT_RESIDENT
-is cleared.
-Both functions return 0 on success or -1 if an error has occurred.
 .Sh FINALIZATION
 .nr nS 1
 .Ft "void"
@@ -911,29 +893,9 @@ which assumes that parent and child are locked.
 The following public
 .Nm
 flags are defined:
-.Bl -tag -width "AG_OBJECT_NON_PERSISTENT "
-.It AG_OBJECT_FLOATING_VARS
-Remove all entries of the
-.Xr AG_Variable 3
-table in
-.Fn AG_ObjectLoad .
-By default, the existing table is preserved and entries are created or
-replaced by items found in the archive.
-.It AG_OBJECT_NON_PERSISTENT
-Disables archiving of the object and its children.
-If set,
-.Fn AG_ObjectSave
-becomes a no-op and
-.Fn AG_ObjectLoad
-calls will fail.
+.Bl -tag -width "AG_OBJECT_INDESTRUCTIBLE "
 .It AG_OBJECT_INDESTRUCTIBLE
 Application-specific advisory flag.
-.It AG_OBJECT_RESIDENT
-The object's data exists in memory.
-Set by
-.Fn AG_ObjectPageIn
-and
-.Fn AG_ObjectPageOut .
 .It AG_OBJECT_STATIC
 Object is statically allocated (or allocated via a facility other than
 .Xr malloc 3 ) .
@@ -943,29 +905,12 @@ by
 .Fn AG_ObjectDestroy .
 .It AG_OBJECT_READONLY
 Application-specific advisory flag.
-.It AG_OBJECT_REOPEN_ONLOAD
-If an
-.Fn edit
-method is defined, indicate that elements associated with its return
-value (such as GUI windows or elements in the case of a GUI application)
-should be recreated whenever
-.Fn AG_ObjectLoad
-is used.
-.It AG_OBJECT_REMAIN_DATA
-Prevent the object's data from being freed by
-.Fn AG_ObjectReset
-when a
-.Fn AG_ObjectPageOut
-call is made and the reference count reaches zero.
 .It AG_OBJECT_DEBUG
 Application-specific debugging flag.
 .It AG_OBJECT_NAME_ONATTACH
 Automatically generate a unique name for the object as soon as
 .Fn AG_ObjectAttach
 occurs.
-.It AG_OBJECT_CHLD_AUTOSAVE
-Serialize the object's children in
-.Fn AG_ObjectSerialize .
 .El
 .Sh EVENTS
 The
@@ -1149,8 +1094,7 @@ AGOBJECT_FOREACH_CLASS(chld, parent, my_class, "MyClass") {
 }
 .Ed
 .Pp
-The following code performs a class-membership test using
-.Fn AG_OfClass .
+The following code performs a class-membership test with a pattern:
 .Bd -literal -offset indent
 .\" SYNTAX(c)
 AG_Button *btn = AG_ButtonNew(NULL, 0, NULL);
@@ -1158,13 +1102,35 @@ AG_Button *btn = AG_ButtonNew(NULL, 0, NULL);
 if (AG_OfClass(btn, "AG_Widget:AG_Button")) {
 	/*
 	 * btn is an instance of AG_Button,
-	 * and *not* a subclass thereof.
+	 * and NOT a subclass thereof.
 	 */
 }
 if (AG_OfClass(btn, "AG_Widget:AG_Button:*")) {
 	/*
+	 * btn is an instance of AG_Button,
+	 * OR a subclass thereof.
+	 */
+}
+.Ed
+.Pp
+The following code performs the same class-membership test using the
+numerical class identifier (as opposed to an
+.Fn AG_OfClass
+pattern):
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+AG_Button *btn = AG_ButtonNew(NULL, 0, NULL);
+
+if (OBJECT(btn)->cid == AGC_BUTTON) {
+	/*
+	 * btn is an instance of AG_Button,
+	 * and NOT a subclass thereof.
+	 */
+}
+if (AG_BUTTON_ISA(btn)) {
+	/*
 	 * btn is an instance of AG_Button
-	 * or a subclass thereof (common case).
+	 * OR a subclass thereof.
 	 */
 }
 .Ed
@@ -1175,13 +1141,13 @@ The following code registers a new class "MyClass" and instantiates it:
 AG_ObjectClass myClass = {
 	"MY_Class",
 	sizeof(AG_Object),
-	{ 1,0 },
-	NULL,	/* init */
-	NULL,	/* reset */
-	NULL,	/* destroy */
-	NULL,	/* load */
-	NULL,	/* save */
-	NULL	/* edit */
+	{ 1,0, 1234, 0xE03A },
+	NULL,    /* init */
+	NULL,    /* reset */
+	NULL,    /* destroy */
+	NULL,    /* load */
+	NULL,    /* save */
+	NULL     /* edit */
 };
 
 AG_Object *obj;
@@ -1288,7 +1254,7 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 AG_ObjectClass myDummyClass = {
 	"MY_Dummy",
 	sizeof(MY_Dummy),
-	{ 1,0 },
+	{ 1,0, 0,0 },
 	Init,
 	NULL,      /* reset */
 	Destroy,

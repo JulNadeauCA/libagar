@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,12 +50,8 @@ AG_DbObjectLoad(void *obj, AG_Db *db, const char *key)
 	AG_DataSource *ds;
 	AG_DbEntry dbe;
 
-#ifdef AG_DEBUG
-	if (!AG_OfClass(dbo, "AG_DbObject:*")) {
-		AG_SetError("Object is not an AG_DbObject");
-		return (-1);
-	}
-#endif
+	AG_OBJECT_ISA(dbo, "AG_DbObject:*");
+
 	if (AG_DbLookup(db, &dbe, key) == -1) {
 		return (-1);
 	}
@@ -77,6 +73,8 @@ AG_DbObjectSave(void *pDbo, AG_Db *db)
 	AG_DbObject *dbo = pDbo;
 	AG_DataSource *ds;
 	AG_DbEntry dbe;
+
+	AG_OBJECT_ISA(dbo, "AG_DbObject:*");
 
 	if ((ds = AG_OpenAutoCore()) == NULL)
 		return (-1);
@@ -105,6 +103,8 @@ AG_DbObjectInsert(AG_Db *db, void *pDbo)
 {
 	AG_DbObject *dbo = pDbo;
 
+	AG_OBJECT_ISA(dbo, "AG_DbObject:*");
+
 	if (AG_DbExists(db, AGOBJECT(dbo)->name)) {
 		AG_SetError("Existing db object: %s", AGOBJECT(dbo)->name);
 		return (-1);
@@ -116,6 +116,8 @@ AG_DbObjectInsert(AG_Db *db, void *pDbo)
 int
 AG_DbObjectDelete(AG_Db *db, const char *name)
 {
+	AG_OBJECT_ISA(dbo, "AG_DbObject:*");
+
 	if (AG_DbDelete(db, name) == -1 ||
 	    AG_DbSync(db) == -1) {
 		return (-1);
@@ -132,7 +134,7 @@ Init(void *_Nonnull obj)
 AG_ObjectClass agDbObjectClass = {
 	"AG_DbObject",
 	sizeof(AG_DbObject),
-	{ 0, 0 },
+	{ 1,0, AGC_DB_OBJECT, 0xE030 },
 	Init,
 	NULL,		/* reset */
 	NULL,		/* destroy */

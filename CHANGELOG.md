@@ -13,6 +13,8 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): Implemented keyboard shortcuts. Added `AG_MENU_NO_BOOL_MSG` and `AG_MENU_FAST_BOOL_MSG` options.
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): Improved the performance of the `AG_MenuView` renderer by caching state-dependent opaque labels (embedding any icons), so blending is no longer required. Improved appearance of `AG_MenuView`.
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): When an `AG_MenuView` is detached, immediately invalidate the `view` pointers of its `AG_MenuItem`.
+- [**AG_Object**](https://libagar.org/man3/AG_Object): Introduce numerical class IDs and `*_ISA()` macros.
+- [**AG_Object**](https://libagar.org/man3/AG_Object): Improve the object validity test by using a pseudo-random signature generated on initialization. Make validity and class-membership testing possible outside of Debug builds.
 - [**AG_Radio**](https://libagar.org/man3/AG_Radio): New `HOMOGENOUS` option to divide space equally between items. Thanks Stephen!
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Embed 4 general-purpose 16-bit guides. Guides are useful for typography, graphics and other applications.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): The surface returned by `AG_TextRender()` now includes Ascent information under `Guide 0`.
@@ -46,6 +48,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - Added Vim syntax files (under the `syntax/` directory) complete with all types and constants.
 
 ### Removed
+- [**AG_Object**](https://libagar.org/man3/AG_Object): Removed `AG_ObjectPage{In,Out}()` and unused flags `AG_OBJECT_FLOATING_VARS`, `AG_OBJECT_NON_PERSISTENT`, `AG_OBJECT_RESIDENT`, `AG_OBJECT_REOPEN_ONLOAD`, `AG_OBJECT_REMAIN_DATA` and `AG_OBJECT_CHLD_AUTOSAVE`.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): Removed `AG_UnusedFont()` and the reference counter in `AG_Font`.
 - 
 New function [AG_UnusedFont()](https://libagar.org/man3/AG_UnusedFont) for decrementing reference count on a font.
@@ -55,6 +58,7 @@ New function [AG_UnusedFont()](https://libagar.org/man3/AG_UnusedFont) for decre
 - Don't install headers from disabled libraries.
 - [**AG_Color**](https://libagar.org/man3/AG_Color): Handle `rgb16()` format in [AG_ColorFromString()](https://libagar.org/man3/AG_ColorFromString).
 - [**AG_FontSelector**](https://libagar.org/man3/AG_FontSelector): The preview function now includes text in different scripts. It is now possible to set a user-defined preview function.
+- [**AG_Object**](https://libagar.org/man3/AG_Object): Event argument accessor macros of the form `AG_CONST_FOO_PTR()` are now defined as `AG_cFOO_PTR()`.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): In `AG_ObjectGenName()`, convert the prefix (class name) to lowercase in its entirety.
 - [**AG_Printf**](https://libagar.org/man3/AG_Printf): When formatting floating-point, handle positive and negative infinity.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): The `agFontAdjustments[]` table has been updated and expanded to include common system fonts.

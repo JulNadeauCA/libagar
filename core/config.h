@@ -35,14 +35,14 @@ typedef struct ag_config {
 	Uint32 _pad;
 } AG_Config;
 
-#define AGCONFIG(obj)            ((AG_Config *)(obj))
-#define AGCCONFIG(obj)           ((const AG_Config *)(obj))
-#define AG_CONFIG_SELF()          AGCONFIG( AG_OBJECT(0,"AG_Config:*") )
-#define AG_CONFIG_PTR(n)          AGCONFIG( AG_OBJECT((n),"AG_Config:*") )
-#define AG_CONFIG_NAMED(n)        AGCONFIG( AG_OBJECT_NAMED((n),"AG_Config:*") )
-#define AG_CONST_CONFIG_SELF()   AGCCONFIG( AG_CONST_OBJECT(0,"AG_Config:*") )
-#define AG_CONST_CONFIG_PTR(n)   AGCCONFIG( AG_CONST_OBJECT((n),"AG_Config:*") )
-#define AG_CONST_CONFIG_NAMED(n) AGCCONFIG( AG_CONST_OBJECT_NAMED((n),"AG_Config:*") )
+#define   AGCONFIG(o)        ((AG_Config *)(o))
+#define  AGcCONFIG(o)        ((const AG_Config *)(o))
+#define  AG_CONFIG_SELF()    AGCONFIG(  AG_OBJECT(0,         "AG_Config:*") )
+#define  AG_CONFIG_PTR(n)    AGCONFIG(  AG_OBJECT((n),       "AG_Config:*") )
+#define  AG_CONFIG_NAMED(n)  AGCONFIG(  AG_OBJECT_NAMED((n), "AG_Config:*") )
+#define AG_cCONFIG_SELF()   AGcCONFIG( AG_cOBJECT(0,         "AG_Config:*") )
+#define AG_cCONFIG_PTR(n)   AGcCONFIG( AG_cOBJECT((n),       "AG_Config:*") )
+#define AG_cCONFIG_NAMED(n) AGcCONFIG( AG_cOBJECT_NAMED((n), "AG_Config:*") )
 
 __BEGIN_DECLS
 extern AG_Config *_Nullable agConfig;

@@ -13,14 +13,14 @@ typedef struct ag_dummy {
 	/* ... */
 } AG_Dummy;
 
-#define AGDUMMY(obj)            ((AG_Dummy *)(obj))
-#define AGCDUMMY(obj)           ((const AG_Dummy *)(obj))
-#define AG_DUMMY_SELF()          AGDUMMY( AG_OBJECT(0,"AG_Dummy:*") )
-#define AG_DUMMY_PTR(n)          AGDUMMY( AG_OBJECT((n),"AG_Dummy:*") )
-#define AG_DUMMY_NAMED(n)        AGDUMMY( AG_OBJECT_NAMED((n),"AG_Dummy:*") )
-#define AG_CONST_DUMMY_SELF()   AGCDUMMY( AG_CONST_OBJECT(0,"AG_Dummy:*") )
-#define AG_CONST_DUMMY_PTR(n)   AGCDUMMY( AG_CONST_OBJECT((n),"AG_Dummy:*") )
-#define AG_CONST_DUMMY_NAMED(n) AGCDUMMY( AG_CONST_OBJECT_NAMED((n),"AG_Dummy:*") )
+#define   AGDUMMY(o)        ((AG_Dummy *)(o))
+#define  AGcDUMMY(o)        ((const AG_Dummy *)(o))
+#define  AG_DUMMY_SELF()    AGDUMMY(  AG_OBJECT(0,         "AG_Dummy:*") )
+#define  AG_DUMMY_PTR(n)    AGDUMMY(  AG_OBJECT((n),       "AG_Dummy:*") )
+#define  AG_DUMMY_NAMED(n)  AGDUMMY(  AG_OBJECT_NAMED((n), "AG_Dummy:*") )
+#define AG_cDUMMY_SELF()   AGcDUMMY( AG_cOBJECT(0,         "AG_Dummy:*") )
+#define AG_cDUMMY_PTR(n)   AGcDUMMY( AG_cOBJECT((n),       "AG_Dummy:*") )
+#define AG_cDUMMY_NAMED(n) AGcDUMMY( AG_cOBJECT_NAMED((n), "AG_Dummy:*") )
 
 extern AG_ObjectClass agDummyClass;	/* Class description */
 

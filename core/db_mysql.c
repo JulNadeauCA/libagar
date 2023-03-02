@@ -194,7 +194,7 @@ AG_DbClass agDbMySQLClass = {
 	{
 		"AG_Db:AG_DbMySQL",
 		sizeof(AG_DbMySQL),
-		{ 0,0 },
+		{ 0,1, AGC_DB_MYSQL, 0xE030 },
 		Init,
 		NULL,		/* free */
 		NULL,		/* destroy */

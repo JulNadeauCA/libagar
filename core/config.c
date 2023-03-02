@@ -432,13 +432,13 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 AG_ObjectClass agConfigClass = {
 	"AG_Config",
 	sizeof(AG_Config),
-	{ 12, 0 },
+	{ 12,0, AGC_DB_OBJECT, 0x2699 },
 	Init,
-	NULL,		/* reset */
+	NULL,     /* reset */
 	Destroy,
 	Load,
 	Save,
-	NULL		/* edit */
+	NULL      /* edit */
 };
 
 #endif /* AG_SERIALIZATION */

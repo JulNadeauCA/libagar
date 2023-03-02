@@ -16,8 +16,6 @@ LIBS+=		${AGAR_LIBS} ${AGAR_ADA_CORE_LIBS} ${AGAR_CORE_LIBS}
 
 SRCS=		agar-init_gui.adb \
 		agar-input_device.ads \
-		agar-keyboard.ads \
-		agar-mouse.adb \
 		agar-surface.adb \
 		agar-widget.adb \
 		agar-text.adb

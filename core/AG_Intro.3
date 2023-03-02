@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2001-2022 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2001-2023 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@ which graphical applications can be built.
 .Sh AGAR-CORE
 The
 .Em ag_core
-library (stable) is Agar's non-graphical platform and utility library.
+library is Agar's non-graphical platform and utility library.
 It implements the base object system, events / virtual functions and timers.
 It provides cross-platform interfaces to OS services such as
 filesystems, kernel-based events, timers and threads.
@@ -90,8 +90,7 @@ Data file versioning.
 .Sh AGAR-GUI: BASE SYSTEM
 The
 .Em ag_gui
-library (stable) includes the base Agar GUI system and its standard widget
-library.
+library includes the base Agar GUI system and its standard widget toolkit.
 To use it, link against
 .Sq agar-config --libs .
 .Pp
@@ -231,8 +230,8 @@ Single-button variant of
 .Sh AGAR-MATH
 The
 .Em ag_math
-library (stable) is a general-purpose math library which extends Agar
-with new widgets and support for linear algebra / geometry types.
+library is a general-purpose math library which extends Agar with new widgets
+and support for linear algebra / geometry types.
 To use this library, link against
 .Sq agar-math-config --libs .
 .Pp
@@ -289,8 +288,8 @@ Vectors (optimized R^2, R^3 and R^4 or general R^n).
 .Sh AGAR-NET
 The
 .Em ag_net
-library (stable) provides network access methods and implements a
-modular HTTP/1.1 application server.
+library provides network access methods and implements a modular HTTP/1.1
+application server.
 To use this library, link against
 .Sq agar-net-config --libs .
 .Pp
@@ -423,7 +422,7 @@ Edition and visualization widget.
 .Sh AGAR-VG
 The
 .Em ag_vg
-library (stable) implements basic 2D vector graphics display.
+library implements basic 2D vector graphics display.
 It includes an editor tool framework.
 Geometrical placement of elements is determined by linear transformations
 using floating-point methods.

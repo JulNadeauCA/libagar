@@ -4,17 +4,25 @@
 #define	_AGAR_CORE_LOAD_VERSION_H_
 #include <agar/core/begin.h>
 
+#if AG_MODEL == AG_SMALL
+
 typedef struct ag_version {
-	Uint32 major;		/* TODO 2.0: 16-bit */
-	Uint32 minor;
-#if AG_MODEL == AG_MEDIUM
-	Uint32 _pad;
-#endif
+	Uint8 major;              /* Major version number */
+	Uint8 minor;              /* Minor version number */
+	Uint16 cid;	          /* Class ID */
+	Uint16 unicode;           /* Icon (Unicode offset from 0xE000) */
 } AG_Version;
 
-/* TODO 2.0: shorten this */
-#define AG_VERSION_NAME_MAX	48
-#define AG_VERSION_MAX		(AG_VERSION_NAME_MAX+8)
+#else /* !AG_SMALL */
+
+typedef struct ag_version {
+	Uint32 major;              /* Major version number */
+	Uint32 minor;              /* Minor version number */
+	Uint32 cid;	           /* Class ID */
+	Uint32 unicode;            /* Icon (UCS-4 Unicode value) */
+} AG_Version;
+
+#endif /* !AG_SMALL */
 
 __BEGIN_DECLS
 

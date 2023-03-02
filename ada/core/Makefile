@@ -16,6 +16,7 @@ LIBS+=		${AGAR_CORE_LIBS}
 SRCS=		ag_dso.c \
 		ag_event.c \
 		agar.ads \
+		agar-classes.ads \
 		agar-config.adb \
 		agar-data_source.adb \
 		agar-dso.adb \

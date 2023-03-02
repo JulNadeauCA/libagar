@@ -41,7 +41,7 @@ int
 AG_ReadVersion(AG_DataSource *ds, const char *name, const AG_Version *ver,
     AG_Version *rver)
 {
-	char nbuf[AG_VERSION_NAME_MAX];
+	char nbuf[AG_OBJECT_TYPE_MAX];
 	size_t nlen;
 	Uint32 major, minor;
 
@@ -77,7 +77,7 @@ AG_ReadVersion(AG_DataSource *ds, const char *name, const AG_Version *ver,
 int
 AG_WriteVersion(AG_DataSource *ds, const char *name, const AG_Version *ver)
 {
-	char nbuf[AG_VERSION_NAME_MAX];
+	char nbuf[AG_OBJECT_TYPE_MAX];
 	int i;
 	
 	for (i = 0; i < sizeof(nbuf); i += 4) {

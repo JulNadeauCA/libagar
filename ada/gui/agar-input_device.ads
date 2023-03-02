@@ -18,7 +18,7 @@ package Agar.Input_Device is
   use type C.unsigned;
 
   type Input_Device is limited record
-    Super   : aliased Agar.Object.Object; -- [Object -> Input_Device]
+    Super   : aliased Agar.Object.Object; -- ( Object -> Input_Device )
     Driver  : System.Address;             -- Agar.Driver.Driver_Access
     Descr   : CS.chars_ptr;               -- Long description
     Flags   : C.unsigned;

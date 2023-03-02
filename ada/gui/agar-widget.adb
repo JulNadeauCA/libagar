@@ -206,20 +206,6 @@ package body Agar.Widget is
   end;
 
   --
-  -- Create a new mouse instance under a Driver.
-  --
-  function New_Mouse
-    (Driver : in Driver_not_null_Access;
-     Descr  : in String) return MSE.Mouse_Device_not_null_Access
-  is
-    Ch_Descr : aliased C.char_array := C.To_C(Descr);
-  begin
-    return AG_MouseNew
-      (Driver => Driver,
-       Descr  => CS.To_Chars_Ptr(Ch_Descr'Unchecked_Access));
-  end;
-
-  --
   -- Change the cursor if its coordinates overlap a registered cursor area.
   -- Generally called from window/driver code following a mouse motion event.
   --
@@ -240,7 +226,7 @@ package body Agar.Widget is
     (Window    : in Window_not_null_Access;
      X,Y       : in Natural;
      Xrel,Yrel : in Integer;
-     Buttons   : in MSE.Mouse_Button) is
+     Buttons   : in Mouse_Button) is
   begin
     AG_ProcessMouseMotion
       (Window  => Window,
@@ -258,7 +244,7 @@ package body Agar.Widget is
   procedure Process_Mouse_Button_Up
     (Window    : in Window_not_null_Access;
      X,Y       : in Natural;
-     Button    : in MSE.Mouse_Button) is
+     Button    : in Mouse_Button) is
   begin
     AG_ProcessMouseButtonUp
       (Window => Window,
@@ -274,13 +260,49 @@ package body Agar.Widget is
   procedure Process_Mouse_Button_Down
     (Window    : in Window_not_null_Access;
      X,Y       : in Natural;
-     Button    : in MSE.Mouse_Button) is
+     Button    : in Mouse_Button) is
   begin
     AG_ProcessMouseButtonDown
       (Window => Window,
        X      => C.int(X),
        Y      => C.int(Y),
        Button => Button);
+  end;
+
+  ------------------
+  -- Keyboard API --
+  ------------------
+
+  --
+  -- Create a new keyboard instance under a Driver.
+  --
+  function New_Keyboard
+    (Driver : in Agar.Widget.Driver_not_null_Access;
+     Descr  : in String) return Keyboard_not_null_Access
+  is
+    Ch_Descr : aliased C.char_array := C.To_C(Descr);
+  begin
+    return AG_KeyboardNew
+      (Driver => Driver,
+       Descr  => CS.To_Chars_Ptr(Ch_Descr'Unchecked_Access));
+  end;
+
+  ---------------
+  -- Mouse API --
+  ---------------
+
+  --
+  -- Create a new mouse instance under a Driver.
+  --
+  function New_Mouse
+    (Driver : in Driver_not_null_Access;
+     Descr  : in String) return Mouse_not_null_Access
+  is
+    Ch_Descr : aliased C.char_array := C.To_C(Descr);
+  begin
+    return AG_MouseNew
+      (Driver => Driver,
+       Descr  => CS.To_Chars_Ptr(Ch_Descr'Unchecked_Access));
   end;
 
 end Agar.Widget;

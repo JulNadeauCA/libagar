@@ -172,21 +172,21 @@ package Agar.Text is
   subtype Font_Family_Style_not_null_Access is not null Font_Family_Style_Access;
 
   type Font is limited record
-    Super              : aliased Agar.Object.Object;
-    Name               : aliased Font_Name;         -- Font family
-    Spec               : aliased Font_Spec;         -- Font specification
-    Flags              : C.unsigned;                -- Style/Weight/Wd.Variant
-    Family_Style_Count : C.unsigned;                -- No. of styles in font's family
-    Family_Styles      : Font_Family_Style_Access;  -- Styles in font's family
-    State_Flags        : C.unsigned;                -- State flags
-    Height             : C.int;                     -- Height (px)
-    Ascent             : C.int;                     -- Ascent (px)
-    Descent            : C.int;                     -- Descent (px)
-    Line_Skip          : C.int;                     -- Multiline y-increment (px)
-    Underline_Pos      : C.int;                     -- Underline position
-    Underline_Thick    : C.int;                     -- Underline thickness
-    Access_Time        : C.unsigned;                -- Access time (debug mode only)
-    Entry_in_Fonts     : Font_Entry;                -- Entry in global fonts list
+    Super              : aliased Agar.Object.Object; -- ( Object -> Font )
+    Name               : aliased Font_Name;          -- Font family
+    Spec               : aliased Font_Spec;          -- Font specification
+    Flags              : C.unsigned;                 -- Style/Weight/Wd.Variant
+    Family_Style_Count : C.unsigned;                 -- No. of styles in font's family
+    Family_Styles      : Font_Family_Style_Access;   -- Styles in font's family
+    State_Flags        : C.unsigned;                 -- State flags
+    Height             : C.int;                      -- Height (px)
+    Ascent             : C.int;                      -- Ascent (px)
+    Descent            : C.int;                      -- Descent (px)
+    Line_Skip          : C.int;                      -- Multiline y-increment (px)
+    Underline_Pos      : C.int;                      -- Underline position
+    Underline_Thick    : C.int;                      -- Underline thickness
+    Access_Time        : C.unsigned;                 -- Access time (debug mode only)
+    Entry_in_Fonts     : Font_Entry;                 -- Entry in global fonts list
   end record
     with Convention => C;
 

@@ -417,7 +417,7 @@ elsif AG_MODEL = AG_MEDIUM
     --
     T_IO.Put_Line("Testing transparency");
     declare
-      Denis : constant Surface_Access := New_Surface("axe.png");
+      Denis : constant Surface_Access := New_Surface("champden.png");
       Degs  : Float := 0.0;
       Alpha : AG_Component := 0;
     begin

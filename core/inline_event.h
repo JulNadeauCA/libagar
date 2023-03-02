@@ -280,7 +280,7 @@ ag_get_named_ptr(AG_Event *event, const char *name)
 	}
 	if ((V->info.pFlags & AG_VARIABLE_P_READONLY)) {
 		AG_FatalErrorV("E35", "Pointer is const. "
-		                      "Did you mean AG_CONST_PTR_NAMED()?");
+		                      "Did you mean AG_cPTR_NAMED()?");
 	}
 # endif
 	return (V->data.p);

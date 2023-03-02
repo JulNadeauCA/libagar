@@ -2611,8 +2611,6 @@ static const struct {
 	{ "AG_TIMER_NAME_MAX", AG_TIMER_NAME_MAX },
 	{ "AG_USER_NAME_MAX", AG_USER_NAME_MAX },
 	{ "AG_VARIABLE_NAME_MAX", AG_VARIABLE_NAME_MAX },
-	{ "AG_VERSION_NAME_MAX", AG_VERSION_NAME_MAX },
-	{ "AG_VERSION_MAX", AG_VERSION_MAX },
 };
 static const struct {
 	const char *name;
@@ -2644,7 +2642,6 @@ static const struct {
 	{ "SIZEOF_AG_NAMESPACE", sizeof(AG_Namespace) },
 	{ "SIZEOF_AG_OBJECT", sizeof(AG_Object) },
 	{ "SIZEOF_AG_OBJECTCLASS", sizeof(AG_ObjectClass) },
-	{ "SIZEOF_AG_OBJECTCLASSPVT", sizeof(AG_ObjectClassPvt) },
 	{ "SIZEOF_AG_OBJECTHEADER", sizeof(AG_ObjectHeader) },
 	{ "SIZEOF_AG_TBL", sizeof(AG_Tbl) },
 	{ "SIZEOF_AG_TBLBUCKET", sizeof(AG_TblBucket) },

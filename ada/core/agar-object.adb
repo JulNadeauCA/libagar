@@ -373,11 +373,6 @@ package body Agar.Object is
        Pattern => CS.To_Chars_Ptr(Ch_Pattern'Unchecked_Access)) = 1;
   end;
 
-  function In_Use (Object : in Object_Not_Null_Access) return Boolean is
-  begin
-    return AG_ObjectInUse(Object) = 1;
-  end;
-
   -------------------
   -- Serialization --
   -------------------
@@ -472,18 +467,6 @@ package body Agar.Object is
     return AG_ObjectReadHeader (Source, Header) = 0;
   end;
 
-  function Page_In
-    (Object : in Object_Not_Null_Access) return Boolean is
-  begin
-    return AG_ObjectPageIn (Object) = 0;
-  end;
-
-  function Page_Out
-    (Object : in Object_Not_Null_Access) return Boolean is
-  begin
-    return AG_ObjectPageOut (Object) = 0;
-  end;
-  
   ------------
   -- Events --
   ------------

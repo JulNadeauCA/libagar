@@ -2,7 +2,7 @@
 #include <agar/core.h>
 
 void       *ag_event_get_ptr(AG_Event *event, unsigned i)       { return AG_PTR(i); }
-const void *ag_event_get_const_ptr(AG_Event *event, unsigned i) { return AG_CONST_PTR(i); }
+const void *ag_event_get_const_ptr(AG_Event *event, unsigned i) { return AG_cPTR(i); }
 char       *ag_event_get_string(AG_Event *event, unsigned i)    { return AG_STRING(i); }
 int         ag_event_get_int(AG_Event *event, unsigned i)       { return AG_INT(i); }
 unsigned    ag_event_get_uint(AG_Event *event, unsigned i)      { return AG_UINT(i); }

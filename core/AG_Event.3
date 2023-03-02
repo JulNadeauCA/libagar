@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -202,9 +202,9 @@ It is customary for Agar object classes to define accessor macros
 Arguments marked
 .Em constant
 must be accessed with
-.Fn AG_CONST_<T>_PTR
+.Fn AG_c<T>_PTR
 and
-.Fn AG_CONST_<T>_SELF .
+.Fn AG_c<T>_SELF .
 .Pp
 Here is an example using Agar-GUI widget classes:
 .Bd -literal -offset indent
@@ -215,7 +215,7 @@ PushedOK(AG_Event *event)
 	AG_Button *button = AG_BUTTON_SELF();
 	AG_Radio *radio   = AG_RADIO_PTR(1);
 	AG_Button *button = AG_BUTTON_PTR(2);
-	const AG_Checkbox *cb = AG_CONST_CHECKBOX_PTR(3);
+	const AG_Checkbox *cb = AG_cCHECKBOX_PTR(3);
 
 /* 	cb->invert = 1;              <- Incorrect (cb is const) */
 /*	AG_WidgetDisable(cb);        <- Incorrect (cb is const) */
@@ -241,7 +241,7 @@ Arguments are optionally
 static void
 CopySomeData(AG_Event *event)
 {
-	const void *src = AG_CONST_PTR_NAMED("src");
+	const void *src = AG_cPTR_NAMED("src");
 	void *dst = AG_PTR_NAMED("dst");
 	long offs = AG_LONG_NAMED("offs");
 
@@ -252,7 +252,8 @@ void *src, *dst;
 long offs = 0;
 
 AG_SetEvent(obj, "some-event",
-    CopySomeData, "%Cp(src),%p(dst),%li(offs)", src, dst, offs);
+    CopySomeData, "%Cp(src),%p(dst),%li(offs)",
+    src, dst, offs);
 .Ed
 .Pp
 The following argument specifiers are accepted:
@@ -306,20 +307,20 @@ they also check for potential accesses to incorrect types.
 .Fn AG_SELF "void"
 .Pp
 .Ft "const AG_Object *"
-.Fn AG_CONST_SELF "void"
+.Fn AG_cSELF "void"
 .Pp
 .Ft "void *"
 .Fn AG_PTR "int index"
 .Pp
 .Ft "const void *"
-.Fn AG_CONST_PTR "int index"
+.Fn AG_cPTR "int index"
 .Pp
 .\" NOMANLINK
 .Ft "AG_Object *"
 .Fn AG_OBJECT "int index" "const char *hierarchy"
 .Pp
 .Ft "const AG_Object *"
-.Fn AG_CONST_OBJECT "int index" "const char *hierarchy"
+.Fn AG_cOBJECT "int index" "const char *hierarchy"
 .Pp
 .Ft "char *"
 .Fn AG_STRING "int index"
@@ -346,13 +347,13 @@ they also check for potential accesses to incorrect types.
 .Fn AG_PTR_NAMED "const char *key"
 .Pp
 .Ft "const void *"
-.Fn AG_CONST_PTR_NAMED "const char *key"
+.Fn AG_cPTR_NAMED "const char *key"
 .Pp
 .Ft "AG_Object *"
 .Fn AG_OBJECT_NAMED "const char *key" "const char *hierarchy"
 .Pp
 .Ft "const AG_Object *"
-.Fn AG_CONST_OBJECT_NAMED "const char *key" "const char *hierarchy"
+.Fn AG_cOBJECT_NAMED "const char *key" "const char *hierarchy"
 .Pp
 .Ft "char *"
 .Fn AG_STRING_NAMED "const char *key"
@@ -379,14 +380,14 @@ they also check for potential accesses to incorrect types.
 The
 .Fn AG_SELF
 and
-.Fn AG_CONST_SELF
+.Fn AG_cSELF
 macros expand to a pointer to the
 .Xr AG_Object 3
 receiving the event (the
 .Fa obj
 argument passed to
 .Fn AG_PostEvent ) .
-They are equivalent to AG_PTR(0) and AG_CONST_PTR(0), respectively.
+They are equivalent to AG_PTR(0) and AG_cPTR(0), respectively.
 .Pp
 The following macros return a specific item in the list of arguments.
 When retrieving arguments by index, note that the arguments to
@@ -402,53 +403,63 @@ These macros ensure type safety if Agar is compiled with
 --enable-debug or --enable-type-safety.
 .Pp
 .Fn AG_PTR
-returns a pointer (previously passed as a
+returns a pointer (a
 .Sq %p
 argument).
-.Fn AG_CONST_PTR
-returns a pointer (previously passed as a 
+.Fn AG_cPTR
+returns a
+.Ft const
+pointer (a
 .Sq %Cp
 argument).
 .Pp
 .Fn AG_OBJECT
 returns a pointer to an
 .Xr AG_Object 3
-(previously passed as a
+(a
 .Sq %p
 argument).
 In debug mode, assert that the argument points to a valid
 .Xr AG_Object 3
 by performing a validity test, and a class membership test.
 The
-.Fn AG_CONST_OBJECT
-variant asserts that the object pointer was passed as "%Cp".
+.Fn AG_cOBJECT
+variant asserts that the pointer is a
+.Ft const
+pointer (a
+.Sq %Cp
+argument).
 .Pp
 .Fn AG_STRING
-returns a pointer to a string passed as a
+returns a pointer to a string (a
 .Sq %s
-argument.
+argument).
 .Pp
 .Fn AG_INT ,
 .Fn AG_UINT ,
 .Fn AG_LONG
 and
 .Fn AG_ULONG
-return a natural or long integer passed as
+return a natural or long integer (a
 .Sq %i ,
 .Sq %u ,
 .Sq %li
 or
 .Sq %lu
-argument respectively.
+argument, respectively).
 .Pp
 .Fn AG_FLOAT
 and
 .Fn AG_DOUBLE
-return the given floating-point number, previously passed as a real
+return the given floating-point number (a
 .Sq %f
+for a
+.Ft float
 or
 .Sq %d
-argument.
+for a
+.Ft double
+argument).
 .Pp
 The
 .Fn AG_*_NAMED
@@ -688,7 +699,7 @@ mechanism first appeared in Agar 1.0.
 The
 .Xr AG_Variable 3
 structure was first used to represent event handler arguments in Agar 1.3.4.
-Agar 1.6.0 added the CONST argument accessor macros and introduced validity
+Agar 1.6.0 added the const argument accessor macros and introduced validity
 and class membership tests for object pointers in event handler arguments.
 .Fn AG_EventCopy ,
 .Fn AG_EventDup

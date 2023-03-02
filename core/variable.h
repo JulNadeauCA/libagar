@@ -149,7 +149,7 @@ typedef struct ag_variable {
 #endif
 	union {
 		Uint pFlags;           /* Pointer flags (for [P_]POINTER) */
-#define AG_VARIABLE_P_READONLY 0x01    /* Hard const (need AG_CONST_PTR()) */
+#define AG_VARIABLE_P_READONLY 0x01    /* Hard const (needs AG_cPTR()) */
 #define AG_VARIABLE_P_FREE     0x02    /* Auto free() target on cleanup */
 #define AG_VARIABLE_P_SENDER   0x04    /* Is a pointer to a sender Object */
 		union {                /* Bitmask (for P_FLAG_*) */

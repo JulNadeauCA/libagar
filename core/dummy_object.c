@@ -101,7 +101,7 @@ Edit(void *_Nonnull obj)
 AG_ObjectClass agDummyClass = {
 	"AG_Dummy",
 	sizeof(AG_Dummy),
-	{ 1,0 },
+	{ 0,1, 0x1234, 0xE027 },
 	Init,
 	NULL,		/* reset */
 	Destroy,

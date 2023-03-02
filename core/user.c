@@ -91,11 +91,7 @@ AG_GetUserByName(const char *_Nonnull name)
 		return (NULL);
 	}
 	if (agUserOps->getUserByName(u, name) != 1) {
-#ifdef AG_VERBOSITY
-		AG_SetError("No such user \"%s\"", name);
-#else
-		AG_SetErrorS("E26");
-#endif
+		AG_SetErrorV("E26", _("No such user account"));
 		AG_UserFree(u);
 		return (NULL);
 	}
@@ -112,11 +108,7 @@ AG_GetUserByUID(Uint32 uid)
 		return (NULL);
 	}
 	if (agUserOps->getUserByUID(u, uid) != 1) {
-#ifdef AG_VERBOSITY
-		AG_SetError("No such user (uid %lu)", (unsigned long)uid);
-#else
-		AG_SetErrorS("E26");
-#endif
+		AG_SetErrorV("E26", _("No such user account"));
 		AG_UserFree(u);
 		return (NULL);
 	}

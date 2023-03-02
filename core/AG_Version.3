@@ -33,16 +33,20 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-The agar
+The
 .Nm
-interface encodes or decodes versioning information.
-This includes a magic string (limited to
-.Dv AG_VERSION_NAME_MAX
-characters) and two 32-bit integers representing a version number:
+structure represents a version number for an
+.Xr AG_Object 3
+(or any other type of data).
+It is defined as follows:
+.Pp
 .Bd -literal -offset indent
 .\" SYNTAX(c)
 typedef struct ag_version {
-	Uint32 major, minor;
+	Uint32 major;    /* Major version number */
+	Uint32 minor;    /* Minor version number */
+	Uint32 cid;	 /* Class ID */
+	Uint32 unicode;  /* Icon (Unicode value) */
 } AG_Version;
 .Ed
 .Pp
@@ -57,6 +61,14 @@ number is incremented when a new feature is introduced which does not break
 binary compatibility with previous versions.
 A typical deserialization routine may test the minor number to determine
 the presence of new features (which do not break binary compatibility).
+.Pp
+The
+.Va cid
+field is a 32-bit numerical class ID (or 0).
+.Pp
+The
+.Va unicode
+field is an optional Unicode character value (or 0).
 .Sh VERSIONING
 .nr nS 1
 .Ft "int"
