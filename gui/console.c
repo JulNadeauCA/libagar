@@ -48,6 +48,14 @@
 
 static AG_ConsoleLine *AppendMultiLine(AG_Console *_Nonnull, const char *_Nonnull);
 
+#define RETURN_IF_INVALID(cons) \
+	if (!AG_OBJECT_VALID(cons) || !AG_CONSOLE_ISA(cons)) \
+		return
+
+#define RETURN_NULL_IF_INVALID(cons) \
+	if (!AG_OBJECT_VALID(cons) || !AG_CONSOLE_ISA(cons)) \
+		return (NULL)
+
 AG_Console *
 AG_ConsoleNew(void *parent, Uint flags)
 {
@@ -372,7 +380,7 @@ MenuCopy(AG_Event *_Nonnull event)
 static void
 MenuCopyActive(AG_Event *_Nonnull event)
 {
-	const AG_Console *cons = AG_CONST_CONSOLE_PTR(1);
+	const AG_Console *cons = AG_cCONSOLE_PTR(1);
 	int *status = AG_PTR(2);
 
 	*status = (cons->pos != -1) ? 1 : 0;
@@ -384,7 +392,7 @@ MenuCopyActive(AG_Event *_Nonnull event)
 static void
 MenuExportToFileTXT(AG_Event *_Nonnull event)
 {
-	const AG_Console *cons = AG_CONST_CONSOLE_PTR(1);
+	const AG_Console *cons = AG_cCONSOLE_PTR(1);
 	const char *path = AG_STRING(2);
 	AG_FileType *ft = AG_PTR(3);
 	char *s;
@@ -457,7 +465,7 @@ out:
 static void
 MenuExportDlg(AG_Event *_Nonnull event)
 {
-	const AG_Console *cons = AG_CONST_CONSOLE_PTR(1);
+	const AG_Console *cons = AG_cCONSOLE_PTR(1);
 	AG_Window *win;
 	AG_FileDlg *fd;
 	AG_FileType *ft;
@@ -961,7 +969,7 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 {
 	AG_ConsoleLine *ln;
 
-	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
+	RETURN_NULL_IF_INVALID(cons);
 	AG_ObjectLock(cons);
 
 	if (s && (strchr(s, agNewlineFormats[AG_NEWLINE_NATIVE].s[0]))) {
@@ -1049,7 +1057,7 @@ AG_ConsoleMsg(AG_Console *cons, const char *fmt, ...)
 	va_list args;
 	AG_Size len;
 
-	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
+	RETURN_NULL_IF_INVALID(cons);
 	AG_ObjectLock(cons);
 
 	if ((ln = AG_ConsoleAppendLine(cons, NULL)) == NULL) {
@@ -1079,7 +1087,7 @@ AG_ConsoleMsgS(AG_Console *cons, const char *s)
 	AG_ConsoleLine *ln;
 	AG_Size len;
 
-	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
+	RETURN_NULL_IF_INVALID(cons);
 	AG_ObjectLock(cons);
 
 	if ((ln = AG_ConsoleAppendLine(cons, s)) == NULL) {
@@ -1112,7 +1120,7 @@ AG_ConsoleBinary(AG_Console *cons, const void *data, AG_Size size,
 	AG_Size bufSize = size*3 + 1 + (2+columnWd+1) + 1;	/* One line */
 	int lineWd = 0;
 
-	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
+	RETURN_IF_INVALID(cons);
 
 	if (label) {
 		bufSize += 1+strlen(label)+2;
@@ -1194,7 +1202,7 @@ AG_ConsoleMsgEdit(AG_ConsoleLine *ln, const char *s)
 {
 	AG_Console *cons = ln->cons;
 
-	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
+	RETURN_IF_INVALID(cons);
 	AG_ObjectLock(cons);
 
 	free(ln->text);
@@ -1214,7 +1222,7 @@ AG_ConsoleMsgCatS(AG_ConsoleLine *ln, const char *s)
 
 	sLen = strlen(s);
 
-	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
+	RETURN_IF_INVALID(cons);
 	AG_ObjectLock(cons);
 
 	newLen = ln->len + sLen + 1;
@@ -1232,7 +1240,7 @@ AG_ConsoleMsgPtr(AG_ConsoleLine *ln, void *p)
 {
 	AG_Console *cons = ln->cons;
 
-	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
+	RETURN_IF_INVALID(cons);
 	AG_ObjectLock(cons);
 
 	ln->p = p;
@@ -1246,7 +1254,7 @@ AG_ConsoleMsgColor(AG_ConsoleLine *ln, const AG_Color *c)
 {
 	AG_Console *cons = ln->cons;
 
-	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
+	RETURN_IF_INVALID(cons);
 	AG_ObjectLock(cons);
 
 	memcpy(&ln->c, c, sizeof(AG_Color));
@@ -1258,7 +1266,7 @@ AG_ConsoleMsgColor(AG_ConsoleLine *ln, const AG_Color *c)
 void
 AG_ConsoleClear(AG_Console *cons)
 {
-	AG_OBJECT_ISA(cons, "AG_Widget:AG_Console:*");
+	RETURN_IF_INVALID(cons);
 	AG_ObjectLock(cons);
 
 	FreeLines(cons);
@@ -1458,13 +1466,13 @@ AG_WidgetClass agConsoleClass = {
 	{
 		"Agar(Widget:Console)",
 		sizeof(AG_Console),
-		{ 0,0 },
+		{ 1,0, AGC_CONSOLE, 0xE017 },
 		Init,
-		NULL,		/* reset */
+		NULL,             /* reset */
 		Destroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
+		NULL,             /* load */
+		NULL,             /* save */
+		NULL              /* edit */
 	},
 	Draw,
 	SizeRequest,
