@@ -58,7 +58,6 @@ CloseObject(AG_Event *event)
 			return;
 		}
 	}
-	AG_ObjectPageOut(ts);
 	AG_ObjectDetach(win);
 
 	if (--nEditorWindows == 0)

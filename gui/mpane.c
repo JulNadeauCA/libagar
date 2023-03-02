@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -183,7 +183,7 @@ AG_WidgetClass agMPaneClass = {
 	{
 		"Agar(Widget:Box:MPane)",
 		sizeof(AG_MPane),
-		{ 0,0 },
+		{ 1,0, AGC_MPANE, 0xE028 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

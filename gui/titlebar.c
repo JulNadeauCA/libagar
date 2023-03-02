@@ -40,7 +40,7 @@
 static void
 MaximizeWindow(AG_Event *_Nonnull event)
 {
-	const AG_Titlebar *tbar = AG_CONST_TITLEBAR_PTR(1);
+	const AG_Titlebar *tbar = AG_cTITLEBAR_PTR(1);
 	AG_Window *win = tbar->win;
 
 	AG_ObjectLock(win);
@@ -56,7 +56,7 @@ MaximizeWindow(AG_Event *_Nonnull event)
 static void
 MinimizeWindow(AG_Event *_Nonnull event)
 {
-	const AG_Titlebar *tbar = AG_CONST_TITLEBAR_PTR(1);
+	const AG_Titlebar *tbar = AG_cTITLEBAR_PTR(1);
 
 	AG_WindowMinimize(tbar->win);
 }
@@ -64,7 +64,7 @@ MinimizeWindow(AG_Event *_Nonnull event)
 static void
 CloseWindow(AG_Event *_Nonnull event)
 {
-	const AG_Titlebar *tbar = AG_CONST_TITLEBAR_PTR(1);
+	const AG_Titlebar *tbar = AG_cTITLEBAR_PTR(1);
 	AG_Window *win = tbar->win;
 
 	AG_PostEvent(win, "window-close", NULL);
@@ -191,7 +191,7 @@ AG_WidgetClass agTitlebarClass = {
 	{
 		"Agar(Widget:Box:Titlebar)",
 		sizeof(AG_Titlebar),
-		{ 0,0 },
+		{ 1,0, AGC_TITLEBAR, 0xE024 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

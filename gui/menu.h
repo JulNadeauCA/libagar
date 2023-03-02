@@ -9,24 +9,17 @@
 
 #include <agar/gui/begin.h>
 
-#define AG_MENU_ITEM_TAG "AgMnItm"
-#define AG_MENU_ITEM_TAG_LEN 8
-
 struct ag_menu;
 struct ag_menu_view;
 struct ag_button;
 
 typedef struct ag_menu_item {
-#ifdef AG_TYPE_SAFETY
-	char tag[AG_MENU_ITEM_TAG_LEN];	/* Tagged Non-object */
-#endif
+	Uint32 tag;			/* Tagged Non-Object */
 	char *_Nonnull text;		/* Label text */
-
 	int lblMenu[2];			/* Cached surfaces of AG_Menu(3) */
 					/* 0=Disabled, 1=Enabled */
 	int lblView[3];			/* Cached surfaces of AG_MenuView(3) */
 					/* 0=Disabled, 1=Enabled, 2=Selected */
-
 	int value;			/* Default bool value binding */
 	AG_Surface *_Nullable icon;	/* Icon surface */
 	AG_Function *_Nullable stateFn;	/* State function (overrides flag) */
@@ -35,14 +28,13 @@ typedef struct ag_menu_item {
 	AG_KeyMod key_mod;
 	int x, y;			/* Position in parent view */
 	Uint flags;
-#define AG_MENU_ITEM_ICONS     0x01 /* At least one item has an icon */
-#define AG_MENU_ITEM_NOSELECT  0x02 /* Non-selectable regardless of state */
-#define AG_MENU_ITEM_SEPARATOR 0x04 /* Item is a cosmetic separator */
-#define AG_MENU_ITEM_INVERTED  0x08 /* Invert the binding state */
+#define AG_MENU_ITEM_ICONS     0x01     /* At least one item has an icon */
+#define AG_MENU_ITEM_NOSELECT  0x02     /* Non-selectable regardless of state */
+#define AG_MENU_ITEM_SEPARATOR 0x04     /* Item is a cosmetic separator */
+#define AG_MENU_ITEM_INVERTED  0x08     /* Invert the binding state */
 
 	AG_Event *_Nullable clickFn;	/* Raised on click */
 	AG_Event *_Nullable poll;	/* Raised before the item is drawn */
-
 	enum ag_menu_binding {		/* Boolean binding */
 		AG_MENU_NO_BINDING,
 		AG_MENU_INT_BOOL,
@@ -62,28 +54,28 @@ typedef struct ag_menu_item {
 	struct ag_menu_item *_Nullable sel_subitem; /* Selected subitem */
 	struct ag_button *_Nullable    tbButton;    /* Related toolbar button */
 	struct ag_menu_item *_Nullable parent;      /* Parent MenuItem if any */
-
 	AG_TAILQ_HEAD_(ag_menu_item) subItems;      /* Child items */
 	Uint                        nSubItems;
 	Uint32 _pad;
 	AG_TAILQ_ENTRY(ag_menu_item) items;         /* In parent */
 } AG_MenuItem;
 
-#define AGMENUITEM(p)             ((AG_MenuItem *)(p))
-#define AGCMENUITEM(p)            ((const AG_MenuItem *)(p))
-#define AG_MENU_ITEM_SELF()       AGMENUITEM( AG_MENU_ITEM_PTR(0) )
-#define AG_CONST_MENU_ITEM_SELF() AGCMENUITEM( AG_CONST_MENU_ITEM(0) )
+/* Tagged Non-Object */
+#define    AGMENUITEM(p)      ((AG_MenuItem *)(p))
+#define   AGcMENUITEM(p)      ((const AG_MenuItem *)(p))
+#define   AG_MENUITEM_SELF()  AGMENUITEM(  AG_MENUITEM_PTR(0) )
+#define  AG_cMENUITEM_SELF() AGcMENUITEM( AG_cMENUITEM(0) )
 
 #ifdef AG_TYPE_SAFETY
-# define AG_MENU_ITEM_VALID(p)     (strncmp(AGMENUITEM(p)->tag, AG_MENU_ITEM_TAG, AG_MENU_ITEM_TAG_LEN) == 0)
-# define AG_MENU_ITEM_IS_VALID(p)  if (!AG_MENU_ITEM_VALID(p)) { AG_FatalError("Illegal AG_MenuItem access"); }
-# define AG_MENU_ITEM_PTR(v)       AG_MenuGetItemPtr(event,(v),0)
-# define AG_CONST_MENU_ITEM_PTR(v) AG_MenuGetItemPtr(event,(v),1)
+# define  AG_MENUITEM_VALID(p)     (AGMENUITEM(p)->tag == agNonObjectSignature)
+# define  AG_MENUITEM_IS_VALID(p)  if (!AG_MENUITEM_VALID(p)) { AG_FatalError("Illegal AG_MenuItem access"); }
+# define  AG_MENUITEM_PTR(v) AG_MenuGetItemPtr(event,(v),0)
+# define AG_cMENUITEM_PTR(v) AG_MenuGetItemPtr(event,(v),1)
 #else
-# define AG_MENU_ITEM_VALID(p)     1
-# define AG_MENU_ITEM_IS_VALID(p)
-# define AG_MENU_ITEM_PTR(v)       event->argv[v].data.p
-# define AG_CONST_MENU_ITEM_PTR(v) event->argv[v].data.p
+# define  AG_MENUITEM_VALID(p)     1
+# define  AG_MENUITEM_IS_VALID(p)
+# define  AG_MENUITEM_PTR(v) event->argv[v].data.p
+# define AG_cMENUITEM_PTR(v) event->argv[v].data.p
 #endif
 
 enum ag_menu_style {
@@ -119,14 +111,15 @@ typedef struct ag_menu {
 	AG_Rect r;                        /* View area */
 } AG_Menu;
 
-#define AGMENU(obj)            ((AG_Menu *)(obj))
-#define AGCMENU(obj)           ((const AG_Menu *)(obj))
-#define AG_MENU_SELF()          AGMENU( AG_OBJECT(0,"AG_Widget:AG_Menu:*") )
-#define AG_MENU_PTR(n)          AGMENU( AG_OBJECT((n),"AG_Widget:AG_Menu:*") )
-#define AG_MENU_NAMED(n)        AGMENU( AG_OBJECT_NAMED((n),"AG_Widget:AG_Menu:*") )
-#define AG_CONST_MENU_SELF()   AGCMENU( AG_CONST_OBJECT(0,"AG_Widget:AG_Menu:*") )
-#define AG_CONST_MENU_PTR(n)   AGCMENU( AG_CONST_OBJECT((n),"AG_Widget:AG_Menu:*") )
-#define AG_CONST_MENU_NAMED(n) AGCMENU( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Menu:*") )
+#define   AGMENU(o)        ((AG_Menu *)(o))
+#define  AGcMENU(o)        ((const AG_Menu *)(o))
+#define  AG_MENU_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x18)
+#define  AG_MENU_SELF()    AGMENU(  AG_OBJECT(0,        "AG_Widget:AG_Menu:*") )
+#define  AG_MENU_PTR(n)    AGMENU(  AG_OBJECT((n),      "AG_Widget:AG_Menu:*") )
+#define  AG_MENU_NAMED(n)  AGMENU(  AG_OBJECT_NAMED((n),"AG_Widget:AG_Menu:*") )
+#define AG_cMENU_SELF()   AGcMENU( AG_cOBJECT(0,        "AG_Widget:AG_Menu:*") )
+#define AG_cMENU_PTR(n)   AGcMENU( AG_cOBJECT((n),      "AG_Widget:AG_Menu:*") )
+#define AG_cMENU_NAMED(n) AGcMENU( AG_cOBJECT_NAMED((n),"AG_Widget:AG_Menu:*") )
 
 typedef struct ag_popup_menu {
 	AG_Widget *_Nonnull widget;     /* Parent widget */
@@ -145,14 +138,15 @@ typedef struct ag_menu_view {
 	int arrowRight;                 /* Right arrow surface handle */
 } AG_MenuView;
 
-#define AGMENUVIEW(obj)            ((AG_MenuView *)(obj))
-#define AGCMENUVIEW(obj)           ((const AG_MenuView *)(obj))
-#define AG_MENUVIEW_SELF()         AGMENUVIEW( AG_OBJECT(0,"AG_Widget:AG_MenuView:*") )
-#define AG_MENUVIEW_PTR(n)         AGMENUVIEW( AG_OBJECT((n),"AG_Widget:AG_MenuView:*") )
-#define AG_MENUVIEW_NAMED(n)       AGMENUVIEW( AG_OBJECT_NAMED((n),"AG_Widget:AG_MenuView:*") )
-#define AG_CONST_MENUVIEW_SELF()   AGCMENUVIEW( AG_CONST_OBJECT(0,"AG_Widget:AG_MenuView:*") )
-#define AG_CONST_MENUVIEW_PTR(n)   AGCMENUVIEW( AG_CONST_OBJECT((n),"AG_Widget:AG_MenuView:*") )
-#define AG_CONST_MENUVIEW_NAMED(n) AGCMENUVIEW( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_MenuView:*") )
+#define   AGMENUVIEW(o)        ((AG_MenuView *)(o))
+#define  AGcMENUVIEW(o)        ((const AG_MenuView *)(o))
+#define  AG_MENUVIEW_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x19)
+#define  AG_MENUVIEW_SELF()    AGMENUVIEW(  AG_OBJECT(0,         "AG_Widget:AG_MenuView:*") )
+#define  AG_MENUVIEW_PTR(n)    AGMENUVIEW(  AG_OBJECT((n),       "AG_Widget:AG_MenuView:*") )
+#define  AG_MENUVIEW_NAMED(n)  AGMENUVIEW(  AG_OBJECT_NAMED((n), "AG_Widget:AG_MenuView:*") )
+#define AG_cMENUVIEW_SELF()   AGcMENUVIEW( AG_cOBJECT(0,         "AG_Widget:AG_MenuView:*") )
+#define AG_cMENUVIEW_PTR(n)   AGcMENUVIEW( AG_cOBJECT((n),       "AG_Widget:AG_MenuView:*") )
+#define AG_cMENUVIEW_NAMED(n) AGcMENUVIEW( AG_cOBJECT_NAMED((n), "AG_Widget:AG_MenuView:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agMenuClass;
@@ -318,6 +312,8 @@ AG_MenuItem *_Nullable AG_MenuGetItemPtr(const AG_Event *_Nonnull, int, int);
 #endif
 
 #ifdef AG_LEGACY
+# define AG_MENU_ITEM_PTR(v)        AG_MENUITEM_PTR(v)
+# define AG_CONST_MENU_ITEM_PTR(v) AG_cMENUITEM_PTR(v)
 # define AG_MenuAddItem(m,lbl)        AG_MenuNode((m)->root,(lbl),NULL)
 # define AG_MenuSetPaddingLeft(m,v)   AG_MenuSetPadding((m),(v),-1,-1,-1)
 # define AG_MenuSetPaddingRight(m,v)  AG_MenuSetPadding((m),-1,(v),-1,-1)

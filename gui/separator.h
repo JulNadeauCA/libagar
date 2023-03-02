@@ -17,6 +17,8 @@ typedef struct ag_separator {
 	Uint minLen;				/* Minimum length in pixels */
 } AG_Separator;
 
+#define AG_SEPARATOR_ISA(o) (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x22)
+
 __BEGIN_DECLS
 extern AG_WidgetClass agSeparatorClass;
 

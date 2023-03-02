@@ -63,7 +63,15 @@ typedef struct ag_joystick {
 	void *instancePtr;                   /* Opaque instance pointer */
 } AG_Joystick;
 
-#define AGJOYSTICK(obj) ((AG_Joystick *)(obj))
+#define   AGJOYSTICK(obj)   ((AG_Joystick *)(obj))
+#define  AGcJOYSTICK(obj)   ((const AG_Joystick *)(obj))
+#define  AG_JOYSTICK_ISA(o) (((AGOBJECT(o)->cid & 0xffff0000) >> 16) == 0x0603)
+#define  AG_JOYSTICK_SELF()    AGJOYSTICK(  AG_OBJECT(0,         "AG_InputDevice:AG_Joystick:*") )
+#define  AG_JOYSTICK_PTR(n)    AGJOYSTICK(  AG_OBJECT((n),       "AG_InputDevice:AG_Joystick:*") )
+#define  AG_JOYSTICK_NAMED(n)  AGJOYSTICK(  AG_OBJECT_NAMED((n), "AG_InputDevice:AG_Joystick:*") )
+#define AG_cJOYSTICK_SELF()   AGcJOYSTICK( AG_cOBJECT(0,         "AG_InputDevice:AG_Joystick:*") )
+#define AG_cJOYSTICK_PTR(n)   AGcJOYSTICK( AG_cOBJECT((n),       "AG_InputDevice:AG_Joystick:*") )
+#define AG_cJOYSTICK_NAMED(n) AGcJOYSTICK( AG_cOBJECT_NAMED((n), "AG_InputDevice:AG_Joystick:*") )
 
 __BEGIN_DECLS
 extern AG_ObjectClass agJoystickClass;

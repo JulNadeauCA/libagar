@@ -320,7 +320,7 @@ AG_WidgetClass agFixedPlotterClass = {
 	{
 		"Agar(Widget:FixedPlotter)",
 		sizeof(AG_FixedPlotter),
-		{ 0,0 },
+		{ 1,0, AGC_FIXED_PLOTTER, 0x223F },
 		Init,
 		NULL,		/* reset */
 		Destroy,

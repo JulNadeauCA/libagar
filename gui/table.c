@@ -2519,7 +2519,7 @@ AG_WidgetClass agTableClass = {
 	{
 		"Agar(Widget:Table)",
 		sizeof(AG_Table),
-		{ 0,0 },
+		{ 1,0, AGC_TABLE, 0xE030 },
 		Init,
 		NULL,		/* reset */
 		Destroy,

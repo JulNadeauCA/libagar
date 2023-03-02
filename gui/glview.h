@@ -41,14 +41,15 @@ typedef struct ag_glview {
 	AG_COLOR_PADDING(_pad2);
 } AG_GLView;
 
-#define AGGLVIEW(obj)            ((AG_GLView *)(obj))
-#define AGCGLVIEW(obj)           ((const AG_GLView *)(obj))
-#define AG_GLVIEW_SELF()          AGGLVIEW( AG_OBJECT(0,"AG_Widget:AG_GLView:*") )
-#define AG_GLVIEW_PTR(n)          AGGLVIEW( AG_OBJECT((n),"AG_Widget:AG_GLView:*") )
-#define AG_GLVIEW_NAMED(n)        AGGLVIEW( AG_OBJECT_NAMED((n),"AG_Widget:AG_GLView:*") )
-#define AG_CONST_GLVIEW_SELF()   AGCGLVIEW( AG_CONST_OBJECT(0,"AG_Widget:AG_GLView:*") )
-#define AG_CONST_GLVIEW_PTR(n)   AGCGLVIEW( AG_CONST_OBJECT((n),"AG_Widget:AG_GLView:*") )
-#define AG_CONST_GLVIEW_NAMED(n) AGCGLVIEW( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_GLView:*") )
+#define AGGLVIEW(obj)        ((AG_GLView *)(obj))
+#define AGcGLVIEW(obj)       ((const AG_GLView *)(obj))
+#define AG_GLVIEW_ISA(o)     (AGOBJECT(o)->cid == AGC_GLVIEW)
+#define AG_GLVIEW_SELF()     AGGLVIEW( AG_OBJECT(0,         "AG_Widget:AG_GLView:*") )
+#define AG_GLVIEW_PTR(n)     AGGLVIEW( AG_OBJECT((n),       "AG_Widget:AG_GLView:*") )
+#define AG_GLVIEW_NAMED(n)   AGGLVIEW( AG_OBJECT_NAMED((n), "AG_Widget:AG_GLView:*") )
+#define AG_cGLVIEW_SELF()   AGcGLVIEW( AG_cOBJECT(0,        "AG_Widget:AG_GLView:*") )
+#define AG_cGLVIEW_PTR(n)   AGcGLVIEW( AG_cOBJECT((n),      "AG_Widget:AG_GLView:*") )
+#define AG_cGLVIEW_NAMED(n) AGcGLVIEW( AG_cOBJECT_NAMED((n),"AG_Widget:AG_GLView:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agGLViewClass;

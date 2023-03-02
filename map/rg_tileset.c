@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,6 @@
 
 #include <agar/map/rg_tileset.h>
 #include <agar/map/rg_tileview.h>
-#include <agar/map/rg_texsel.h>
 #include <agar/map/rg_icons.h>
 #include <agar/map/rg_icons_data.h>
 
@@ -73,7 +72,6 @@ RG_InitSubsystem(void)
 
 	AG_RegisterNamespace("RG", "RG_", "https://libagar.org/");
 	AG_RegisterClass(&rgTileviewClass);
-	AG_RegisterClass(&rgTextureSelectorClass);
 	AG_RegisterClass(&rgTilesetClass);
 
 	rgIcon_Init();
@@ -86,7 +84,6 @@ RG_DestroySubsystem(void)
 		return;
 	}
 	AG_UnregisterClass(&rgTileviewClass);
-	AG_UnregisterClass(&rgTextureSelectorClass);
 	AG_UnregisterClass(&rgTilesetClass);
 	AG_UnregisterNamespace("RG");
 }
@@ -110,9 +107,6 @@ Init(void *_Nonnull obj)
 {
 	RG_Tileset *ts = obj;
 	AG_Surface *Sicon;
-
-	/* Restart the graphical editor on load. */
-	OBJECT(ts)->flags |= AG_OBJECT_REOPEN_ONLOAD;
 
 	AG_MutexInitRecursive(&ts->lock);
 	TAILQ_INIT(&ts->tiles);
@@ -532,21 +526,17 @@ RG_TilesetResvPixmap(void *vfsRoot, const char *tsname, const char *pxname)
 	RG_Pixmap *px;
 	RG_Tileset *ts;
 
-	if ((ts = AG_ObjectFindS(vfsRoot, tsname)) == NULL) {
-		AG_SetError("%s: no such tileset", tsname);
+	if ((ts = AG_ObjectFindS(vfsRoot, tsname)) == NULL ||
+	    !RG_TILESET_ISA(ts)) {
+		AG_SetErrorS(_("No such tileset."));
 		return (NULL);
 	}
-	if (!AG_OfClass(ts, "RG_Tileset:*")) {
-		AG_SetError("%s: not a tileset", tsname);
-		return (NULL);
-	}
-
 	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
 		if (strcmp(px->name, pxname) == 0)
 			break;
 	}
 	if (px == NULL) {
-		AG_SetError("%s has no `%s' pixmap", tsname, pxname);
+		AG_SetErrorS(_("No such pixmap."));
 	}
 	return (px);
 }
@@ -557,21 +547,17 @@ RG_TilesetResvTile(void *vfsRoot, const char *tsname, const char *tname)
 	RG_Tileset *ts;
 	RG_Tile *t;
 
-	if ((ts = AG_ObjectFindS(vfsRoot, tsname)) == NULL) {
-		AG_SetError("%s: no such tileset", tsname);
+	if ((ts = AG_ObjectFindS(vfsRoot, tsname)) == NULL ||
+	    !RG_TILESET_ISA(ts)) {
+		AG_SetErrorS(_("No such tileset."));
 		return (NULL);
 	}
-	if (!AG_OfClass(ts, "RG_Tileset:*")) {
-		AG_SetError("%s: not a tileset", tsname);
-		return (NULL);
-	}
-
 	TAILQ_FOREACH(t, &ts->tiles, tiles) {
 		if (strcmp(t->name, tname) == 0)
 			break;
 	}
 	if (t == NULL) {
-		AG_SetError("%s has no `%s' tile", tsname, tname);
+		AG_SetErrorS(_("No such tile."));
 	}
 	return (t);
 }

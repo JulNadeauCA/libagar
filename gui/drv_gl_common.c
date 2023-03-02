@@ -382,6 +382,7 @@ AG_GL_SurfaceType(const AG_Surface *S)
 	}
 }
 
+#ifdef ENABLE_GL_NO_NPOT
 static __inline__ int _Const_Attribute
 PowOf2i(int i)
 {
@@ -390,6 +391,7 @@ PowOf2i(int i)
 	while (val < i) { val <<= 1; }
 	return (val);
 }
+#endif
 
 /*
  * Create a hardware texture from the given AG_Surface.
@@ -520,7 +522,7 @@ AG_GL_BlitSurface(void *obj, AG_Widget *wid, AG_Surface *S, int x, int y)
 	AG_TexCoord tc;
 	GLuint texture;
 	
-	AG_OBJECT_ISA(obj, "AG_Driver:*");
+/*	AG_OBJECT_ISA(obj, "AG_Driver:*"); */
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	AGDRIVER_CLASS(drv)->uploadTexture(drv, &texture, S, &tc);
@@ -544,14 +546,25 @@ AG_GL_BlitSurface(void *obj, AG_Widget *wid, AG_Surface *S, int x, int y)
 static __inline__ void
 PrepareTexture(AG_Driver *_Nonnull drv, AG_Widget *_Nonnull wid, int name)
 {
+#ifdef AG_DEBUG
+	if (name < 0 || name >= wid->nSurfaces)
+		AG_FatalError("Bad surface ID");
+#endif
 	if (wid->textures[name] == 0) {
-		AGDRIVER_CLASS(drv)->uploadTexture(drv, &wid->textures[name],
-		    wid->surfaces[name], &wid->texcoords[name]);
+
+		AGDRIVER_CLASS(drv)->uploadTexture(drv,
+		    &wid->textures[name],
+		     wid->surfaces[name],
+		    &wid->texcoords[name]);
+
 	} else if (wid->surfaceFlags[name] & AG_WIDGET_SURFACE_REGEN) {
+
 		wid->surfaceFlags[name] &= ~(AG_WIDGET_SURFACE_REGEN);
 
-		AGDRIVER_CLASS(drv)->updateTexture(drv, wid->textures[name],
-		    wid->surfaces[name], &wid->texcoords[name]);
+		AGDRIVER_CLASS(drv)->updateTexture(drv,
+		     wid->textures[name],
+		     wid->surfaces[name],
+		    &wid->texcoords[name]);
 	}
 }
 
@@ -566,7 +579,7 @@ AG_GL_BlitSurfaceFrom(void *obj, AG_Widget *wid, int name, const AG_Rect *r,
 	AG_Driver *drv = obj;
 	const AG_Surface *S = wid->surfaces[name];
 	
-	AG_OBJECT_ISA(drv, "AG_Driver:*");
+/*	AG_OBJECT_ISA(drv, "AG_Driver:*"); */
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	PrepareTexture(drv, wid, name);
@@ -579,10 +592,17 @@ AG_GL_BlitSurfaceFrom(void *obj, AG_Widget *wid, int name, const AG_Rect *r,
 		AG_TexCoord tc;
 
 		if (r != NULL) {
+#ifdef ENABLE_GL_NO_NPOT
 			tc.x = (float)r->x / PowOf2i(r->x);
 			tc.y = (float)r->y / PowOf2i(r->y);
 			tc.w = (float)r->w / PowOf2i(r->w);
 			tc.h = (float)r->h / PowOf2i(r->h);
+#else
+			tc.x = (float)r->x;
+			tc.y = (float)r->y;
+			tc.w = (float)r->w;
+			tc.h = (float)r->h;
+#endif
 		} else {
 			tc = wid->texcoords[name];
 		}
@@ -606,7 +626,7 @@ AG_GL_BlitSurfaceGL(void *obj, AG_Widget *wid, AG_Surface *S, float w, float h)
 	AG_TexCoord tc;
 	GLuint name;
 	
-	AG_OBJECT_ISA(drv, "AG_Driver:*");
+/*	AG_OBJECT_ISA(drv, "AG_Driver:*"); */
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	AGDRIVER_CLASS(drv)->uploadTexture(drv, &name, S, &tc);
@@ -636,7 +656,7 @@ AG_GL_BlitSurfaceFromGL(void *obj, AG_Widget *wid, int name, float w, float h)
 {
 	AG_Driver *drv = obj;
 	
-	AG_OBJECT_ISA(obj, "AG_Driver:*");
+/*	AG_OBJECT_ISA(obj, "AG_Driver:*"); */
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	
 	PrepareTexture(drv, wid, name);
@@ -666,7 +686,7 @@ AG_GL_BlitSurfaceFlippedGL(void *obj, AG_Widget *wid, int name, float w, float h
 {
 	AG_Driver *drv = obj;
 	
-	AG_OBJECT_ISA(obj, "AG_Driver:*");
+/*	AG_OBJECT_ISA(obj, "AG_Driver:*"); */
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	
 	PrepareTexture(drv, wid, name);
@@ -775,7 +795,7 @@ AG_GL_RenderToSurface(void *obj, AG_Widget *wid, AG_Surface **S)
 	}
 	if (AGDRIVER_MULTIPLE(drv)) {
 		glReadPixels(wid->rView.x1,
-		    HEIGHT(AGDRIVER_MW(drv)->win) - wid->rView.y2,
+		    HEIGHT(AGDRIVERMW(drv)->win) - wid->rView.y2,
 		    w, h,
 		    GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	} else {
@@ -1424,7 +1444,7 @@ AG_GL_UpdateGlyph(void *obj, AG_Glyph *gl)
 {
 	AG_Driver *drv = (AG_Driver *)obj;
 
-	AG_OBJECT_ISA(drv, "AG_Driver:*");
+/*	AG_OBJECT_ISA(drv, "AG_Driver:*"); */
 
 	AGDRIVER_CLASS(drv)->uploadTexture(drv,
 	    &gl->texture, gl->su, &gl->texcoords);

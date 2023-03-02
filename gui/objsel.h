@@ -11,23 +11,22 @@
 typedef struct ag_object_selector {
 	struct ag_combo com;
 	Uint flags;
-#define AG_OBJSEL_PAGE_DATA	0x01
-#define AG_OBJSEL_PAGE_GFX	0x02
 	char type_mask[AG_OBJECT_HIER_MAX];
 	Uint32 _pad;
-	void *_Nullable pobj;			/* Pointer to the object */
-	void *_Nullable root;			/* Root of object's VFS */
-	void *_Nullable object;			/* Default "object" binding */
+	void *_Nullable pobj;     /* Pointer to the object */
+	void *_Nullable root;     /* Root of object's VFS */
+	void *_Nullable object;   /* Default "object" binding */
 } AG_ObjectSelector;
 
-#define AGOBJECTSELECTOR(obj)            ((AG_ObjectSelector *)(obj))
-#define AGCOBJECTSELECTOR(obj)           ((const AG_ObjectSelector *)(obj))
-#define AG_OBJECTSELECTOR_SELF()          AGOBJECTSELECTOR( AG_OBJECT(0,"AG_Widget:AG_Combo:AG_ObjectSelector:*") )
-#define AG_OBJECTSELECTOR_PTR(n)          AGOBJECTSELECTOR( AG_OBJECT((n),"AG_Widget:AG_Combo:AG_ObjectSelector:*") )
-#define AG_OBJECTSELECTOR_NAMED(n)        AGOBJECTSELECTOR( AG_OBJECT_NAMED((n),"AG_Widget:AG_Combo:AG_ObjectSelector:*") )
-#define AG_CONST_OBJECTSELECTOR_SELF()   AGCOBJECTSELECTOR( AG_CONST_OBJECT(0,"AG_Widget:AG_Combo:AG_ObjectSelector:*") )
-#define AG_CONST_OBJECTSELECTOR_PTR(n)   AGCOBJECTSELECTOR( AG_CONST_OBJECT((n),"AG_Widget:AG_Combo:AG_ObjectSelector:*") )
-#define AG_CONST_OBJECTSELECTOR_NAMED(n) AGCOBJECTSELECTOR( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Combo:AG_ObjectSelector:*") )
+#define   AGOBJECTSELECTOR(obj)      ((AG_ObjectSelector *)(obj))
+#define  AGcOBJECTSELECTOR(obj)      ((const AG_ObjectSelector *)(obj))
+#define  AG_OBJECTSELECTOR_ISA(o)    (((AGOBJECT(o)->cid & 0xffff0000) >> 16) == 0x0C01)
+#define  AG_OBJECTSELECTOR_SELF()    AGOBJECTSELECTOR(  AG_OBJECT(0,        "AG_Widget:AG_Combo:AG_ObjectSelector:*") )
+#define  AG_OBJECTSELECTOR_PTR(n)    AGOBJECTSELECTOR(  AG_OBJECT((n),      "AG_Widget:AG_Combo:AG_ObjectSelector:*") )
+#define  AG_OBJECTSELECTOR_NAMED(n)  AGOBJECTSELECTOR(  AG_OBJECT_NAMED((n),"AG_Widget:AG_Combo:AG_ObjectSelector:*") )
+#define AG_cOBJECTSELECTOR_SELF()   AGCOBJECTSELECTOR( AG_cOBJECT(0,        "AG_Widget:AG_Combo:AG_ObjectSelector:*") )
+#define AG_cOBJECTSELECTOR_PTR(n)   AGCOBJECTSELECTOR( AG_cOBJECT((n),      "AG_Widget:AG_Combo:AG_ObjectSelector:*") )
+#define AG_cOBJECTSELECTOR_NAMED(n) AGCOBJECTSELECTOR( AG_cOBJECT_NAMED((n),"AG_Widget:AG_Combo:AG_ObjectSelector:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agObjectSelectorClass;

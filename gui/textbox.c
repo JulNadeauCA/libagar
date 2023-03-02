@@ -742,7 +742,7 @@ AG_WidgetClass agTextboxClass = {
 	{
 		"Agar(Widget:Textbox)",
 		sizeof(AG_Textbox),
-		{ 0,0 },
+		{ 1,0, AGC_TEXTBOX, 0xE031 },
 		Init,
 		NULL,		/* reset */
 		Destroy,

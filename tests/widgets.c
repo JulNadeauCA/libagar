@@ -24,7 +24,7 @@ typedef struct {
 static void
 ComboSelectedItem(AG_Event *event)
 {
-	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(1);
+	AG_TlistItem *ti = AG_TLISTITEM_PTR(1);
 
 	AG_TextTmsg(AG_MSG_INFO, 1000,
 	    "Selected item: [ " AGSI_ITALIC "%s" AGSI_RST " ]", ti->text);

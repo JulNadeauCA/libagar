@@ -3,7 +3,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agarsg.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 January 09
+" Last Change:  2023 February 27
 
 if !exists("c_no_agar_sg") || exists("c_agar_sg_typedefs")
   " sg/sg.h
@@ -54,13 +54,6 @@ if !exists("c_no_agar_sg") || exists("c_agar_sg_typedefs")
   syn keyword cConstant SG_EDGE_SELECTED SG_EDGE_HIGHLIGHTED SG_FACET_SELECTED
   syn keyword cConstant SG_FACET_HIGHLIGHTED SG_OBJECT_STATIC SG_OBJECT_NODUPVERTEX
   syn keyword cConstant SG_EXTRUDE_REGION SG_EXTRUDE_EDGES SG_EXTRUDE_VERTICES
-  " sg/sg_palette.h
-  syn keyword cType SG_Pigment SG_Mixture SG_Palette
-  syn keyword cConstant SG_PALETTE_PIGMENTS_MAX
-  " sg/sg_palette_view.h
-  syn keyword cType SG_PaletteView
-  syn keyword cConstant SG_PALETTE_VIEW_HFILL SG_PALETTE_VIEW_VFILL
-  syn keyword cConstant SG_PALETTE_VIEW_EXPAND
   " sg/sg_plane.h
   syn keyword cType SG_Plane
   " sg/sg_point.h
@@ -96,7 +89,7 @@ if !exists("c_no_agar_sg") || exists("c_agar_sg_typedefs")
   syn keyword cConstant SG_VIEW_EXPAND SG_VIEW_NO_LIGHTING SG_VIEW_NO_DEPTH_TEST
   syn keyword cConstant SG_VIEW_UPDATE_PROJ SG_VIEW_PANNING SG_VIEW_CAMERA_STATUS
   syn keyword cConstant SG_VIEW_EDIT SG_VIEW_EDIT_STATUS SG_VIEW_MOVING
-  syn keyword cConstant SG_VIEW_ROTATING SG_VIEW_TRANSFADE
+  syn keyword cConstant SG_VIEW_ROTATING SG_VIEW_TRANSFADE SG_VIEW_GRABBED_MOUSE
   " sg/sg_voxel.h
   syn keyword cType SG_Voxel
   " sg/sg_widget.h

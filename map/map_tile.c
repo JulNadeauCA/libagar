@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2021-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -62,11 +62,6 @@ MAP_TileSet(MAP_Tile *mt, MAP *map, RG_Tileset *ts, Uint id)
 {
 	RG_Tile *tile;
 
-	if (mt->obj != ts && mt->obj != NULL) {
-		MAP_PageOut(map, "TS-", mt->obj);
-	} else {
-		MAP_PageIn(map, "TS-", ts);
-	}
 	mt->obj = ts;
 	mt->id = id;
 	mt->rs.x = 0;
@@ -110,8 +105,8 @@ Load(MAP *map, void *mi, AG_DataSource *ds)
 	AG_CopyString(tsName, ds, sizeof(tsName));
 	mt->id = (Uint)AG_ReadUint32(ds);
 	mt->obj = AG_ObjectFindChild(OBJECT(map)->root, tsName);
-	if (mt->obj == NULL || !AG_OfClass(mt->obj, "RG_Tileset:*")) {
-		AG_SetError("No such tileset \"%s\"", tsName);
+	if (mt->obj == NULL || !RG_TILESET_ISA(mt->obj)) {
+		AG_SetErrorS(_("No such tileset."));
 		mt->id = 0;
 		mt->obj = NULL;
 		return (-1);

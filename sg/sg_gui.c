@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2010-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -45,19 +45,16 @@ const char *sgEditableClasses[] = {
 	"SG:*",
 	"SG_Script:*",
 	"SG_Texture:*",
-	"SG_Palette:*",
 	NULL
 };
 
-/*
- * Display "Save changes?" dialog on exit.
- */
+/* Save (or discard) the object and exit. */
 static void
 CloseObject(AG_Event *_Nonnull event)
 {
 	AG_Window *wMain = AG_WINDOW_PTR(1);
 	AG_Object *obj = AG_OBJECT_PTR(2);
-	const int save = AG_INT(3);
+	const int save = AG_INT(3);           /* 0 = Discard */
 	AG_Event ev;
 
 	if (save) {
@@ -79,46 +76,13 @@ CloseObject(AG_Event *_Nonnull event)
 		AG_Terminate(0);
 }
 
-static AG_Window *
-SG_GUI_PromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
-{
-	char *text;
-	AG_Window *win;
-	AG_Box *bo;
-	va_list ap;
-	Uint i;
-
-	va_start(ap, fmt);
-	Vasprintf(&text, fmt, ap);
-	va_end(ap);
-
-	if ((win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NOTITLE |
-	                        AG_WINDOW_NORESIZE)) == NULL) {
-		AG_FatalError(NULL);
-	}
-	win->wmType = AG_WINDOW_WM_DIALOG;
-	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
-	AG_SetSpacing(win, "8");
-
-	AG_LabelNewS(win, 0, text);
-	free(text);
-
-	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS | AG_BOX_HFILL);
-	for (i = 0; i < nbOpts; i++) {
-		bOpts[i] = AG_ButtonNewS(bo, 0, "XXXXXXXXXXX");
-	}
-	AG_WindowShow(win);
-	return (win);
-}
-
 static void
 WindowClose(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_WINDOW_SELF();
 	AG_Object *obj = AG_OBJECT_PTR(1);
 	AG_Event ev;
-	AG_Button *bOpts[3];
-	AG_Window *wDlg, *wOther;
+	AG_Window *wOther;
 
 	TAILQ_FOREACH(wOther, &sgEditorWindows, user) {
 		if (wOther != win &&
@@ -127,25 +91,49 @@ WindowClose(AG_Event *_Nonnull event)
 	}
 	if (wOther == NULL &&		/* Last editor window for this object */
 	    AG_ObjectChanged(obj)) {
-		wDlg = SG_GUI_PromptOptions(bOpts, 3, _("Save changes to %s?"),
-		    OBJECT(obj)->name);
+		AG_Window *wDlg;
+		AG_Label *lbl;
+		AG_Button *btn;
+		AG_Box *box;
+
+		if ((wDlg = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NOTITLE |
+		                         AG_WINDOW_NORESIZE)) == NULL) {
+			goto out;
+		}
+		wDlg->wmType = AG_WINDOW_WM_DIALOG;
+		AG_WindowSetCaptionS(wDlg, _("Save changes before closing?"));
+		AG_WindowSetPosition(wDlg, AG_WINDOW_CENTER, 0);
+
+		lbl = AG_LabelNew(wDlg, 0,
+		    _("Save changes to " AGSI_BOLD "%s" AGSI_RST " ?"), obj->name);
+		AG_SetFontSize(lbl, "110%");
+		AG_SetPadding(lbl, "10");
+
+		box = AG_BoxNewHoriz(wDlg, 0);
+		AG_SetPadding(box, "5");
+		{
+			AG_ButtonNewFn(box, AG_BUTTON_VFILL,
+			    _("Save As"),
+			    CloseObject, "%p,%p,%i", win, obj, 1);
+
+			btn = AG_ButtonNewFn(box, AG_BUTTON_VFILL,
+			    _("Cancel"),
+			    AGWINDETACH(wDlg));
+
+			AG_WidgetFocus(btn);
+
+			AG_ButtonNewFn(box, AG_BUTTON_VFILL,
+			    _("Discard Changes"),
+			    CloseObject, "%p,%p,%i", win, obj, 0);
+		}
+
 		AG_WindowAttach(win, wDlg);
-
-		AG_ButtonText(bOpts[0], _("Save"));
-		AG_SetEvent(bOpts[0], "button-pushed",
-		    CloseObject, "%p,%p,%i", win, obj, 1);
-		AG_WidgetFocus(bOpts[0]);
-
-		AG_ButtonText(bOpts[1], _("Discard"));
-		AG_SetEvent(bOpts[1], "button-pushed",
-		    CloseObject, "%p,%p,%i", win, obj, 0);
-
-		AG_ButtonText(bOpts[2], _("Cancel"));
-		AG_SetEvent(bOpts[2], "button-pushed", AGWINDETACH(wDlg));
-	} else {
-		AG_EventArgs(&ev, "%p,%p,%i", win, obj, 0);
-		CloseObject(&ev);
+		AG_WindowShow(wDlg);
+		return;
 	}
+out:
+	AG_EventArgs(&ev, "%p,%p,%i", win, obj, 0);
+	CloseObject(&ev);
 }
 
 /* Open a Agar-SG object for edition. */
@@ -161,11 +149,11 @@ SG_GUI_OpenObject(void *p)
 		AG_SetError("%s no edit()", obj->cls->name);
 		return (NULL);
 	}
-	if (AG_OfClass(wEdit, "AG_Widget:AG_Window:*")) {
+	if (AG_WINDOW_ISA(wEdit)) {
 		Debug(NULL, "SG_GUI: %s->edit() returned Window %s\n", obj->name,
 		    wEdit ? OBJECT(wEdit)->name : "NULL");
 		win = (AG_Window *)wEdit;
-	} else if (AG_OfClass(wEdit, "AG_Widget:*")) {
+	} else if (AG_WIDGET_ISA(wEdit)) {
 		Debug(NULL, "SG_GUI: %s->edit() returned Widget %s\n", obj->name,
 		    wEdit ? OBJECT(wEdit)->name : "NULL");
 		if ((win = AG_WindowNew(AG_WINDOW_MAIN)) == NULL) {
@@ -330,7 +318,10 @@ SG_GUI_SaveAsDlg(AG_Event *event)
 
 	fd = AG_FileDlgNew(win, AG_FILEDLG_SAVE | AG_FILEDLG_CLOSEWIN |
 	                        AG_FILEDLG_EXPAND);
-	AG_FileDlgSetOptionContainer(fd, AG_BoxNewVert(win, AG_BOX_HFILL));
+
+	AG_FileDlgSetOptionContainer(fd,
+	    AG_BoxNewVert(win, AG_BOX_HFILL));
+
 	AG_ConfigGetPath(AG_CONFIG_PATH_DATA, 0, defDir, sizeof(defDir));
 	AG_FileDlgSetDirectoryMRU(fd, "agar-sg.mru.files", defDir);
 	
@@ -606,7 +597,6 @@ SG_InitGUI(void)
 {
 	if (agGUI) {
 		AG_RegisterClass(&sgViewClass);
-		AG_RegisterClass(&sgPaletteViewClass);
 		sgIcon_Init();
 	}
 	AG_ObjectInit(&sgVfsRoot, NULL);
@@ -621,7 +611,6 @@ SG_DestroyGUI(void)
 {
 	if (agGUI) {
 		AG_UnregisterClass(&sgViewClass);
-		AG_UnregisterClass(&sgPaletteViewClass);
 	}
 	AG_ObjectDestroy(&sgVfsRoot);
 }

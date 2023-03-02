@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@ Init(void *_Nonnull obj)
 AG_ObjectClass agDriverMwClass = {
 	"AG_Driver:AG_DriverMw",
 	sizeof(AG_DriverMw),
-	{ 1,4 },
+	{ 1,7, AGC_DRIVER_MW, 0xE039 },
 	Init,
 	NULL,		/* reset */
 	NULL,		/* destroy */

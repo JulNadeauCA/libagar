@@ -282,17 +282,19 @@ typedef struct ag_widget {
 
 typedef AG_VEC_HEAD(AG_Widget *) AG_WidgetVec;
 
-#define AGWIDGET(p)             ((AG_Widget *)(p))
-#define AGCWIDGET(p)            ((const AG_Widget *)(p))
-#define AG_WIDGET_SELF()          AGWIDGET( AG_OBJECT(0,"AG_Widget:*") )
-#define AG_WIDGET_PTR(n)          AGWIDGET( AG_OBJECT((n),"AG_Widget:*") )
-#define AG_WIDGET_NAMED(n)        AGWIDGET( AG_OBJECT_NAMED((n),"AG_Widget:*") )
-#define AG_CONST_WIDGET_SELF()   AGCWIDGET( AG_CONST_OBJECT(0,"AG_Widget:*") )
-#define AG_CONST_WIDGET_PTR(n)   AGCWIDGET( AG_CONST_OBJECT((n),"AG_Widget:*") )
-#define AG_CONST_WIDGET_NAMED(n) AGCWIDGET( AG_CONST_OBJECT((n),"AG_Widget:*") )
+#define   AGWIDGET(o)     ((AG_Widget *)(o))
+#define  AGcWIDGET(o)     ((const AG_Widget *)(o))
+#define  AG_WIDGET_ISA(o) (((AGOBJECT(o)->cid & 0xff000000) >> 24) >= 0x08 && \
+                           ((AGOBJECT(o)->cid & 0xff000000) >> 24) <= 0x35)
+#define  AG_WIDGET_SELF()    AGWIDGET(  AG_OBJECT(0,         "AG_Widget:*") )
+#define  AG_WIDGET_PTR(n)    AGWIDGET(  AG_OBJECT((n),       "AG_Widget:*") )
+#define  AG_WIDGET_NAMED(n)  AGWIDGET(  AG_OBJECT_NAMED((n), "AG_Widget:*") )
+#define AG_cWIDGET_SELF()   AGcWIDGET( AG_cOBJECT(0,         "AG_Widget:*") )
+#define AG_cWIDGET_PTR(n)   AGcWIDGET( AG_cOBJECT((n),       "AG_Widget:*") )
+#define AG_cWIDGET_NAMED(n) AGcWIDGET( AG_cOBJECT((n),       "AG_Widget:*") )
 
-#define AGWIDGET_OPS(wi)          ((AG_WidgetClass *)AGOBJECT(wi)->cls)
-#define AGWIDGET_SUPER_OPS(wi)    ((AG_WidgetClass *)AGOBJECT(wi)->cls->super)
+#define AGWIDGET_OPS(wi)       ((AG_WidgetClass *)AGOBJECT(wi)->cls)
+#define AGWIDGET_SUPER_OPS(wi) ((AG_WidgetClass *)AGOBJECT(wi)->cls->super)
 
 #define AGWIDGET_SURFACE(wi, ind) AGWIDGET(wi)->surfaces[ind]
 #define AGWIDGET_TEXTURE(wi, ind) AGWIDGET(wi)->textures[ind]
@@ -386,7 +388,7 @@ void AG_WidgetHideAll(void *_Nonnull);
 AG_Surface *_Nullable AG_WidgetSurface(void *_Nonnull);
 
 void AG_RedrawOnChange(void *_Nonnull, int, const char *_Nonnull);
-void AG_RedrawOnTick(void *_Nonnull, int);
+int  AG_RedrawOnTick(void *_Nonnull, int);
 
 void AG_WidgetStdKeyDown(AG_Event *_Nonnull);
 void AG_WidgetStdKeyUp(AG_Event *_Nonnull);

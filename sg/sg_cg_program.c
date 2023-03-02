@@ -105,7 +105,7 @@ ViewProgramText(AG_Event *_Nonnull event)
 {
 	SG_CgProgram *prog = AG_PTR(1);
 	AG_Textbox *tbox = AG_TEXTBOX_PTR(2);
-	AG_TlistItem *it = AG_TLIST_ITEM_PTR(3);
+	AG_TlistItem *it = AG_TLISTITEM_PTR(3);
 	CGprogram cgp = (CGprogram)it->p1;
 	const char *s;
 

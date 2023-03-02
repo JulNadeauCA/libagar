@@ -24,7 +24,7 @@ SRCS=	sg.c sg_node.c sg_view.c sg_camera.c sg_gui.c sg_edit.c sg_dummy.c \
 	sg_voxel.c sg_program.c sg_load_ply.c sg_image.c sg_script.c \
 	sg_line.c sg_geom.c sg_circle.c sg_polygon.c sg_triangle.c \
 	sg_rectangle.c sg_sphere.c sg_polyball.c sg_polybox.c sg_action.c \
-	sg_widget.c sg_palette.c sg_palette_view.c
+	sg_widget.c
 
 #SRCS+=	sg_cg_program.c
 

@@ -20,11 +20,11 @@ typedef struct ag_socket {
 	int state;			/* Default boolean state binding */
 	int count;			/* Default stack count binding */
 	Uint flags;
-#define AG_SOCKET_HFILL		0x01	/* Fill available width */
-#define AG_SOCKET_VFILL		0x02	/* Fill available height */
-#define AG_SOCKET_EXPAND	(AG_SOCKET_HFILL|AG_SOCKET_VFILL)
-#define AG_SOCKET_MOUSEOVER	0x04
-#define AG_SOCKET_STICKY_STATE	0x08
+#define AG_SOCKET_HFILL        0x01	/* Fill available width */
+#define AG_SOCKET_VFILL        0x02	/* Fill available height */
+#define AG_SOCKET_EXPAND       (AG_SOCKET_HFILL | AG_SOCKET_VFILL)
+#define AG_SOCKET_MOUSEOVER    0x04
+#define AG_SOCKET_STICKY_STATE 0x08
 	enum ag_socket_bg_type bgType;
 	union {
 		struct {
@@ -51,14 +51,15 @@ typedef struct ag_socket {
 	AG_Event *_Nullable overlayFn;	/* Rendering overlay callback */
 } AG_Socket;
 
-#define AGSOCKET(obj)            ((AG_Socket *)(obj))
-#define AGCSOCKET(obj)           ((const AG_Socket *)(obj))
-#define AG_SOCKET_SELF()          AGSOCKET( AG_OBJECT(0,"AG_Widget:AG_Socket:*") )
-#define AG_SOCKET_PTR(n)          AGSOCKET( AG_OBJECT((n),"AG_Widget:AG_Socket:*") )
-#define AG_SOCKET_NAMED(n)        AGSOCKET( AG_OBJECT_NAMED((n),"AG_Widget:AG_Socket:*") )
-#define AG_CONST_SOCKET_SELF()   AGCSOCKET( AG_CONST_OBJECT(0,"AG_Widget:AG_Socket:*") )
-#define AG_CONST_SOCKET_PTR(n)   AGCSOCKET( AG_CONST_OBJECT((n),"AG_Widget:AG_Socket:*") )
-#define AG_CONST_SOCKET_NAMED(n) AGCSOCKET( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Socket:*") )
+#define   AGSOCKET(o)        ((AG_Socket *)(o))
+#define  AGcSOCKET(o)        ((const AG_Socket *)(o))
+#define  AG_SOCKET_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x24)
+#define  AG_SOCKET_SELF()    AGSOCKET(  AG_OBJECT(0,        "AG_Widget:AG_Socket:*") )
+#define  AG_SOCKET_PTR(n)    AGSOCKET(  AG_OBJECT((n),      "AG_Widget:AG_Socket:*") )
+#define  AG_SOCKET_NAMED(n)  AGSOCKET(  AG_OBJECT_NAMED((n),"AG_Widget:AG_Socket:*") )
+#define AG_cSOCKET_SELF()   AGcSOCKET( AG_cOBJECT(0,        "AG_Widget:AG_Socket:*") )
+#define AG_cSOCKET_PTR(n)   AGcSOCKET( AG_cOBJECT((n),      "AG_Widget:AG_Socket:*") )
+#define AG_cSOCKET_NAMED(n) AGcSOCKET( AG_cOBJECT_NAMED((n),"AG_Widget:AG_Socket:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agSocketClass;

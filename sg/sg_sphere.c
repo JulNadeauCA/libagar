@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2011-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -192,7 +192,7 @@ SG_NodeClass sgSphereClass = {
 	{
 		"SG_Node:SG_Geom:SG_Sphere",
 		sizeof(SG_Sphere),
-		{ 0,0 },
+		{ 1,0, AGC_SG_SPHERE, 0xE027 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

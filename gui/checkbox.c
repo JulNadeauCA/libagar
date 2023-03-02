@@ -632,7 +632,7 @@ AG_WidgetClass agCheckboxClass = {
 	{
 		"Agar(Widget:Checkbox)",
 		sizeof(AG_Checkbox),
-		{ 0,0 },
+		{ 1,0, AGC_CHECKBOX, 0xE015 },
 		Init,
 		NULL,		/* reset */
 		Destroy,

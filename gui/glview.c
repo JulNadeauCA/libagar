@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -369,7 +369,7 @@ Draw(void *_Nonnull obj)
 	}
 
 	if (AGDRIVER_SINGLE(drv)) {
-		hView = AGDRIVER_SW(drv)->h;
+		hView = AGDRIVERSW(drv)->h;
 	} else {
 		hView = HEIGHT(WIDGET(glv)->window);
 	}
@@ -450,7 +450,7 @@ AG_WidgetClass agGLViewClass = {
 	{
 		"Agar(Widget:GLView)",
 		sizeof(AG_GLView),
-		{ 0,0 },
+		{ 1,0, AGC_GLVIEW, 0xE01D },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

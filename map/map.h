@@ -216,16 +216,17 @@ typedef struct map {
 	AG_Object *_Nullable pMaps;		/* Maps container object */
 } MAP;
 
-#define MAPMAP(obj)        ((MAP *)(obj))
-#define MAPCMAP(obj)       ((const MAP *)(obj))
-#define MAP_SELF()          MAPMAP( AG_OBJECT(0,"MAP:*") )
-#define MAP_PTR(n)          MAPMAP( AG_OBJECT((n),"MAP:*") )
-#define MAP_NAMED(n)        MAPMAP( AG_OBJECT_NAMED((n),"MAP:*") )
-#define MAP_CONST_SELF()   MAPCMAP( AG_CONST_OBJECT(0,"MAP:*") )
-#define MAP_CONST_PTR(n)   MAPCMAP( AG_CONST_OBJECT((n),"MAP:*") )
-#define MAP_CONST_NAMED(n) MAPCMAP( AG_CONST_OBJECT_NAMED((n),"MAP:*") )
+#define  MAPMAP(o)     ((MAP *)(o))
+#define MAPcMAP(o)     ((const MAP *)(o))
+#define MAP_ISA(o)     (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x72)
+#define MAP_SELF()     MAPMAP(  AG_OBJECT(0,         "MAP:*") )
+#define MAP_PTR(n)     MAPMAP(  AG_OBJECT((n),       "MAP:*") )
+#define MAP_NAMED(n)   MAPMAP(  AG_OBJECT_NAMED((n), "MAP:*") )
+#define MAP_cSELF()   MAPcMAP( AG_cOBJECT(0,         "MAP:*") )
+#define MAP_cPTR(n)   MAPcMAP( AG_cOBJECT((n),       "MAP:*") )
+#define MAP_cNAMED(n) MAPcMAP( AG_cOBJECT_NAMED((n), "MAP:*") )
 
-#define MAPITEM(mi)       ((MAP_Item *)(mi))
+#define MAPITEM(mi) ((MAP_Item *)(mi))
 
 __BEGIN_DECLS
 extern AG_ObjectClass mapClass;
@@ -266,9 +267,6 @@ void MAP_ItemDestroy(MAP *_Nonnull, MAP_Item *_Nonnull);
 int  MAP_ItemLoad(MAP *_Nonnull, MAP_Node *_Nonnull, AG_DataSource *_Nonnull);
 void MAP_ItemSave(MAP *_Nonnull, MAP_Item *_Nonnull, AG_DataSource *_Nonnull);
 int  MAP_ItemExtent(MAP *_Nonnull, const MAP_Item *_Nonnull, AG_Rect *_Nonnull, int);
-
-void MAP_PageIn(MAP *_Nonnull, const char *_Nonnull, void *_Nonnull);
-void MAP_PageOut(MAP *_Nonnull, const char *_Nonnull, void *_Nonnull);
 
 void MAP_ItemAttrColor(Uint, int, AG_Color *_Nonnull);
 

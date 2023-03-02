@@ -5,7 +5,8 @@ typedef struct sg_polygon {
 	M_Polygon P;
 } SG_Polygon;
 
-#define SGPOLYGON(n) ((SG_Polygon *)(n))
+#define SG_POLYGON_ISA(o) (((AGOBJECT(o)->cid & 0xffffff00) >> 8) == 0x7A0407)
+#define SGPOLYGON(n)      ((SG_Polygon *)(n))
 
 __BEGIN_DECLS
 extern SG_NodeClass sgPolygonClass;

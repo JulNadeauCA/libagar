@@ -75,7 +75,7 @@ SG_NodeClass sgCircleClass = {
 	{
 		"SG_Node:SG_Geom:SG_Circle",
 		sizeof(SG_Circle),
-		{ 0,0 },
+		{ 1,0, AGC_SG_CIRCLE, 0xE029 },
 		NULL,		/* init */
 		NULL,		/* reset */
 		NULL,		/* destroy */

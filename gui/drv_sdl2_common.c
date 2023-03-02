@@ -833,9 +833,9 @@ AG_SDL_GetWindowFromID(AG_Driver *drv, Uint32 windowID)
 		    dmw->windowID != windowID) {
 			continue;
 		}
-		win = AGDRIVER_MW(dmw)->win;
+		win = AGDRIVERMW(dmw)->win;
 
-		if (!(AGDRIVER_MW(dmw)->flags & AG_DRIVER_MW_OPEN) ||
+		if (!(AGDRIVERMW(dmw)->flags & AG_DRIVER_MW_OPEN) ||
 		    (win->flags & AG_WINDOW_DETACHING) ||
 		    WIDGET(win)->drv == NULL ||
 		    ((void *)win == (void *)&agDrivers)) {           /* XXX */
@@ -1639,7 +1639,7 @@ AG_SDL2_JoystickRemoved(void *drv, int instanceID)
 	SDL_LockJoysticks();
 
 	AGOBJECT_FOREACH_CHILD(idev, &agInputDevices, ag_input_device) {
-		if (!AG_OfClass(idev, "AG_InputDevice:AG_Joystick:*")) {
+		if (!AG_JOYSTICK_ISA(idev)) {
 			continue;
 		}
 		joy = AGJOYSTICK(idev);

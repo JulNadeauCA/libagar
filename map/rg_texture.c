@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -106,9 +106,8 @@ find_tilesets(AG_Tlist *_Nonnull tl, AG_Object *_Nonnull pob, int depth)
 	AG_Object *cob;
 	AG_TlistItem *it;
 	
-	if (AG_OfClass(pob, "RG_Tileset:*")) {
-		it = AG_TlistAdd(tl, AG_ObjectIcon(pob), "%s%s", pob->name,
-		    OBJECT_RESIDENT(pob) ? _(" (resident)") : "");
+	if (RG_TILESET_ISA(pob)) {
+		it = AG_TlistAddS(tl, AG_ObjectIcon(pob), pob->name);
 		it->p1 = pob;
 	}
 	TAILQ_FOREACH(cob, &pob->children, cobjs)
@@ -141,7 +140,7 @@ PollSourceTiles(AG_Event *_Nonnull event)
 	AG_TlistClear(tl);
 	if (tex->tileset[0] != '\0' &&
 	    (ts = AG_ObjectFindS(vfsRoot, tex->tileset)) != NULL &&
-	    AG_OfClass(ts, "RG_Tileset:*")) {
+	    RG_TILESET_ISA(ts)) {
 		TAILQ_FOREACH(t, &ts->tiles, tiles) {
 			it = AG_TlistAddS(tl, NULL, t->name);
 			it->p1 = t;
@@ -155,7 +154,7 @@ static void
 SelectTileset(AG_Event *_Nonnull event)
 {
 	RG_Texture *tex = AG_PTR(1);
-	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	AG_TlistItem *it = AG_TLISTITEM_PTR(2);
 	RG_Tileset *ts = it->p1;
 
 	AG_ObjectCopyName(ts, tex->tileset, sizeof(tex->tileset));
@@ -166,7 +165,7 @@ static void
 SelectSourceTile(AG_Event *_Nonnull event)
 {
 	RG_Texture *tex = AG_PTR(1);
-	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	AG_TlistItem *it = AG_TLISTITEM_PTR(2);
 	RG_Tile *t = it->p1;
 
 	Strlcpy(tex->tile, t->name, sizeof(tex->tile));

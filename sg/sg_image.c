@@ -2004,7 +2004,7 @@ SG_NodeClass sgImageClass = {
 	{
 		"SG_Node:SG_Image",
 		sizeof(SG_Image),
-		{ 0,0 },
+		{ 1,0, AGC_SG_IMAGE, 0xE01E },
 		Init,
 		Reset,
 		Destroy,

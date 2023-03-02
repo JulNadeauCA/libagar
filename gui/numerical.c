@@ -76,10 +76,8 @@ ComboExpanded(AG_Event *_Nonnull event)
 	const int wPadding = 8;				/* TODO style */
 	const int hPadding = 2;
 
-#ifdef AG_TYPE_SAFETY
-	if (!AG_OBJECT_VALID(tl) || !AG_OfClass(tl, "AG_Widget:AG_Tlist:*"))
-		AG_FatalError("Invalid tlist");
-#endif
+	if (!AG_OBJECT_VALID(tl) || !AG_TLIST_ISA(tl))
+		return;
 
 /*	AG_TlistDeselectAll(tl); */
 /*	AG_TlistBegin(tl); */
@@ -124,7 +122,7 @@ static void
 ComboSelected(AG_Event *_Nonnull event)
 {
 	AG_Numerical *num = AG_NUMERICAL_PTR(1);
-	const AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
+	const AG_TlistItem *ti = AG_TLISTITEM_PTR(2);
 
 	AG_ObjectLock(num);
 
@@ -1069,7 +1067,7 @@ AG_WidgetClass agNumericalClass = {
 	{
 		"Agar(Widget:Numerical)",
 		sizeof(AG_Numerical),
-		{ 0,0 },
+		{ 1,0, AGC_NUMERICAL, 0xE031 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

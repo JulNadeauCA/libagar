@@ -8,30 +8,31 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_pixmap {
-	struct ag_widget wid;	/* AG_Widget -> AG_Pixmap */
+	struct ag_widget wid;      /* AG_Widget -> AG_Pixmap */
 	Uint flags;
-#define AG_PIXMAP_HFILL		0x01
-#define AG_PIXMAP_VFILL		0x02
-#define AG_PIXMAP_FORCE_SIZE	0x04	/* Always override image size */
-#define AG_PIXMAP_RESCALE	0x08	/* Scale image to fit widget */
-#define AG_PIXMAP_UPDATE	0x10	/* Scaled copy needs updating */
-#define AG_PIXMAP_EXPAND (AG_PIXMAP_HFILL|AG_PIXMAP_VFILL)
+#define AG_PIXMAP_HFILL      0x01
+#define AG_PIXMAP_VFILL      0x02
+#define AG_PIXMAP_FORCE_SIZE 0x04  /* Always override image size */
+#define AG_PIXMAP_RESCALE    0x08  /* Scale image to fit widget */
+#define AG_PIXMAP_UPDATE     0x10  /* Scaled copy needs updating */
+#define AG_PIXMAP_EXPAND (AG_PIXMAP_HFILL | AG_PIXMAP_VFILL)
 
-	int n;			/* Current surface (or -1) */
-	int s, t;		/* Source coordinates */
-	int wPre, hPre;		/* Size hint */
-	int sScaled;		/* Scaled surface (for RESCALE) */
+	int n;                     /* Current surface (or -1) */
+	int s, t;                  /* Source coordinates */
+	int wPre, hPre;            /* Size hint */
+	int sScaled;               /* Scaled surface (for RESCALE) */
 	Uint32 _pad;
 } AG_Pixmap;
 
-#define AGPIXMAP(p)              ((AG_Pixmap *)(p))
-#define AGCPIXMAP(p)             ((const AG_Pixmap *)(p))
-#define AG_PIXMAP_SELF()          AGPIXMAP( AG_OBJECT(0,"AG_Widget:AG_Pixmap:*") )
-#define AG_PIXMAP_PTR(n)          AGPIXMAP( AG_OBJECT((n),"AG_Widget:AG_Pixmap:*") )
-#define AG_PIXMAP_NAMED(n)        AGPIXMAP( AG_OBJECT_NAMED((n),"AG_Widget:AG_Pixmap:*") )
-#define AG_CONST_PIXMAP_SELF()   AGCPIXMAP( AG_CONST_OBJECT(0,"AG_Widget:AG_Pixmap:*") )
-#define AG_CONST_PIXMAP_PTR(n)   AGCPIXMAP( AG_CONST_OBJECT((n),"AG_Widget:AG_Pixmap:*") )
-#define AG_CONST_PIXMAP_NAMED(n) AGCPIXMAP( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Pixmap:*") )
+#define   AGPIXMAP(o)        ((AG_Pixmap *)(o))
+#define  AGcPIXMAP(o)        ((const AG_Pixmap *)(o))
+#define  AG_PIXMAP_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x1D)
+#define  AG_PIXMAP_SELF()    AGPIXMAP(  AG_OBJECT(0,         "AG_Widget:AG_Pixmap:*") )
+#define  AG_PIXMAP_PTR(n)    AGPIXMAP(  AG_OBJECT((n),       "AG_Widget:AG_Pixmap:*") )
+#define  AG_PIXMAP_NAMED(n)  AGPIXMAP(  AG_OBJECT_NAMED((n), "AG_Widget:AG_Pixmap:*") )
+#define AG_cPIXMAP_SELF()   AGcPIXMAP( AG_cOBJECT(0,         "AG_Widget:AG_Pixmap:*") )
+#define AG_cPIXMAP_PTR(n)   AGcPIXMAP( AG_cOBJECT((n),       "AG_Widget:AG_Pixmap:*") )
+#define AG_cPIXMAP_NAMED(n) AGcPIXMAP( AG_cOBJECT_NAMED((n), "AG_Widget:AG_Pixmap:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agPixmapClass;

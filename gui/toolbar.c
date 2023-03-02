@@ -317,7 +317,7 @@ AG_WidgetClass agToolbarClass = {
 	{
 		"Agar(Widget:Box:Toolbar)",
 		sizeof(AG_Toolbar),
-		{ 0,0 },
+		{ 1,0, AGC_TOOLBAR, 0 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

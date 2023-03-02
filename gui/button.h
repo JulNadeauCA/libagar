@@ -47,14 +47,15 @@ typedef struct ag_button {
 	AG_ButtonRepeat *_Nullable repeat; /* Context for REPEAT mode */
 } AG_Button;
 
-#define AGBUTTON(obj)            ((AG_Button *)(obj))
-#define AGCBUTTON(obj)           ((const AG_Button *)(obj))
-#define AG_BUTTON_SELF()          AGBUTTON( AG_OBJECT(0,"AG_Widget:AG_Button:*") )
-#define AG_BUTTON_PTR(n)          AGBUTTON( AG_OBJECT((n),"AG_Widget:AG_Button:*") )
-#define AG_BUTTON_NAMED(n)        AGBUTTON( AG_OBJECT_NAMED((n),"AG_Widget:AG_Button:*") )
-#define AG_CONST_BUTTON_SELF()   AGCBUTTON( AG_CONST_OBJECT(0,"AG_Widget:AG_Button:*") )
-#define AG_CONST_BUTTON_PTR(n)   AGCBUTTON( AG_CONST_OBJECT((n),"AG_Widget:AG_Button:*") )
-#define AG_CONST_BUTTON_NAMED(n) AGCBUTTON( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Button:*") )
+#define   AGBUTTON(obj)      ((AG_Button *)(obj))
+#define  AGcBUTTON(obj)      ((const AG_Button *)(obj))
+#define  AG_BUTTON_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x0B)
+#define  AG_BUTTON_SELF()    AGBUTTON(  AG_OBJECT(0,         "AG_Widget:AG_Button:*") )
+#define  AG_BUTTON_PTR(n)    AGBUTTON(  AG_OBJECT((n),       "AG_Widget:AG_Button:*") )
+#define  AG_BUTTON_NAMED(n)  AGBUTTON(  AG_OBJECT_NAMED((n), "AG_Widget:AG_Button:*") )
+#define AG_cBUTTON_SELF()   AGcBUTTON( AG_cOBJECT(0,         "AG_Widget:AG_Button:*") )
+#define AG_cBUTTON_PTR(n)   AGcBUTTON( AG_cOBJECT((n),       "AG_Widget:AG_Button:*") )
+#define AG_cBUTTON_NAMED(n) AGcBUTTON( AG_cOBJECT_NAMED((n), "AG_Widget:AG_Button:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agButtonClass;

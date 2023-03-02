@@ -12,7 +12,7 @@ static int
 Init(void *obj)
 {
 	if (inited++ == 0) {
-		AG_RegisterClass(&bezierWidgetClass);
+		AG_RegisterClass(&myBezierWidgetClass);
 	}
 	return (0);
 }
@@ -20,11 +20,11 @@ Init(void *obj)
 static int
 TestGUI(void *obj, AG_Window *win)
 {
-	BezierWidget *my;
+	MY_BezierWidget *bez;
 
-	my = BezierWidgetNew(win, "foo");
-	my->ti = obj;
-	AG_Expand(my);
+	bez = MY_BezierWidgetNew(win, NULL);
+	bez->ti = obj;
+	AG_Expand(bez);
 
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, 240);
 	return (0);

@@ -128,14 +128,15 @@ typedef struct ag_editable {
 	AG_EditableRevision *_Nonnull redo;  /* Redo stack */
 } AG_Editable;
 
-#define AGEDITABLE(obj)            ((AG_Editable *)(obj))
-#define AGCEDITABLE(obj)           ((const AG_Editable *)(obj))
-#define AG_EDITABLE_SELF()          AGEDITABLE( AG_OBJECT(0,"AG_Widget:AG_Editable:*") )
-#define AG_EDITABLE_PTR(n)          AGEDITABLE( AG_OBJECT((n),"AG_Widget:AG_Editable:*") )
-#define AG_EDITABLE_NAMED(n)        AGEDITABLE( AG_OBJECT_NAMED((n),"AG_Widget:AG_Editable:*") )
-#define AG_CONST_EDITABLE_SELF()   AGCEDITABLE( AG_CONST_OBJECT(0,"AG_Widget:AG_Editable:*") )
-#define AG_CONST_EDITABLE_PTR(n)   AGCEDITABLE( AG_CONST_OBJECT((n),"AG_Widget:AG_Editable:*") )
-#define AG_CONST_EDITABLE_NAMED(n) AGCEDITABLE( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Editable:*") )
+#define   AGEDITABLE(o)       ((AG_Editable *)(o))
+#define  AGcEDITABLE(o)       ((const AG_Editable *)(o))
+#define  AG_EDITABLE_ISA(o)   (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x0E)
+#define  AG_EDITABLE_SELF()    AGEDITABLE(   AG_OBJECT(0,        "AG_Widget:AG_Editable:*") )
+#define  AG_EDITABLE_PTR(n)    AGEDITABLE(   AG_OBJECT((n),      "AG_Widget:AG_Editable:*") )
+#define  AG_EDITABLE_NAMED(n)  AGEDITABLE(   AG_OBJECT_NAMED((n),"AG_Widget:AG_Editable:*") )
+#define AG_cEDITABLE_SELF()   AGcEDITABLE( AG_cOBJECT(0,        "AG_Widget:AG_Editable:*") )
+#define AG_cEDITABLE_PTR(n)   AGcEDITABLE( AG_cOBJECT((n),      "AG_Widget:AG_Editable:*") )
+#define AG_cEDITABLE_NAMED(n) AGcEDITABLE( AG_cOBJECT_NAMED((n) "AG_Widget:AG_Editable:*") )
 
 #define AGEDITABLE_IS_READONLY(ed) (((ed)->flags & AG_EDITABLE_READONLY) || \
                                     AG_WidgetDisabled(ed))

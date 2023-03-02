@@ -117,7 +117,7 @@ static void
 SelectSketch(AG_Event *_Nonnull event)
 {
 	struct rg_sketchproj *sproj = AG_PTR(1);
-	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(3);
+	const AG_TlistItem *it = AG_TLISTITEM_PTR(3);
 
 	Strlcpy(sproj->sketch, it->text, sizeof(sproj->sketch));
 }

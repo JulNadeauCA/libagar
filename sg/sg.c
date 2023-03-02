@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -41,7 +41,6 @@ void *sgStdClasses[] = {
 	&sgProgramClass,
 /*	&sgCgProgramClass, <- Legacy */
 	&sgTextureClass,
-	&sgPaletteClass,
 	&sgScriptClass,
 	/* Non-geometrical */
 	&sgDummyClass,
@@ -76,7 +75,6 @@ const AG_FileExtMapping sgFileExtMap[] = {
 	{ ".sg",	N_("Scene"),		&sgClass,		1 },
 	{ ".sgs",	N_("Script"),		&sgScriptClass,		1 },
 	{ ".sgt",	N_("Texture"),		&sgTextureClass,	1 },
-	{ ".sgp",	N_("Palette"),		&sgPaletteClass,	1 },
 	{ ".sgo",	N_("Object"),		&sgObjectClass,		0 },
 };
 const Uint sgFileExtCount = sizeof(sgFileExtMap) / sizeof(sgFileExtMap[0]);
@@ -162,7 +160,6 @@ Init(void *_Nonnull obj)
 {
 	SG *sg = obj;
 	
-	OBJECT(sg)->flags |= AG_OBJECT_REOPEN_ONLOAD;
 	sg->flags = 0;
 	sg->root = NULL;
 	sg->def.cam = NULL;
@@ -284,7 +281,7 @@ SG_Clear(SG *sg)
 AG_ObjectClass sgClass = {
 	"SG",
 	sizeof(SG),
-	{ 1,0 },
+	{ 1,0, AGC_SG, 0xE01D },
 	Init,
 	NULL,		/* reset */
 	NULL,		/* destroy */

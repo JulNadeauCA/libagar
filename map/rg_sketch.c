@@ -33,7 +33,6 @@
 
 #include <agar/map/rg_tileset.h>
 #include <agar/map/rg_tileview.h>
-#include <agar/map/rg_texsel.h>
 #include <agar/map/rg_icons.h>
 #include <agar/map/rg_math.h>
 
@@ -311,6 +310,7 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel, VG_Element *vge)
 	}
 	ntab = AG_NotebookAdd(nb, _("Filling style"), AG_BOX_VERT);
 	{
+#if 0
 		const char *fill_styles[] = {
 			N_("None"),
 			N_("Solid"),
@@ -328,6 +328,11 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel, VG_Element *vge)
 		WIDGET(texsel)->flags |= AG_WIDGET_HFILL|AG_WIDGET_VFILL;
 		AG_BindString(texsel, "texture-name", vge->fill_st.texture,
 		    sizeof(vge->fill_st.texture));
+#else
+		AG_LabelNewS(ntab, 0,
+		    AGSI_IDEOGRAM AGSI_TRI_CONSTRUCTION_SIGN AGSI_RST
+		    " TODO...");
+#endif
 	}
 
 	return (win);

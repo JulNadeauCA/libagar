@@ -273,7 +273,8 @@ public:
 					AG_DriverClass *dc = *pd;
 
 					result.Printf("%p: %s ( %s(3) )\n",
-					    *pd, dc->name, AGCLASS(dc)->name);
+					    *pd, dc->name,
+					    AGOBJECTCLASS(dc)->name);
 				}
 				return (true);
 			}
@@ -281,23 +282,24 @@ public:
 				AG_DriverClass *dc = *pd;
 
 				if (strcasecmp(dc->name, *command) == 0 ||
-				    strcasecmp(AGCLASS(dc)->name, *command) == 0)
+				    strcasecmp(AGOBJECTCLASS(dc)->name, *command) == 0)
 					break;
 			}
 			if (*pd != NULL) {
 				drvClass = *pd;
 				result.Printf(
 				    _("The %s(3) driver is available in this build.\n"),
-				    AGCLASS(drvClass)->name);
+				    AGOBJECTCLASS(drvClass)->name);
 			} else {
 				result.Printf("No such driver \"%s\"\n", *command);
 				return (false);
 			}
 		} else {
-			result.Printf(_("agardb is running %s(3)\n"), AGCLASS(drvClass)->name);
+			result.Printf(_("agardb is running %s(3)\n"),
+			    AGOBJECTCLASS(drvClass)->name);
 		}
-		result.Printf("[%s]\n", AGCLASS(drvClass)->name);
-		result.Printf(_("Driver Class: %s\n"), AGCLASS(drvClass)->name);
+		result.Printf("[%s]\n", AGOBJECTCLASS(drvClass)->name);
+		result.Printf(_("Driver Class: %s\n"), AGOBJECTCLASS(drvClass)->name);
 		result.Printf(_("Rendering method: %s\n"), _(agDriverTypeNames[drvClass->type]));
 		result.Printf(_("Windowing method: %s\n"), _(agDriverWmTypeNames[drvClass->wm]));
 		result.Printf(_("Capabilities: %s%s%s\n"),

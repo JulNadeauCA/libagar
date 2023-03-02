@@ -20,7 +20,7 @@ MAN3=	MAP.3 MAP_View.3 \
 SRCS=	fill.c flip.c invert.c map.c mapview.c nodesel.c tool.c insert.c \
 	insert_obj.c eraser.c \
 	rg_tileset.c rg_tileview.c rg_tile.c rg_feature.c rg_fill.c \
-	rg_pixmap.c rg_prim.c rg_texture.c rg_texsel.c rg_transform.c \
+	rg_pixmap.c rg_prim.c rg_texture.c rg_transform.c \
 	map_object.c map_tile.c map_img.c map_link.c
 
 # SRCS+= rg_sketch.c rg_sketch_line.c rg_sketch_circle.c rg_sketch_polygon.c

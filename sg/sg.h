@@ -10,6 +10,7 @@
 #include <agar/gui/opengl.h>
 
 #include <agar/config/have_glu.h>
+
 #ifdef HAVE_GLU
 # if defined(_AGAR_SG_INTERNAL) || defined(_USE_SG_GL)
 #  if defined(__APPLE__)
@@ -165,25 +166,36 @@ typedef struct sg {
 	AG_TAILQ_HEAD_(sg_node) nodes;	/* Flat list of nodes */
 } SG;
 
-#define SG_SELF()    (SG *)( AG_OBJECT(0,"SG:*") )
-#define SG_PTR(n)    (SG *)( AG_OBJECT((n),"SG:*") )
-#define SG_NAMED(n)  (SG *)( AG_OBJECT_NAMED((n),"SG:*") )
+#define  SGSG(o)         ((SG *)(o))
+#define SGcSG(o)         ((const SG *)(o))
+#define SG_ISA(o)        (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x75)
+#define SG_SELF()        SGSG(  AG_OBJECT(0,         "SG:*") )
+#define SG_PTR(n)        SGSG(  AG_OBJECT((n),       "SG:*") )
+#define SG_NAMED(n)      SGSG(  AG_OBJECT_NAMED((n), "SG:*") )
+#define SG_cSG_SELF()   SGcSG( AG_cOBJECT(0,         "SG:*") )
+#define SG_cSG_PTR(n)   SGcSG( AG_cOBJECT((n),       "SG:*") )
+#define SG_cSG_NAMED(n) SGcSG( AG_cOBJECT_NAMED((n), "SG:*") )
 
-#define SG_NODE_SELF()    SGNODE( AG_OBJECT(0,"SG_Node:*") )
-#define SG_NODE_PTR(n)    SGNODE( AG_OBJECT((n),"SG_Node:*") )
-#define SG_NODE_NAMED(n)  SGNODE( AG_OBJECT_NAMED((n),"SG_Node:*") )
+#define   SGNODE(o)        ((struct sg_node *)(o))
+#define  SGcNODE(o)        ((const struct sg_node *)(o))
+#define  SG_NODE_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x7A)
+#define  SG_NODE_SELF()    SGNODE(  AG_OBJECT(0,         "SG_Node:*") )
+#define  SG_NODE_PTR(n)    SGNODE(  AG_OBJECT((n),       "SG_Node:*") )
+#define  SG_NODE_NAMED(n)  SGNODE(  AG_OBJECT_NAMED((n), "SG_Node:*") )
+#define SG_cNODE_SELF()   SGcNODE( AG_cOBJECT(0,         "SG_Node:*") )
+#define SG_cNODE_PTR(n)   SGcNODE( AG_cOBJECT((n),       "SG_Node:*") )
+#define SG_cNODE_NAMED(n) SGcNODE( AG_cOBJECT_NAMED((n), "SG_Node:*") )
 
-#define SGNODE(node) ((struct sg_node *)(node))
-#define SGNODE_OPS(node) ((struct sg_node_class *)(AGOBJECT(node)->cls))
-#define SGNODE_SELECTED(node) (((SG_Node *)(node))->flags & SG_NODE_SELECTED)
+#define SGNODE_OPS(node)      ((struct sg_node_class *)(AGOBJECT(node)->cls))
+#define SGNODE_SELECTED(node) (SGNODE(node)->flags & SG_NODE_SELECTED)
 
-/* Iterate over attached nodes in the SG. */
+/* Iterators */
+
 #define SG_FOREACH_NODE(node, sg) \
 	for((node) = AG_TAILQ_FIRST(&sg->nodes); \
 	    (node) != AG_TAILQ_END(&sg->nodes); \
 	    (node) = AG_TAILQ_NEXT(SGNODE(node), nodes))
 
-/* Iterate over all selected nodes in the SG. */
 #define SG_FOREACH_NODE_SELECTED(node, sg)			\
 	SG_FOREACH_NODE((node),sg)				\
 		if (!((node)->flags & SG_NODE_SELECTED)) {	\
@@ -197,7 +209,6 @@ typedef struct sg {
 #include <agar/sg/sg_light.h>
 #include <agar/sg/sg_camera.h>
 #include <agar/sg/sg_texture.h>
-#include <agar/sg/sg_palette.h>
 #include <agar/sg/sg_geom.h>
 #include <agar/sg/sg_widget.h>
 #include <agar/sg/sg_point.h>

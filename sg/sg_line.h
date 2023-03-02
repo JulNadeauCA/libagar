@@ -7,7 +7,8 @@ typedef struct sg_line {
 	Uint8 _pad[8];
 } SG_Line;
 
-#define SGLINE(n) ((SG_Line *)(n))
+#define SG_LINE_ISA(o) (((AGOBJECT(o)->cid & 0xffffff00) >> 8) == 0x7A0403)
+#define SGLINE(n)      ((SG_Line *)(n))
 
 __BEGIN_DECLS
 extern SG_NodeClass sgLineClass;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2006-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -589,11 +589,14 @@ SG_FacetExtrude(void *obj, SG_Facet *f, M_Vector3 d, SG_ExtrudeMode mode)
 		}
 	}
 	for (i = 0; i < 1; i++) {
+		SG_Edge *e = f->e[i];
+
 		fE[i] = SG_FacetFromQuad4(so,
-		    HVTX(f->e[i]),
-		    SG_VertexNew(so, M_VecAdd3(OBJ_V(so,HVTX(f->e[i])), d)),
-		    SG_VertexNew(so, M_VecAdd3(OBJ_V(so,TVTX(f->e[i])), d)),
-		    TVTX(f->e[i]));
+		    e->v,
+		    SG_VertexNew( so, M_VecAdd3(OBJ_V(so, e->v),    d)  ),
+		    SG_VertexNew( so, M_VecAdd3(OBJ_V(so, e->oe->v),d)  ),
+		    e->oe->v);
+
 		if (fE[i] == NULL)
 			goto fail;
 	}
@@ -707,11 +710,14 @@ SG_ObjectConvQuadsToTriangles(void *obj)
 
 	AG_ObjectLock(so);
 	SG_FOREACH_FACET(f, fi, so) {
+		SG_Edge **e = f->e;
+
 		if (f->n != 4) {
 			continue;
 		}
-		(void)SG_FacetFromTri3(so, FV1(f), FV2(f), FV3(f));
-		(void)SG_FacetFromTri3(so, FV3(f), FV4(f), FV1(f));
+		SG_FacetFromTri3(so, e[0]->v, e[1]->v, e[2]->v);
+		SG_FacetFromTri3(so, e[2]->v, e[3]->v, e[0]->v);
+
 		/* TODO XXX edge faces */
 		SG_FacetDelete(f);
 		count++;
@@ -1664,7 +1670,7 @@ Edit(void *_Nonnull obj, SG_View *_Nullable sgv)
 	
 	AG_SeparatorNewHoriz(box);
 
-	os = AG_ObjectSelectorNew(box, AG_OBJSEL_PAGE_DATA, SGNODE(so)->sg,
+	os = AG_ObjectSelectorNew(box, 0, SGNODE(so)->sg,
 	    OBJECT(sg)->root, _("Texture: "));
 	AG_ObjectSelectorMaskType(os, "SG_Texture:*");
 	AG_BindPointerMp(os, "object", (void *)&so->tex, lock);
@@ -1676,7 +1682,7 @@ SG_NodeClass sgObjectClass = {
 	{
 		"SG_Node:SG_Object",
 		sizeof(SG_Object),
-		{ 0,0 },
+		{ 1,0, AGC_SG_OBJECT, 0xE027 },
 		Init,
 		Reset,
 		Destroy,

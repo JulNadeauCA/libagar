@@ -208,8 +208,6 @@ Init(void *_Nonnull obj)
 	SK *sk = obj;
 	const AG_Unit *un;
 	
-	OBJECT(sk)->flags |= AG_OBJECT_REOPEN_ONLOAD;
-
 	sk->flags = 0;
 	sk->nSolutions = 0;
 	AG_MutexInitRecursive(&sk->lock);

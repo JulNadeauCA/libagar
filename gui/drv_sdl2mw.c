@@ -80,11 +80,6 @@ typedef struct ag_sdl2mw_driver {
 } AG_DriverSDL2MW;
 
 AG_DriverMwClass agDriverSDL2MW;
-#if 0
-#define AGDRIVER_IS_SDL2MW(drv) AG_OfClass((drv),"AG_Driver:AG_DriverMw:AG_DriverSDL2MW")
-#else
-#define AGDRIVER_IS_SDL2MW(drv) (AGDRIVER_CLASS(drv) == (AG_DriverClass *)&agDriverSDL2MW)
-#endif
 
 static int SDL2MW_ProcessEvent(void *, AG_DriverEvent *);
 
@@ -527,7 +522,7 @@ SDL2MW_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r,
 	}
 
 	/* For AG_SDL_GetWindowFromID(). */
-	AGDRIVER_MW(drv)->windowID = SDL_GetWindowID(smw->window);
+	AGDRIVERMW(drv)->windowID = SDL_GetWindowID(smw->window);
 
 	/* Get the preferred pixel format for the window. */
 	Swin = SDL_GetWindowSurface(smw->window);
@@ -778,8 +773,7 @@ PollGLContext(AG_Event *_Nonnull event)
 	AG_TlistItem *it;
 	Uint i;
 
-	if (!AG_OBJECT_VALID(smw) ||
-	    !AG_OfClass(smw, "AG_Driver:AG_DriverMw:AG_DriverSDL2MW:*")) {
+	if (!AG_OBJECT_VALID(smw) || OBJECT(smw)->cid != AGC_DRIVER_SDL2MW) {
 		if (WIDGET(tl)->window != NULL) {
 			AG_ObjectDetach(WIDGET(tl)->window);
 			return;
@@ -884,7 +878,7 @@ AG_DriverMwClass agDriverSDL2MW = {
 		{
 			"AG_Driver:AG_DriverMw:AG_DriverSDL2MW",
 			sizeof(AG_DriverSDL2MW),
-			{ 1,7 },
+			{ 1,7, AGC_DRIVER_SDL2MW, 0xE039 },
 			Init,
 			NULL,		/* reset */
 			NULL,		/* destroy */

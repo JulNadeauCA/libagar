@@ -76,7 +76,7 @@ MA_DriverOpen(MA_DriverClass *dc)
 	if (maDriver != NULL) {
 		AG_FatalError("Driver exists");
 	}
-	if ((maDriver = AG_ObjectNew(NULL, dc->name, AGCLASS(dc))) == NULL) {
+	if ((maDriver = AG_ObjectNew(NULL, dc->name, AGOBJECTCLASS(dc))) == NULL) {
 		return (NULL);
 	}
 	if (dc->open(NULL) == -1) {

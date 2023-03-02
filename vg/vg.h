@@ -153,28 +153,38 @@ typedef struct vg {
 	AG_TAILQ_ENTRY(vg) user;		/* Entry in user list */
 } VG;
 
-extern VG_NodeOps *_Nullable *_Nonnull vgNodeClasses;
-extern Uint                            vgNodeClassCount;
-
-extern int vgGUI;
+#define  VGVG(o)         ((VG *)(o))
+#define VGcVG(o)         ((const VG *)(o))
+#define VG_ISA(o)        (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x71)
+#define VG_SELF()        VGVG(  AG_OBJECT(0,         "VG:*") )
+#define VG_PTR(n)        VGVG(  AG_OBJECT((n),       "VG:*") )
+#define VG_NAMED(n)      VGVG(  AG_OBJECT_NAMED((n), "VG:*") )
+#define VG_cVG_SELF()   VGcVG( AG_cOBJECT(0,         "VG:*") )
+#define VG_cVG_PTR(n)   VGcVG( AG_cOBJECT((n),       "VG:*") )
+#define VG_cVG_NAMED(n) VGcVG( AG_cOBJECT_NAMED((n), "VG:*") )
 
 #include <agar/vg/vg_math.h>
 
-#define VG_NodeIsClass(p,pat) (strcmp(VGNODE(p)->ops->name, (pat)) == 0)
+/* Iterators */
 
 #define VG_FOREACH_NODE(node, vg, ntype)				\
 	for((node) = (struct ntype *)AG_TAILQ_FIRST(&(vg)->nodes);	\
 	    (node) != (struct ntype *)AG_TAILQ_END(&(vg)->nodes);	\
 	    (node) = (struct ntype *)AG_TAILQ_NEXT(VGNODE(node),list))
+
+#define VG_NodeIsClass(p,pat) (strcmp(VGNODE(p)->ops->name, (pat)) == 0)
+
 #define VG_FOREACH_NODE_CLASS(node, vg, ntype, cn)			\
 	VG_FOREACH_NODE(node,vg,ntype)					\
 		if (!VG_NodeIsClass(VGNODE(node),(cn))) {		\
 			continue;					\
 		} else
+
 #define VG_FOREACH_CHLD(node, pnode, ntype)				\
 	for((node) = (struct ntype *)AG_TAILQ_FIRST(&VGNODE(pnode)->cNodes); \
 	    (node) != (struct ntype *)AG_TAILQ_END(&VGNODE(pnode)->cNodes); \
 	    (node) = (struct ntype *)AG_TAILQ_NEXT(VGNODE(node),tree))
+
 #define VG_FOREACH_CHLD_CLASS(node, pnode, ntype, cn)			\
 	VG_FOREACH_CHLD(node,pnode,ntype)				\
 		if (!VG_NodeIsClass(VGNODE(node),(cn))) {		\
@@ -182,6 +192,10 @@ extern int vgGUI;
 		} else
 
 __BEGIN_DECLS
+extern VG_NodeOps *_Nullable *_Nonnull vgNodeClasses;
+extern Uint                            vgNodeClassCount;
+
+extern int vgGUI;
 extern AG_ObjectClass vgClass;
 
 extern const AG_FileExtMapping vgFileExtMap[];

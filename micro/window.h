@@ -6,7 +6,7 @@
 #include <agar/micro/widget.h>
 #include <agar/micro/begin.h>
 
-#ifndef MA_WINDOW_CAPTION_MAX
+#ifndef MA_WINDOW_CAPTION_MAX           /* Maximum length of a window title */
 #define MA_WINDOW_CAPTION_MAX 16
 #endif
 
@@ -46,27 +46,20 @@ typedef struct ma_window {
 #define MA_WINDOW_PLAIN		(MA_WINDOW_NOTITLE | MA_WINDOW_NOBORDERS)
 #define MA_WINDOW_NOBUTTONS	(MA_WINDOW_NOCLOSE | MA_WINDOW_NOMINIMIZE | \
 				 MA_WINDOW_NOMAXIMIZE)
-
 	char caption[MA_WINDOW_CAPTION_MAX];	/* Caption text */
-
 	Uint8 visible;				/* Visibility flag */
-
 	Uint8  spacing;				/* Widget spacing (px) */
 	Uint16 padding;				/* Padding around widgets (px) */
 #define MA_WINDOW_PAD_TOP(x)    (((x) & 0xf000) >> 12)
 #define MA_WINDOW_PAD_BOTTOM(x) (((x) & 0x0f00) >> 8)
 #define MA_WINDOW_PAD_LEFT(x)   (((x) & 0x00f0) >> 4)
 #define MA_WINDOW_PAD_RIGHT(x)   ((x) & 0x000f)
-
 	Uint8 min;				/* Minimum geometry (px/2) */
 #define MA_WINDOW_MIN_W(x) ((x) & 0xf0) >> 4
 #define MA_WINDOW_MIN_H(x) ((x) & 0x0f)
-
 	Sint16 x, y;				/* Display position (px) or -1 */
 	Uint16 w, h;				/* Geometry (px) */
-
 	struct ma_window *_Nullable parent;	/* Logical parent window */
-
 	AG_TAILQ_ENTRY(ma_window) detach;	/* In agWindowDetachQ */
 	AG_TAILQ_ENTRY(ma_window) visibility;	/* In agWindow{Show,Hide}Q */
 	AG_TAILQ_HEAD_(ma_window) subwins;	/* Logical sub-windows */
@@ -122,26 +115,25 @@ void MA_WindowUpdate(MA_Window *_Nonnull);
 
 void MA_WindowProcessQueued(void);
 
-#define MAWINDOW(p)              ((MA_Window *)(p))
-#define MACWINDOW(p)             ((const MA_Window *)(p))
-#define MA_WINDOW_SELF()          MAWINDOW( AG_OBJECT(0,"MA_Window:*") )
-#define MA_WINDOW_PTR(n)          MAWINDOW( AG_OBJECT((n),"MA_Window:*") )
-#define MA_WINDOW_NAMED(n)        MAWINDOW( AG_OBJECT_NAMED((n),"MA_Window:*") )
-#define MA_CONST_WINDOW_SELF()   MACWINDOW( AG_CONST_OBJECT(0,"MA_Window:*") )
-#define MA_CONST_WINDOW_PTR(n)   MACWINDOW( AG_CONST_OBJECT((n),"MA_Window:*") )
-#define MA_CONST_WINDOW_NAMED(n) MACWINDOW( AG_CONST_OBJECT_NAMED((n),"MA_Window:*") )
+#define   MAWINDOW(o)      ((MA_Window *)(o))
+#define  MAcWINDOW(o)      ((const MA_Window *)(o))
+#define  MA_WINDOW_ISA(o)  (AGOBJECT(o)->cid == AGC_WINDOW)
+#define  MA_WINDOW_SELF()  MAWINDOW ( AG_OBJECT(0,   "MA_Window:*") )
+#define  MA_WINDOW_PTR(n)  MAWINDOW ( AG_OBJECT((n), "MA_Window:*") )
+#define MA_cWINDOW_SELF() MAcWINDOW( AG_cOBJECT(0,   "MA_Window:*") )
+#define MA_cWINDOW_PTR(n) MAcWINDOW( AG_cOBJECT((n), "MA_Window:*") )
 
-/* Canned fn,args arguments to AG_{Add,Set,Post}Event(3). */
+/* Canned "Window Detach", "Window Hide" and "Window Close" event handlers. */
 #define MAWINDETACH(win) MA_WindowDetachGenEv, "%p", (win)
 #define MAWINHIDE(win)   MA_WindowHideGenEv, "%p", (win)
 #define MAWINCLOSE(win)  MA_WindowCloseGenEv, "%p", (win)
 
-/* Iterators over direct descendants widgets. */
+/* Iterators */
 #define MA_FOREACH_WINDOW(var, ob) \
 	AGOBJECT_FOREACH_CHILD(var, ob, ma_window)
-
 #define MA_FOREACH_WINDOW_REVERSE(var, ob) \
 	AGOBJECT_FOREACH_CHILD_REVERSE(var, ob, ma_window)
+
 __END_DECLS
 
 #include <agar/micro/close.h>

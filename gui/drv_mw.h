@@ -63,8 +63,17 @@ typedef struct ag_driver_mw {
 	Uint32 windowID;			/* Optional window ID */
 } AG_DriverMw;
 
-#define AGDRIVER_MW(obj) ((AG_DriverMw *)(obj))
-#define AGDRIVER_MW_CLASS(obj) ((struct ag_driver_mw_class *)(AGOBJECT(obj)->cls))
+#define  AGDRIVERMW(o)       ((AG_DriverMw *)(o))
+#define AGcDRIVERMW(o)       ((const AG_DriverMw *)(o))
+#define  AG_DRIVER_MW_ISA(o) (((AGOBJECT(o)->cid & 0xffff0000) >> 16) == 0x0502)
+#define  AG_DRIVER_MW_SELF()    AGDRIVERMW(  AG_OBJECT(0,        "AG_Driver:AG_DriverMw:*") )
+#define  AG_DRIVER_MW_PTR(n)    AGDRIVERMW(  AG_OBJECT((n),      "AG_Driver:AG_DriverMw:*") )
+#define  AG_DRIVER_MW_NAMED(n)  AGDRIVERMW(  AG_OBJECT_NAMED((n),"AG_Driver:AG_DriverMw:*") )
+#define AG_cDRIVER_MW_SELF()   AGcDRIVERMW( AG_cOBJECT(0,        "AG_Driver:AG_DriverMw:*") )
+#define AG_cDRIVER_MW_PTR(n)   AGcDRIVERMW( AG_cOBJECT((n),      "AG_Driver:AG_DriverMw:*") )
+#define AG_cDRIVER_MW_NAMED(n) AGcDRIVERMW( AG_cOBJECT_NAMED((n),"AG_Driver:AG_DriverMw:*") )
+
+#define AGDRIVER_MW_CLASS(o) ((struct ag_driver_mw_class *)(AGOBJECT(o)->cls))
 
 /* Flags to openWindow */
 #define AG_DRIVER_MW_ANYPOS		0x01	/* Autoposition window */

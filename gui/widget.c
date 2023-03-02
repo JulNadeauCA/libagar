@@ -289,8 +289,8 @@ OnAttach(AG_Event *_Nonnull event)
 	AG_Widget *wid = AG_WIDGET_SELF();
 	const void *parent = AG_PTR(1);
 
-	if (AG_OfClass(parent, "AG_Widget:AG_Window:*") &&
-	    AG_OfClass(wid, "AG_Widget:*")) {        /* Widget->Window attach */
+	if (AG_WINDOW_ISA(parent) &&        /* Widget attaching to a Window */
+	    AG_WIDGET_ISA(wid)) {
 		AG_Widget *wParent = WIDGET(parent);
 
 		SetParentWindow(wid, AGWINDOW(wParent));
@@ -310,28 +310,25 @@ OnAttach(AG_Event *_Nonnull event)
 			 */
 			memset(wid->textures, 0, wid->nSurfaces * sizeof(Uint));
 		}
-	} else if (AG_OfClass(parent, "AG_Widget:*") &&
-	           AG_OfClass(wid, "AG_Widget:*")) { /* Widget->Widget attach */
+	} else if (AG_WIDGET_ISA(parent) &&  /* Widget attaching to another */
+	           AG_WIDGET_ISA(wid)) {   
 		AG_Widget *wParent = WIDGET(parent);
 		AG_Window *window = wParent->window;
-#ifdef AG_DEBUG
-		if (window) { AG_OBJECT_ISA(window, "AG_Widget:AG_Window:*"); }
-#endif
+
 		SetParentWindow(wid, window);
 
-		if (window && window->visible) {
-			/*
-			 * Notify the widget that it is now visible.
-			 * XXX redundant events when shown initially?
-			 */
-			AG_PostEvent(wid, "widget-shown", NULL);
+		if (window != NULL) {
+			AG_OBJECT_ISA(window, "AG_Widget:AG_Window:*");
+
+			if (window->visible)
+				AG_PostEvent(wid, "widget-shown", NULL);
 		}
 
 		if (wParent->flags & AG_WIDGET_DISABLE_ON_ATTACH) {
 			wid->flags |= AG_WIDGET_DISABLED;
 		}
-	} else if (AG_OfClass(parent, "AG_Driver:*") && /* Window->Driver attach */
-	           AG_OfClass(wid, "AG_Widget:AG_Window:*")) {
+	} else if (AG_DRIVER_ISA(parent) && /* Window attaching to a Driver */
+	           AG_WINDOW_ISA(wid)) {
 		SetParentDriver(wid, AGDRIVER(parent));
 	} else {
 #ifdef AG_VERBOSITY
@@ -396,8 +393,7 @@ detach_input_devs:
 	}
 	AG_UnlockVFS(&agInputDevices);
 
-	if (AG_OfClass(parent, "AG_Widget:*") &&
-	    AG_OfClass(wid, "AG_Widget:*")) {
+	if (AG_WIDGET_ISA(parent) && AG_WIDGET_ISA(wid)) {
 		if (wid->window) {
 			if (wid->window->visible) {
 				AG_PostEvent(wid, "widget-hidden", NULL);
@@ -405,8 +401,7 @@ detach_input_devs:
 			AG_UnmapAllCursors(wid->window, wid);
 		}
 		SetParentWindow(wid, NULL);
-	} else if (AG_OfClass(parent, "AG_Driver:*") &&
-	           AG_OfClass(wid, "AG_Widget:AG_Window:*")) {
+	} else if (AG_DRIVER_ISA(parent) && AG_WINDOW_ISA(wid)) {
 		SetParentDriver(wid, NULL);
 	} else {
 #ifdef AG_VERBOSITY
@@ -609,12 +604,17 @@ out:
 	AG_ObjectUnlock(wid);
 }
 
-/* Arrange for an unconditional redraw at a periodic interval. */
-void
+/*
+ * Enable/disable auto-refresh. Enabling auto-refresh forces the widget to be
+ * redrawn unconditionally every refresh_ms (or -1 disables auto-refresh).
+ * Return the previous setting in ms (or -1 if auto-refresh was not set).
+ */
+int
 AG_RedrawOnTick(void *obj, int refresh_ms)
 {
 	AG_Widget *wid = obj;
 	AG_RedrawTie *rt;
+	int rv = -1;
 	
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 	AG_ObjectLock(wid);
@@ -625,6 +625,7 @@ AG_RedrawOnTick(void *obj, int refresh_ms)
 				break;
 		}
 		if (rt) {
+			rv = rt->ival;
 			TAILQ_REMOVE(&wid->pvt.redrawTies, rt, redrawTies);
 			AG_DelTimer(wid, &rt->to);
 			free(rt);
@@ -646,6 +647,7 @@ AG_RedrawOnTick(void *obj, int refresh_ms)
 	}
 out:
 	AG_ObjectUnlock(wid);
+	return (rv);
 }
 
 /* Default event handler for "key-down" (for widgets using Actions). */
@@ -1396,7 +1398,7 @@ AG_WidgetFocus(void *obj)
 	 * to the parent window.
 	 */
 	do {
-		if (AG_OfClass(wParent, "AG_Widget:AG_Window:*")) {
+		if (AG_WINDOW_ISA(wParent)) {
 			Debug_Focus(wid, "Imply window %s focus\n", OBJECT(wParent)->name);
 			AG_WindowFocus(AGWINDOW(wParent));
 			break;
@@ -1614,7 +1616,7 @@ AG_WidgetFindFocused(void *p)
 	AG_LockVFS(wid);
 	AG_ObjectLock(wid);
 
-	if (!AG_OfClass(wid, "AG_Widget:AG_Window:*")) {
+	if (!AG_WINDOW_ISA(wid)) {
 		if ((wid->flags & AG_WIDGET_FOCUSED) == 0 ||
 		    (wid->flags & AG_WIDGET_VISIBLE) == 0) {
 			goto fail;
@@ -1652,8 +1654,8 @@ AG_WidgetUpdateCoords(void *obj, int x, int y)
 #endif
 	wid->flags &= ~(AG_WIDGET_UPDATE_WINDOW);
 
-	if (wid->drv && AGDRIVER_MULTIPLE(wid->drv) &&
-	    AG_OfClass(wid, "AG_Widget:AG_Window:*")) {
+	if (AG_WINDOW_ISA(wid) &&
+	    wid->drv != NULL && AGDRIVER_MULTIPLE(wid->drv)) {
 		x = 0;
 		y = 0;
 	}
@@ -1927,7 +1929,7 @@ DrawPrologueGL(AG_Widget *_Nonnull wid)
 	if (wid->flags & AG_WIDGET_GL_RESHAPE)
 		DrawPrologueGL_Reshape(wid);
 
-	hView = AGDRIVER_SINGLE(wid->drv) ? AGDRIVER_SW(wid->drv)->h :
+	hView = AGDRIVER_SINGLE(wid->drv) ? AGDRIVERSW(wid->drv)->h :
 	                                    HEIGHT(wid->window);
 	glViewport(wid->rView.x1, (hView - wid->rView.y2),
 	           WIDTH(wid), HEIGHT(wid));
@@ -2209,9 +2211,9 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
 	for (po = OBJECT(wid);
-	     po->parent && AG_OfClass(po->parent, "AG_Widget:*");
+	     po->parent != NULL && AG_WIDGET_ISA(po->parent);
 	     po = po->parent) {
-		if (WIDGET(po)->css) {               /* alternate stylesheet */
+		if (WIDGET(po)->css != NULL) {     /* alternate stylesheet? */
 			css = WIDGET(po)->css;
 			break;
 		}
@@ -2571,7 +2573,8 @@ AG_WidgetCompileStyle(void *obj)
 	AG_LockVFS(wid);
 	AG_MutexLock(&agTextLock);
 
-	if ((parent = OBJECT(wid)->parent) && AG_OfClass(parent, "AG_Widget:*") &&
+	if ((parent = OBJECT(wid)->parent) != NULL &&
+	    AG_WIDGET_ISA(parent) &&
 	    (parentFont = parent->font) != NULL) {
 		CompileStyleRecursive(wid,	/* Inheritable attributes: */
 		    OBJECT(parentFont)->name,	/* "font-family" */
@@ -2729,7 +2732,7 @@ AG_WidgetClass agWidgetClass = {
 	{
 		"Agar(Widget)",
 		sizeof(AG_Widget),
-		{ 0,0 },
+		{ 1,0, AGC_WIDGET, 0xE018 },
 		Init,
 		NULL,           /* reset */
 		Destroy,

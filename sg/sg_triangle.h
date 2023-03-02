@@ -4,7 +4,8 @@ typedef struct sg_triangle {
 	struct sg_geom _inherit;		/* SG_Geom -> SG_Triangle */
 } SG_Triangle;
 
-#define SGTRIANGLE(n) ((SG_Triangle *)(n))
+#define SG_TRIANGLE_ISA(o) (((AGOBJECT(o)->cid & 0xffffff00) >> 8)  == 0x7A0408)
+#define SGTRIANGLE(n)      ((SG_Triangle *)(n))
 
 __BEGIN_DECLS
 extern SG_NodeClass sgTriangleClass;

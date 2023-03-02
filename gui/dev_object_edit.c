@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,19 +41,15 @@
 #include <agar/gui/iconmgr.h>
 
 const AG_FlagDescr devObjectFlags[] = {
-	{ AG_OBJECT_FLOATING_VARS,  N_("Clear Variables pre-load"),   1 },
-	{ AG_OBJECT_NON_PERSISTENT, N_("Not serializable"),           1 },
-	{ AG_OBJECT_INDESTRUCTIBLE, N_("Indestructible"),             1 },
-	{ AG_OBJECT_RESIDENT,       N_("Data part is resident"),      0 },
-	{ AG_OBJECT_STATIC,         N_("Static (not on the heap)"),   1 },
-	{ AG_OBJECT_READONLY,       N_("Read-only to editors"),       1 },
-	{ AG_OBJECT_REOPEN_ONLOAD,  N_("Recreate GUI post-load"),     1 },
-	{ AG_OBJECT_REMAIN_DATA,    N_("Keep data part resident"),    1 },
-	{ AG_OBJECT_DEBUG,          N_("Debug mode"),                 1 },
-	{ AG_OBJECT_DEBUG_DATA,     N_("Produce DEBUG object files"), 1 },
-	{ AG_OBJECT_NAME_ONATTACH,  N_("Was named on attach"),        0 },
-	{ AG_OBJECT_CHLD_AUTOSAVE,  N_("Autosave child objects"),     1 },
-	{ 0,                        "",                               0 }
+	{ AG_OBJECT_STATIC,         N_("Static"),                         1 },
+	{ AG_OBJECT_INDESTRUCTIBLE, N_("Indestructible"),                 1 },
+	{ AG_OBJECT_READONLY,       N_("Read-Only"),                      1 },
+	{ AG_OBJECT_DEBUG,          N_("Debug Mode"),                     1 },
+	{ AG_OBJECT_DEBUG_DATA,     N_("Debug Datafiles"),                1 },
+	{ AG_OBJECT_NAME_ONATTACH,  N_("Named on Attach"),                0 },
+	{ AG_OBJECT_BOUND_EVENTS,
+	  N_("Generate " AGSI_CODE "bound" AGSI_RST " events"),           0 },
+	{ 0,                        "",                                   0 }
 };
 
 static void
@@ -112,16 +108,10 @@ PollEvents(AG_Event *_Nonnull event)
 }
 
 static void
-RenameObject(AG_Event *_Nonnull event)
+RenamedObject(AG_Event *_Nonnull event)
 {
-	AG_Textbox *tb = AG_TEXTBOX_SELF();
 	AG_Object *ob = AG_OBJECT_PTR(1);
 
-	if (AG_ObjectPageIn(ob) == 0) {
-		AG_ObjectUnlinkDatafiles(ob);
-		AG_TextboxCopyString(tb, ob->name, sizeof(ob->name));
-		AG_ObjectPageOut(ob);
-	}
 	AG_PostEvent(ob, "renamed", NULL);
 }
 
@@ -145,9 +135,9 @@ AG_DEV_ObjectEdit(void *p)
 	ntab = AG_NotebookAdd(nb, _("Infos"), AG_BOX_VERT);
 	{
 		tbox = AG_TextboxNewS(ntab, AG_TEXTBOX_HFILL, _("Name: "));
-		AG_TextboxPrintf(tbox, ob->name);
+		AG_TextboxSetString(tbox, ob->name);
 		AG_WidgetFocus(tbox);
-		AG_SetEvent(tbox, "textbox-return", RenameObject, "%p", ob);
+		AG_SetEvent(tbox, "textbox-return", RenamedObject, "%p", ob);
 		
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 	

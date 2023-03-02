@@ -12,35 +12,34 @@
 #include <agar/gui/begin.h>
 
 typedef struct ag_combo {
-	struct ag_widget wid;		/* AG_Widget -> AG_Combo */
-
+	struct ag_widget wid;           /* AG_Widget -> AG_Combo */
 	Uint flags;
-#define AG_COMBO_POLL	  	0x01	/* Polled list */
-#define AG_COMBO_ANY_TEXT 	0x04	/* Accept text not matching an item */
-#define AG_COMBO_HFILL	  	0x08
-#define AG_COMBO_VFILL	  	0x10
-#define AG_COMBO_SCROLLTOSEL	0x40	/* Scroll to initial selection */
-#define AG_COMBO_EXPAND	  (AG_COMBO_HFILL|AG_COMBO_VFILL)
-
+#define AG_COMBO_POLL        0x01       /* Polled list */
+#define AG_COMBO_ANY_TEXT    0x04       /* Accept text not matching an item */
+#define AG_COMBO_HFILL       0x08
+#define AG_COMBO_VFILL       0x10
+#define AG_COMBO_SCROLLTOSEL 0x40       /* Scroll to initial selection */
+#define AG_COMBO_EXPAND      (AG_COMBO_HFILL | AG_COMBO_VFILL)
 	Uint32 _pad;
-	AG_Textbox *_Nonnull  tbox;	/* Text input */
-	AG_Button  *_Nonnull  button;	/* [...] button */
-	AG_Tlist   *_Nonnull  list;	/* List of items */
-	AG_Window  *_Nullable panel;	/* Expanded panel */
-
-	int wSaved, hSaved;			/* Saved popup list geometry */
-	int wPreList, hPreList;		/* Size hints */
+	AG_Textbox *_Nonnull  tbox;     /* Text input */
+	AG_Button  *_Nonnull  button;   /* [...] button */
+	AG_Tlist   *_Nonnull  list;     /* List of items */
+	AG_Window  *_Nullable panel;    /* Expanded panel */
+	int wSaved, hSaved;             /* Saved window size */
+	int wPreList, hPreList;         /* Size hints */
 } AG_Combo;
 
-#define AGCOMBO(obj)            ((AG_Combo *)(obj))
-#define AGCCOMBO(obj)           ((const AG_Combo *)(obj))
-#define AG_COMBO_SELF()          AGCOMBO( AG_OBJECT(0,"AG_Widget:AG_Combo:*") )
-#define AG_COMBO_PTR(n)          AGCOMBO( AG_OBJECT((n),"AG_Widget:AG_Combo:*") )
-#define AG_COMBO_NAMED(n)        AGCOMBO( AG_OBJECT_NAMED((n),"AG_Widget:AG_Combo:*") )
-#define AG_CONST_COMBO_SELF()   AGCCOMBO( AG_CONST_OBJECT(0,"AG_Widget:AG_Combo:*") )
-#define AG_CONST_COMBO_PTR(n)   AGCCOMBO( AG_CONST_OBJECT((n),"AG_Widget:AG_Combo:*") )
-#define AG_CONST_COMBO_NAMED(n) AGCCOMBO( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Combo:*") )
+#define   AGCOMBO(o)        ((AG_Combo *)(o))
+#define  AGcCOMBO(o)        ((const AG_Combo *)(o))
+#define  AG_COMBO_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x0C)
+#define  AG_COMBO_SELF()    AGCOMBO(  AG_OBJECT(0,        "AG_Widget:AG_Combo:*") )
+#define  AG_COMBO_PTR(n)    AGCOMBO(  AG_OBJECT((n),      "AG_Widget:AG_Combo:*") )
+#define  AG_COMBO_NAMED(n)  AGCOMBO(  AG_OBJECT_NAMED((n),"AG_Widget:AG_Combo:*") )
+#define AG_cCOMBO_SELF()   AGCCOMBO( AG_cOBJECT(0,        "AG_Widget:AG_Combo:*") )
+#define AG_cCOMBO_PTR(n)   AGCCOMBO( AG_cOBJECT((n),      "AG_Widget:AG_Combo:*") )
+#define AG_cCOMBO_NAMED(n) AGCCOMBO( AG_cOBJECT_NAMED((n),"AG_Widget:AG_Combo:*") )
 
+/* Iterators */
 #define AG_COMBO_FOREACH(it, com) \
 	AG_TLIST_FOREACH(it, (com)->list)
 #define AG_COMBO_FOREACH_ITEM(p, com, it, t) \

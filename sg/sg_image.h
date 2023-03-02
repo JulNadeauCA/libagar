@@ -47,7 +47,9 @@ typedef struct sg_image {
 	Uint8 _pad3[8];
 } SG_Image;
 
-#define SGIMAGE(n) ((SG_Image *)(n))
+#define SG_IMAGE_ISA(o) (((AGOBJECT(o)->cid & 0xffff0000) >> 16) == 0x7A07)
+#define SGIMAGE(n)      ((SG_Image *)(n))
+#define SGCIMAGE(n)     ((const SG_Image *)(n))
 
 __BEGIN_DECLS
 extern SG_NodeClass sgImageClass;

@@ -37,6 +37,8 @@ typedef struct ag_mouse {
 	int xRel, yRel;                   /* Last relative motion */
 } AG_Mouse;
 
+#define AG_MOUSE_ISA(o) (((AGOBJECT(o)->cid & 0xffff0000) >> 16) == 0x0601)
+
 __BEGIN_DECLS
 extern AG_ObjectClass agMouseClass;
 

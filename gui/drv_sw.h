@@ -77,8 +77,18 @@ typedef struct ag_driver_sw {
 	struct ag_menu *_Nullable bgPopup;	/* Background popup menu */
 } AG_DriverSw;
 
-#define AGDRIVER_SW(obj) ((AG_DriverSw *)(obj))
-#define AGDRIVER_SW_CLASS(obj) ((struct ag_driver_sw_class *)(AGOBJECT(obj)->cls))
+
+#define   AGDRIVERSW(o)      ((AG_DriverSw *)(o))
+#define  AGcDRIVERSW(o)      ((const AG_DriverSw *)(o))
+#define  AG_DRIVER_SW_ISA(o) (((AGOBJECT(o)->cid & 0xffff0000) >> 16) == 0x0501)
+#define  AG_DRIVER_SW_SELF()    AGDRIVERSW(  AG_OBJECT(0,        "AG_Driver:AG_DriverSw:*") )
+#define  AG_DRIVER_SW_PTR(n)    AGDRIVERSW(  AG_OBJECT((n),      "AG_Driver:AG_DriverSw:*") )
+#define  AG_DRIVER_SW_NAMED(n)  AGDRIVERSW(  AG_OBJECT_NAMED((n),"AG_Driver:AG_DriverSw:*") )
+#define AG_cDRIVER_SW_SELF()   AGcDRIVERSW( AG_cOBJECT(0,        "AG_Driver:AG_DriverSw:*") )
+#define AG_cDRIVER_SW_PTR(n)   AGcDRIVERSW( AG_cOBJECT((n),      "AG_Driver:AG_DriverSw:*") )
+#define AG_cDRIVER_SW_NAMED(n) AGcDRIVERSW( AG_cOBJECT_NAMED((n),"AG_Driver:AG_DriverSw:*") )
+
+#define AGDRIVER_SW_CLASS(o) ((struct ag_driver_sw_class *)(AGOBJECT(o)->cls))
 
 __BEGIN_DECLS
 extern AG_ObjectClass agDriverSwClass;

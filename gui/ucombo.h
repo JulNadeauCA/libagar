@@ -25,14 +25,15 @@ typedef struct ag_ucombo {
 	int wPreList, hPreList;        /* Size hints */
 } AG_UCombo;
 
-#define AGUCOMBO(obj)            ((AG_UCombo *)(obj))
-#define AGCUCOMBO(obj)           ((const AG_UCombo *)(obj))
-#define AG_UCOMBO_SELF()          AGUCOMBO( AG_OBJECT(0,"AG_Widget:AG_UCombo:*") )
-#define AG_UCOMBO_PTR(n)          AGUCOMBO( AG_OBJECT((n),"AG_Widget:AG_UCombo:*") )
-#define AG_UCOMBO_NAMED(n)        AGUCOMBO( AG_OBJECT_NAMED((n),"AG_Widget:AG_UCombo:*") )
-#define AG_CONST_UCOMBO_SELF()   AGCUCOMBO( AG_CONST_OBJECT(0,"AG_Widget:AG_UCombo:*") )
-#define AG_CONST_UCOMBO_PTR(n)   AGCUCOMBO( AG_CONST_OBJECT((n),"AG_Widget:AG_UCombo:*") )
-#define AG_CONST_UCOMBO_NAMED(n) AGCUCOMBO( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_UCombo:*") )
+#define   AGUCOMBO(o)        ((AG_UCombo *)(o))
+#define  AGcUCOMBO(o)        ((const AG_UCombo *)(o))
+#define  AG_UCOMBO_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x29)
+#define  AG_UCOMBO_SELF()    AGUCOMBO(  AG_OBJECT(0,         "AG_Widget:AG_UCombo:*") )
+#define  AG_UCOMBO_PTR(n)    AGUCOMBO(  AG_OBJECT((n),       "AG_Widget:AG_UCombo:*") )
+#define  AG_UCOMBO_NAMED(n)  AGUCOMBO(  AG_OBJECT_NAMED((n), "AG_Widget:AG_UCombo:*") )
+#define AG_cUCOMBO_SELF()   AGcUCOMBO( AG_cOBJECT(0,         "AG_Widget:AG_UCombo:*") )
+#define AG_cUCOMBO_PTR(n)   AGcUCOMBO( AG_cOBJECT((n),       "AG_Widget:AG_UCombo:*") )
+#define AG_cUCOMBO_NAMED(n) AGcUCOMBO( AG_cOBJECT_NAMED((n), "AG_Widget:AG_UCombo:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agUComboClass;

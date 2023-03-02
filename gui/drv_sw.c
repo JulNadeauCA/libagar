@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -464,7 +464,7 @@ static void
 GetTilingPosition(AG_Window *_Nonnull win, int *_Nonnull xDst,
     int *_Nonnull yDst, int w, int h)
 {
-	AG_DriverSw *dsw = AGDRIVER_SW(WIDGET(win)->drv);
+	AG_DriverSw *dsw = AGDRIVERSW(WIDGET(win)->drv);
 	AG_Window *wOther;
 	const int maxTests = 10000, dx = 16;
 	int nTest = 0;
@@ -569,7 +569,7 @@ fail:
 void
 AG_WM_GetPrefPosition(AG_Window *win, int *x, int *y, int w, int h)
 {
-	AG_DriverSw *dsw = AGDRIVER_SW(WIDGET(win)->drv);
+	AG_DriverSw *dsw = AGDRIVERSW(WIDGET(win)->drv);
 	int xOffs = 0, yOffs = 0;
 
 	if (win->flags & AG_WINDOW_TILING) {
@@ -677,7 +677,7 @@ AG_ProcessEvent(AG_Driver *drv, AG_DriverEvent *dev)
 AG_ObjectClass agDriverSwClass = {
 	"AG_Driver:AG_DriverSw",
 	sizeof(AG_DriverSw),
-	{ 1,4 },
+	{ 1,7, AGC_DRIVER_SW, 0xE024 },
 	Init,
 	NULL,		/* reset */
 	NULL,		/* destroy */

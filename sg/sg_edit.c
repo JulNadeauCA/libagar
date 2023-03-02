@@ -47,7 +47,7 @@ FindSGNodes(AG_Tlist *_Nonnull tl, SG_Node *_Nonnull node, int depth)
 	it->selected = (node->flags & SG_NODE_SELECTED);
 
 	if (!TAILQ_EMPTY(&AGOBJECT(node)->children) ||
-	    AG_OfClass(node, "SG_Node:SG_Object:*")) {
+	    SG_OBJECT_ISA(node)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
 	}
 	if (AG_TlistVisibleChildren(tl, it)) {
@@ -74,7 +74,7 @@ SG_GUI_PollNodes(AG_Event *event)
 static void
 SelectNode(AG_Event *_Nonnull event)
 {
-	AG_TlistItem *it = AG_TLIST_ITEM_PTR(1);
+	AG_TlistItem *it = AG_TLISTITEM_PTR(1);
 	const int state = AG_INT(2);
 
 	if (strcmp(it->cat, "node") == 0) {
@@ -108,7 +108,7 @@ SG_GUI_EditNode(SG_Node *node, AG_Widget *editArea, SG_View *sv)
 
 	if (NODE_OPS(node)->edit != NULL) {
 		wEdit = NODE_OPS(node)->edit(node, sv);
-		if (wEdit != NULL && AG_OfClass(wEdit, "AG_Widget:*"))
+		if (wEdit != NULL && AG_WIDGET_ISA(wEdit))
 			AG_ObjectAttach(sv->editArea, wEdit);
 	}
 
@@ -134,7 +134,7 @@ ListLibraryItems(AG_Tlist *_Nonnull tl, const char *_Nonnull pat, int depth,
 		it = AG_TlistAddPtr(tl, sgIconNode.s, cl->name, cl);
 		it->depth = depth;
 	}
-	TAILQ_FOREACH(clSub, &cl->pvt.sub, pvt.subclasses)
+	TAILQ_FOREACH(clSub, &cl->sub, subclasses)
 		ListLibraryItems(tl, pat, depth+1, clSub);
 }
 
@@ -207,7 +207,7 @@ NodePopupFindCommon(SG_Node *_Nonnull node,
 	SG *sg = node->sg;
 	SG_Node *chld;
 
-	if (!AG_OfClass(node, "SG_Node:*") ||
+	if (!AG_OBJECT_VALID(node) || !SG_NODE_ISA(node) ||
 	    (node->flags & SG_NODE_SELECTED) == 0) {
 		return;
 	}
@@ -303,7 +303,7 @@ CreateNode(AG_Event *_Nonnull event)
 	AG_Pane *editPane = AG_PANE_PTR(2);
 	AG_Widget *editArea = AG_WIDGET_PTR(3);
 	SG_View *sv = SG_VIEW_PTR(4);
-	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(5);
+	AG_TlistItem *ti = AG_TLISTITEM_PTR(5);
 	AG_ObjectClass *cl = ti->p1;
 	SG_Node *node;
 

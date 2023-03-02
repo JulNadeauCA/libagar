@@ -8,6 +8,10 @@ typedef struct sg_voxel {
 	Uint8 _pad2[8];
 } SG_Voxel;
 
+#define SG_VOXEL_ISA(o) (((AGOBJECT(o)->cid & 0xffff0000) >> 16) == 0x7A06)
+#define SGVOXEL(o)      ((SG_Voxel *)(o))
+#define SGCVOXEL(o)     ((const SG_Voxel *)(o))
+
 __BEGIN_DECLS
 extern SG_NodeClass sgVoxelClass;
 

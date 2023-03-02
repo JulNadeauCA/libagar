@@ -925,7 +925,7 @@ AG_FontClass agFontFtClass = {
 	{
 		"Agar(Font:FontFt)",
 		sizeof(AG_FontFt),
-		{ 0, 0 },
+		{ 1,0, AGC_FONT_FT, 0xE01B },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

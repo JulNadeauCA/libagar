@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -107,7 +107,7 @@ SG_NodeClass sgDummyClass = {
 	{
 		"SG_Node:SG_Dummy",
 		sizeof(SG_Dummy),
-		{ 0,0 },
+		{ 1,0, AGC_SG_DUMMY, 0xE026 },
 		Init,
 		NULL,	/* reset */
 		NULL,	/* destroy */

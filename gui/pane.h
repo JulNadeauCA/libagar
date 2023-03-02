@@ -47,20 +47,21 @@ typedef struct ag_pane {
 	AG_CursorArea *_Nullable ca;        /* Cursor changing area (over bar) */
 } AG_Pane;
 
-#define AGPANE(obj)            ((AG_Pane *)(obj))
-#define AGCPANE(obj)           ((const AG_Pane *)(obj))
-#define AG_PANE_SELF()          AGPANE( AG_OBJECT(0,"AG_Widget:AG_Pane:*") )
-#define AG_PANE_PTR(n)          AGPANE( AG_OBJECT((n),"AG_Widget:AG_Pane:*") )
-#define AG_PANE_NAMED(n)        AGPANE( AG_OBJECT_NAMED((n),"AG_Widget:AG_Pane:*") )
-#define AG_CONST_PANE_SELF()   AGCPANE( AG_CONST_OBJECT(0,"AG_Widget:AG_Pane:*") )
-#define AG_CONST_PANE_PTR(n)   AGCPANE( AG_CONST_OBJECT((n),"AG_Widget:AG_Pane:*") )
-#define AG_CONST_PANE_NAMED(n) AGCPANE( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Pane:*") )
+#define   AGPANE(o)        ((AG_Pane *)(o))
+#define  AGcPANE(o)        ((const AG_Pane *)(o))
+#define  AG_PANE_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x1C)
+#define  AG_PANE_SELF()    AGPANE(  AG_OBJECT(0,         "AG_Widget:AG_Pane:*") )
+#define  AG_PANE_PTR(n)    AGPANE(  AG_OBJECT((n),       "AG_Widget:AG_Pane:*") )
+#define  AG_PANE_NAMED(n)  AGPANE(  AG_OBJECT_NAMED((n), "AG_Widget:AG_Pane:*") )
+#define AG_cPANE_SELF()   AGcPANE( AG_cOBJECT(0,         "AG_Widget:AG_Pane:*") )
+#define AG_cPANE_PTR(n)   AGcPANE( AG_cOBJECT((n),       "AG_Widget:AG_Pane:*") )
+#define AG_cPANE_NAMED(n) AGcPANE( AG_cOBJECT_NAMED((n), "AG_Widget:AG_Pane:*") )
 
 #ifdef AG_LEGACY
-#define AG_PANE_FORCE_DIV1FILL	0x010	/* Enforce div1 expansion */
-#define AG_PANE_FORCE_DIV2FILL	0x020	/* Enforce div2 expansion */
-#define AG_PANE_DIV		0x040	/* Initially divide equally */
-#define AG_PANE_FORCE_DIV	0x080	/* Enforce equal division */
+#define AG_PANE_FORCE_DIV1FILL	0x010
+#define AG_PANE_FORCE_DIV2FILL	0x020
+#define AG_PANE_DIV		0x040
+#define AG_PANE_FORCE_DIV	0x080
 #endif
 
 __BEGIN_DECLS

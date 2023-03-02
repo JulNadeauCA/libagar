@@ -58,30 +58,28 @@ typedef struct sg_script {
 	Uint32 _pad;
 } SG_Script;
 
-#define SGSCRIPT(obj)            ((SG_Script *)(obj))
-#define SGCSCRIPT(obj)           ((const SG_Script *)(obj))
-#define SG_SCRIPT_SELF()          SGSCRIPT( AG_OBJECT(0,"SG_Script:*") )
-#define SG_SCRIPT_PTR(n)          SGSCRIPT( AG_OBJECT((n),"SG_Script:*") )
-#define SG_SCRIPT_NAMED(n)        SGSCRIPT( AG_OBJECT_NAMED((n),"SG_Script:*") )
-#define SG_CONST_SCRIPT_SELF()   SGCSCRIPT( AG_CONST_OBJECT(0,"SG_Script:*") )
-#define SG_CONST_SCRIPT_PTR(n)   SGCSCRIPT( AG_CONST_OBJECT((n),"SG_Script:*") )
-#define SG_CONST_SCRIPT_NAMED(n) SGCSCRIPT( AG_CONST_OBJECT_NAMED((n),"SG_Script:*") )
-
-struct sg_view;
+#define   SGSCRIPT(obj)      ((SG_Script *)(obj))
+#define  SGcSCRIPT(obj)      ((const SG_Script *)(obj))
+#define  SG_SCRIPT_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x76)
+#define  SG_SCRIPT_SELF()    SGSCRIPT(  AG_OBJECT(0,         "SG_Script:*") )
+#define  SG_SCRIPT_PTR(n)    SGSCRIPT(  AG_OBJECT((n),       "SG_Script:*") )
+#define  SG_SCRIPT_NAMED(n)  SGSCRIPT(  AG_OBJECT_NAMED((n), "SG_Script:*") )
+#define SG_cSCRIPT_SELF()   SGcSCRIPT( AG_cOBJECT(0,         "SG_Script:*") )
+#define SG_cSCRIPT_PTR(n)   SGcSCRIPT( AG_cOBJECT((n),       "SG_Script:*") )
+#define SG_cSCRIPT_NAMED(n) SGcSCRIPT( AG_cOBJECT_NAMED((n), "SG_Script:*") )
 
 __BEGIN_DECLS
-extern AG_ObjectClass sgScriptClass;
+extern AG_ObjectClass       sgScriptClass;
 extern const char *_Nonnull sgScriptInsnNames[];
 
-SG_Script *_Nonnull SG_ScriptNew(void *_Nullable, const char *_Nullable);
-int                 SG_ScriptAlloc(SG_Script *_Nonnull, Uint);
-
+SG_Script *_Nonnull      SG_ScriptNew(void *_Nullable, const char *_Nullable);
+int                      SG_ScriptAlloc(SG_Script *_Nonnull, Uint);
 SG_ScriptInsn *_Nullable SG_ScriptInsnNew(SG_Script *_Nonnull);
 void                     SG_ScriptInsnFree(SG_ScriptInsn *_Nonnull);
 
-int SG_ScriptAddInsn(SG_Script *_Nonnull, Uint, SG_ScriptInsn *_Nonnull);
-int SG_ScriptAddInsnBefore(SG_Script *_Nonnull, Uint, SG_ScriptInsn *_Nonnull,
-                           SG_ScriptInsn *_Nonnull);
+int  SG_ScriptAddInsn(SG_Script *_Nonnull, Uint, SG_ScriptInsn *_Nonnull);
+int  SG_ScriptAddInsnBefore(SG_Script *_Nonnull, Uint, SG_ScriptInsn *_Nonnull,
+                            SG_ScriptInsn *_Nonnull);
 int  SG_ScriptDelInsn(SG_Script *_Nonnull, Uint, SG_ScriptInsn *_Nonnull);
 void SG_ScriptPrintInsn(const SG_ScriptInsn *_Nonnull, char *_Nonnull, AG_Size);
 __END_DECLS

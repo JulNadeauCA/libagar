@@ -27,11 +27,9 @@ typedef enum vg_grid_type {
 
 typedef struct vg_grid {
 	VG_GridType type;	/* Points or lines? */
-
 	Uint flags;
 #define VG_GRID_HIDE      0x01	/* Hide grid */
 #define VG_GRID_UNDERSIZE 0x02	/* Grid too small to display */
-
 	int ival;		/* Nominal pixel interval */
 	int ivalView;		/* Effective interval (dependent on wPixel) */
 	VG_Color color;		/* Display color */
@@ -40,13 +38,13 @@ typedef struct vg_grid {
 typedef struct vg_view {
 	struct ag_widget wid;			/* AG_Widget(3) -> VG_View */
 	Uint flags;
-#define VG_VIEW_HFILL		0x01
-#define VG_VIEW_VFILL		0x02
-#define VG_VIEW_GRID		0x04		/* Display grid */
-#define VG_VIEW_EXTENTS		0x08		/* Display extents (DEBUG) */
-#define VG_VIEW_DISABLE_BG	0x10		/* Enable VG background */
-#define VG_VIEW_CONSTRUCTION	0x20		/* Construction geometry */
-#define VG_VIEW_EXPAND	(VG_VIEW_HFILL|VG_VIEW_VFILL)
+#define VG_VIEW_HFILL        0x01
+#define VG_VIEW_VFILL        0x02
+#define VG_VIEW_GRID         0x04		/* Display grid */
+#define VG_VIEW_EXTENTS      0x08		/* Display extents (DEBUG) */
+#define VG_VIEW_DISABLE_BG   0x10		/* Enable VG background */
+#define VG_VIEW_CONSTRUCTION 0x20		/* Construction geometry */
+#define VG_VIEW_EXPAND       (VG_VIEW_HFILL | VG_VIEW_VFILL)
 	int scaleIdx;				/* Scaling factor index */
 	VG *_Nullable vg;			/* Vector graphics object */
 	float x, y;				/* Display offset */
@@ -64,35 +62,30 @@ typedef struct vg_view {
 	AG_Event *_Nullable btndown_ev;		/* Mouse button down events */
 	AG_Event *_Nullable btnup_ev;		/* Mouse button up events */
 	AG_Event *_Nullable motion_ev;		/* Mouse motion event */
-
 	struct {
 		float x, y;			/* Saved coords */
 		int panning;			/* Panning mode */
 	} mouse;
-
 	char status[VG_VIEW_STATUS_MAX];	/* Status text buffer */
-
 	VG_Tool *_Nullable curtool;		/* Selected tool */
 	VG_Tool *_Nullable deftool;		/* Default tool if any */
 	AG_TAILQ_HEAD_(vg_tool) tools;		/* Edition tools */
-
 	AG_TextCache *_Nonnull tCache;		/* Text cache for VG_Text */
-
 	AG_Widget *_Nullable *_Nonnull editAreas; /* User-created containers */
 	Uint                          nEditAreas;
-
 	int pointSelRadius;			/* Point selection threshold */
 	AG_Rect r;				/* View area */
 } VG_View;
 
-#define VGVIEW(p)              ((VG_View *)(p))
-#define VGCVIEW(p)             ((const VG_View *)(p))
-#define VG_VIEW_SELF()          VGVIEW( AG_OBJECT(0,"AG_Widget:VG_View:*") )
-#define VG_VIEW_PTR(n)          VGVIEW( AG_OBJECT((n),"AG_Widget:VG_View:*") )
-#define VG_VIEW_NAMED(n)        VGVIEW( AG_OBJECT_NAMED((n),"AG_Widget:VG_View:*") )
-#define VG_CONST_VIEW_SELF()   VGCVIEW( AG_CONST_OBJECT(0,"AG_Widget:VG_View:*") )
-#define VG_CONST_VIEW_PTR(n)   VGCVIEW( AG_CONST_OBJECT((n),"AG_Widget:VG_View:*") )
-#define VG_CONST_VIEW_NAMED(n) VGCVIEW( AG_CONST_OBJECT_NAMED((n),"AG_Widget:VG_View:*") )
+#define   VGVIEW(o)        ((VG_View *)(o))
+#define  VGcVIEW(o)        ((const VG_View *)(o))
+#define  VG_VIEW_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x30)
+#define  VG_VIEW_SELF()    VGVIEW(  AG_OBJECT(0,         "AG_Widget:VG_View:*") )
+#define  VG_VIEW_PTR(n)    VGVIEW(  AG_OBJECT((n),       "AG_Widget:VG_View:*") )
+#define  VG_VIEW_NAMED(n)  VGVIEW(  AG_OBJECT_NAMED((n), "AG_Widget:VG_View:*") )
+#define VG_cVIEW_SELF()   VGcVIEW( AG_cOBJECT(0,         "AG_Widget:VG_View:*") )
+#define VG_cVIEW_PTR(n)   VGcVIEW( AG_cOBJECT((n),       "AG_Widget:VG_View:*") )
+#define VG_cVIEW_NAMED(n) VGcVIEW( AG_cOBJECT_NAMED((n), "AG_Widget:VG_View:*") )
 
 #define VG_SKIP_CONSTRAINTS(vv) (AG_GetModState(vv) & AG_KEYMOD_SHIFT)
 #define VG_SELECT_MULTI(vv)     (AG_GetModState(vv) & AG_KEYMOD_CTRL)

@@ -539,7 +539,7 @@ AG_WidgetClass agMFSpinbuttonClass = {
 	{
 		"Agar(Widget:MFSpinbutton)",
 		sizeof(AG_MFSpinbutton),
-		{ 0,0 },
+		{ 1,0, AGC_MFSPINBUTTON, 0xE031 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

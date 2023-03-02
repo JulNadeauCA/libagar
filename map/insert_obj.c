@@ -101,7 +101,7 @@ EditPane(void *_Nonnull p, void *_Nonnull box)
 			continue;
 		}
 		lbl = AG_LabelNew(box, AG_LABEL_HFILL, "%s:",
-		    AGCLASS(clsMo)->name);
+		    AGOBJECTCLASS(clsMo)->name);
 		AG_SetFontSize(lbl, "80%");
 		clsMo->edit(mo, box, TOOL(tool));
 		AG_SeparatorNewHoriz(box);
@@ -195,13 +195,13 @@ MouseButtonDown(void *_Nonnull obj, int x, int y, int button)
 		return (1);
 	}
 	moLib = it->p1;
-	if (!AG_OfClass(moLib, "MAP_Object:*")) {
-		AG_SetErrorS("Library object is not a map object");
+	if (!MAP_OBJECT_ISA(moLib)) {
+		AG_SetErrorS(_("Library item is not a MAP_Object"));
 		goto fail;
 	}
 	node = &map->map[mv->cy][mv->cx];
 	if ((node->flags & MAP_NODE_VALID) == 0) {
-		AG_SetErrorS("Invalid node");
+		AG_SetErrorS(_("Invalid map node"));
 		goto fail;
 	}
 

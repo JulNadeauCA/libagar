@@ -1731,7 +1731,7 @@ AG_DriverSwClass agDriverSDL2FB = {
 		{
 			"AG_Driver:AG_DriverSw:AG_DriverSDL2FB",
 			sizeof(AG_DriverSDL2FB),
-			{ 1,7 },
+			{ 1,7, AGC_DRIVER_SDL2FB, 0xE024 },
 			Init,
 			NULL,		/* reset */
 			Destroy,

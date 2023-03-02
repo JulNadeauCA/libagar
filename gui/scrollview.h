@@ -47,14 +47,15 @@ typedef struct ag_scrollview {
 	AG_Scrollbar *_Nullable vbar;	/* Vertical scrollbar */
 } AG_Scrollview;
 
-#define AGSCROLLVIEW(obj)            ((AG_Scrollview *)(obj))
-#define AGCSCROLLVIEW(obj)           ((const AG_Scrollview *)(obj))
-#define AG_SCROLLVIEW_SELF()          AGSCROLLVIEW( AG_OBJECT(0,"AG_Widget:AG_Scrollview:*") )
-#define AG_SCROLLVIEW_PTR(n)          AGSCROLLVIEW( AG_OBJECT((n),"AG_Widget:AG_Scrollview:*") )
-#define AG_SCROLLVIEW_NAMED(n)        AGSCROLLVIEW( AG_OBJECT_NAMED((n),"AG_Widget:AG_Scrollview:*") )
-#define AG_CONST_SCROLLVIEW_SELF()   AGCSCROLLVIEW( AG_CONST_OBJECT(0,"AG_Widget:AG_Scrollview:*") )
-#define AG_CONST_SCROLLVIEW_PTR(n)   AGCSCROLLVIEW( AG_CONST_OBJECT((n),"AG_Widget:AG_Scrollview:*") )
-#define AG_CONST_SCROLLVIEW_NAMED(n) AGCSCROLLVIEW( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Scrollview:*") )
+#define   AGSCROLLVIEW(obj)    ((AG_Scrollview *)(obj))
+#define  AGcSCROLLVIEW(obj)    ((const AG_Scrollview *)(obj))
+#define  AG_SCROLLVIEW_ISA(o)  (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x21)
+#define  AG_SCROLLVIEW_SELF()    AGSCROLLVIEW(  AG_OBJECT(0,        "AG_Widget:AG_Scrollview:*") )
+#define  AG_SCROLLVIEW_PTR(n)    AGSCROLLVIEW(  AG_OBJECT((n),      "AG_Widget:AG_Scrollview:*") )
+#define  AG_SCROLLVIEW_NAMED(n)  AGSCROLLVIEW(  AG_OBJECT_NAMED((n),"AG_Widget:AG_Scrollview:*") )
+#define AG_cSCROLLVIEW_SELF()   AGCSCROLLVIEW( AG_cOBJECT(0,        "AG_Widget:AG_Scrollview:*") )
+#define AG_cSCROLLVIEW_PTR(n)   AGCSCROLLVIEW( AG_cOBJECT((n),      "AG_Widget:AG_Scrollview:*") )
+#define AG_cSCROLLVIEW_NAMED(n) AGCSCROLLVIEW( AG_cOBJECT_NAMED((n),"AG_Widget:AG_Scrollview:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agScrollviewClass;

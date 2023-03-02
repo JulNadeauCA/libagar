@@ -523,64 +523,6 @@ MAP_PopLayer(MAP *map)
 }
 
 /*
- * Set up a dependency between the map and an external Object
- * (or increment the reference count of existing dependency).
- */
-void
-MAP_PageIn(MAP *map, const char *resPrefix, void *resObj)
-{
-	char key[AG_VARIABLE_NAME_MAX];
-	int nRefs;
-
-	Strlcpy(key, resPrefix, sizeof(key));
-	Strlcat(key, OBJECT(resObj)->name, sizeof(key));
-	AG_BindObject(map,key, resObj);
-
-	Strlcat(key, "-NREFS", sizeof(key));
-	if (AG_Defined(map,key)) {
-		if ((nRefs = AG_GetInt(map,key)) == 0) {
-			if (AG_ObjectPageIn(resObj) == -1)
-				AG_FatalError(NULL);
-		}
-		AG_SetInt(map,key, nRefs+1);
-	} else {
-		if (AG_ObjectPageIn(resObj) == -1) {
-			AG_FatalError(NULL);
-		}
-		AG_SetInt(map,key, 1);
-	}
-}
-
-/*
- * Decrement the reference count between the map and specified tileset.
- * Delete the reference if the reference count reaches 0.
- */
-void
-MAP_PageOut(MAP *map, const char *resPrefix, void *resObj)
-{
-	char key[AG_VARIABLE_NAME_MAX];
-	char nrefkey[AG_VARIABLE_NAME_MAX];
-	int nRefs;
-	
-	Strlcpy(key, resPrefix, sizeof(key));
-	Strlcat(key, OBJECT(resObj)->name, sizeof(key));
-
-	Strlcpy(nrefkey, key, sizeof(nrefkey));
-	Strlcat(nrefkey, "-NREFS", sizeof(nrefkey));
-
-	if (!AG_Defined(map,nrefkey)) {
-		Debug(map, "No reference to %s\n", OBJECT(resObj)->name);
-		return;
-	}
-	if ((nRefs = AG_GetInt(map,nrefkey)) > 0) {
-		AG_SetInt(map,nrefkey, --nRefs);
-	} else {
-		AG_Unset(map,key);
-		AG_Unset(map,nrefkey);
-	}
-}
-
-/*
  * Copy map items and objects from mapSrc:nodeSrc to map:node.
  *
  * Copy only those items/objects on layerSrc (or -1 = all layers).
@@ -1254,7 +1196,7 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 		MAP_Object *mo = map->objs[i];
 		AG_Offset skipSizeOffs;
 		
-		if (!AG_OBJECT_VALID(mo) || !AG_OfClass(mo, "MAP_Object:*"))
+		if (!AG_OBJECT_VALID(mo) || !MAP_OBJECT_ISA(mo))
 			continue;
 
 		Debug(map, "Saving Object %u in slot %u: "
@@ -1263,12 +1205,12 @@ Save(void *_Nonnull obj, AG_DataSource *_Nonnull ds)
 
 		AG_WriteString(ds, OBJECT(mo)->name);
 
-		if (OBJECT_CLASS(mo)->pvt.libs[0] != '\0') {       /* DSOs? */
+		if (OBJECT_CLASS(mo)->libs[0] != '\0') {       /* DSOs? */
 			char s[AG_OBJECT_TYPE_MAX];
 
 			Strlcpy(s, OBJECT_CLASS(mo)->hier, sizeof(s));
 			Strlcat(s, "@", sizeof(s));
-			Strlcat(s, OBJECT_CLASS(mo)->pvt.libs, sizeof(s));
+			Strlcat(s, OBJECT_CLASS(mo)->libs, sizeof(s));
 			AG_WriteString(ds, s);
 		} else {
 			AG_WriteString(ds, OBJECT_CLASS(mo)->hier);
@@ -1957,7 +1899,7 @@ PollLibObjectsFind(AG_Tlist *_Nonnull tl, AG_Object *_Nonnull obj, int depth)
 	AG_Object *child;
 	AG_TlistItem *it;
 	
-	if (AG_OfClass(obj, "RG_Tileset:*")) {
+	if (RG_TILESET_ISA(obj)) {
 		RG_Tileset *ts = (RG_Tileset *)obj;
 		AG_TlistItem *itTile;
 		RG_Tile *tile;
@@ -2024,8 +1966,9 @@ static void
 SelectLibObject(AG_Event *_Nonnull event)
 {
 	MAP_View *mv = MAP_VIEW_PTR(1);
-	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	const AG_TlistItem *it = AG_TLISTITEM_PTR(2);
 	MAP_Tool *tool;
+	void *pObj = it->p1;
 	const int state = AG_INT(3);
 
 	if (state == 0) {
@@ -2035,7 +1978,7 @@ SelectLibObject(AG_Event *_Nonnull event)
 		    	MAP_ViewSelectTool(mv, NULL, NULL);
 	} else {
 		if (strcmp(it->cat, "tile") == 0) {
-			RG_Tile *tile = it->p1;
+			RG_Tile *tile = pObj;
 
 			if ((tool = MAP_ViewFindTool(mv, "Insert")) != NULL) {
 				MAP_InsertTool *insTool = (MAP_InsertTool *)tool;
@@ -2051,8 +1994,7 @@ SelectLibObject(AG_Event *_Nonnull event)
 				MAP_ViewSelectTool(mv, tool, mv->map);
 				AG_WidgetFocus(mv);
 			}
-		} else if (strcmp(it->cat, "object") == 0 &&
-		    AG_OfClass(it->p1, "MAP_Object:*")) {
+		} else if (strcmp(it->cat, "object")==0 && MAP_OBJECT_ISA(pObj)) {
 			if ((tool = MAP_ViewFindTool(mv, "InsertObj")) != NULL) {
 				if (mv->curtool != NULL) {
 					MAP_ViewSelectTool(mv, NULL, NULL);
@@ -2090,11 +2032,11 @@ static void
 SelectObject(AG_Event *_Nonnull event)
 {
 	MAP_View *mv = MAP_VIEW_PTR(1);
-	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	AG_TlistItem *it = AG_TLISTITEM_PTR(2);
 	const int selected = AG_INT(3);
 	MAP_Object *mo = it->p1;
 
-	if (!AG_OBJECT_VALID(mo) || !AG_OfClass(mo, "MAP_Object:*"))
+	if (!AG_OBJECT_VALID(mo) || !MAP_OBJECT_ISA(mo))
 		return;
 
 	if (selected) {
@@ -2147,7 +2089,7 @@ SelectLayer(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
 	MAP *map = MAP_PTR(1);
-	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
+	AG_TlistItem *ti = AG_TLISTITEM_PTR(2);
 	const MAP_Layer *layer = ti->p1;
 	Uint i;
 
@@ -2548,12 +2490,12 @@ GenNewObjectMenu(AG_MenuItem *_Nonnull mParent, AG_ObjectClass *_Nonnull cls,
 	AG_MenuAction(mn, AG_Printf(_("New %s..."), cls->name), NULL,
 	    CreateObjectDlg, "%p%p%p%p%p", pLibsRoot, cls, winParent, mv);
 
-	if (!TAILQ_EMPTY(&cls->pvt.sub)) {		/* Subclasses exist? */
+	if (!TAILQ_EMPTY(&cls->sub)) {		/* Subclasses exist? */
 		AG_ObjectClass *clsSub;
 
 		AG_MenuSeparator(mn);
 
-		TAILQ_FOREACH(clsSub, &cls->pvt.sub, pvt.subclasses) {
+		TAILQ_FOREACH(clsSub, &cls->sub, subclasses) {
 			GenNewObjectMenu(mn, clsSub, pLibsRoot, mv, winParent,
 			    depth+1);
 		}
@@ -2707,7 +2649,7 @@ Edit(void *_Nonnull obj)
 	menu = AG_MenuNew(win, AG_MENU_HFILL);
 	mi = AG_MenuNode(menu->root, _("File"), NULL);
 	{
-		GenNewObjectMenu(mi, AGCLASS(&mapObjectClass),
+		GenNewObjectMenu(mi, AGOBJECTCLASS(&mapObjectClass),
 		    map->pLibs, mv, win, 0);
 
 		AG_MenuActionKb(mi, _("Open..."), agIconLoad.s,
@@ -2883,7 +2825,7 @@ Edit(void *_Nonnull obj)
 AG_ObjectClass mapClass = {
 	"MAP",
 	sizeof(MAP),
-	{ 12, 1 },
+	{ 12,1, AGC_MAP, 0xE02D },
 	Init,
 	Reset,
 	Destroy,

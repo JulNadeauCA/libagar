@@ -171,7 +171,7 @@ static void
 SelectUnicodeRange(AG_Event *_Nonnull event)
 {
 	AG_Treetbl *tt = AG_TREETBL_PTR(1);
-	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	AG_TlistItem *it = AG_TLISTITEM_PTR(2);
 	struct unicode_range *range = it->p1;
 	const struct unicode_range *next_range = NULL;
 	Uint32 i, end;

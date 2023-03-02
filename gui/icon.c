@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -263,7 +263,7 @@ AG_WidgetClass agIconClass = {
 	{
 		"Agar(Widget:Icon)",
 		sizeof(AG_Icon),
-		{ 0,0 },
+		{ 1,0, AGC_ICON, 0xE02E },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

@@ -275,7 +275,7 @@ AG_WidgetClass agProgressBarClass = {
 	{
 		"Agar(Widget:ProgressBar)",
 		sizeof(AG_ProgressBar),
-		{ 0,0 },
+		{ 1,0, AGC_PROGRESSBAR, 0xE032 },
 		Init,
 		NULL,		/* reset */
 		Destroy,

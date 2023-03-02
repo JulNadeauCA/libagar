@@ -52,7 +52,7 @@ AG_JoystickNew(void *obj, const char *desc)
 		return (NULL);
 	}
 	AG_ObjectInit(joy, &agJoystickClass);
-	idev = AGINPUTDEV(joy);
+	idev = AGINPUTDEVICE(joy);
 	idev->drv = drv;
 	if ((idev->desc = TryStrdup(desc)) == NULL) {
 		goto fail;
@@ -100,7 +100,7 @@ void
 AG_ProcessJoystick(AG_Window *win, const AG_DriverEvent *dev)
 {
 	AG_Widget *wFoc;
-	AG_InputDevice *id;
+	AG_InputDevice *idev;
 	int instanceID;
 
 	if ((instanceID = AG_GetJoystickInstanceID(dev)) == -1)
@@ -108,22 +108,22 @@ AG_ProcessJoystick(AG_Window *win, const AG_DriverEvent *dev)
 
 	AG_LockVFS(&agInputDevices);
 
-	OBJECT_FOREACH_CHILD(id, &agInputDevices, ag_input_device) {
+	OBJECT_FOREACH_CHILD(idev, &agInputDevices, ag_input_device) {
 		int i;
 
-		if (!AG_OfClass(id, "AG_InputDevice:AG_Joystick:*")) {
+		if (!AG_JOYSTICK_ISA(idev)) {
 			continue;
 		}
-		if (instanceID != AGJOYSTICK(id)->instanceID) {
+		if (instanceID != AGJOYSTICK(idev)->instanceID) {
 			continue;
 		}
-		for (i = 0; i < id->nWidGrab; i++) {
-			AG_Widget *wGrab = id->widGrab[i];
+		for (i = 0; i < idev->nWidGrab; i++) {
+			AG_Widget *wGrab = idev->widGrab[i];
 
 			AG_OBJECT_ISA(wGrab, "AG_Widget:*");
 			AG_ObjectLock(wGrab);
 			if (WIDGET_OPS(wGrab)->joy != NULL) {
-				WIDGET_OPS(wGrab)->joy(wGrab, id, dev);
+				WIDGET_OPS(wGrab)->joy(wGrab, idev, dev);
 			}
 			AG_ObjectUnlock(wGrab);
 		}
@@ -137,7 +137,7 @@ AG_ProcessJoystick(AG_Window *win, const AG_DriverEvent *dev)
 		}
 		AG_ObjectLock(wFoc);
 		if (WIDGET_OPS(wFoc)->joy != NULL) {
-			WIDGET_OPS(wFoc)->joy(wFoc, id, dev);
+			WIDGET_OPS(wFoc)->joy(wFoc, idev, dev);
 		}
 		AG_ObjectUnlock(wFoc);
 	} else {
@@ -153,7 +153,7 @@ AG_ProcessJoystick(AG_Window *win, const AG_DriverEvent *dev)
 				}
 				AG_ObjectLock(wFoc);
 				if (WIDGET_OPS(wFoc)->joy != NULL) {
-					WIDGET_OPS(wFoc)->joy(wFoc, id, dev);
+					WIDGET_OPS(wFoc)->joy(wFoc, idev, dev);
 				}
 				AG_ObjectUnlock(wFoc);
 			}
@@ -182,7 +182,7 @@ Edit(void *obj)
 
 	box = AG_BoxNewVert(NULL, AG_BOX_HFILL);
 
-	lbl = AG_LabelNewS(box, 0, AGINPUTDEV(joy)->desc);
+	lbl = AG_LabelNewS(box, 0, AGINPUTDEVICE(joy)->desc);
 	AG_SetFontFamily(lbl, "league-spartan");
 	AG_SetFontSize(lbl, "130%");
 
@@ -214,7 +214,7 @@ Edit(void *obj)
 AG_ObjectClass agJoystickClass = {
 	"Agar(InputDevice:Joystick)",
 	sizeof(AG_Joystick),
-	{ 0,0 },
+	{ 1,0, AGC_JOYSTICK, 0x1F579 },
 	Init,
 	NULL,		/* reset */
 	NULL,		/* destroy */

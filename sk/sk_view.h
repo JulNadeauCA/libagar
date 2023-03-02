@@ -54,14 +54,15 @@ typedef struct sk_view {
 	char status[SK_VIEW_STATUS_MAX];	/* Status text buffer */
 } SK_View;
 
-#define SKVIEW(obj)            ((SK_View *)(obj))
-#define SKCVIEW(obj)           ((const SK_View *)(obj))
-#define SK_VIEW_SELF()          SKVIEW( AG_OBJECT(0,"AG_Widget:SK_View:*") )
-#define SK_VIEW_PTR(n)          SKVIEW( AG_OBJECT((n),"AG_Widget:SK_View:*") )
-#define SK_VIEW_NAMED(n)        SKVIEW( AG_OBJECT_NAMED((n),"AG_Widget:SK_View:*") )
-#define SK_CONST_VIEW_SELF()   SKCVIEW( AG_CONST_OBJECT(0,"AG_Widget:SK_View:*") )
-#define SK_CONST_VIEW_PTR(n)   SKCVIEW( AG_CONST_OBJECT((n),"AG_Widget:SK_View:*") )
-#define SK_CONST_VIEW_NAMED(n) SKCVIEW( AG_CONST_OBJECT_NAMED((n),"AG_Widget:SK_View:*") )
+#define   SKVIEW(o)        ((SK_View *)(o))
+#define  SKcVIEW(o)        ((const SK_View *)(o))
+#define  SK_VIEW_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x33)
+#define  SK_VIEW_SELF()    SKVIEW(  AG_OBJECT(0,         "AG_Widget:SK_View:*") )
+#define  SK_VIEW_PTR(n)    SKVIEW(  AG_OBJECT((n),       "AG_Widget:SK_View:*") )
+#define  SK_VIEW_NAMED(n)  SKVIEW(  AG_OBJECT_NAMED((n), "AG_Widget:SK_View:*") )
+#define SK_cVIEW_SELF()   SKcVIEW( AG_cOBJECT(0,         "AG_Widget:SK_View:*") )
+#define SK_cVIEW_PTR(n)   SKcVIEW( AG_cOBJECT((n),       "AG_Widget:SK_View:*") )
+#define SK_cVIEW_NAMED(n) SKcVIEW( AG_cOBJECT_NAMED((n), "AG_Widget:SK_View:*") )
 
 #define SK_VIEW_X(skv,px) ((M_Real)(px - (AGWIDGET(skv)->w >> 1))) / \
                           ((M_Real)WIDGET(skv)->w/2.0)

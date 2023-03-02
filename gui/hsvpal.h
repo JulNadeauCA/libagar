@@ -22,7 +22,7 @@ typedef struct ag_hsvpal {
 #define AG_HSVPAL_SHOW_RGB	0x40	/* Print RGB value */
 #define AG_HSVPAL_SHOW_HSV	0x80	/* Print HSV value */
 #define AG_HSVPAL_SHOW_RGB_HSV	0xc0	/* Print both RGB and HSV values */
-#define AG_HSVPAL_EXPAND (AG_HSVPAL_HFILL|AG_HSVPAL_VFILL)
+#define AG_HSVPAL_EXPAND (AG_HSVPAL_HFILL | AG_HSVPAL_VFILL)
 
 	float h, s, v, a;		/* Default bindings */
 	Uint32 pixel;			/* Packed 32-bit pixel */
@@ -60,14 +60,15 @@ typedef struct ag_hsvpal {
 	AG_Timer toMove[4];             /* For 4-way keyboard navigation */
 } AG_HSVPal;
 
-#define AGHSVPAL(obj)            ((AG_HSVPal *)(obj))
-#define AGCHSVPAL(obj)           ((const AG_HSVPal *)(obj))
-#define AG_HSVPAL_SELF()          AGHSVPAL( AG_OBJECT(0,"AG_Widget:AG_HSVPal:*") )
-#define AG_HSVPAL_PTR(n)          AGHSVPAL( AG_OBJECT((n),"AG_Widget:AG_HSVPal:*") )
-#define AG_HSVPAL_NAMED(n)        AGHSVPAL( AG_OBJECT_NAMED((n),"AG_Widget:AG_HSVPal:*") )
-#define AG_CONST_HSVPAL_SELF()   AGCHSVPAL( AG_CONST_OBJECT(0,"AG_Widget:AG_HSVPal:*") )
-#define AG_CONST_HSVPAL_PTR(n)   AGCHSVPAL( AG_CONST_OBJECT((n),"AG_Widget:AG_HSVPal:*") )
-#define AG_CONST_HSVPAL_NAMED(n) AGCHSVPAL( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_HSVPal:*") )
+#define   AGHSVPAL(o)        ((AG_HSVPal *)(o))
+#define  AGcHSVPAL(o)        ((const AG_HSVPal *)(o))
+#define  AG_HSVPAL_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x15)
+#define  AG_HSVPAL_SELF()    AGHSVPAL( AG_OBJECT(0,          "AG_Widget:AG_HSVPal:*") )
+#define  AG_HSVPAL_PTR(n)    AGHSVPAL( AG_OBJECT((n),        "AG_Widget:AG_HSVPal:*") )
+#define  AG_HSVPAL_NAMED(n)  AGHSVPAL( AG_OBJECT_NAMED((n),  "AG_Widget:AG_HSVPal:*") )
+#define AG_cHSVPAL_SELF()   AGcHSVPAL( AG_cOBJECT(0,         "AG_Widget:AG_HSVPal:*") )
+#define AG_cHSVPAL_PTR(n)   AGcHSVPAL( AG_cOBJECT((n),       "AG_Widget:AG_HSVPal:*") )
+#define AG_cHSVPAL_NAMED(n) AGcHSVPAL( AG_cOBJECT_NAMED((n), "AG_Widget:AG_HSVPal:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agHSVPalClass;

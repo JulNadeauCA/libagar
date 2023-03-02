@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -178,7 +178,7 @@ AG_WindowNewUnder(void *pDrv, Uint flags)
 	AG_Driver *drv = pDrv;
 	AG_Window *win;
 
-	if (!AG_OBJECT_VALID(drv) || !AG_OfClass(drv, "AG_Driver:*")) {
+	if (!AG_OBJECT_VALID(drv) || !AG_DRIVER_ISA(drv)) {
 		AG_SetErrorS("drv is not a Driver");
 		return (NULL);
 	}
@@ -233,7 +233,7 @@ AG_WindowNew(Uint flags)
 		}
 		AG_ObjectAttach(drv, win);
 
-		AGDRIVER_MW(drv)->win = win;
+		AGDRIVERMW(drv)->win = win;
 
 		win->wBorderSide = 0;
 		win->wBorderBot = 0;
@@ -302,7 +302,7 @@ Attach(AG_Event *_Nonnull event)
 		TAILQ_INSERT_TAIL(&OBJECT(drv)->children, OBJECT(win), cobjs);
 	}
 	if (AGDRIVER_MULTIPLE(drv))
-		AGDRIVER_MW(drv)->win = win;
+		AGDRIVERMW(drv)->win = win;
 
 	/*
 	 * Notify the objects. This will cause the the "drv" and "drvOps"
@@ -337,7 +337,7 @@ Attach(AG_Event *_Nonnull event)
 		WIDGET(icon)->drvOps = AGDRIVER_CLASS(drv);
 
 		AG_IconSetSurface(icon, agIconWindow.s);
-		AG_IconSetBackgroundFill(icon, 1, &AGDRIVER_SW(drv)->bgColor);
+		AG_IconSetBackgroundFill(icon, 1, &AGDRIVERSW(drv)->bgColor);
 		AG_SetFontSize(icon, "80%");
 		AG_WidgetCompileStyle(icon);
 	}
@@ -656,8 +656,8 @@ Selected_WM_Op(AG_Window *_Nonnull win, enum ag_wm_operation op)
 	AG_Driver *drv = WIDGET(win)->drv;
 
 	return (AGDRIVER_SINGLE(drv) &&
-	        AGDRIVER_SW(drv)->winSelected == win &&
-	        AGDRIVER_SW(drv)->winop == op);
+	        AGDRIVERSW(drv)->winSelected == win &&
+	        AGDRIVERSW(drv)->winop == op);
 }
 
 #define DRAW_BORDER(winop,c)			\
@@ -772,7 +772,7 @@ OnShow(AG_Event *_Nonnull event)
 		} else {
 #ifdef AG_WM_HINTS
 			if (AGDRIVER_MULTIPLE(drv) &&
-			   (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_ANYPOS_AVAIL)) {
+			   (AGDRIVERMW(drv)->flags & AG_DRIVER_MW_ANYPOS_AVAIL)) {
 				/* Let the WM choose a default position */
 				mwFlags |= AG_DRIVER_MW_ANYPOS;
 			} else
@@ -797,7 +797,7 @@ OnShow(AG_Event *_Nonnull event)
 		    WIDGET(win)->y);
 		break;
 	case AG_WM_MULTIPLE:
-		if (!(AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN)) {
+		if (!(AGDRIVERMW(drv)->flags & AG_DRIVER_MW_OPEN)) {
 			AG_Rect rw;
 
 			rw.x = a.x;
@@ -808,7 +808,7 @@ OnShow(AG_Event *_Nonnull event)
 			    mwFlags) == -1) {
 				AG_FatalError(NULL);
 			}
-			AGDRIVER_MW(drv)->flags |= AG_DRIVER_MW_OPEN;
+			AGDRIVERMW(drv)->flags |= AG_DRIVER_MW_OPEN;
 		}
 		if (win->flags & AG_WINDOW_FADEIN)
 			AG_WindowSetOpacity(win, 0.0f);
@@ -918,7 +918,7 @@ OnHide(AG_Event *_Nonnull event)
 			AG_PostEvent(win, "window-lostfocus", NULL);
 			agWindowFocused = NULL;
 		}
-		if (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) {
+		if (AGDRIVERMW(drv)->flags & AG_DRIVER_MW_OPEN) {
 			if (AGDRIVER_MW_CLASS(drv)->unmapWindow(win) == -1)
 				AG_FatalError(NULL);
 		}
@@ -1137,7 +1137,7 @@ AG_WindowDrawQueued(void)
 	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
 		switch (AGDRIVER_CLASS(drv)->wm) {
 		case AG_WM_MULTIPLE:
-			if ((win = AGDRIVER_MW(drv)->win) != NULL) {
+			if ((win = AGDRIVERMW(drv)->win) != NULL) {
 				if (!win->visible || !win->dirty) {
 					continue;
 				}
@@ -1210,7 +1210,7 @@ FindFocusableWidgets(AG_WidgetVec *W, AG_Widget *_Nonnull wid)
 		/* TODO move to proper index. */
 #endif
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
-		if (AG_OfClass(chld, "AG_Widget:AG_Window:*")) {
+		if (AG_WINDOW_ISA(chld)) {
 			continue;
 		}
 		FindFocusableWidgets(W, chld);
@@ -1236,7 +1236,7 @@ AG_WindowCycleFocus(AG_Window *win, int reverse)
 	AG_VEC_INIT(&WU);
 
 	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
-		if (AG_OfClass(chld, "AG_Widget:AG_Window:*")) {
+		if (AG_WINDOW_ISA(chld)) {
 			continue;
 		}
 		FindFocusableWidgets(&W, chld);
@@ -1448,7 +1448,7 @@ UpdateWindowBG(AG_Window *_Nonnull win, const AG_Rect *_Nonnull rPrev)
 		r.h = 0;
 	}
 	if (r.w > 0 && r.h > 0) {
-		AGDRIVER_CLASS(drv)->fillRect(drv, &r, &AGDRIVER_SW(drv)->bgColor);
+		AGDRIVER_CLASS(drv)->fillRect(drv, &r, &AGDRIVERSW(drv)->bgColor);
 		if (AGDRIVER_CLASS(drv)->updateRegion != NULL)
 			AGDRIVER_CLASS(drv)->updateRegion(drv, &r);
 	}
@@ -1458,7 +1458,7 @@ UpdateWindowBG(AG_Window *_Nonnull win, const AG_Rect *_Nonnull rPrev)
 		r.w = rPrev->w;
 		r.h = rPrev->h - HEIGHT(win) + 1;
 			
-		AGDRIVER_CLASS(drv)->fillRect(drv, &r, &AGDRIVER_SW(drv)->bgColor);
+		AGDRIVER_CLASS(drv)->fillRect(drv, &r, &AGDRIVERSW(drv)->bgColor);
 
 		if (AGDRIVER_CLASS(drv)->updateRegion != NULL)
 			AGDRIVER_CLASS(drv)->updateRegion(drv, &r);
@@ -1579,7 +1579,7 @@ AG_WindowSetGeometryRect(AG_Window *win, const AG_Rect *r, int bounded)
 		}
 		break;
 	case AG_WM_MULTIPLE:
-		if (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) {
+		if (AGDRIVERMW(drv)->flags & AG_DRIVER_MW_OPEN) {
 			if (AGDRIVER_MW_CLASS(drv)->moveResizeWindow(win, &a) == -1)
 				goto fail;
 		}
@@ -1634,7 +1634,7 @@ AG_WindowMove(AG_Window *win, int xRel, int yRel)
 		}
 		break;
 	case AG_WM_MULTIPLE:
-		if ((AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) &&
+		if ((AGDRIVERMW(drv)->flags & AG_DRIVER_MW_OPEN) &&
 		    AGDRIVER_MW_CLASS(drv)->moveWindow(win,
 		    WIDGET(win)->x + xRel,
 		    WIDGET(win)->y + yRel) == -1) {
@@ -1681,7 +1681,7 @@ AG_WindowSetMinSize(AG_Window *win, int w, int h)
 
 	drv = WIDGET(win)->drv;
 	if (AGDRIVER_MULTIPLE(drv) &&
-	    AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN &&
+	    (AGDRIVERMW(drv)->flags & AG_DRIVER_MW_OPEN) &&
 	    AGDRIVER_MW_CLASS(drv)->setWindowMinSize != NULL) {
 		AGDRIVER_MW_CLASS(drv)->setWindowMinSize(win, w,h);
 	}
@@ -1874,10 +1874,12 @@ IconMouseMotion(AG_Event *_Nonnull event)
 		if (drv && AGDRIVER_SINGLE(drv)) {         /* Must clear BG */
 			r.x = 0;
 			r.y = 0;
-			r.w = AGDRIVER_SW(drv)->w;
-			r.h = AGDRIVER_SW(drv)->h;
+			r.w = AGDRIVERSW(drv)->w;
+			r.h = AGDRIVERSW(drv)->h;
+
 			AGDRIVER_CLASS(drv)->fillRect(drv, &r,
-			    &AGDRIVER_SW(drv)->bgColor);
+			    &AGDRIVERSW(drv)->bgColor);
+
 			AG_Rect2ToRect(&r, &WIDGET(wDND)->rView);
 
 			if (AGDRIVER_CLASS(drv)->updateRegion != NULL)
@@ -2344,7 +2346,7 @@ AG_WindowSetCaptionS(AG_Window *win, const char *s)
 		UpdateIconCaption(win);
 
 	if ((drv = WIDGET(win)->drv) && AGDRIVER_MULTIPLE(drv) &&
-	    (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) &&
+	    (AGDRIVERMW(drv)->flags & AG_DRIVER_MW_OPEN) &&
 	    (AGDRIVER_MW_CLASS(drv)->setWindowCaption != NULL)) {
 		AGDRIVER_MW_CLASS(drv)->setWindowCaption(win, s);
 	} else {
@@ -2470,14 +2472,14 @@ AG_WindowProcessDetachQueue(void)
 		AG_PostEvent(win, "detached", "%p", drv);
 
 		if (AGDRIVER_MULTIPLE(drv)) {
-			if (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) {
+			if (AGDRIVERMW(drv)->flags & AG_DRIVER_MW_OPEN) {
 				AGDRIVER_MW_CLASS(drv)->closeWindow(win);
-				AGDRIVER_MW(drv)->flags &= ~(AG_DRIVER_MW_OPEN);
+				AGDRIVERMW(drv)->flags &= ~(AG_DRIVER_MW_OPEN);
 			}
 		} else {
 			AG_UnmapAllCursors(win, win);
 			win->tbar = NULL;
-			AGDRIVER_SW(drv)->flags |= AG_DRIVER_SW_REDRAW;
+			AGDRIVERSW(drv)->flags |= AG_DRIVER_SW_REDRAW;
 		}
 
 		/* Unset detach-fn and perform a generic Object detach. */
@@ -3101,8 +3103,7 @@ PollCursorAreas(AG_Event *event)
 	
 	AG_TlistBegin(tl);
 	
-	if (tgt == NULL || !AG_OBJECT_VALID(tgt) ||
-	    !AG_OfClass(tgt, "AG_Widget:AG_Window:*")) {
+	if (tgt == NULL || !AG_OBJECT_VALID(tgt) || !AG_WINDOW_ISA(tgt)) {
 		AG_TlistAdd(tl, NULL, _("(Object %p is invalid)"), tgt);
 		goto out;
 	}
@@ -3248,7 +3249,7 @@ AG_WidgetClass agWindowClass = {
 	{
 		"Agar(Widget:Window)",
 		sizeof(AG_Window),
-		{ 0,0 },
+		{ 1,0, AGC_WINDOW, 0xE024 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

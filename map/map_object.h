@@ -78,17 +78,18 @@ typedef struct map_object_class {
 	                      struct map_tool *_Nonnull);
 } MAP_ObjectClass;
 
-#define MAPOBJECT(obj)            ((MAP_Object *)(obj))
-#define MAPCOBJECT(obj)           ((const MAP_Object *)(obj))
-#define MAP_OBJECT_SELF()         MAPOBJECT( AG_OBJECT(0,"MAP_Object:*") )
-#define MAP_OBJECT_PTR(n)         MAPOBJECT( AG_OBJECT((n),"MAP_Object:*") )
-#define MAP_OBJECT_NAMED(n)       MAPOBJECT( AG_OBJECT_NAMED((n),"MAP_Object:*") )
-#define MAP_OBJECT_CONST_SELF()   MAPOBJECT( AG_CONST_OBJECT(0,"MAP_Object:*") )
-#define MAP_OBJECT_CONST_PTR(n)   MAPOBJECT( AG_CONST_OBJECT((n),"MAP_Object:*") )
-#define MAP_OBJECT_CONST_NAMED(n) MAPOBJECT( AG_CONST_OBJECT_NAMED((n),"MAP_Object:*") )
+#define  MAPOBJECT(o)         ((MAP_Object *)(o))
+#define MAPcOBJECT(o)         ((const MAP_Object *)(o))
+#define MAP_OBJECT_ISA(o)     (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x73)
+#define MAP_OBJECT_SELF()     MAPOBJECT(  AG_OBJECT(0,         "MAP_Object:*") )
+#define MAP_OBJECT_PTR(n)     MAPOBJECT(  AG_OBJECT((n),       "MAP_Object:*") )
+#define MAP_OBJECT_NAMED(n)   MAPOBJECT(  AG_OBJECT_NAMED((n), "MAP_Object:*") )
+#define MAP_OBJECT_cSELF()   MAPcOBJECT( AG_cOBJECT(0,         "MAP_Object:*") )
+#define MAP_OBJECT_cPTR(n)   MAPcOBJECT( AG_cOBJECT((n),       "MAP_Object:*") )
+#define MAP_OBJECT_cNAMED(n) MAPcOBJECT( AG_cOBJECT_NAMED((n), "MAP_Object:*") )
 
-#define MAPOBJECTCLASS(cls)    ((MAP_ObjectClass *)(cls))
-#define MAPOBJECTCLASS_OF(obj) ((MAP_ObjectClass *)(AGOBJECT(obj)->cls))
+#define MAPOBJECTCLASS(cls)  ((MAP_ObjectClass *)(cls))
+#define MAPOBJECTCLASS_OF(o) ((MAP_ObjectClass *)(AGOBJECT(o)->cls))
 
 __BEGIN_DECLS
 extern MAP_ObjectClass mapObjectClass;

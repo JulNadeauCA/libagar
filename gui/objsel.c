@@ -104,12 +104,10 @@ FindObjects(AG_ObjectSelector *os, AG_Tlist *tl, AG_Object *pob, int depth)
 }
 
 static void
-PollObjects(AG_Event *event)
+ExpandObjects(AG_Event *event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
 	AG_ObjectSelector *os = AG_OBJECTSELECTOR_PTR(1);
-
-	AG_TlistClear(tl);
 
 	AG_ObjectLock(os);
 	AG_LockVFS(os->root);
@@ -118,29 +116,18 @@ PollObjects(AG_Event *event)
 
 	AG_UnlockVFS(os->root);
 	AG_ObjectUnlock(os);
-
-	AG_TlistRestore(tl);
 }
 
 static void
 SelectObject(AG_Event *event)
 {
 	AG_ObjectSelector *os = AG_OBJECTSELECTOR_PTR(1);
-	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	const AG_TlistItem *it = AG_TLISTITEM_PTR(2);
 	AG_Variable *V;
 	void **object;
 	
 	V = AG_GetVariable(os, "object", (void *)&object);
-
-	if (*object != NULL) {
-		if (os->flags & AG_OBJSEL_PAGE_DATA)
-			AG_ObjectPageOut(*object);
-	}
 	*object = it->p1;
-
-	if (os->flags & AG_OBJSEL_PAGE_DATA) {
-		AG_ObjectPageIn(*object);
-	}
 	AG_UnlockVariable(V);
 }
 
@@ -167,7 +154,6 @@ Init(void *obj)
 	WIDGET(os)->flags |= AG_WIDGET_HFILL;
 
 	com->flags |= AG_COMBO_POLL;
-	com->list->flags |= AG_TLIST_POLL;
 	
 	os->object = NULL;
 	os->flags = 0;
@@ -178,7 +164,7 @@ Init(void *obj)
 
 	AG_BindPointer(os, "object", &os->object);
 
-	AG_SetEvent(os->com.list, "tlist-poll", PollObjects, "%p", os);
+	AG_SetEvent(&os->com, "combo-expand", ExpandObjects, "%p", os);
 	AG_SetEvent(&os->com, "combo-selected", SelectObject, "%p", os);
 	
 	AG_SetEvent(os, "bound", Bound, NULL);
@@ -200,7 +186,7 @@ AG_WidgetClass agObjectSelectorClass = {
 	{
 		"Agar(Widget:Combo:ObjectSelector)",
 		sizeof(AG_ObjectSelector),
-		{ 0,0 },
+		{ 1,0, AGC_OBJECT_SELECTOR, 0xE063 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

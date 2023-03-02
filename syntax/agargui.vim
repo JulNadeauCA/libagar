@@ -3,7 +3,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agargui.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 February 8
+" Last Change:  2023 March 1
 
 " Agar-GUI (https://libagar.org/)
 if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
@@ -560,7 +560,7 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_TEXT_TOP AG_TEXT_MIDDLE AG_TEXT_BOTTOM
   syn keyword cConstant AG_MSG_ERROR AG_MSG_WARNING AG_MSG_INFO
   syn keyword cConstant AG_FONT_VECTOR AG_FONT_BITMAP AG_FONT_DUMMY
-  syn keyword cConstant AG_FONT_FREETYPE
+  syn keyword cConstant AG_FONT_FREETYPE AG_FONT_NAME_MAX
   syn keyword cConstant AG_FONT_TYPE_LAST AG_FONT_SOURCE_FILE
   syn keyword cConstant AG_FONT_SOURCE_MEMORY AG_FONT_PTS_EPSILON
   syn keyword cConstant AG_ANSI_BLACK AG_ANSI_RED AG_ANSI_GREEN

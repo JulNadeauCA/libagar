@@ -119,8 +119,7 @@ OnAttach(AG_Event *_Nonnull event)
 	MA_Widget *widget = MA_WIDGET_SELF();
 	const void *parent = AG_PTR(1);
 
-	if (AG_OfClass(parent, "MA_Window:*") &&
-	    AG_OfClass(widget, "MA_Widget:*")) {
+	if (MA_WINDOW_ISA(parent) && MA_WIDGET_ISA(widget)) {
 		MA_Widget *wParent = WIDGET(parent);
 		/*
 		 * This is a widget attaching to a window.
@@ -130,8 +129,7 @@ OnAttach(AG_Event *_Nonnull event)
 /*			widget->flags |= MA_WIDGET_UPDATE_WINDOW; */
 			AG_PostEvent(widget, "widget-shown", NULL);
 		}
-	} else if (AG_OfClass(parent, "MA_Widget:*") &&
-	           AG_OfClass(widget, "MA_Widget:*")) {
+	} else if (MA_WIDGET_ISA(parent) && MA_WIDGET_ISA(widget)) {
 		MA_Widget *wParent = WIDGET(parent);
 		MA_Window *window = wParent->window;
 		/*
@@ -149,8 +147,7 @@ OnDetach(AG_Event *_Nonnull event)
 	MA_Widget *widget = MA_WIDGET_SELF();
 	const void *parent = AG_PTR(1);
 	
-	if (AG_OfClass(parent, "MA_Widget:*") &&
-	    AG_OfClass(widget, "MA_Widget:*"))
+	if (MA_WIDGET_ISA(parent) && MA_WIDGET_ISA(widget))
 		SetParentWindow(widget, NULL);
 }
 
@@ -297,7 +294,7 @@ MA_WidgetFocus(void *obj)
 	 * to the parent window.
 	 */
 	do {
-		if (AG_OfClass(wParent, "MA_Window:*")) {
+		if (MA_WINDOW_ISA(wParent)) {
 			MA_WindowFocus(MAWINDOW(wParent));
 			break;
 		}
@@ -388,7 +385,7 @@ MA_WidgetFindFocused(void *p)
 	MA_Widget *wid = p;
 	MA_Widget *cwid, *fwid;
 
-	if (!AG_OfClass(wid, "MA_Window:*")) {
+	if (!MA_WINDOW_ISA(wid)) {
 		if ((wid->flags & MA_WIDGET_FOCUSED) == 0 ||
 		    (wid->flags & MA_WIDGET_VISIBLE) == 0 ||
 		    (wid->flags & MA_WIDGET_DISABLED))

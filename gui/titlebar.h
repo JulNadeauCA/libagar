@@ -26,14 +26,15 @@ typedef struct ag_titlebar {
 	AG_Label *_Nonnull label;		/* Titlebar text */
 } AG_Titlebar;
 
-#define AGTITLEBAR(obj)            ((AG_Titlebar *)(obj))
-#define AGCTITLEBAR(obj)           ((const AG_Titlebar *)(obj))
-#define AG_TITLEBAR_SELF()          AGTITLEBAR( AG_OBJECT(0,"AG_Widget:AG_Box:AG_Titlebar:*") )
-#define AG_TITLEBAR_PTR(n)          AGTITLEBAR( AG_OBJECT((n),"AG_Widget:AG_Box:AG_Titlebar:*") )
-#define AG_TITLEBAR_NAMED(n)        AGTITLEBAR( AG_OBJECT_NAMED((n),"AG_Widget:AG_Box:AG_Titlebar:*") )
-#define AG_CONST_TITLEBAR_SELF()   AGCTITLEBAR( AG_CONST_OBJECT(0,"AG_Widget:AG_Box:AG_Titlebar:*") )
-#define AG_CONST_TITLEBAR_PTR(n)   AGCTITLEBAR( AG_CONST_OBJECT((n),"AG_Widget:AG_Box:AG_Titlebar:*") )
-#define AG_CONST_TITLEBAR_NAMED(n) AGCTITLEBAR( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Box:AG_Titlebar:*") )
+#define   AGTITLEBAR(o)     ((AG_Titlebar *)(o))
+#define  AGcTITLEBAR(o)     ((const AG_Titlebar *)(o))
+#define  AG_TITLEBAR_ISA(o) (((AGOBJECT(o)->cid & 0xffff0000) >> 16) == 0x0904)
+#define  AG_TITLEBAR_SELF()    AGTITLEBAR(  AG_OBJECT(0,         "AG_Widget:AG_Box:AG_Titlebar:*") )
+#define  AG_TITLEBAR_PTR(n)    AGTITLEBAR(  AG_OBJECT((n),       "AG_Widget:AG_Box:AG_Titlebar:*") )
+#define  AG_TITLEBAR_NAMED(n)  AGTITLEBAR(  AG_OBJECT_NAMED((n), "AG_Widget:AG_Box:AG_Titlebar:*") )
+#define AG_cTITLEBAR_SELF()   AGcTITLEBAR( AG_cOBJECT(0,         "AG_Widget:AG_Box:AG_Titlebar:*") )
+#define AG_cTITLEBAR_PTR(n)   AGcTITLEBAR( AG_cOBJECT((n),       "AG_Widget:AG_Box:AG_Titlebar:*") )
+#define AG_cTITLEBAR_NAMED(n) AGcTITLEBAR( AG_cOBJECT_NAMED((n), "AG_Widget:AG_Box:AG_Titlebar:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agTitlebarClass;

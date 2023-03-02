@@ -177,7 +177,7 @@ SDL2GL_BeginRendering(void *_Nonnull obj)
 	AG_DriverSDL2GL *sgl = obj;
 	AG_GL_Context *gl = &sgl->gl;
 
-	if (AGDRIVER_SW(sgl)->flags & AG_DRIVER_SW_OVERLAY) {
+	if (AGDRIVERSW(sgl)->flags & AG_DRIVER_SW_OVERLAY) {
 		AG_Rect r;
 		AG_Driver *drv = obj;
 
@@ -191,8 +191,8 @@ SDL2GL_BeginRendering(void *_Nonnull obj)
 		AG_GL_InitContext(drv, gl);
 		r.x = 0;
 		r.y = 0;
-		r.w = AGDRIVER_SW(sgl)->w;
-		r.h = AGDRIVER_SW(sgl)->h;
+		r.w = AGDRIVERSW(sgl)->w;
+		r.h = AGDRIVERSW(sgl)->h;
 		AG_GL_SetViewport(gl, &r);
 	} else {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -277,7 +277,7 @@ SDL2GL_EndRendering(void *_Nonnull drv)
 	gl->nTextureGC = 0;
 	gl->nListGC = 0;
 
-	if (AGDRIVER_SW(sgl)->flags & AG_DRIVER_SW_OVERLAY) {
+	if (AGDRIVERSW(sgl)->flags & AG_DRIVER_SW_OVERLAY) {
 		glPopAttrib();
 		AG_GL_DestroyContext(&sgl->gl);     /* Restore former state */
 	} else {
@@ -574,8 +574,7 @@ PollGLContext(AG_Event *_Nonnull event)
 	AG_TlistItem *it;
 	Uint i;
 
-	if (!AG_OBJECT_VALID(sgl) ||
-	    !AG_OfClass(sgl, "AG_Driver:AG_DriverSw:AG_DriverSDL2GL:*")) {
+	if (!AG_OBJECT_VALID(sgl) || OBJECT(sgl)->cid != AGC_DRIVER_SDL2GL) {
 		if (WIDGET(tl)->window != NULL) {
 			AG_ObjectDetach(WIDGET(tl)->window);
 			return;
@@ -681,7 +680,7 @@ AG_DriverSwClass agDriverSDL2GL = {
 		{
 			"AG_Driver:AG_DriverSw:AG_DriverSDL2GL",
 			sizeof(AG_DriverSDL2GL),
-			{ 1,7 },
+			{ 1,7, AGC_DRIVER_SDL2GL, 0xE01D },
 			Init,
 			NULL,		/* reset */
 			NULL,		/* destroy */

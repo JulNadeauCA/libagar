@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2007-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * Copyright (c) 2019 Charles A. Daniels, <charles@cdaniels.net>
  * All rights reserved.
  *
@@ -1088,7 +1088,7 @@ AG_WidgetClass agGraphClass = {
 	{
 		"Agar(Widget:Graph)",
 		sizeof(AG_Graph),
-		{ 0,0 },
+		{ 1,0, AGC_GRAPH, 0xE01C },
 		Init,
 		NULL,		/* reset */
 		Destroy,

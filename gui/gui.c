@@ -545,7 +545,7 @@ AG_InitGraphics(const char *spec)
 
 	switch (dc->wm) {
 	case AG_WM_MULTIPLE:
-		agDriverMw = AGDRIVER_MW(drv);
+		agDriverMw = AGDRIVERMW(drv);
 		break;
 	case AG_WM_SINGLE:
 		if (AGDRIVER_SW_CLASS(drv)->openVideo(drv, 0,0, 0,
@@ -554,7 +554,7 @@ AG_InitGraphics(const char *spec)
 			    AG_GetError());
 			goto fail_close;
 		}
-		agDriverSw = AGDRIVER_SW(drv);
+		agDriverSw = AGDRIVERSW(drv);
 		break;
 	}
 	agDriverOps = dc;
@@ -833,7 +833,7 @@ AG_InitVideo(int w, int h, int depth, Uint flags)
 		goto fail;
 	}
 	agDriverOps = dc;
-	agDriverSw = AGDRIVER_SW(drv);
+	agDriverSw = AGDRIVERSW(drv);
 	return (0);
 fail:
 	AG_DestroyGUIGlobals();

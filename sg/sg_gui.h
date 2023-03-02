@@ -27,7 +27,6 @@
 #include <agar/gui/separator.h>
 
 #include <agar/sg/sg_view.h>
-#include <agar/sg/sg_palette_view.h>
 #include <agar/sg/icons.h>
 
 #include <agar/sg/begin.h>

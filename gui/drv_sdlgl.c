@@ -181,7 +181,7 @@ SDLGL_BeginRendering(void *_Nonnull obj)
 	AG_DriverSDLGL *sgl = obj;
 	AG_GL_Context *gl = &sgl->gl;
 
-	if (AGDRIVER_SW(sgl)->flags & AG_DRIVER_SW_OVERLAY) {
+	if (AGDRIVERSW(sgl)->flags & AG_DRIVER_SW_OVERLAY) {
 		AG_Rect r;
 		AG_Driver *drv = obj;
 
@@ -195,8 +195,8 @@ SDLGL_BeginRendering(void *_Nonnull obj)
 		AG_GL_InitContext(drv, gl);
 		r.x = 0;
 		r.y = 0;
-		r.w = AGDRIVER_SW(sgl)->w;
-		r.h = AGDRIVER_SW(sgl)->h;
+		r.w = AGDRIVERSW(sgl)->w;
+		r.h = AGDRIVERSW(sgl)->h;
 		AG_GL_SetViewport(gl, &r);
 	} else {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -268,7 +268,7 @@ SDLGL_EndRendering(void *_Nonnull drv)
 	if (sgl->outMode != AG_SDLGL_OUT_NONE)            /* Capture output */
 		SDLGL_CaptureOutput(sgl);
 
-	if (AGDRIVER_SW(sgl)->flags & AG_DRIVER_SW_OVERLAY) {
+	if (AGDRIVERSW(sgl)->flags & AG_DRIVER_SW_OVERLAY) {
 		glPopAttrib();
 		AG_GL_DestroyContext(&sgl->gl);     /* Restore former state */
 	} else {
@@ -615,7 +615,7 @@ AG_DriverSwClass agDriverSDLGL = {
 		{
 			"AG_Driver:AG_DriverSw:AG_DriverSDLGL",
 			sizeof(AG_DriverSDLGL),
-			{ 1,6 },
+			{ 1,7, AGC_DRIVER_SDLGL, 0xE01D },
 			Init,
 			NULL,		/* reset */
 			NULL,		/* destroy */

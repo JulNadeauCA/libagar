@@ -20,11 +20,11 @@ Init(void *obj)
 static int
 TestGUI(void *obj, AG_Window *win)
 {
-	MyWidget *my;
+	MY_Widget *myw;
 
-	my = MyWidgetNew(win, "foo");
-	my->ti = obj;
-	AG_Expand(my);
+	myw = MY_WidgetNew(win, "foo");
+	myw->ti = obj;
+	AG_Expand(myw);
 
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, 240);
 	return (0);

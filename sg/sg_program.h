@@ -18,7 +18,10 @@ typedef struct sg_program {
 	int tag;			/* User tag */
 } SG_Program;
 
-#define SG_PROGRAM(sp)	   ((SG_Program *)(sp))
+#define SG_PROGRAM_ISA(o) (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x77)
+#define SGPROGRAM(o)      ((SG_Program *)(o))
+#define SGCPROGRAM(o)     ((const SG_Program *)(o))
+
 #define SG_PROGRAM_OPS(sp) ((SG_ProgramClass *)AGOBJECT(sp)->cls)
 
 __BEGIN_DECLS

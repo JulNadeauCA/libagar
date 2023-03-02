@@ -49,14 +49,15 @@ typedef struct ag_textbox {
 	AG_Button *_Nullable btnRet;    /* Optional RETURN button */
 } AG_Textbox;
 
-#define AGTEXTBOX(obj)            ((AG_Textbox *)(obj))
-#define AGCTEXTBOX(obj)           ((const AG_Textbox *)(obj))
-#define AG_TEXTBOX_SELF()          AGTEXTBOX( AG_OBJECT(0,"AG_Widget:AG_Textbox:*") )
-#define AG_TEXTBOX_PTR(n)          AGTEXTBOX( AG_OBJECT((n),"AG_Widget:AG_Textbox:*") )
-#define AG_TEXTBOX_NAMED(n)        AGTEXTBOX( AG_OBJECT_NAMED((n),"AG_Widget:AG_Textbox:*") )
-#define AG_CONST_TEXTBOX_SELF()   AGCTEXTBOX( AG_CONST_OBJECT(0,"AG_Widget:AG_Textbox:*") )
-#define AG_CONST_TEXTBOX_PTR(n)   AGCTEXTBOX( AG_CONST_OBJECT((n),"AG_Widget:AG_Textbox:*") )
-#define AG_CONST_TEXTBOX_NAMED(n) AGCTEXTBOX( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Textbox:*") )
+#define   AGTEXTBOX(obj)     ((AG_Textbox *)(obj))
+#define  AGcTEXTBOX(obj)     ((const AG_Textbox *)(obj))
+#define  AG_TEXTBOX_ISA(o)   (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x27)
+#define  AG_TEXTBOX_SELF()    AGTEXTBOX(  AG_OBJECT(0,         "AG_Widget:AG_Textbox:*") )
+#define  AG_TEXTBOX_PTR(n)    AGTEXTBOX(  AG_OBJECT((n),       "AG_Widget:AG_Textbox:*") )
+#define  AG_TEXTBOX_NAMED(n)  AGTEXTBOX(  AG_OBJECT_NAMED((n), "AG_Widget:AG_Textbox:*") )
+#define AG_cTEXTBOX_SELF()   AGcTEXTBOX( AG_cOBJECT(0,         "AG_Widget:AG_Textbox:*") )
+#define AG_cTEXTBOX_PTR(n)   AGcTEXTBOX( AG_cOBJECT((n),       "AG_Widget:AG_Textbox:*") )
+#define AG_cTEXTBOX_NAMED(n) AGcTEXTBOX( AG_cOBJECT_NAMED((n), "AG_Widget:AG_Textbox:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agTextboxClass;

@@ -540,7 +540,7 @@ AG_WidgetClass agNotebookClass = {
 	{
 		"Agar(Widget:Notebook)",
 		sizeof(AG_Notebook),
-		{ 0,0 },
+		{ 1,0, AGC_NOTEBOOK, 0 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */
@@ -565,7 +565,7 @@ AG_WidgetClass agNotebookTabClass = {
 	{
 		"Agar(Widget:Box:NotebookTab)",
 		sizeof(AG_NotebookTab),
-		{ 0,0 },
+		{ 1,0, AGC_NOTEBOOK_TAB, 0 },
 		NULL,		/* init */
 		NULL,		/* reset */
 		NULL,		/* destroy */

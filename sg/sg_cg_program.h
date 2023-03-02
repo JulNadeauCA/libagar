@@ -21,6 +21,8 @@ typedef struct sg_cg_program {
 	CGprofile instProf;		/* Installed program profile */
 } SG_CgProgram;
 
+#define SG_CG_PROGRAM_ISA(o) (((AGOBJECT(o)->cid & 0xffff0000) >> 16) == 0x7701)
+
 __BEGIN_DECLS
 extern SG_ProgramClass sgCgProgramClass;
 extern CGcontext sgCgProgramCtx;

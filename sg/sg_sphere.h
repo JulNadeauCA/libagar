@@ -6,7 +6,8 @@ typedef struct sg_sphere {
 	Uint8 _pad[8];
 } SG_Sphere;
 
-#define SGSPHERE(n) ((SG_Sphere *)(n))
+#define SG_SPHERE_ISA(o) (((AGOBJECT(o)->cid & 0xffffff00) >> 8) == 0x7A0405)
+#define SGSPHERE(n)      ((SG_Sphere *)(n))
 
 __BEGIN_DECLS
 extern SG_NodeClass sgSphereClass;

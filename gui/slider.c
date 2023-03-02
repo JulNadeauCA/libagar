@@ -622,7 +622,7 @@ AG_WidgetClass agSliderClass = {
 	{
 		"Agar(Widget:Slider)",
 		sizeof(AG_Slider),
-		{ 0,0 },
+		{ 1,0, AGC_SLIDER, 0xE02C },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

@@ -343,8 +343,8 @@ AG_KeyboardNew(void *drv, const char *desc)
 		return (NULL);
 	}
 	AG_ObjectInit(kbd, &agKeyboardClass);
-	AGINPUTDEV(kbd)->drv = drv;
-	if ((AGINPUTDEV(kbd)->desc = TryStrdup(desc)) == NULL) {
+	AGINPUTDEVICE(kbd)->drv = drv;
+	if ((AGINPUTDEVICE(kbd)->desc = TryStrdup(desc)) == NULL) {
 		goto fail;
 	}
 	AGDRIVER(drv)->kbd = kbd;
@@ -523,7 +523,7 @@ int
 AG_ProcessKey(AG_Keyboard *kbd, AG_Window *win, AG_KeyboardAction action,
     AG_KeySym ks, AG_Char ch)
 {
-	AG_Driver *drv = AGINPUTDEV(kbd)->drv;
+	AG_Driver *drv = AGINPUTDEVICE(kbd)->drv;
 	AG_Widget *wFoc;
 	const AG_KeyMod modState = kbd->modState;
 	int tabCycle;
@@ -594,7 +594,7 @@ AG_ProcessKey(AG_Keyboard *kbd, AG_Window *win, AG_KeyboardAction action,
 				 * where key-down event handlers cause changes
 				 * in window focus.
 				 */
-				AGDRIVER_SW(drv)->winLastKeydown = win;
+				AGDRIVERSW(drv)->winLastKeydown = win;
 			}
 		}
 		AG_ObjectUnlock(wFoc);
@@ -770,8 +770,7 @@ PollKeyboardState(AG_Event *_Nonnull event)
 	AG_TlistItem *it;
 	Uint i;
 
-	if (!AG_OBJECT_VALID(kbd) ||
-	    !AG_OfClass(kbd, "AG_InputDevice:AG_Keyboard:*"))
+	if (!AG_OBJECT_VALID(kbd) || !AG_KEYBOARD_ISA(kbd))
 		return;
 
 	AG_TlistBegin(tl);
@@ -803,7 +802,7 @@ Edit(void *obj)
 
 	box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 
-	lbl = AG_LabelNewS(box, 0, AGINPUTDEV(kbd)->desc);
+	lbl = AG_LabelNewS(box, 0, AGINPUTDEVICE(kbd)->desc);
 	AG_SetFontFamily(lbl, "league-spartan");
 	AG_SetFontSize(lbl, "130%");
 
@@ -826,7 +825,7 @@ Edit(void *obj)
 AG_ObjectClass agKeyboardClass = {
 	"Agar(InputDevice:Keyboard)",
 	sizeof(AG_Keyboard),
-	{ 0,0 },
+	{ 1,0, AGC_KEYBOARD, 0xE020 },
 	Init,
 	NULL,		/* reset */
 	Destroy,

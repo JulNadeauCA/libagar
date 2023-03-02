@@ -309,7 +309,7 @@ AG_WidgetClass agUComboClass = {
 	{
 		"Agar(Widget:UCombo)",
 		sizeof(AG_UCombo),
-		{ 0,0 },
+		{ 1,0, AGC_UCOMBO, 0 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

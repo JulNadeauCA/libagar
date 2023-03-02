@@ -168,7 +168,7 @@ TestGUI(void *obj, AG_Window *win)
 	}
 #endif /* !_WIN32 */
 
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_BR, 640, 800);
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_BR, 740, 800);
 	return (0);
 }
 

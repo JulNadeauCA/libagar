@@ -24,8 +24,8 @@ Init(void *obj)
 
 	if (inited++ == 0) {
 		/* Register the Agar object classes which we implement. */
-		AG_RegisterClass(&AnimalClass);
-		AG_RegisterClass(&MammalClass);
+		AG_RegisterClass(&myAnimalClass);
+		AG_RegisterClass(&myMammalClass);
 	}
 	
 	/*
@@ -48,8 +48,8 @@ Destroy(void *obj)
 
 	if (--inited == 0) {
 		/* Unregister our classes for a complete cleanup. */
-		AG_UnregisterClass(&AnimalClass);
-		AG_UnregisterClass(&MammalClass);
+		AG_UnregisterClass(&myAnimalClass);
+		AG_UnregisterClass(&myMammalClass);
 	}
 }
 

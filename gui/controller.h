@@ -77,7 +77,15 @@ typedef struct ag_controller {
 	AG_ControllerType type;          /* Specific controller type */
 } AG_Controller;
 
-#define AGCONTROLLER(obj) ((AG_Controller *)(obj))
+#define   AGCONTROLLER(obj)   ((AG_Controller *)(obj))
+#define  AGcCONTROLLER(obj)   ((const AG_Controller *)(obj))
+#define  AG_CONTROLLER_ISA(o) (((AGOBJECT(o)->cid & 0xffffff00) >> 8) == 0x060301)
+#define  AG_CONTROLLER_SELF()    AGCONTROLLER(  AG_OBJECT(0,         "AG_InputDevice:AG_Joystick:AG_Controller:*") )
+#define  AG_CONTROLLER_PTR(n)    AGCONTROLLER(  AG_OBJECT((n),       "AG_InputDevice:AG_Joystick:AG_Controller:*") )
+#define  AG_CONTROLLER_NAMED(n)  AGCONTROLLER(  AG_OBJECT_NAMED((n), "AG_InputDevice:AG_Joystick:AG_Controller:*") )
+#define AG_cCONTROLLER_SELF()   AGcCONTROLLER( AG_cOBJECT(0,         "AG_InputDevice:AG_Joystick:AG_Controller:*") )
+#define AG_cCONTROLLER_PTR(n)   AGcCONTROLLER( AG_cOBJECT((n),       "AG_InputDevice:AG_Joystick:AG_Controller:*") )
+#define AG_cCONTROLLER_NAMED(n) AGcCONTROLLER( AG_cOBJECT_NAMED((n), "AG_InputDevice:AG_Joystick:AG_Controller:*") )
 
 __BEGIN_DECLS
 extern AG_ObjectClass agControllerClass;

@@ -449,7 +449,7 @@ AG_WidgetClass agPixmapClass = {
 	{
 		"Agar(Widget:Pixmap)",
 		sizeof(AG_Pixmap),
-		{ 0,0 },
+		{ 1,0, AGC_PIXMAP, 0xE01E },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

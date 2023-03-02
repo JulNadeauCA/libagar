@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2010-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,7 +23,7 @@
  */
 
 /*
- * Graphical user interface.
+ * Graphical User Interface routines for SK.
  */
 
 #include <agar/core/core.h>
@@ -140,9 +140,9 @@ SK_GUI_OpenObject(void *p)
 		AG_SetError("%s no edit()", obj->cls->name);
 		return (NULL);
 	}
-	if (AG_OfClass(wEdit, "AG_Widget:AG_Window:*")) {
+	if (AG_WINDOW_ISA(wEdit)) {
 		win = (AG_Window *)wEdit;
-	} else if (AG_OfClass(wEdit, "AG_Widget:*")) {
+	} else if (AG_WIDGET_ISA(wEdit)) {
 		if ((win = AG_WindowNew(AG_WINDOW_MAIN)) == NULL) {
 			return (NULL);
 		}
@@ -283,7 +283,7 @@ SK_GUI_SaveAsDlg(AG_Event *event)
 	AG_ConfigGetPath(AG_CONFIG_PATH_DATA, 0, defDir, sizeof(defDir));
 	AG_FileDlgSetDirectoryMRU(fd, "agar-sk.mru.files", defDir);
 
-	if (AG_OfClass(obj, "SK:*")) {
+	if (SK_ISA(obj)) {
 		AG_FileDlgAddType(fd, _("Agar sketch file"), "*.sk",
 		    SaveNativeObject, "%p", obj);
 	}

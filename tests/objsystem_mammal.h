@@ -1,19 +1,19 @@
 /*	Public domain	*/
 
-typedef struct mammal {
-	struct animal animal;		/* Parent class */
+typedef struct my_mammal {
+	struct my_animal animal;	/* MY_Animal -> MY_Mammal */
 	struct {
 		float h, s, v;		/* Hair color */
 	} hairColor;
-} Mammal;
+} MY_Mammal;
 
-#define MAMMAL(obj)              ((Mammal *)(obj))
-#define CMAMMAL(obj)             ((const Mammal *)(obj))
-#define AG_MAMMAL_SELF()          MAMMAL( AG_OBJECT(0,"Animal:Mammal:*") )
-#define AG_MAMMAL_PTR(n)          MAMMAL( AG_OBJECT((n),"Animal:Mammal:*") )
-#define AG_MAMMAL_NAMED(n)        MAMMAL( AG_OBJECT_NAMED((n),"Animal:Mammal:*") )
-#define AG_CONST_MAMMAL_SELF()   CMAMMAL( AG_CONST_OBJECT(0,"Animal:Mammal:*") )
-#define AG_CONST_MAMMAL_PTR(n)   CMAMMAL( AG_CONST_OBJECT((n),"Animal:Mammal:*") )
-#define AG_CONST_MAMMAL_NAMED(n) CMAMMAL( AG_CONST_OBJECT_NAMED((n),"Animal:Mammal:*") )
+#define   MYMAMMAL(o)        ((MY_Mammal *)(o))
+#define  MYcMAMMAL(o)        ((const MY_Mammal *)(o))
+#define  MY_MAMMAL_SELF()    MYMAMMAL(  AG_OBJECT(0,         "Animal:Mammal:*") )
+#define  MY_MAMMAL_PTR(n)    MYMAMMAL(  AG_OBJECT((n),       "Animal:Mammal:*") )
+#define  MY_MAMMAL_NAMED(n)  MYMAMMAL(  AG_OBJECT_NAMED((n), "Animal:Mammal:*") )
+#define MY_cMAMMAL_SELF()   MYcMAMMAL( AG_cOBJECT(0,         "Animal:Mammal:*") )
+#define MY_cMAMMAL_PTR(n)   MYcMAMMAL( AG_cOBJECT((n),       "Animal:Mammal:*") )
+#define MY_cMAMMAL_NAMED(n) MYcMAMMAL( AG_cOBJECT_NAMED((n), "Animal:Mammal:*") )
 
-extern AG_ObjectClass MammalClass;
+extern AG_ObjectClass myMammalClass;

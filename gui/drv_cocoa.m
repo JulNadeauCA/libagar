@@ -202,7 +202,7 @@ ConvertNSRect(NSRect *_Nonnull r)
 	NSView *view = [win contentView];
 
 	_driver = co;
-	_window = AGDRIVER_MW(co)->win;
+	_window = AGDRIVERMW(co)->win;
 
 	nc = [NSNotificationCenter defaultCenter];
 
@@ -570,7 +570,7 @@ QueueKeyEvent(AG_DriverCocoa *_Nonnull co, enum ag_driver_event_type type,
 		return;
 	}
 	dev->type = type;
-	dev->win = AGDRIVER_MW(co)->win;
+	dev->win = AGDRIVERMW(co)->win;
 	dev->key.ks = ks;
 	dev->key.ucs = ucs;
 	TAILQ_INSERT_TAIL(&cocEventQ, dev, events);
@@ -1296,7 +1296,7 @@ COCOA_GetInputFocus(AG_Window *_Nonnull *_Nonnull rv)
 		AG_SetError("Input focus is external to this application");
 		goto fail;
 	}
-	*rv = AGDRIVER_MW(co)->win;
+	*rv = AGDRIVERMW(co)->win;
 	[pool release];
 	return (0);
 fail:
@@ -1662,7 +1662,7 @@ AG_DriverMwClass agDriverCocoa = {
 		{
 			"AG_Driver:AG_DriverMw:AG_DriverCocoa",
 			sizeof(AG_DriverCocoa),
-			{ 1,6 },
+			{ 1,6, AGC_DRIVER_COCOA, 0xE053 },
 			Init,
 			NULL,		/* reset */
 			Destroy,

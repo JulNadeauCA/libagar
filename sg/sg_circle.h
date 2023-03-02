@@ -4,7 +4,8 @@ typedef struct sg_circle {
 	struct sg_geom _inherit;	/* SG_Geom -> SG_Circle */
 } SG_Circle;
 
-#define SGCIRCLE(n) ((SG_Circle *)(n))
+#define SG_CIRCLE_ISA(o) (((AGOBJECT(o)->cid & 0xffffff00) >> 8) == 0x7A0404)
+#define SGCIRCLE(n)      ((SG_Circle *)(n))
 
 __BEGIN_DECLS
 extern SG_NodeClass sgCircleClass;

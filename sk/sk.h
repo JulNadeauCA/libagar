@@ -31,10 +31,10 @@
 # define MIN(l,o) ((l) < (o) ? (l) : (o))
 #endif /* _AGAR_INTERNAL */
 
-#define SK_TYPE_NAME_MAX 64
-#define SK_NODE_NAME_MAX (SK_TYPE_NAME_MAX+12)
-#define SK_NAME_MAX	 (0xffffffff-1)
-#define SK_STATUS_MAX	 508
+#define SK_TYPE_NAME_MAX  64
+#define SK_NODE_NAME_MAX  (SK_TYPE_NAME_MAX+12)
+#define SK_NAME_MAX       (0xffffffff-1)
+#define SK_STATUS_MAX     508
 #define SK_GROUP_NAME_MAX 64
 
 struct sk;
@@ -87,13 +87,13 @@ typedef struct sk_node {
 	Uint handle;			/* Unique handle for this node class */
 	const SK_NodeOps *_Nonnull ops;
 	Uint flags;
-#define SK_NODE_SELECTED	0x01	/* For editor */
-#define SK_NODE_MOUSEOVER	0x02	/* For editor */
-#define SK_NODE_MOVED		0x04	/* For editor */
-#define SK_NODE_SUPCONSTRAINTS	0x08	/* Suppress constraints */
-#define SK_NODE_FIXED		0x10	/* Treat position as known */
-#define SK_NODE_KNOWN		0x20	/* Position found by solver */
-#define SK_NODE_CHECKED		0x40	/* For constrainedness check */
+#define SK_NODE_SELECTED       0x01	/* For editor */
+#define SK_NODE_MOUSEOVER      0x02	/* For editor */
+#define SK_NODE_MOVED          0x04	/* For editor */
+#define SK_NODE_SUPCONSTRAINTS 0x08	/* Suppress constraints */
+#define SK_NODE_FIXED          0x10	/* Treat position as known */
+#define SK_NODE_KNOWN          0x20	/* Position found by solver */
+#define SK_NODE_CHECKED        0x40	/* For constrainedness check */
 
 	Uint nRefs;			 /* Reference count */
 	struct sk *_Nullable sk;	 /* Back pointer to sk */
@@ -190,7 +190,7 @@ typedef struct sk_geometry_fn {
 typedef struct sk {
 	struct ag_object obj;
 	Uint flags;
-#define SK_SKIP_UNKNOWN_NODES	0x01		/* Ignore unimplemented nodes
+#define SK_SKIP_UNKNOWN_NODES 0x01		/* Ignore unimplemented nodes
 						   in load (otherwise fail) */
 	Uint nSolutions;			/* Total number of solutions
 						   (if well-constrained) */
@@ -208,27 +208,39 @@ typedef struct sk {
 	AG_TAILQ_HEAD_(sk_group) group;		/* Item groups */
 } SK;
 
-#define SK_SELF()   (SK *)( AG_OBJECT(0,"SK:*") )
-#define SK_PTR(n)   (SK *)( AG_OBJECT((n),"SK:*") )
-#define SK_NAMED(n) (SK *)( AG_OBJECT_NAMED((n),"SK:*") )
+#define  SKSK(o)           ((SK *)(o))
+#define SKcSK(o)           ((const SK *)(o))
+#define SK_ISA(o)          (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x7B)
+#define SK_SELF()          SKSK(  AG_OBJECT(0,         "SK:*") )
+#define SK_PTR(n)          SKSK(  AG_OBJECT((n),       "SK:*") )
+#define SK_NAMED(n)        SKSK(  AG_OBJECT_NAMED((n), "SK:*") )
+#define SK_cSK_SELF()     SKcSK( AG_cOBJECT(0,         "SK:*") )
+#define SK_cSK_PTR(n)     SKcSK( AG_cOBJECT((n),       "SK:*") )
+#define SK_cSK_NAMED(n)   SKcSK( AG_cOBJECT_NAMED((n), "SK:*") )
 
-#define SKNODE(node) ((SK_Node *)(node))
-#define SKNODE_SELECTED(node) (((SK_Node *)(node))->flags & SK_NODE_SELECTED)
-#define SK_MOVED(node) (((SK_Node *)(node))->flags & SK_NODE_MOVED)
-#define SK_FIXED(node) (((SK_Node *)(node))->flags & SK_NODE_FIXED)
+#define SKNODE(node)          ((SK_Node *)(node))
+#define SKNODE_SELECTED(node) (SKNODE(node)->flags & SK_NODE_SELECTED)
+#define SK_MOVED(node)        (SKNODE(node)->flags & SK_NODE_MOVED)
+#define SK_FIXED(node)        (SKNODE(node)->flags & SK_NODE_FIXED)
+
+/* Iterators */
+
 #define SK_FOREACH_NODE(node, sk, ntype)				\
 	for((node) = (struct ntype *)AG_TAILQ_FIRST(&(sk)->nodes);	\
 	    (node) != (struct ntype *)AG_TAILQ_END(&(sk)->nodes);	\
 	    (node) = (struct ntype *)AG_TAILQ_NEXT(SKNODE(node),nodes))
+
 #define SK_FOREACH_NODE_CLASS(node, sk, ntype, cn)			\
 	SK_FOREACH_NODE(node,sk,ntype)					\
 		if (!SK_NodeOfClass(SKNODE(node),(cn))) {		\
 			continue;					\
 		} else
+
 #define SK_FOREACH_SUBNODE(node, pnode, ntype)				\
 	for((node) = (struct ntype *)AG_TAILQ_FIRST(&(pnode)->nodes);	\
 	    (node) != (struct ntype *)AG_TAILQ_END(&(pnode)->cnodes);	\
 	    (node) = (struct ntype *)AG_TAILQ_NEXT(SKNODE(node),sknodes))
+
 #define SK_FOREACH_SUBNODE_CLASS(node, pnode, ntype, cn)		\
 	SK_FOREACH_SUBNODE(node,pnode,ntype)				\
 		if (!SK_NodeOfClass(SKNODE(node),(cn))) {		\

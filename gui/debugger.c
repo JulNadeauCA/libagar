@@ -67,7 +67,8 @@ FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth,
 	AG_Widget *widChld;
 
 	Strlcpy(text, OBJECT(wid)->name, sizeof(text));
-	if (AG_OfClass(wid, "AG_Widget:AG_Window:*")) {
+
+	if (AG_WINDOW_ISA(wid)) {
 		AG_Window *win = (AG_Window *)wid;
 
 		Strlcat(text, " (\"", sizeof(text));
@@ -201,7 +202,7 @@ SelectedSurface(AG_Event *_Nonnull event)
 {
 	AG_Pixmap *px = AG_PIXMAP_PTR(1);
 	AG_Label *lblInfo = AG_LABEL_PTR(2);
-	AG_TlistItem *it = AG_TLIST_ITEM_PTR(3);
+	AG_TlistItem *it = AG_TLISTITEM_PTR(3);
 	AG_Surface *S = it->p1;
 	const char *grayscaleModeNames[] = {  /* Sync with AG_GrayscaleMode */
 		"BT.709",
@@ -273,7 +274,7 @@ SelectedSurface(AG_Event *_Nonnull event)
 static void
 ExportSurface(AG_Event *_Nonnull event)
 {
-	const AG_Pixmap *px = AG_CONST_PIXMAP_PTR(1);
+	const AG_Pixmap *px = AG_cPIXMAP_PTR(1);
 	const char *path = AG_STRING(2);
 	AG_Surface *S;
 
@@ -294,7 +295,7 @@ ExportSurface(AG_Event *_Nonnull event)
 static void
 ExportSurfaceDlg(AG_Event *_Nonnull event)
 {
-	const AG_Pixmap *px = AG_CONST_PIXMAP_PTR(1);
+	const AG_Pixmap *px = AG_cPIXMAP_PTR(1);
 	AG_Window *win;
 	AG_FileDlg *fd;
 	
@@ -317,8 +318,7 @@ PollSurfaces(AG_Event *_Nonnull event)
 	AG_TlistItem *it;
 	Uint i;
 
-	if (wid == NULL || !AG_OBJECT_VALID(wid) ||
-	    !AG_OfClass(wid, "AG_Widget:*")) {
+	if (wid == NULL || !AG_OBJECT_VALID(wid) || !AG_WIDGET_ISA(wid)) {
 		TargetRoot();
 		return;
 	}
@@ -431,7 +431,7 @@ InputVariable(AG_Event *_Nonnull event)
 	const char *c;
 	int floatChars;
 
-	if (!AG_OBJECT_VALID(tgt) || !AG_OfClass(tgt, "AG_Widget:*")) {
+	if (!AG_OBJECT_VALID(tgt) || !AG_WIDGET_ISA(tgt)) {
 		Debug(NULL, "Invalid target %p\n", tgt);
 		return;
 	}
@@ -486,7 +486,7 @@ static void
 TargetWidget(AG_Event *_Nonnull event)
 {
 	AG_Box *box = agDebuggerBox;
-	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(1);
+	AG_TlistItem *ti = AG_TLISTITEM_PTR(1);
 	AG_Widget *tgt = ti->p1;
 	AG_Notebook *nb;
 	AG_NotebookTab *nt;
@@ -587,18 +587,16 @@ TargetWidget(AG_Event *_Nonnull event)
 		AG_Widget *editRv;
 		char label[64];
 
-		if (AG_OfClass(tgt, "AG_Widget:AG_Scrollbar:*")) {
+		if (AG_SCROLLBAR_ISA(tgt)) {
 			Strlcpy(label,
 			    AGSI_IDEOGRAM AGSI_HORIZ_SCROLLBAR AGSI_RST " ",
 			    sizeof(label));
-		} else if (AG_OfClass(tgt, "AG_Widget:AG_Box:*")) {
+		} else if (AG_BOX_ISA(tgt)) {
 			Strlcpy(label,
 			    AGSI_IDEOGRAM AGSI_BOX_VERT AGSI_RST " ",
 			    sizeof(label));
-		} else if (AG_OfClass(tgt, "AG_Widget:AG_Editable:*") ||
-		           AG_OfClass(tgt, "AG_Widget:AG_Textbox:*") ||
-		           AG_OfClass(tgt, "AG_Widget:AG_Label:*") ||
-		           AG_OfClass(tgt, "AG_Widget:AG_Numerical:*")) {
+		} else if (AG_EDITABLE_ISA(tgt) || AG_TEXTBOX_ISA(tgt) ||
+		           AG_LABEL_ISA(tgt) || AG_NUMERICAL_ISA(tgt)) {
 			Strlcpy(label,
 			    AGSI_IDEOGRAM AGSI_TEXTBOX AGSI_RST " ",
 			    sizeof(label));
@@ -681,13 +679,12 @@ ContextualMenu(AG_Event *_Nonnull event)
 	AG_Tlist *tl = AG_TLIST_PTR(1);
 	AG_MenuItem *mi = AG_MENU_ITEM_PTR(2);
 	AG_TlistItem *ti = AG_TlistSelectedItem(tl);
+	AG_Window *win;
 
 	if (ti == NULL)
 		return;
 	
-	if (AG_OfClass(ti->p1, "AG_Widget:AG_Window:*")) {
-		AG_Window *win = ti->p1;
-
+	if ((win = ti->p1) != NULL && AG_WINDOW_ISA(win)) {
 		if (win->visible) {
 			AG_MenuAction(mi, _("Hide window"), NULL,
 			    HideWindow,"%p",win);

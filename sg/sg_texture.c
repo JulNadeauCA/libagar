@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2006-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -407,7 +407,8 @@ ImportSurfaceDlg(AG_Event *_Nonnull event)
 	hBox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_EXPAND);
 	{
 		fd = AG_FileDlgNewMRU(hBox, "sg-textures",
-		    AG_FILEDLG_LOAD | AG_FILEDLG_CLOSEWIN | AG_FILEDLG_EXPAND);
+		    AG_FILEDLG_LOAD | AG_FILEDLG_CLOSEWIN | AG_FILEDLG_EXPAND |
+		    AG_FILEDLG_MASK_EXT);
 
 		AG_FileDlgAddType(fd, _("JPEG Image"), "*.jpg,*.jpeg",
 		    ImportSurface, "%p", tex);
@@ -459,6 +460,17 @@ PollPrograms(AG_Event *_Nonnull event)
 	AG_TlistEnd(tl);
 }
 
+static void
+ExpandPreviewModes(AG_Event *_Nonnull event)
+{
+	AG_Combo *com = AG_COMBO_SELF();
+
+	AG_TlistAdd(com->list, NULL,
+	    _(AGSI_IDEOGRAM AGSI_WIREFRAME_CUBE AGSI_RST " Cube"));
+	AG_TlistAdd(com->list, NULL,
+	    _(AGSI_IDEOGRAM AGSI_LARGE_SPHERE AGSI_RST "Ball"));
+}
+
 static void *_Nullable
 Edit(void *_Nonnull obj)
 {
@@ -482,9 +494,11 @@ Edit(void *_Nonnull obj)
 /*		SG_Ball *ball ; */
 		SG_Camera *cam;
 		AG_Combo *com;
+		SG_View *svPre;
 
 		sgPre = SG_New(NULL, "Preview", 0);
-		SG_ViewNew(paHoriz->div[1], sgPre, SG_VIEW_EXPAND);
+		svPre = SG_ViewNew(paHoriz->div[1], sgPre, SG_VIEW_EXPAND);
+		AG_RedrawOnTick(svPre, 1);
 
 		cube = SG_PolyboxNew(sgPre->root, "Box");
 		SG_ObjectSetTexture(cube, tex);
@@ -500,10 +514,7 @@ Edit(void *_Nonnull obj)
 
 		com = AG_ComboNew(paHoriz->div[1], AG_COMBO_HFILL,
 		    _("Preview: "));
-		AG_TlistAdd(com->list, NULL, "Cube");
-		AG_TlistAdd(com->list, NULL, "Ball");
-
-		AG_ComboSelectText(com, "Cube");
+		AG_SetEvent(com, "combo-expand", ExpandPreviewModes, "%p", tex);
 	}
 
 	nb = AG_NotebookNew(paHoriz->div[0], AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
@@ -566,12 +577,12 @@ Edit(void *_Nonnull obj)
 
 		hBox = AG_BoxNewHoriz(ntab, AG_BOX_HFILL);
 		{
-			os = AG_ObjectSelectorNew(hBox, AG_OBJSEL_PAGE_DATA,
-			    tex, AGOBJECT(tex)->root,
+			os = AG_ObjectSelectorNew(hBox, 0, tex,
+			    AGOBJECT(tex)->root,
 			    _("Attach Shader Program: "));
 			AG_ObjectSelectorMaskType(os, "SG_Program:*");
 			AG_ButtonNewFn(hBox, AG_BUTTON_VFILL, _("OK"),
-			    AttachProgram, "%p", os, tex);
+			    AttachProgram, "%p,%p", os, tex);
 		}
 		AG_TlistNewPolled(ntab, AG_TLIST_EXPAND,
 		    PollPrograms, "%p", tex);
@@ -672,22 +683,27 @@ SG_TextureBind(SG_Texture *tex, SG_View *view)
 
 	/* Bind associated fragment shaders. */
 	TAILQ_FOREACH(tp, &tex->progs, programs) {
+		SG_Program *prog;
+
 		if (tp->flags & SG_TEXTURE_PROGRAM_SUPPRESS) {
 			continue;
 		}
-		if (tp->prog == NULL) {
+		if ((prog = tp->prog) == NULL) {
 			AG_Object *parent;
-			SG_Program *prog;
 
 			if ((parent = AG_ObjectParent(tex)) != NULL &&
 			    (prog = AG_ObjectFindChild(parent, tp->progName)) != NULL) {
+				Debug(tex, "Bind program: %s\n", OBJECT(prog)->name);
 				tp->prog = prog;
 			} else {
-				Verbose("%s: No such program\n", tp->progName);
+				Debug(tex, "No such program: %s; ignoring\n",
+				    tp->progName);
 				continue;
 			}
 		}
-		SG_ProgramBind(tp->prog, view);
+		if (prog != NULL &&
+		    AG_OBJECT_VALID(prog) && SG_PROGRAM_ISA(prog))
+			SG_ProgramBind(prog, view);
 	}
 	AG_ObjectUnlock(tex);
 	return;
@@ -710,10 +726,14 @@ SG_TextureUnbind(SG_Texture *tex, SG_View *view)
 	AG_ObjectLock(tex);
 
 	TAILQ_FOREACH(tp, &tex->progs, programs) {
+		SG_Program *prog;
+
 		if (tp->flags & SG_TEXTURE_PROGRAM_SUPPRESS) {
 			continue;
 		}
-		SG_ProgramUnbind(tp->prog, view);
+		if ((prog = tp->prog) != NULL &&
+		    AG_OBJECT_VALID(prog) && SG_PROGRAM_ISA(prog))
+			SG_ProgramUnbind(prog, view);
 	}
 	if (tex->nSurfaces > 0) {
 		TAILQ_FOREACH(vt, &tex->vtex, textures) {
@@ -732,7 +752,7 @@ SG_TextureUnbind(SG_Texture *tex, SG_View *view)
 AG_ObjectClass sgTextureClass = {
 	"SG_Texture",
 	sizeof(SG_Texture),
-	{ 0,0 },
+	{ 0,0, AGC_SG_TEXTURE, 0xE06B },
 	Init,
 	Reset,
 	NULL,			/* destroy */

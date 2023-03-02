@@ -8190,6 +8190,9 @@ main(int argc, char *argv[])
 {
 	struct timespec ts;
 	clock_gettime(CLOCK_REALTIME, &ts);
+#ifdef __FreeBSD__
+	clock_gettime(CLOCK_SECOND, &ts);
+#endif
 	return (0);
 }
 EOT
@@ -8240,6 +8243,9 @@ main(int argc, char *argv[])
 {
 	struct timespec ts;
 	clock_gettime(CLOCK_REALTIME, &ts);
+#ifdef __FreeBSD__
+	clock_gettime(CLOCK_SECOND, &ts);
+#endif
 	return (0);
 }
 EOT
@@ -8617,6 +8623,68 @@ if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 # END xbox
+$ECHO_N 'checking for mprotect()...'
+$ECHO_N '# checking for mprotect()...' >>config.log
+# BEGIN mprotect
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <sys/mman.h>
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+
+int
+main(int argc, char *argv[])
+{
+	void *p;
+	int psz;
+	char *buffer;
+
+	psz = sysconf(_SC_PAGE_SIZE);
+	if (psz == -1) {
+		return (1);
+	}
+
+	posix_memalign(&buffer, psz, psz*4);
+	if (buffer == NULL)
+		return (1);
+
+	mprotect(buffer + psz*2, psz, PROT_READ);
+	return (0);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_MPROTECT' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_MPROTECT=yes
+bb_o=$bb_incdir/have_mprotect.h
+echo '#ifndef HAVE_MPROTECT' >$bb_o
+echo "#define HAVE_MPROTECT \"$HAVE_MPROTECT\"" >>$bb_o
+echo '#endif' >>$bb_o
+echo "hdefs[\"HAVE_MPROTECT\"] = \"$HAVE_MPROTECT\"" >>configure.lua
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_MPROTECT=no
+echo '#undef HAVE_MPROTECT' >$bb_incdir/have_mprotect.h
+echo 'hdefs["HAVE_MPROTECT"] = nil' >>configure.lua
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+# END mprotect
 CFLAGS="$CFLAGS -D_AGAR_INTERNAL"
 CXXFLAGS="$CXXFLAGS -D_AGAR_INTERNAL"
 CFLAGS="$CFLAGS -D_DEFAULT_SOURCE"

@@ -11,45 +11,45 @@ typedef struct sg_camera_polymode {
 } SG_CameraPolyMode;
 
 typedef struct sg_camera {
-	struct sg_node _inherit;		/* SG_Node -> SG_Camera */
+	struct sg_node _inherit;   /* SG_Node -> SG_Camera */
 
 	Uint flags;
-#define SG_CAMERA_ROT_I 0x01	/* Artificial rotation around i (debug) */
-#define SG_CAMERA_ROT_J 0x02	/* Artificial rotation around j (debug) */
-#define SG_CAMERA_ROT_K 0x04	/* Artificial rotation around k (debug) */
-#define SG_CAMERA_DRAW	0x08	/* Render a visible camera */
+#define SG_CAMERA_ROT_I 0x01       /* Artificial rotation around i (debug) */
+#define SG_CAMERA_ROT_J 0x02       /* Artificial rotation around j (debug) */
+#define SG_CAMERA_ROT_K 0x04       /* Artificial rotation around k (debug) */
+#define SG_CAMERA_DRAW	0x08       /* Draw the camera as a visible object */
 
 	enum sg_camera_pmode {
-		SG_CAMERA_PERSPECTIVE,		/* Perspective projection */
-		SG_CAMERA_ORTHOGRAPHIC,		/* Parallel projection */
-		SG_CAMERA_USER_PROJ		/* User-specified */
+		SG_CAMERA_PERSPECTIVE,  /* Perspective projection */
+		SG_CAMERA_ORTHOGRAPHIC, /* Parallel projection */
+		SG_CAMERA_USER_PROJ     /* Custom projection matrix */
 	} pmode;
-	SG_CameraPolyMode polyFace;	/* Front-facing polygon modes */
-	SG_CameraPolyMode polyBack;	/* Back-facing polygon modes */
-	M_Real fov;				/* Field of view (radians) */
-	M_Real aspect;				/* Aspect ratio */
-	M_Real pNear, pFar;			/* Clipping planes */
-	M_Real rotSpeed;			/* For artificial rotate */
-	M_Matrix44 userProj[2];			/* User projection matrices
-						   (column-major) */
+	SG_CameraPolyMode polyFace;     /* Front-facing polygon modes */
+	SG_CameraPolyMode polyBack;     /* Back-facing polygon modes */
+	M_Real fov;                     /* Field of view (radians) */
+	M_Real aspect;                  /* Aspect ratio */
+	M_Real pNear, pFar;             /* Clipping planes */
+	M_Real rotSpeed;                /* For artificial rotate */
+	M_Matrix44 userProj[2];	        /* User projection matrices (col-major) */
 	enum sg_camera_rotctrl {
-		SG_CAMERA_ROT_IGNORE,		/* Disable rotation control */
-		SG_CAMERA_ROT_CIRCULAR,		/* Circular path (1 node) */
-		SG_CAMERA_ROT_ELLIPTIC		/* Elliptic path (2 nodes) */
+		SG_CAMERA_ROT_IGNORE,   /* Disable rotation control */
+		SG_CAMERA_ROT_CIRCULAR, /* Circular orbit (1 node) */
+		SG_CAMERA_ROT_ELLIPTIC  /* Elliptical orbit (2 nodes) */
 	} rotCtrl;
 	Uint8 _pad1[4];
-	SG_Node *_Nullable focus[2];		/* Center nodes */
+	SG_Node *_Nullable focus[2];    /* Center nodes */
 	Uint8 _pad2[8];
 } SG_Camera;
 
-#define SGCAMERA(obj)            ((SG_Camera *)(obj))
-#define SGCCAMERA(obj)           ((const SG_Camera *)(obj))
-#define SG_CAMERA_SELF()          SGCAMERA( AG_OBJECT(0,"SG_Node:SG_Camera:*") )
-#define SG_CAMERA_PTR(n)          SGCAMERA( AG_OBJECT((n),"SG_Node:SG_Camera:*") )
-#define SG_CAMERA_NAMED(n)        SGCAMERA( AG_OBJECT_NAMED((n),"SG_Node:SG_Camera:*") )
-#define SG_CONST_CAMERA_SELF()   SGCCAMERA( AG_CONST_OBJECT(0,"SG_Node:SG_Camera:*") )
-#define SG_CONST_CAMERA_PTR(n)   SGCCAMERA( AG_CONST_OBJECT((n),"SG_Node:SG_Camera:*") )
-#define SG_CONST_CAMERA_NAMED(n) SGCCAMERA( AG_CONST_OBJECT_NAMED((n),"SG_Node:SG_Camera:*") )
+#define   SGCAMERA(o)        ((SG_Camera *)(o))
+#define  SGCCAMERA(o)        ((const SG_Camera *)(o))
+#define  SG_CAMERA_ISA(o)    (((AGOBJECT(o)->cid & 0xffff0000) >> 16) == 0x7A02)
+#define  SG_CAMERA_SELF()    SGCAMERA(  AG_OBJECT(0,         "SG_Node:SG_Camera:*") )
+#define  SG_CAMERA_PTR(n)    SGCAMERA(  AG_OBJECT((n),       "SG_Node:SG_Camera:*") )
+#define  SG_CAMERA_NAMED(n)  SGCAMERA(  AG_OBJECT_NAMED((n), "SG_Node:SG_Camera:*") )
+#define SG_cCAMERA_SELF()   SGcCAMERA( AG_cOBJECT(0,         "SG_Node:SG_Camera:*") )
+#define SG_cCAMERA_PTR(n)   SGcCAMERA( AG_cOBJECT((n),       "SG_Node:SG_Camera:*") )
+#define SG_cCAMERA_NAMED(n) SGcCAMERA( AG_cOBJECT_NAMED((n), "SG_Node:SG_Camera:*") )
 
 __BEGIN_DECLS
 extern SG_NodeClass sgCameraClass;

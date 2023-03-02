@@ -212,12 +212,13 @@ InputAttribute(AG_Event *_Nonnull event)
 {
 	AG_Textbox *tb = AG_TEXTBOX_PTR(1);
 	AG_Widget *tgt = AG_WIDGET_PTR(2);
+	AG_Tlist *tlAttrs = AG_TLIST_PTR(3);
 	char *s = AG_TextboxDupString(tb), *ps = s;
 	const char *key = Strsep(&ps, ":=");
 	const char *val = Strsep(&ps, ":=");
-	
-	AG_OBJECT_ISA(tgt, "AG_Widget:*");
 
+	if (tgt == NULL || !AG_OBJECT_VALID(tgt) || !AG_WIDGET_ISA(tgt))
+		return;
 	if (key == NULL || val == NULL)
 		return;
 
@@ -228,6 +229,9 @@ InputAttribute(AG_Event *_Nonnull event)
 
 	AG_WindowUpdate(AG_ParentWindow(tgt));
 /*	AG_TextboxClearString(tb); */
+
+	tlAttrs->flags |= AG_TLIST_REFRESH;
+	AG_Redraw(tlAttrs);
 
 	free(s);
 }
@@ -532,7 +536,7 @@ static void
 SelectedAttribute(AG_Event *_Nonnull event)
 {
 	AG_Textbox *tb = AG_TEXTBOX_PTR(1);
-	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	const AG_TlistItem *it = AG_TLISTITEM_PTR(2);
 
 	AG_TextboxSetString(tb, it->text);
 }
@@ -541,14 +545,15 @@ static void
 TargetWidget(AG_Event *_Nonnull event)
 {
 	AG_Box *box = agStyleEditorBox;
-	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(1);
+	AG_TlistItem *ti = AG_TLISTITEM_PTR(1);
 	AG_Widget *tgt = ti->p1;
 	AG_Notebook *nb;
 	AG_NotebookTab *nt;
 	AG_Tlist *tlAttrs;
 	int savedTabID;
 
-	AG_OBJECT_ISA(tgt, "AG_Widget:*");
+	if (tgt == NULL || !AG_OBJECT_VALID(tgt) || !AG_WIDGET_ISA(tgt))
+		return;
 
 	agStyleEditorTgt = tgt;
 
@@ -571,14 +576,15 @@ TargetWidget(AG_Event *_Nonnull event)
 		                        AG_TEXTBOX_RETURN_BUTTON, "+ ");
 
 		AG_TextboxAutocomplete(tb, CompleteAttribute, NULL);
-		AG_SetEvent(tb, "textbox-return",
-		    InputAttribute, "%p,%p", tb,tgt);
 
-		tlAttrs = AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 333,
+		tlAttrs = AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 500,
 		    PollAttributes, "%p", tgt);
 
 		AG_SetEvent(tlAttrs, "tlist-selected",
 		    SelectedAttribute, "%p", tb);
+
+		AG_SetEvent(tb, "textbox-return",
+		    InputAttribute, "%p,%p,%p", tb, tgt, tlAttrs);
 	}
 
 	nt = AG_NotebookAdd(nb, _("Capture"), AG_BOX_VERT);
@@ -636,20 +642,20 @@ MenuForWindow(AG_Event *_Nonnull event)
 	AG_Tlist *tl = AG_TLIST_PTR(1);
 	AG_MenuItem *mi = AG_MENU_ITEM_PTR(2);
 	AG_TlistItem *ti = AG_TlistSelectedItem(tl);
+	AG_Window *win = ti->p1;
 
 	if (ti == NULL)
 		return;
-	
-	if (AG_OfClass(ti->p1, "AG_Widget:AG_Window:*")) {
-		AG_Window *win = ti->p1;
 
-		if (win->visible) {
-			AG_MenuAction(mi, _("Hide window"), NULL,
-			    HideWindow, "%p", win);
-		} else {
-			AG_MenuAction(mi, _("Show window"), NULL,
-			    ShowWindow, "%p", win);
-		}
+	if (win == NULL || !AG_OBJECT_VALID(win) || !AG_WINDOW_ISA(win))
+		return;
+
+	if (win->visible) {
+		AG_MenuAction(mi, _("Hide window"), NULL,
+		    HideWindow, "%p", win);
+	} else {
+		AG_MenuAction(mi, _("Show window"), NULL,
+		    ShowWindow, "%p", win);
 	}
 }
 
@@ -691,9 +697,11 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 		               "Focus on a window to target it in Style Editor."));
 		return (NULL);
 	}
-	if (tgt == agStyleEditorWindow) {			/* Unsafe */
+	if (tgt == agStyleEditorWindow)                           /* Unsafe */
 		return (NULL);
-	}
+
+	agStyleEditorFilter[0] = '\0';
+
 	if ((win = agStyleEditorWindow) != NULL) {
 		AG_WindowFocus(win);
 		if (agStyleEditorTgtWindow != tgt) {
@@ -702,8 +710,6 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 		}
 		return (win);
 	}
-
-	agStyleEditorFilter[0] = '\0';
 
 	if ((win = agStyleEditorWindow = AG_WindowNewNamedS(0, "_agStyleEditor")) == NULL)
 		return (NULL);
@@ -732,8 +738,7 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
 	agStyleEditorBox = pane->div[1];
 	{
-		tb = AG_TextboxNewS(pane->div[0], AG_TEXTBOX_EXCL |
-		                                  AG_TEXTBOX_HFILL, NULL);
+		tb = AG_TextboxNewS(pane->div[0],  AG_TEXTBOX_HFILL, NULL);
 		AG_TextboxSizeHint(tb, "<XXXXXXXXXXXXXXXXXX>");
 		AG_TextboxBindUTF8(tb, agStyleEditorFilter,
 		    sizeof(agStyleEditorFilter));

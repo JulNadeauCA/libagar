@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2006-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -68,7 +68,7 @@ Init(void *_Nonnull obj)
 	lt->Kl = 0.0;
 	lt->Kq = 0.0;
 #ifdef HAVE_GLU
-	lt->qo = gluNewQuadric();
+	lt->qo = (GLUquadricObj *)gluNewQuadric();
 	gluQuadricDrawStyle(lt->qo, GLU_FILL);
 	gluQuadricNormals(lt->qo, GLU_SMOOTH);
 #endif
@@ -264,14 +264,14 @@ Edit(void *_Nonnull obj, SG_View *_Nullable sgv)
 		M_BindRealMp(pal, "RGBAv", (void *)&lt->ambient, lock);
 
 		bar = AG_ToolbarNew(ntab, AG_TOOLBAR_HORIZ, 1,
-		    AG_TOOLBAR_HOMOGENOUS|AG_TOOLBAR_STICKY);
+		    AG_TOOLBAR_HOMOGENOUS | AG_TOOLBAR_STICKY);
 		{
 			AG_ToolbarButton(bar, _("Ambient"), 1,
-			    SelectColor, "%p,%p", pal, &lt->ambient, lock);
+			    SelectColor, "%p,%p,%p", pal, &lt->ambient, lock);
 			AG_ToolbarButton(bar, _("Diffuse"), 0,
-			    SelectColor, "%p,%p", pal, &lt->diffuse, lock);
+			    SelectColor, "%p,%p,%p", pal, &lt->diffuse, lock);
 			AG_ToolbarButton(bar, _("Specular"), 0,
-			    SelectColor, "%p,%p", pal, &lt->specular, lock);
+			    SelectColor, "%p,%p,%p", pal, &lt->specular, lock);
 		}
 	}
 	return (nb);
@@ -294,7 +294,7 @@ SG_NodeClass sgLightClass = {
 	{
 		"SG_Node:SG_Light",
 		sizeof(SG_Light),
-		{ 0,0 },
+		{ 1,0, AGC_SG_LIGHT, 0xE026 },
 		Init,
 		NULL,	/* reset */
 		Destroy,

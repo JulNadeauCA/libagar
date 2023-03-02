@@ -1714,7 +1714,7 @@ AG_WidgetClass agTreetblClass = {
 	{
 		"Agar(Widget:Treetbl)",
 		sizeof(AG_Treetbl),
-		{ 0,0 },
+		{ 1,0, AGC_TREETBL, 0xE030 },
 		Init,
 		NULL,		/* reset */
 		Destroy,

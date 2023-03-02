@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -39,9 +39,9 @@ OnAttach(AG_Event *_Nonnull event)
 	AG_Object *parent = AG_OBJECT_PTR(1);
 	SG *sg = NULL;
 	
-	if (AG_OfClass(parent, "SG:*")) {
+	if (SG_ISA(parent)) {
 		sg = (SG *)parent;
-	} else if (AG_OfClass(parent, "SG_Node:*")) {
+	} else if (SG_NODE_ISA(parent)) {
 		sg = SGNODE(parent)->sg;
 	} else {
 		AG_FatalError("Invalid SG_Node parent");
@@ -59,9 +59,9 @@ OnDetach(AG_Event *_Nonnull event)
 	void *parent = AG_OBJECT_PTR(1);
 	SG *sg = NULL;
 	
-	if (AG_OfClass(parent, "SG:*")) {
+	if (SG_ISA(parent)) {
 		sg = (SG *)parent;
-	} else if (AG_OfClass(parent, "SG_Node:*")) {
+	} else if (SG_NODE_ISA(parent)) {
 		sg = SGNODE(parent)->sg;
 	} else {
 		AG_FatalError("Invalid SG_Node parent");
@@ -157,7 +157,7 @@ SG_NodeEdit(void *obj)
 			continue;
 
 		wEdit = nc->edit(node, NULL);
-		if (wEdit != NULL && AG_OfClass(wEdit, "AG_Widget:*"))
+		if (wEdit != NULL && AG_WIDGET_ISA(wEdit))
 			AG_ObjectAttach(win, wEdit);
 	}
 	Free(hier);
@@ -184,7 +184,7 @@ SG_GetNodeTransform(void *obj, M_Matrix44 *T)
 	while (chld != NULL) {
 		TAILQ_INSERT_TAIL(&rnodes, chld, rnodes);
 		if (OBJECT(chld)->parent == NULL ||
-		    !AG_OfClass(OBJECT(chld)->parent, "SG_Node:*")) {
+		    !SG_NODE_ISA(OBJECT(chld)->parent)) {
 			break;
 		}
 		chld = OBJECT(chld)->parent;
@@ -215,7 +215,7 @@ SG_GetNodeTransformInverse(void *obj, M_Matrix44 *T)
 	while (chld != NULL) {
 		TAILQ_INSERT_TAIL(&rnodes, chld, rnodes);
 		if (OBJECT(chld)->parent == NULL ||
-		    !AG_OfClass(OBJECT(chld)->parent, "SG_Node:*")) {
+		    !SG_NODE_ISA(OBJECT(chld)->parent)) {
 			break;
 		}
 		chld = OBJECT(chld)->parent;
@@ -284,11 +284,11 @@ SG_NodeSave(SG *sg, AG_DataSource *ds, SG_Node *node)
 
 	/* Save object metadata */
 	AG_WriteString(ds, OBJECT(node)->name);
-	if (OBJECT_CLASS(node)->pvt.libs[0] != '\0') {
+	if (OBJECT_CLASS(node)->libs[0] != '\0') {
 		char s[AG_OBJECT_TYPE_MAX];
 		Strlcpy(s, OBJECT_CLASS(node)->hier, sizeof(s));
 		Strlcat(s, "@", sizeof(s));
-		Strlcat(s, OBJECT_CLASS(node)->pvt.libs, sizeof(s));
+		Strlcat(s, OBJECT_CLASS(node)->libs, sizeof(s));
 		AG_WriteString(ds, s);
 	} else {
 		AG_WriteString(ds, OBJECT_CLASS(node)->hier);
@@ -378,7 +378,7 @@ SG_NodeClass sgNodeClass = {
 	{
 		"SG_Node",
 		sizeof(SG_Node),
-		{ 0,0 },
+		{ 1,0, AGC_SG_NODE, 0xE026 },
 		Init,
 		Reset,
 		NULL,		/* destroy */

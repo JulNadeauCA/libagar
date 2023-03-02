@@ -411,8 +411,10 @@ AG_TextSizeInternal(const AG_Char *s, int *w, int *h)
 	if (s != NULL && (char)(s[0]) != '\0') {
 		const AG_TextState *ts = AG_TEXT_STATE_CUR();
 		const AG_Font *font = ts->font;
-
-		AG_OBJECT_ISA(font, "AG_Font:*");
+#ifdef AG_DEBUG
+		if (!AG_OBJECT_VALID(font) || !AG_FONT_ISA(font))
+			AG_FatalError("Bad font");
+#endif
 		AGFONT_OPS(font)->size(font, s, &Tm, 0);
 	}
 
@@ -457,8 +459,10 @@ AG_TextSizeMultiInternal(const AG_Char *s, int *w, int *h, Uint **wLines,
 	if (s != NULL && (char)(s[0]) != '\0') {
 		const AG_TextState *ts = AG_TEXT_STATE_CUR();
 		AG_Font *font = ts->font;
-
-		AG_OBJECT_ISA(font, "AG_Font:*");
+#ifdef AG_DEBUG
+		if (!AG_OBJECT_VALID(font) || !AG_FONT_ISA(font))
+			AG_FatalError("Bad font");
+#endif
 		AGFONT_OPS(font)->size(font, s, &Tm, 1);
 	}
 
@@ -529,8 +533,7 @@ TextTmsgExpire(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 {
 	AG_Window *win = AGWINDOW(event->argv[1].data.p);
 
-	if (!AG_OBJECT_VALID(win) || !AG_OfClass(win, "AG_Widget:AG_Window:*")) {
-		AG_Verbose("Ignoring a TextTmsg() expiration\n");
+	if (!AG_OBJECT_VALID(win) || !AG_WINDOW_ISA(win)) {
 		return (0);
 	}
 	AG_ObjectDetach(win);

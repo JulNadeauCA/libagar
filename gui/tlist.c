@@ -471,6 +471,8 @@ FreeItem(AG_Tlist *_Nonnull tl, AG_TlistItem *_Nonnull it)
 {
 	int i;
 
+	it->tag = 0;
+
 	for (i = 0; i < 3; i++) {
 		if (it->label[i] != -1)
 			AG_WidgetUnmapSurface(tl, it->label[i]);
@@ -1239,9 +1241,7 @@ AG_TlistItemNew(const AG_Surface *icon)
 	AG_TlistItem *it;
 
 	it = Malloc(sizeof(AG_TlistItem));
-#ifdef AG_TYPE_SAFETY
-	Strlcpy(it->tag, AG_TLIST_ITEM_TAG, sizeof(it->tag));
-#endif
+	it->tag = agNonObjectSignature;
 	it->label[0] = -1;
 	it->label[1] = -1;
 	it->label[2] = -1;
@@ -2223,7 +2223,7 @@ AG_TlistSortByInt(AG_Tlist *tl)
 
 #ifdef AG_TYPE_SAFETY
 /*
- * Accessor for AG_[CONST_]TLIST_ITEM_PTR().
+ * Accessor for AG_[c]TLISTITEM_PTR().
  */
 AG_TlistItem *
 AG_TlistGetItemPtr(const AG_Event *event, int idx, int isConst)
@@ -2231,22 +2231,22 @@ AG_TlistGetItemPtr(const AG_Event *event, int idx, int isConst)
 	const AG_Variable *V = &event->argv[idx];
 
 	if (idx > event->argc || V->type != AG_VARIABLE_POINTER) {
-		AG_GenericMismatch("by AG_TLIST_ITEM_PTR(idx)");
+		AG_GenericMismatch("by AG_TLISTITEM_PTR (no such variable)");
 	}
 	if (isConst) {
 		if ((V->info.pFlags & AG_VARIABLE_P_READONLY) == 0)
-			AG_FatalError("AG_TLIST_CONST_ITEM_PTR() argument isn't const. "
-			              "Did you mean AG_TLIST_ITEM_PTR()?");
+			AG_FatalError("AG_cTLISTITEM_PTR() argument isn't const. "
+			              "Did you mean AG_TLISTITEM_PTR()?");
 	} else {
 		if (V->info.pFlags & AG_VARIABLE_P_READONLY)
-			AG_FatalError("AG_TLIST_ITEM_PTR() argument is const. "
-			              "Did you mean AG_CONST_TLIST_ITEM_PTR()?");
+			AG_FatalError("AG_TLISTITEM_PTR() argument is const. "
+			              "Did you mean AG_cTLISTITEM_PTR()?");
 	}
 	if (V->data.p == NULL) {
 		return (NULL);
 	}
-	if (strncmp(AGTLISTITEM(V->data.p)->tag, AG_TLIST_ITEM_TAG, AG_TLIST_ITEM_TAG_LEN) != 0) {
-		AG_GenericMismatch("by AG_TLIST_ITEM_PTR(tag)");
+	if (AGTLISTITEM(V->data.p)->tag != agNonObjectSignature) {
+		AG_GenericMismatch("by AG_TLISTITEM_PTR (invalid item)");
 	}
 	return (V->data.p);
 }
@@ -2322,7 +2322,7 @@ AG_WidgetClass agTlistClass = {
 	{
 		"Agar(Widget:Tlist)",
 		sizeof(AG_Tlist),
-		{ 0,0 },
+		{ 1,0, AGC_TLIST, 0 },
 		Init,
 		NULL,		/* reset */
 		Destroy,

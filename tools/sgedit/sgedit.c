@@ -59,7 +59,7 @@ int
 main(int argc, char *argv[])
 {
 	char driverSpec[128];
-	int i, j, debug = 0, forceScalar = 0, forceStereo = 0;
+	int i, j, forceScalar = 0, forceStereo = 0;
 	const char *fontSpec = NULL;
 	char *optArg = NULL;
 	int optInd, c;
@@ -93,7 +93,7 @@ main(int argc, char *argv[])
 			printf("sgedit %s\n", VERSION);
 			exit(0);
 		case 'D':
-			debug = 1;
+			agDebugLvl = 2;
 			break;
 		case 'd':
 			Strlcpy(driverSpec, optArg, sizeof(driverSpec));
@@ -138,10 +138,7 @@ main(int argc, char *argv[])
 #endif
 	AG_ConfigLoad();
 
-	AG_BindGlobalKeyEv(AG_KEY_Q,    AGSI_WINCMD,    Quit);
-	AG_BindGlobalKey(AG_KEY_EQUALS, AGSI_WINCMD,    AG_ZoomIn);
-	AG_BindGlobalKey(AG_KEY_MINUS,  AGSI_WINCMD,    AG_ZoomOut);
-	AG_BindGlobalKey(AG_KEY_0,      AGSI_WINCMD,    AG_ZoomReset);
+	AG_BindStdGlobalKeys();
 	AG_BindGlobalKey(AG_KEY_P,      AGSI_APPCMD,    AG_ViewCapture);
 	AG_BindGlobalKey(AG_KEY_F8,     AG_KEYMOD_NONE, AG_ViewCapture);
 

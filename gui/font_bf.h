@@ -45,7 +45,15 @@ typedef struct ag_font_bf {
 	int advance;                            /* Global advance */
 } AG_FontBf;
 
-#define AGFONTBF(font) ((AG_FontBf *)(font))
+#define   AGFONTBF(o)      ((AG_FontBf *)(o))
+#define  AGcFONTBF(o)      ((const AG_FontBf *)(o))
+#define  AG_FONTBF_ISA(o) (((AGOBJECT(o)->cid & 0xffff0000) >> 16) == 0x0701)
+#define  AG_FONTBF_SELF()    AGFONTBF(  AG_OBJECT(0,         "AG_Font:AG_FontBf:*") )
+#define  AG_FONTBF_PTR(n)    AGFONTBF(  AG_OBJECT((n),       "AG_Font:AG_FontBf:*") )
+#define  AG_FONTBF_NAMED(n)  AGFONTBF(  AG_OBJECT_NAMED((n), "AG_Font:AG_FontBf:*") )
+#define AG_cFONTBF_SELF()   AGcFONTBF( AG_cOBJECT(0,         "AG_Font:AG_FontBf:*") )
+#define AG_cFONTBF_PTR(n)   AGcFONTBF( AG_cOBJECT((n),       "AG_Font:AG_FontBf:*") )
+#define AG_cFONTBF_NAMED(n) AGcFONTBF( AG_cOBJECT_NAMED((n), "AG_Font:AG_FontBf:*") )
 
 __BEGIN_DECLS
 extern AG_FontClass agFontBfClass;

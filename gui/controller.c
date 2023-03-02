@@ -53,7 +53,7 @@ AG_ControllerNew(void *obj, const char *desc)
 		return (NULL);
 	}
 	AG_ObjectInit(ctrl, &agControllerClass);
-	idev = AGINPUTDEV(ctrl);
+	idev = AGINPUTDEVICE(ctrl);
 	idev->drv = drv;
 	if ((idev->desc = TryStrdup(desc)) == NULL) {
 		goto fail;
@@ -111,7 +111,7 @@ void
 AG_ProcessController(AG_Window *win, const AG_DriverEvent *dev)
 {
 	AG_Widget *wFoc;
-	AG_InputDevice *id;
+	AG_InputDevice *idev;
 	int instanceID;
 
 	if ((instanceID = AG_GetJoystickInstanceID(dev)) == -1)
@@ -120,20 +120,18 @@ AG_ProcessController(AG_Window *win, const AG_DriverEvent *dev)
 	AG_LockVFS(&agInputDevices);
 
 	/* Post event to any widget with an active matching input device grab. */
-	OBJECT_FOREACH_CHILD(id, &agInputDevices, ag_input_device) {
+	OBJECT_FOREACH_CHILD(idev, &agInputDevices, ag_input_device) {
 		int i;
 
-		if (!AG_OfClass(id, "AG_InputDevice:AG_Joystick:*")) {
+		if (!AG_JOYSTICK_ISA(idev) ||
+		    instanceID != AGJOYSTICK(idev)->instanceID) {
 			continue;
 		}
-		if (instanceID != AGJOYSTICK(id)->instanceID) {
-			continue;
-		}
-		for (i = 0; i < id->nWidGrab; i++) {
-			AG_Widget *wGrab = id->widGrab[i];
+		for (i = 0; i < idev->nWidGrab; i++) {
+			AG_Widget *wGrab = idev->widGrab[i];
 
 			AG_OBJECT_ISA(wGrab, "AG_Widget:*");
-			PostCtrl(wGrab, id, dev);
+			PostCtrl(wGrab, idev, dev);
 		}
 		break;
 	}
@@ -144,7 +142,7 @@ AG_ProcessController(AG_Window *win, const AG_DriverEvent *dev)
 		    (wFoc = AG_WidgetFindFocused(win)) == NULL) {
 			goto out;
 		}
-		PostCtrl(wFoc, id, dev);
+		PostCtrl(wFoc, idev, dev);
 	} else {
 		AG_Driver *drv;
 
@@ -156,7 +154,7 @@ AG_ProcessController(AG_Window *win, const AG_DriverEvent *dev)
 				    (wFoc = AG_WidgetFindFocused(win)) == NULL) {
 					continue;
 				}
-				PostCtrl(wFoc, id, dev);
+				PostCtrl(wFoc, idev, dev);
 			}
 		}
 		AG_UnlockVFS(&agDrivers);
@@ -183,7 +181,7 @@ Edit(void *obj)
 
 	box = AG_BoxNewVert(NULL, AG_BOX_HFILL);
 
-	lbl = AG_LabelNewS(box, 0, AGINPUTDEV(ctrl)->desc);
+	lbl = AG_LabelNewS(box, 0, AGINPUTDEVICE(ctrl)->desc);
 	AG_SetFontFamily(lbl, "league-spartan");
 	AG_SetFontSize(lbl, "130%");
 
@@ -196,9 +194,9 @@ Edit(void *obj)
 #endif /* AG_WIDGETS and AG_DEBUG */
 
 AG_ObjectClass agControllerClass = {
-	"Agar(InputDevice:Controller)",
+	"Agar(InputDevice:Joystick:Controller)",
 	sizeof(AG_Controller),
-	{ 0,0 },
+	{ 1,0, AGC_CONTROLLER, 0xE062 },
 	Init,
 	NULL,		/* reset */
 	NULL,		/* destroy */

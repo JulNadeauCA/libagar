@@ -421,7 +421,7 @@ static void
 LocSelected(AG_Event *_Nonnull event)
 {
 	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
-	const AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
+	const AG_TlistItem *ti = AG_TLISTITEM_PTR(2);
 
 	if (ti == NULL) {
 		return;
@@ -795,7 +795,7 @@ SelectGlobResult(AG_Event *_Nonnull event)
 	char file[AG_PATHNAME_MAX];
 	AG_Window *win = AG_WINDOW_PTR(1);
 	AG_FileDlg *fd = AG_FILEDLG_PTR(2);
-	const AG_TlistItem *ti = AG_TLIST_ITEM_PTR(3);
+	const AG_TlistItem *ti = AG_TLISTITEM_PTR(3);
 	AG_Textbox *tb = fd->tbFile;
 	AG_FileInfo info;
 	int endSep;
@@ -1066,7 +1066,7 @@ static void
 FileTypeSelected(AG_Event *_Nonnull event)
 {
 	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
-	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	const AG_TlistItem *it = AG_TLISTITEM_PTR(2);
 
 	AG_ObjectLock(fd);
 
@@ -2130,7 +2130,7 @@ AG_WidgetClass agFileDlgClass = {
 	{
 		"Agar(Widget:FileDlg)",
 		sizeof(AG_FileDlg),
-		{ 0,0 },
+		{ 1,0, AGC_FILE_DLG, 0x1F4BE },
 		Init,
 		NULL,		/* reset */
 		Destroy,

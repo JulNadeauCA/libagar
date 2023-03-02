@@ -36,14 +36,15 @@ typedef struct ag_toolbar {
 	Uint32 _pad;
 } AG_Toolbar;
 
-#define AGTOOLBAR(obj)            ((AG_Toolbar *)(obj))
-#define AGCTOOLBAR(obj)           ((const AG_Toolbar *)(obj))
-#define AG_TOOLBAR_SELF()          AGTOOLBAR( AG_OBJECT(0,"AG_Widget:AG_Box:AG_Toolbar:*") )
-#define AG_TOOLBAR_PTR(n)          AGTOOLBAR( AG_OBJECT((n),"AG_Widget:AG_Box:AG_Toolbar:*") )
-#define AG_TOOLBAR_NAMED(n)        AGTOOLBAR( AG_OBJECT_NAMED((n),"AG_Widget:AG_Box:AG_Toolbar:*") )
-#define AG_CONST_TOOLBAR_SELF()   AGCTOOLBAR( AG_CONST_OBJECT(0,"AG_Widget:AG_Box:AG_Toolbar:*") )
-#define AG_CONST_TOOLBAR_PTR(n)   AGCTOOLBAR( AG_CONST_OBJECT((n),"AG_Widget:AG_Box:AG_Toolbar:*") )
-#define AG_CONST_TOOLBAR_NAMED(n) AGCTOOLBAR( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Box:AG_Toolbar:*") )
+#define   AGTOOLBAR(o)       ((AG_Toolbar *)(o))
+#define  AGcTOOLBAR(o)       ((const AG_Toolbar *)(o))
+#define  AG_TOOLBAR_ISA(o)   (((AGOBJECT(o)->cid & 0xffff0000) >> 16) == 0x0905)
+#define  AG_TOOLBAR_SELF()    AGTOOLBAR(  AG_OBJECT(0,        "AG_Widget:AG_Box:AG_Toolbar:*") )
+#define  AG_TOOLBAR_PTR(n)    AGTOOLBAR(  AG_OBJECT((n),      "AG_Widget:AG_Box:AG_Toolbar:*") )
+#define  AG_TOOLBAR_NAMED(n)  AGTOOLBAR(  AG_OBJECT_NAMED((n),"AG_Widget:AG_Box:AG_Toolbar:*") )
+#define AG_cTOOLBAR_SELF()   AGcTOOLBAR( AG_cOBJECT(0,        "AG_Widget:AG_Box:AG_Toolbar:*") )
+#define AG_cTOOLBAR_PTR(n)   AGcTOOLBAR( AG_cOBJECT((n),      "AG_Widget:AG_Box:AG_Toolbar:*") )
+#define AG_cTOOLBAR_NAMED(n) AGcTOOLBAR( AG_cOBJECT_NAMED((n),"AG_Widget:AG_Box:AG_Toolbar:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agToolbarClass;

@@ -3,7 +3,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agarmap.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 January 09
+" Last Change:  2023 February 25
 
 if !exists("c_no_agar_map") || exists("c_agar_map_typedefs")
   " map/insert.h
@@ -72,8 +72,6 @@ if !exists("c_no_agar_map") || exists("c_agar_map_typedefs")
   " map/rg_sketch.h
   syn keyword cType RG_SketchMod RG_SketchUndoBlk RG_Sketch
   syn keyword cConstant RG_SKETCH_NAME_MAX RG_SKETCH_VERTEX_DISPLACEMENT
-  " map/rg_texsel.h
-  syn keyword cType RG_TextureSelector
   " map/rg_texture.h
   syn keyword cType RG_Texture
   syn keyword cConstant RG_TEXTURE_NAME_MAX RG_TEXTURE_REPEAT RG_TEXTURE_CLAMP

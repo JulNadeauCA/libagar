@@ -1255,7 +1255,7 @@ AG_WidgetClass agHSVPalClass = {
 	{
 		"Agar(Widget:HSVPal)",
 		sizeof(AG_HSVPal),
-		{ 0,0 },
+		{ 1,0, AGC_HSVPAL, 0x1F3A8 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

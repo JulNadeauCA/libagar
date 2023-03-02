@@ -8,7 +8,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agarcss.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 February 18
+" Last Change:  2023 February 25
 
 " quit when a syntax file was already loaded
 if !exists("main_syntax")
@@ -41,11 +41,8 @@ syn keyword cssTagName AG_Table AG_Textbox AG_Titlebar AG_Tlist AG_Toolbar
 syn keyword cssTagName AG_Treetbl AG_UCombo AG_Widget AG_Window
 
 " Agar Widget classes from extra libraries.
-syn keyword cssTagName MAP_View RG_TextureSelector RG_Tileview
-syn keyword cssTagName M_Matview M_Plotter
-syn keyword cssTagName SG_PaletteView SG_View
-syn keyword cssTagName SK_View
-syn keyword cssTagName VG_View
+syn keyword cssTagName MAP_View RG_Tileview M_Matview M_Plotter SG_View 
+syn keyword cssTagName SK_View VG_View
 
 " Your own Agar Widget classes
 "syn keyword cssTagName MY_Widget

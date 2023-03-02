@@ -1490,7 +1490,7 @@ AG_WidgetClass mapViewClass = {
 	{
 		"Agar(Widget):MAP(View)",
 		sizeof(MAP_View),
-		{ 0,0 },
+		{ 1,0, AGC_MAP_VIEW, 0xE02D },
 		Init,
 		NULL,		/* reset */
 		Destroy,

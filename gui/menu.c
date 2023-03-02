@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2004-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -199,7 +199,7 @@ UpdatePolledItem(AG_MenuItem *mi)
 {
 	AG_Menu *m = mi->pmenu;
 
-	AG_MENU_ITEM_IS_VALID(mi);
+	AG_MENUITEM_IS_VALID(mi);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 
 	AG_MenuInvalidateLabels(mi);
@@ -236,26 +236,30 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 	int debugLvlSave;
 #endif
 
-	AG_MENU_ITEM_IS_VALID(mi);
+	AG_MENUITEM_IS_VALID(mi);
 
 	if (parent) {
-		if (AG_OfClass(parent, "AG_Widget:AG_MenuView")) {
+		if (AG_MENUVIEW_ISA(parent)) {
 			m = ((AG_MenuView *)parent)->pmenu;
-		} else if (AG_OfClass(parent, "AG_Widget:AG_Menu")) {
+		} else if (AG_MENU_ISA(parent)) {
 			m = parent;
 		} else {
 			m = mi->pmenu;
 		}
-		AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
+		if (!AG_OBJECT_VALID(m) || !AG_MENU_ISA(m))
+			return (NULL);
 
-		/* Convert to absolute coordinates for AG_WindowSetGeometry(). */
+		/* Convert to absolute coordinates for AG_WindowSetGeometry() */
 		x += WIDGET(parent)->rView.x1;
 		y += WIDGET(parent)->rView.y1;
-		if ((winParent = WIDGET(parent)->window) == NULL) {
-			AG_FatalError("AG_MenuExpand: No parent window");
-		}
-		AG_OBJECT_ISA(winParent, "AG_Widget:AG_Window:*");
-		if (WIDGET(winParent)->drv && AGDRIVER_MULTIPLE(WIDGET(winParent)->drv)) {
+
+		if ((winParent = WIDGET(parent)->window) == NULL ||
+		    !AG_OBJECT_VALID(winParent) ||
+		    !AG_WINDOW_ISA(winParent))
+			return (NULL);
+
+		if (WIDGET(winParent)->drv != NULL &&
+		    AGDRIVER_MULTIPLE(WIDGET(winParent)->drv)) {
 			x += WIDGET(winParent)->x;
 			y += WIDGET(winParent)->y;
 		}
@@ -273,10 +277,13 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 		goto out;
 
 	if ((mv = mi->view) != NULL) {                            /* Cached */
-		AG_OBJECT_ISA(mv, "AG_Widget:AG_MenuView:*");
+		if (!AG_OBJECT_VALID(mv) || !AG_MENUVIEW_ISA(mv)) {
+			mi->view = NULL;
+			goto out;
+		}
+
 		win = WIDGET(mv)->window;
-		if (win != NULL) {
-			AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
+		if (win != NULL && AG_OBJECT_VALID(win) && AG_WINDOW_ISA(win)) {
 #ifdef DEBUG_EXPAND
 			Debug(m, "Expand [%s] -> %s (cached)\n", mi->text, OBJECT(win)->name);
 #endif
@@ -388,7 +395,7 @@ AG_MenuCollapse(AG_MenuItem *mi)
 	if (mi == NULL || mi->view == NULL || (m = mi->pmenu) == NULL)
 		return;
 
-	AG_MENU_ITEM_IS_VALID(mi);
+	AG_MENUITEM_IS_VALID(mi);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -411,7 +418,7 @@ CollapseAll(AG_MenuItem *_Nonnull mi)
 {
 	AG_MenuItem *miSub;
 
-	AG_MENU_ITEM_IS_VALID(mi);
+	AG_MENUITEM_IS_VALID(mi);
 
 	TAILQ_FOREACH(miSub, &mi->subItems, items) {
 		CollapseAll(miSub);
@@ -490,9 +497,7 @@ CreateItem(AG_MenuItem *_Nullable miParent, const char *_Nullable text,
 	AG_MenuItem *mi;
 	
 	mi = Malloc(sizeof(AG_MenuItem));
-#ifdef AG_TYPE_SAFETY
-	Strlcpy(mi->tag, AG_MENU_ITEM_TAG, sizeof(mi->tag));
-#endif
+	mi->tag = agNonObjectSignature;
 	mi->text = (text) ? Strdup(text) : Strdup("");
 	mi->lblMenu[1] = mi->lblMenu[0] = -1;
 	mi->lblView[2] = mi->lblView[1] = mi->lblView[0] = -1;
@@ -670,7 +675,7 @@ AG_MenuSetIcon(AG_MenuItem *mi, const AG_Surface *icon)
 {
 	AG_Menu *m = mi->pmenu;
 
-	AG_MENU_ITEM_IS_VALID(mi);
+	AG_MENUITEM_IS_VALID(mi);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -691,7 +696,7 @@ AG_MenuSetLabel(AG_MenuItem *mi, const char *fmt, ...)
 	AG_Menu *m = mi->pmenu;
 	va_list ap;
 	
-	AG_MENU_ITEM_IS_VALID(mi);
+	AG_MENUITEM_IS_VALID(mi);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -712,7 +717,7 @@ AG_MenuSetLabelS(AG_MenuItem *mi, const char *s)
 {
 	AG_Menu *m = mi->pmenu;
 
-	AG_MENU_ITEM_IS_VALID(mi);
+	AG_MENUITEM_IS_VALID(mi);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -731,7 +736,7 @@ AG_MenuSeparator(AG_MenuItem *pitem)
 	AG_MenuItem *mi;
 	AG_Menu *m = pitem->pmenu;
 
-	AG_MENU_ITEM_IS_VALID(pitem);
+	AG_MENUITEM_IS_VALID(pitem);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 	
@@ -758,7 +763,7 @@ AG_MenuSection(AG_MenuItem *pitem, const char *fmt, ...)
 	Vasprintf(&text, fmt, ap);
 	va_end(ap);
 
-	AG_MENU_ITEM_IS_VALID(pitem);
+	AG_MENUITEM_IS_VALID(pitem);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -777,7 +782,7 @@ AG_MenuSectionS(AG_MenuItem *pitem, const char *label)
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	AG_MENU_ITEM_IS_VALID(pitem);
+	AG_MENUITEM_IS_VALID(pitem);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -796,7 +801,7 @@ AG_MenuDynamicItem(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	AG_MENU_ITEM_IS_VALID(pitem);
+	AG_MENUITEM_IS_VALID(pitem);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -821,7 +826,7 @@ AG_MenuDynamicItemKb(AG_MenuItem *pitem, const char *text, const AG_Surface *ico
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	AG_MENU_ITEM_IS_VALID(pitem);
+	AG_MENUITEM_IS_VALID(pitem);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -846,7 +851,7 @@ AG_MenuSetPollFn(AG_MenuItem *mi, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_Menu *m = mi->pmenu;
 
-	AG_MENU_ITEM_IS_VALID(mi);
+	AG_MENUITEM_IS_VALID(mi);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -871,7 +876,7 @@ AG_MenuNode(AG_MenuItem *pitem, const char *text, const AG_Surface *icon)
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *node;
 	
-	AG_MENU_ITEM_IS_VALID(pitem);
+	AG_MENUITEM_IS_VALID(pitem);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -958,7 +963,7 @@ AG_MenuActionKb(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 	
-	AG_MENU_ITEM_IS_VALID(pitem);
+	AG_MENUITEM_IS_VALID(pitem);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -1001,7 +1006,7 @@ AG_MenuTool(AG_MenuItem *pitem, AG_Toolbar *toolbar, const char *text,
 	AG_Button *bu;
 	AG_Event *btn_ev;
 	
-	AG_MENU_ITEM_IS_VALID(pitem);
+	AG_MENUITEM_IS_VALID(pitem);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 	AG_OBJECT_ISA(toolbar, "AG_Widget:AG_Box:AG_Toolbar:*");
@@ -1047,7 +1052,7 @@ AG_MenuIntBoolMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	AG_MENU_ITEM_IS_VALID(pitem);
+	AG_MENUITEM_IS_VALID(pitem);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -1081,7 +1086,7 @@ AG_MenuInt8BoolMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	AG_MENU_ITEM_IS_VALID(pitem);
+	AG_MENUITEM_IS_VALID(pitem);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -1115,7 +1120,7 @@ AG_MenuIntFlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	AG_MENU_ITEM_IS_VALID(pitem);
+	AG_MENUITEM_IS_VALID(pitem);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -1152,7 +1157,7 @@ AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon,
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	AG_MENU_ITEM_IS_VALID(pitem);
+	AG_MENUITEM_IS_VALID(pitem);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -1187,7 +1192,7 @@ AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 	
-	AG_MENU_ITEM_IS_VALID(pitem);
+	AG_MENUITEM_IS_VALID(pitem);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -1223,7 +1228,7 @@ AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, const AG_Surface *icon
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	AG_MENU_ITEM_IS_VALID(pitem);
+	AG_MENUITEM_IS_VALID(pitem);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -1257,7 +1262,7 @@ AG_MenuSetIntBoolMp(AG_MenuItem *mi, int *pBool, int inv, AG_Mutex *lock)
 {
 	AG_Menu *m = mi->pmenu;
 
-	AG_MENU_ITEM_IS_VALID(mi);
+	AG_MENUITEM_IS_VALID(mi);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -1288,7 +1293,7 @@ AG_MenuSetIntFlagsMp(AG_MenuItem *mi, int *pFlags, int flags, int inv,
 {
 	AG_Menu *m = mi->pmenu;
 
-	AG_MENU_ITEM_IS_VALID(mi);
+	AG_MENUITEM_IS_VALID(mi);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -1325,7 +1330,7 @@ AG_MenuFreeSubitems(AG_MenuItem *_Nonnull mi)
 {
 	AG_MenuItem *miSub, *miSubNext;
 
-	AG_MENU_ITEM_IS_VALID(mi);
+	AG_MENUITEM_IS_VALID(mi);
 
 	for (miSub = TAILQ_FIRST(&mi->subItems);
 	     miSub != TAILQ_END(&mi->subItems);
@@ -1345,6 +1350,8 @@ void
 AG_MenuItemFree(AG_MenuItem *mi)
 {
 	AG_MenuItem *miSub, *miSubNext;
+
+	mi->tag = 0;
 
 	for (miSub = TAILQ_FIRST(&mi->subItems);
 	     miSub != TAILQ_END(&mi->subItems);
@@ -1366,7 +1373,7 @@ AG_MenuDel(AG_MenuItem *mi)
 	AG_Menu *m = mi->pmenu;
 	AG_MenuItem *miParent = mi->parent;
 
-	AG_MENU_ITEM_IS_VALID(mi);
+	AG_MENUITEM_IS_VALID(mi);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -1392,7 +1399,7 @@ InvalidateLabels(AG_MenuItem *_Nonnull mi)
 	AG_MenuItem *miSub;
 	int i;
 
-	AG_MENU_ITEM_IS_VALID(mi);
+	AG_MENUITEM_IS_VALID(mi);
 
 	for (i = 0; i < 2; i++) {
 		if (mi->lblMenu[i] != -1) {
@@ -1426,7 +1433,7 @@ AG_MenuInvalidateLabels(AG_MenuItem *_Nonnull mi)
 {
 	AG_MenuItem *miSub;
 
-	AG_MENU_ITEM_IS_VALID(mi);
+	AG_MENUITEM_IS_VALID(mi);
 
 	TAILQ_FOREACH(miSub, &mi->subItems, items)
 		InvalidateLabels(mi);
@@ -1437,7 +1444,7 @@ AG_MenuState(AG_MenuItem *mi, int state)
 {
 	AG_Menu *m = mi->pmenu;
 
-	AG_MENU_ITEM_IS_VALID(mi);
+	AG_MENUITEM_IS_VALID(mi);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 
 	m->curState = state;
@@ -1526,7 +1533,7 @@ AG_MenuToolbar(AG_MenuItem *mi, AG_Toolbar *tb)
 {
 	AG_Menu *m = mi->pmenu;
 
-	AG_MENU_ITEM_IS_VALID(mi);
+	AG_MENUITEM_IS_VALID(mi);
 	AG_OBJECT_ISA(m, "AG_Widget:AG_Menu:*");
 	AG_ObjectLock(m);
 
@@ -1770,22 +1777,22 @@ AG_MenuGetItemPtr(const AG_Event *event, int idx, int isConst)
 	const AG_Variable *V = &event->argv[idx];
 
 	if (idx > event->argc || V->type != AG_VARIABLE_POINTER) {
-		AG_GenericMismatch("by AG_MENU_ITEM_PTR(idx)");
+		AG_GenericMismatch("by AG_MENUITEM_PTR(idx)");
 	}
 	if (isConst) {
 		if ((V->info.pFlags & AG_VARIABLE_P_READONLY) == 0)
 			AG_FatalError("AG_MENU_CONST_ITEM_PTR() argument isn't const. "
-			              "Did you mean AG_MENU_ITEM_PTR()?");
+			              "Did you mean AG_MENUITEM_PTR()?");
 	} else {
 		if (V->info.pFlags & AG_VARIABLE_P_READONLY)
-			AG_FatalError("AG_MENU_ITEM_PTR() argument is const. "
-			              "Did you mean AG_CONST_MENU_ITEM_PTR()?");
+			AG_FatalError("AG_MENUITEM_PTR() argument is const. "
+			              "Did you mean AG_cMENUITEM_PTR()?");
 	}
 	if (V->data.p == NULL) {
 		return (NULL);
 	}
-	if (!AG_MENU_ITEM_VALID(V->data.p)) {
-		AG_GenericMismatch("by AG_MENU_ITEM_PTR(tag)");
+	if (!AG_MENUITEM_VALID(V->data.p)) {
+		AG_GenericMismatch("by AG_MENUITEM_PTR(tag)");
 	}
 	return (V->data.p);
 }
@@ -1807,7 +1814,7 @@ AG_WidgetClass agMenuClass = {
 	{
 		"Agar(Widget:Menu)",
 		sizeof(AG_Menu),
-		{ 0,0 },
+		{ 1,0, AGC_MENU, 0xE024 },
 		Init,
 		NULL,		/* reset */
 		Destroy,

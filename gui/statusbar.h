@@ -24,6 +24,8 @@ typedef struct ag_statusbar {
 	AG_Label *_Nonnull labels[AG_STATUSBAR_MAX_LABELS];
 } AG_Statusbar;
 
+#define AG_STATUSBAR_ISA(o) (((AGOBJECT(o)->cid & 0xffff0000) >> 16) == 0x0903)
+
 __BEGIN_DECLS
 extern AG_WidgetClass agStatusbarClass;
 

@@ -187,7 +187,7 @@ AG_DEV_ConfigWindow(AG_Config *_Nullable cfg)
 		{
 			char extns[160], *c;
 			AG_FlagDescrRO *fd;
-			int i;
+			int i = 0;
 
 			extns[0] = '\0';
 			for (fd = &agArchExtnNames[0]; fd->bitmask != 0; fd++) {
@@ -274,7 +274,7 @@ AG_DEV_ConfigWindow(AG_Config *_Nullable cfg)
 				NULL
 			};
 
-			if (AG_OfClass(drv, "AG_Driver:AG_DriverMw:AG_DriverGLX")) {
+			if (OBJECT(drv)->cid == AGC_DRIVER_GLX) {
 				cb = AG_CheckboxNewInt(tab, 0,
 				    _("Use Synchronous X Events"), &agXsync);
 				AG_WidgetDisable(cb);
@@ -361,10 +361,9 @@ AG_DEV_ConfigWindow(AG_Config *_Nullable cfg)
 
 		box = AG_BoxNewVert(tab, AG_BOX_EXPAND);
 #ifdef HAVE_SDL2
-		if (AG_OfClass(drv, "AG_Driver:AG_DriverMw:AG_DriverSDL2MW:*") ||
-		    AG_OfClass(drv, "AG_Driver:AG_DriverSw:AG_DriverSDL2GL:*") ||
-		    AG_OfClass(drv, "AG_Driver:AG_DriverSw:AG_DriverSDL2FB:*"))
-		{
+		if (OBJECT(drv)->cid == AGC_DRIVER_SDL2MW ||
+		    OBJECT(drv)->cid == AGC_DRIVER_SDL2GL ||
+		    OBJECT(drv)->cid == AGC_DRIVER_SDL2FB) {
 			AG_LabelNewS(box, 0,
 			    _("Joystick support is available."));
 

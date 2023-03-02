@@ -13,7 +13,8 @@ typedef struct sg_widget {
 	AG_TAILQ_ENTRY(sg_widget) widgets;
 } SG_Widget;
 
-#define SGWIDGET(n) ((SG_Widget *)(n))
+#define SGWIDGET(n)      ((SG_Widget *)(n))
+#define SG_WIDGET_ISA(o) (((AGOBJECT(o)->cid & 0xffffff00) >> 8)  == 0x7A0401)
 
 __BEGIN_DECLS
 extern SG_NodeClass sgWidgetClass;

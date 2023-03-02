@@ -254,7 +254,7 @@ AG_WidgetClass agFixedClass = {
 	{
 		"Agar(Widget:Fixed)",
 		sizeof(AG_Fixed),
-		{ 0,0 },
+		{ 1,0, AGC_FIXED, 0xE019 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

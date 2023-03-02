@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2011-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -128,7 +128,7 @@ SG_NodeClass sgLineClass = {
 	{
 		"SG_Node:SG_Geom:SG_Line",
 		sizeof(SG_Line),
-		{ 0,0 },
+		{ 1,0, AGC_SG_LINE, 0xE013 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

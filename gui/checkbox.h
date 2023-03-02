@@ -26,14 +26,15 @@ typedef struct ag_checkbox {
 	char *_Nullable label;          /* Text label string */
 } AG_Checkbox;
 
-#define AGCHECKBOX(obj)            ((AG_Checkbox *)(obj))
-#define AGCCHECKBOX(obj)           ((const AG_Checkbox *)(obj))
-#define AG_CHECKBOX_SELF()          AGCHECKBOX( AG_OBJECT(0,"AG_Widget:AG_Checkbox:*") )
-#define AG_CHECKBOX_PTR(n)          AGCHECKBOX( AG_OBJECT((n),"AG_Widget:AG_Checkbox:*") )
-#define AG_CHECKBOX_NAMED(n)        AGCHECKBOX( AG_OBJECT_NAMED((n),"AG_Widget:AG_Checkbox:*") )
-#define AG_CONST_CHECKBOX_SELF()   AGCCHECKBOX( AG_CONST_OBJECT(0,"AG_Widget:AG_Checkbox:*") )
-#define AG_CONST_CHECKBOX_PTR(n)   AGCCHECKBOX( AG_CONST_OBJECT((n),"AG_Widget:AG_Checkbox:*") )
-#define AG_CONST_CHECKBOX_NAMED(n) AGCCHECKBOX( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Checkbox:*") )
+#define   AGCHECKBOX(o)        ((AG_Checkbox *)(o))
+#define  AGCCHECKBOX(o)        ((const AG_Checkbox *)(o))
+#define  AG_CHECKBOX_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x0A)
+#define  AG_CHECKBOX_SELF()    AGCHECKBOX(  AG_OBJECT(0,        "AG_Widget:AG_Checkbox:*") )
+#define  AG_CHECKBOX_PTR(n)    AGCHECKBOX(  AG_OBJECT((n),      "AG_Widget:AG_Checkbox:*") )
+#define  AG_CHECKBOX_NAMED(n)  AGCHECKBOX(  AG_OBJECT_NAMED((n),"AG_Widget:AG_Checkbox:*") )
+#define AG_cCHECKBOX_SELF()   AGcCHECKBOX( AG_cOBJECT(0,        "AG_Widget:AG_Checkbox:*") )
+#define AG_cCHECKBOX_PTR(n)   AGcCHECKBOX( AG_cOBJECT((n),      "AG_Widget:AG_Checkbox:*") )
+#define AG_cCHECKBOX_NAMED(n) AGcCHECKBOX( AG_cOBJECT_NAMED((n),"AG_Widget:AG_Checkbox:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agCheckboxClass;

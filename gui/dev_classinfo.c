@@ -36,14 +36,27 @@
 static void
 GenClassTable(AG_Table *_Nonnull tbl, AG_ObjectClass *_Nonnull C)
 {
+	Uint32 uch[2];
+	char icon[16];
 	AG_ObjectClass *Csub;
-	
-	AG_TableAddRow(tbl, "%s:%s:%d:%s:%s",
-	    C->name, AG_Printf("%d.%d", C->ver.major, C->ver.minor), C->size,
-	    C->pvt.libs[0] != '\0' ? C->pvt.libs : "",
-	    C->hier);
 
-	TAILQ_FOREACH(Csub, &C->pvt.sub, pvt.subclasses)
+	uch[0] = C->ver.unicode;
+	uch[1] = '\0';
+
+	if (AG_ExportUnicode("UTF-8", icon, uch, sizeof(icon)) == -1)
+		icon[0] = '\0';
+
+	AG_TableAddRow(tbl,
+	    "%08x:%s:%s:"
+	    "%s:"
+	    "%d:%s:%s",
+	    C->ver.cid,
+	    AG_Printf(AGSI_IDEOGRAM "%s" AGSI_RST, icon),
+	    C->name,
+	    AG_Printf("%d.%d", C->ver.major, C->ver.minor),
+	    C->size, (C->libs[0] != '\0') ? C->libs : "", C->hier);
+
+	TAILQ_FOREACH(Csub, &C->sub, subclasses)
 		GenClassTable(tbl, Csub);
 }
 
@@ -52,7 +65,6 @@ PollClasses(AG_Event *_Nonnull event)
 {
 	AG_Table *tbl = AG_TABLE_SELF();
 
-	/* XXX tree */
 	AG_TableBegin(tbl);
 	GenClassTable(tbl, &agObjectClass);
 	AG_TableEnd(tbl);
@@ -72,12 +84,15 @@ AG_DEV_ClassInfo(void)
 	AG_SetFontSize(win, "90%");
 
 	tbl = AG_TableNewPolled(win, AG_TABLE_EXPAND, PollClasses, NULL);
+	AG_TableSetPollInterval(tbl, 500);
+	AG_TableAddCol(tbl, _("Class ID"), "<XXXXXXXX>", NULL);
+	AG_TableAddCol(tbl, "", "<X>", NULL);
 	AG_TableAddCol(tbl, _("Name"), "<XXXXXXXXXXXXXXX>", NULL);
-	AG_TableAddCol(tbl, _("Version"), "<XXX.XXX>", NULL);
+	AG_TableAddCol(tbl, _("Version"), "<XX.XX>", NULL);
 	AG_TableAddCol(tbl, _("Size"), "<XXXX>", NULL);
 	AG_TableAddCol(tbl, _("Modules"), "<XXXXXX>", NULL);
 	AG_TableAddCol(tbl, _("Hierarchy"), NULL, NULL);
-	AG_TableSizeHint(tbl, 680, 30);
+	AG_TableSizeHint(tbl, 800, 25);
 
 	AG_WindowShow(win);
 	return (win);

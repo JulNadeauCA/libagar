@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2006-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -87,7 +87,7 @@ SG_NodeClass sgPolyboxClass = {
 	{
 		"SG_Node:SG_Object:SG_Polybox",
 		sizeof(SG_Polybox),
-		{ 0,0 },
+		{ 1,0, AGC_SG_POLYBOX, 0xE076 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

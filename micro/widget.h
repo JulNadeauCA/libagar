@@ -64,26 +64,26 @@ typedef struct ma_widget {
 
 typedef AG_VEC_HEAD(MA_Widget *) MA_WidgetVec;
 
-#define MAWIDGET(p)             ((MA_Widget *)(p))
-#define MACWIDGET(p)            ((const MA_Widget *)(p))
-#define MA_WIDGET_SELF()          MAWIDGET( AG_OBJECT(0,"MA_Widget:*") )
-#define MA_WIDGET_PTR(n)          MAWIDGET( AG_OBJECT((n),"MA_Widget:*") )
-#define MA_WIDGET_NAMED(n)        MAWIDGET( AG_OBJECT_NAMED((n),"MA_Widget:*") )
-#define MA_CONST_WIDGET_SELF()   MACWIDGET( AG_CONST_OBJECT(0,"MA_Widget:*") )
-#define MA_CONST_WIDGET_PTR(n)   MACWIDGET( AG_CONST_OBJECT((n),"MA_Widget:*") )
-#define MA_CONST_WIDGET_NAMED(n) MACWIDGET( AG_CONST_OBJECT((n),"MA_Widget:*") )
+#define   MAWIDGET(o)       ((MA_Widget *)(o))
+#define  MAcWIDGET(o)       ((const MA_Widget *)(o))
+#define  MA_WIDGET_ISA(o)   (((AGOBJECT(o)->cid & 0xff00) >> 8) >= 0x05 && \
+                            (((AGOBJECT(o)->cid & 0xff00) >> 8) <= 0x0E)
+#define  MA_WIDGET_SELF()   MAWIDGET(  AG_OBJECT(0,   "MA_Widget:*") )
+#define  MA_WIDGET_PTR(n)   MAWIDGET(  AG_OBJECT((n), "MA_Widget:*") )
+#define MA_cWIDGET_SELF()  MAcWIDGET( AG_cOBJECT(0,   "MA_Widget:*") )
+#define MA_cWIDGET_PTR(n)  MAcWIDGET( AG_cOBJECT((n), "MA_Widget:*") )
 
-#define MAWIDGET_OPS(wi)	((MA_WidgetClass *)AGOBJECT(wi)->cls)
-#define MAWIDGET_SUPER_OPS(wi)	((MA_WidgetClass *)AGOBJECT(wi)->cls->super)
-#define MAWIDGET_SURFACE(wi,idx) MAWIDGET(wi)->surfaces[idx]
+#define MAWIDGET_OPS(o)	        ((MA_WidgetClass *)AGOBJECT(o)->cls)
+#define MAWIDGET_SUPER_OPS(o)   ((MA_WidgetClass *)AGOBJECT(o)->cls->super)
+#define MAWIDGET_SURFACE(o,idx) MAWIDGET(o)->surfaces[idx]
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_MICRO)
-# define WIDGET(wi)		MAWIDGET(wi)
-# define WIDGET_OPS(wi)		MAWIDGET_OPS(wi)
-# define WIDGET_SUPER_OPS(wi)	MAWIDGET_SUPER_OPS(wi)
-# define WSURFACE(wi,ind)	MAWIDGET_SURFACE((wi),(ind))
-# define WIDTH(p)		MAWIDGET(p)->w
-# define HEIGHT(p)		MAWIDGET(p)->h
+# define WIDGET(o)           MAWIDGET(o)
+# define WIDGET_OPS(o)       MAWIDGET_OPS(o)
+# define WIDGET_SUPER_OPS(o) MAWIDGET_SUPER_OPS(o)
+# define WSURFACE(o,ind)     MAWIDGET_SURFACE((o),(ind))
+# define WIDTH(o)            MAWIDGET(o)->w
+# define HEIGHT(o)           MAWIDGET(o)->h
 #endif
 
 struct ma_window;

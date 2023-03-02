@@ -126,8 +126,8 @@ LookupWindowByID(HWND hwnd)
 		    wgl->hwnd != hwnd) {
 			continue;
 		}
-		win = AGDRIVER_MW(wgl)->win;
-		if (!(AGDRIVER_MW(wgl)->flags & AG_DRIVER_MW_OPEN) ||
+		win = AGDRIVERMW(wgl)->win;
+		if (!(AGDRIVERMW(wgl)->flags & AG_DRIVER_MW_OPEN) ||
 		    (win->flags & AG_WINDOW_DETACHING) ||
 		    WIDGET(win)->drv == NULL) {
 			return (NULL);
@@ -769,7 +769,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			goto fallback;
 		}
 	case WM_SIZE:
-		if (AGDRIVER_MW(drv)->flags & AG_DRIVER_MW_OPEN) {
+		if (AGDRIVERMW(drv)->flags & AG_DRIVER_MW_OPEN) {
 			TAILQ_FOREACH(dev, &wglEventQ, events) {
 				if (dev->type == AG_DRIVER_VIDEORESIZE)
 					break;
@@ -1071,7 +1071,7 @@ WGL_GetInputFocus(AG_Window **rv)
 		AG_SetError("Input focus is external to this application");
 		return (-1);
 	}
-	*rv = AGDRIVER_MW(wgl)->win;
+	*rv = AGDRIVERMW(wgl)->win;
 	return (0);
 }
 
@@ -1396,7 +1396,7 @@ AG_DriverMwClass agDriverWGL = {
 		{
 			"AG_Driver:AG_DriverMw:AG_DriverWGL",
 			sizeof(AG_DriverWGL),
-			{ 1,6 },
+			{ 1,7, AGC_DRIVER_WGL, 0xE01D },
 			NULL,		/* init */
 			NULL,		/* reset */
 			NULL,		/* destroy */

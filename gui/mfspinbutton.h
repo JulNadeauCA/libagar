@@ -34,14 +34,15 @@ typedef struct ag_mfspinbutton {
 	AG_Timer updateTo;
 } AG_MFSpinbutton;
 
-#define AGMFSPINBUTTON(obj)            ((AG_MFSpinbutton *)(obj))
-#define AGCMFSPINBUTTON(obj)           ((const AG_MFSpinbutton *)(obj))
-#define AG_MFSPINBUTTON_SELF()          AGMFSPINBUTTON( AG_OBJECT(0,"AG_Widget:AG_MFSpinbutton:*") )
-#define AG_MFSPINBUTTON_PTR(n)          AGMFSPINBUTTON( AG_OBJECT((n),"AG_Widget:AG_MFSpinbutton:*") )
-#define AG_MFSPINBUTTON_NAMED(n)        AGMFSPINBUTTON( AG_OBJECT_NAMED((n),"AG_Widget:AG_MFSpinbutton:*") )
-#define AG_CONST_MFSPINBUTTON_SELF()   AGCMFSPINBUTTON( AG_CONST_OBJECT(0,"AG_Widget:AG_MFSpinbutton:*") )
-#define AG_CONST_MFSPINBUTTON_PTR(n)   AGCMFSPINBUTTON( AG_CONST_OBJECT((n),"AG_Widget:AG_MFSpinbutton:*") )
-#define AG_CONST_MFSPINBUTTON_NAMED(n) AGCMFSPINBUTTON( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_MFSpinbutton:*") )
+#define   AGMFSPINBUTTON(o)        ((AG_MFSpinbutton *)(o))
+#define  AGcMFSPINBUTTON(o)        ((const AG_MFSpinbutton *)(o))
+#define  AG_MFSPINBUTTON_ISA(o)    (AGOBJECT(o)->cid == AGC_MFSPINBUTTON)
+#define  AG_MFSPINBUTTON_SELF()    AGMFSPINBUTTON(  AG_OBJECT(0,         "AG_Widget:AG_MFSpinbutton:*") )
+#define  AG_MFSPINBUTTON_PTR(n)    AGMFSPINBUTTON(  AG_OBJECT((n),       "AG_Widget:AG_MFSpinbutton:*") )
+#define  AG_MFSPINBUTTON_NAMED(n)  AGMFSPINBUTTON(  AG_OBJECT_NAMED((n), "AG_Widget:AG_MFSpinbutton:*") )
+#define AG_cMFSPINBUTTON_SELF()   AGcMFSPINBUTTON( AG_cOBJECT(0,         "AG_Widget:AG_MFSpinbutton:*") )
+#define AG_cMFSPINBUTTON_PTR(n)   AGcMFSPINBUTTON( AG_cOBJECT((n),       "AG_Widget:AG_MFSpinbutton:*") )
+#define AG_cMFSPINBUTTON_NAMED(n) AGcMFSPINBUTTON( AG_cOBJECT_NAMED((n), "AG_Widget:AG_MFSpinbutton:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agMFSpinbuttonClass;

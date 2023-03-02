@@ -328,16 +328,17 @@ typedef struct ag_driver_event {
 
 typedef AG_TAILQ_HEAD(ag_driver_eventq, ag_driver_event) AG_DriverEventQ;
 
-#define AGDRIVER(obj)            ((AG_Driver *)(obj))
-#define AGCDRIVER(obj)           ((const AG_Driver *)(obj))
-#define AG_DRIVER_SELF()          AGDRIVER( AG_OBJECT(0,"AG_Driver:*") )
-#define AG_DRIVER_PTR(n)          AGDRIVER( AG_OBJECT((n),"AG_Driver:*") )
-#define AG_DRIVER_NAMED(n)        AGDRIVER( AG_OBJECT_NAMED((n),"AG_Driver:*") )
-#define AG_CONST_DRIVER_SELF()   AGCDRIVER( AG_CONST_OBJECT(0,"AG_Driver:*") )
-#define AG_CONST_DRIVER_PTR(n)   AGCDRIVER( AG_CONST_OBJECT((n),"AG_Driver:*") )
-#define AG_CONST_DRIVER_NAMED(n) AGCDRIVER( AG_CONST_OBJECT_NAMED((n),"AG_Driver:*") )
+#define   AGDRIVER(o)     ((AG_Driver *)(o))
+#define  AGcDRIVER(o)     ((const AG_Driver *)(o))
+#define  AG_DRIVER_ISA(o) (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x05)
+#define  AG_DRIVER_SELF()    AGDRIVER(  AG_OBJECT(0,        "AG_Driver:*") )
+#define  AG_DRIVER_PTR(n)    AGDRIVER(  AG_OBJECT((n),      "AG_Driver:*") )
+#define  AG_DRIVER_NAMED(n)  AGDRIVER(  AG_OBJECT_NAMED((n),"AG_Driver:*") )
+#define AG_cDRIVER_SELF()   AGcDRIVER( AG_cOBJECT(0,        "AG_Driver:*") )
+#define AG_cDRIVER_PTR(n)   AGcDRIVER( AG_cOBJECT((n),      "AG_Driver:*") )
+#define AG_cDRIVER_NAMED(n) AGcDRIVER( AG_cOBJECT_NAMED((n),"AG_Driver:*") )
 
-#define AGDRIVER_CLASS(obj)	((struct ag_driver_class *)(AGOBJECT(obj)->cls))
+#define AGDRIVER_CLASS(o) ((struct ag_driver_class *)(AGOBJECT(o)->cls))
 
 #ifdef AG_TYPE_SAFETY
 # define AGDRIVER_SINGLE(drv)	(AG_OBJECT_VALID(drv) && (AGDRIVER_CLASS(drv)->wm == AG_WM_SINGLE))

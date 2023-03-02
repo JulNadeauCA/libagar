@@ -44,14 +44,15 @@ typedef struct ag_scrollbar {
 	int xOffs, xSeek;		/* Cursor offset for scrolling */
 } AG_Scrollbar;
 
-#define AGSCROLLBAR(obj)            ((AG_Scrollbar *)(obj))
-#define AGCSCROLLBAR(obj)           ((const AG_Scrollbar *)(obj))
-#define AG_SCROLLBAR_SELF()          AGSCROLLBAR( AG_OBJECT(0,"AG_Widget:AG_Scrollbar:*") )
-#define AG_SCROLLBAR_PTR(n)          AGSCROLLBAR( AG_OBJECT((n),"AG_Widget:AG_Scrollbar:*") )
-#define AG_SCROLLBAR_NAMED(n)        AGSCROLLBAR( AG_OBJECT_NAMED((n),"AG_Widget:AG_Scrollbar:*") )
-#define AG_CONST_SCROLLBAR_SELF()   AGCSCROLLBAR( AG_CONST_OBJECT(0,"AG_Widget:AG_Scrollbar:*") )
-#define AG_CONST_SCROLLBAR_PTR(n)   AGCSCROLLBAR( AG_CONST_OBJECT((n),"AG_Widget:AG_Scrollbar:*") )
-#define AG_CONST_SCROLLBAR_NAMED(n) AGCSCROLLBAR( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Scrollbar:*") )
+#define   AGSCROLLBAR(obj)      ((AG_Scrollbar *)(obj))
+#define  AGcSCROLLBAR(obj)      ((const AG_Scrollbar *)(obj))
+#define  AG_SCROLLBAR_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x20)
+#define  AG_SCROLLBAR_SELF()    AGSCROLLBAR(  AG_OBJECT(0,         "AG_Widget:AG_Scrollbar:*") )
+#define  AG_SCROLLBAR_PTR(n)    AGSCROLLBAR(  AG_OBJECT((n),       "AG_Widget:AG_Scrollbar:*") )
+#define  AG_SCROLLBAR_NAMED(n)  AGSCROLLBAR(  AG_OBJECT_NAMED((n), "AG_Widget:AG_Scrollbar:*") )
+#define AG_cSCROLLBAR_SELF()   AGcSCROLLBAR( AG_cOBJECT(0,         "AG_Widget:AG_Scrollbar:*") )
+#define AG_cSCROLLBAR_PTR(n)   AGcSCROLLBAR( AG_cOBJECT((n),       "AG_Widget:AG_Scrollbar:*") )
+#define AG_cSCROLLBAR_NAMED(n) AGcSCROLLBAR( AG_cOBJECT_NAMED((n), "AG_Widget:AG_Scrollbar:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agScrollbarClass;
@@ -69,12 +70,6 @@ void AG_ScrollbarSetDecFn(AG_Scrollbar *_Nonnull,
 int AG_ScrollbarIsUseful(AG_Scrollbar *_Nonnull);
 int AG_ScrollbarWidth(AG_Scrollbar *_Nonnull) _Pure_Attribute_If_Unthreaded;
 __END_DECLS
-
-#ifdef AG_LEGACY
-# define AG_SCROLLBAR_NOAUTOHIDE 0
-void AG_ScrollbarSetControlLength(AG_Scrollbar *_Nonnull, int) DEPRECATED_ATTRIBUTE;
-int  AG_ScrollbarVisible(AG_Scrollbar *_Nonnull) DEPRECATED_ATTRIBUTE;
-#endif /* AG_LEGACY */
 
 #include <agar/gui/close.h>
 #endif /* _AGAR_GUI_SCROLLBAR_H_ */

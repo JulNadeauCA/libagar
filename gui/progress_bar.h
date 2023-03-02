@@ -31,14 +31,15 @@ typedef struct ag_progress_bar {
 	struct ag_text_cache *_Nonnull tCache; /* For SHOW_PCT */
 } AG_ProgressBar;
 
-#define AGPROGRESSBAR(obj)            ((AG_ProgressBar *)(obj))
-#define AGCPROGRESSBAR(obj)           ((const AG_ProgressBar *)(obj))
-#define AG_PROGRESSBAR_SELF()          AGPROGRESSBAR( AG_OBJECT(0,"AG_Widget:AG_ProgressBar:*") )
-#define AG_PROGRESSBAR_PTR(n)          AGPROGRESSBAR( AG_OBJECT((n),"AG_Widget:AG_ProgressBar:*") )
-#define AG_PROGRESSBAR_NAMED(n)        AGPROGRESSBAR( AG_OBJECT_NAMED((n),"AG_Widget:AG_ProgressBar:*") )
-#define AG_CONST_PROGRESSBAR_SELF()   AGCPROGRESSBAR( AG_CONST_OBJECT(0,"AG_Widget:AG_ProgressBar:*") )
-#define AG_CONST_PROGRESSBAR_PTR(n)   AGCPROGRESSBAR( AG_CONST_OBJECT((n),"AG_Widget:AG_ProgressBar:*") )
-#define AG_CONST_PROGRESSBAR_NAMED(n) AGCPROGRESSBAR( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_ProgressBar:*") )
+#define   AGPROGRESSBAR(o)       ((AG_ProgressBar *)(o))
+#define  AGcPROGRESSBAR(o)       ((const AG_ProgressBar *)(o))
+#define  AG_PROGRESSBAR_ISA(o)   (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x1E)
+#define  AG_PROGRESSBAR_SELF()    AGPROGRESSBAR(  AG_OBJECT(0,        "AG_Widget:AG_ProgressBar:*") )
+#define  AG_PROGRESSBAR_PTR(n)    AGPROGRESSBAR(  AG_OBJECT((n),      "AG_Widget:AG_ProgressBar:*") )
+#define  AG_PROGRESSBAR_NAMED(n)  AGPROGRESSBAR(  AG_OBJECT_NAMED((n),"AG_Widget:AG_ProgressBar:*") )
+#define AG_cPROGRESSBAR_SELF()   AGcPROGRESSBAR( AG_cOBJECT(0,        "AG_Widget:AG_ProgressBar:*") )
+#define AG_cPROGRESSBAR_PTR(n)   AGcPROGRESSBAR( AG_cOBJECT((n),      "AG_Widget:AG_ProgressBar:*") )
+#define AG_cPROGRESSBAR_NAMED(n) AGcPROGRESSBAR( AG_cOBJECT_NAMED((n),"AG_Widget:AG_ProgressBar:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agProgressBarClass;

@@ -18,13 +18,13 @@
  * customary of FooNew() functions to allocate, initialize and attach an
  * instance of the class.
  */
-MyWidget *
-MyWidgetNew(void *parent, const char *foo)
+MY_Widget *
+MY_WidgetNew(void *parent, const char *foo)
 {
-	MyWidget *my;
+	MY_Widget *my;
 
-	/* Create a new instance of the MyWidget class */
-	my = malloc(sizeof(MyWidget));
+	/* Create a new instance of the MY_Widget class */
+	my = malloc(sizeof(MY_Widget));
 	AG_ObjectInit(my, &myWidgetClass);
 
 	/* Set some constructor arguments */
@@ -48,7 +48,7 @@ MyWidgetNew(void *parent, const char *foo)
 static void
 SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 {
-	MyWidget *my = p;
+	MY_Widget *my = p;
 	
 	if (my->label == -1) {
 		/*
@@ -76,7 +76,7 @@ SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 static int
 SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 {
-	MyWidget *my = p;
+	MY_Widget *my = p;
 
 	/* If we return -1, Draw() will not be called. */
 	if (a->w < 5 || a->h < 5)
@@ -94,7 +94,7 @@ SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 static void
 Draw(void *_Nonnull p)
 {
-	MyWidget *my = p;
+	MY_Widget *my = p;
 	const int x = my->x;
 	const int y = my->y;
 	const AG_Surface *S;
@@ -151,7 +151,7 @@ Draw(void *_Nonnull p)
 static void
 MouseMotion(void *obj, int x, int y, int dx, int dy)
 {
-	MyWidget *my = obj;
+	MY_Widget *my = obj;
 
 	if (x != my->x || y != my->y) {
 		AG_Redraw(my);
@@ -163,7 +163,7 @@ MouseMotion(void *obj, int x, int y, int dx, int dy)
 static Uint32
 ClickTimeout(AG_Timer *to, AG_Event *_Nonnull event)
 {
-	MyWidget *my = MYWIDGET_SELF();
+	MY_Widget *my = MY_WIDGET_SELF();
 	const int maxDia = AG_MAX(AGWIDGET(my)->w,
 	                          AGWIDGET(my)->h);
 
@@ -179,7 +179,7 @@ ClickTimeout(AG_Timer *to, AG_Event *_Nonnull event)
 static void
 MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 {
-	MyWidget *my = obj;
+	MY_Widget *my = obj;
 
 	if (button != AG_MOUSE_LEFT) {
 		return;
@@ -194,7 +194,7 @@ MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 static void
 MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 {
-	MyWidget *my = obj;
+	MY_Widget *my = obj;
 
 	/* Deactivate the running timer. */
 	AG_DelTimer(my, &my->clickTimer);
@@ -203,7 +203,7 @@ MouseButtonUp(void *obj, AG_MouseButton button, int x, int y)
 static void
 KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	MyWidget *my = obj;
+	MY_Widget *my = obj;
 
 	TestMsg(my->ti, "KeyDown: 0x%x (mod 0x%x) ch=%x", ks, kmod, ch);
 	my->lastKey = ks;
@@ -219,7 +219,7 @@ KeyDown(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 static void
 KeyUp(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 {
-	MyWidget *my = obj;
+	MY_Widget *my = obj;
 
 	TestMsg(my->ti, "KeyUp: 0x%x (mod 0x%x) ch=%x", ks, kmod, ch);
 }
@@ -231,7 +231,7 @@ KeyUp(void *obj, AG_KeySym ks, AG_KeyMod kmod, AG_Char ch)
 static void
 Init(void *_Nonnull obj)
 {
-	MyWidget *my = obj;
+	MY_Widget *my = obj;
 
 	/*
 	 * May grab focus. Receive mousemotion events even if unfocused.
@@ -269,9 +269,9 @@ Init(void *_Nonnull obj)
  */
 AG_WidgetClass myWidgetClass = {
 	{
-		"AG_Widget:MyWidget",
-		sizeof(MyWidget),
-		{ 0,0 },
+		"AG_Widget:MY_Widget",
+		sizeof(MY_Widget),
+		{ 0,0, AGC_WIDGET, 0 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

@@ -7,6 +7,10 @@ typedef struct sg_polyball {
 	Uint8 _pad[8];
 } SG_Polyball;
 
+#define SG_POLYBALL_ISA(o) (((AGOBJECT(o)->cid & 0xffffff00) >> 8) == 0x7A0501)
+#define SGPOLYBALL(o)      ((SG_Polyball *)(o))
+#define SGCPOLYBALL(o)     ((const SG_Polyball *)(o))
+
 __BEGIN_DECLS
 extern SG_NodeClass sgPolyballClass;
 

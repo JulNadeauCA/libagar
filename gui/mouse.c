@@ -51,8 +51,8 @@ AG_MouseNew(void *drv, const char *desc)
 		return (NULL);
 	}
 	AG_ObjectInit(ms, &agMouseClass);
-	AGINPUTDEV(ms)->drv = drv;
-	if ((AGINPUTDEV(ms)->desc = TryStrdup(desc)) == NULL) {
+	AGINPUTDEVICE(ms)->drv = drv;
+	if ((AGINPUTDEVICE(ms)->desc = TryStrdup(desc)) == NULL) {
 		goto fail;
 	}
 	AGDRIVER(drv)->mouse = ms;
@@ -328,7 +328,7 @@ Edit(void *obj)
 
 	box = AG_BoxNewVert(NULL, AG_BOX_HFILL);
 
-	lbl = AG_LabelNewS(box, 0, AGINPUTDEV(mouse)->desc);
+	lbl = AG_LabelNewS(box, 0, AGINPUTDEVICE(mouse)->desc);
 	AG_SetFontFamily(lbl, "league-spartan");
 	AG_SetFontSize(lbl, "130%");
 
@@ -338,7 +338,7 @@ Edit(void *obj)
 	    _("Button Count: %u\n"
 	      "Button State: 0x%x\n"
 	      "Cursor Position: %d,%d [%d %d]"),
-	    AGINPUTDEV(mouse)->desc,
+	    AGINPUTDEVICE(mouse)->desc,
 	    &mouse->nButtons, &mouse->btnState,
 	    &mouse->x, &mouse->y,
 	    &mouse->xRel, &mouse->yRel);
@@ -351,7 +351,7 @@ Edit(void *obj)
 AG_ObjectClass agMouseClass = {
 	"Agar(InputDevice:Mouse)",
 	sizeof(AG_Mouse),
-	{ 0,0 },
+	{ 1,0, AGC_MOUSE, 0x1F5B0 },
 	Init,
 	NULL,		/* reset */
 	NULL,		/* destroy */

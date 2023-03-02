@@ -38,14 +38,15 @@ typedef struct ag_slider {
 	AG_Timer moveTo;		/* Timer for keyboard motion */
 } AG_Slider;
 
-#define AGSLIDER(obj)            ((AG_Slider *)(obj))
-#define AGCSLIDER(obj)           ((const AG_Slider *)(obj))
-#define AG_SLIDER_SELF()          AGSLIDER( AG_OBJECT(0,"AG_Widget:AG_Slider:*") )
-#define AG_SLIDER_PTR(n)          AGSLIDER( AG_OBJECT((n),"AG_Widget:AG_Slider:*") )
-#define AG_SLIDER_NAMED(n)        AGSLIDER( AG_OBJECT_NAMED((n),"AG_Widget:AG_Slider:*") )
-#define AG_CONST_SLIDER_SELF()   AGCSLIDER( AG_CONST_OBJECT(0,"AG_Widget:AG_Slider:*") )
-#define AG_CONST_SLIDER_PTR(n)   AGCSLIDER( AG_CONST_OBJECT((n),"AG_Widget:AG_Slider:*") )
-#define AG_CONST_SLIDER_NAMED(n) AGCSLIDER( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Slider:*") )
+#define   AGSLIDER(o)        ((AG_Slider *)(o))
+#define  AGcSLIDER(o)        ((const AG_Slider *)(o))
+#define  AG_SLIDER_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x23)
+#define  AG_SLIDER_SELF()    AGSLIDER(  AG_OBJECT(0,         "AG_Widget:AG_Slider:*") )
+#define  AG_SLIDER_PTR(n)    AGSLIDER(  AG_OBJECT((n),       "AG_Widget:AG_Slider:*") )
+#define  AG_SLIDER_NAMED(n)  AGSLIDER(  AG_OBJECT_NAMED((n), "AG_Widget:AG_Slider:*") )
+#define AG_cSLIDER_SELF()   AGcSLIDER( AG_cOBJECT(0,         "AG_Widget:AG_Slider:*") )
+#define AG_cSLIDER_PTR(n)   AGcSLIDER( AG_cOBJECT((n),       "AG_Widget:AG_Slider:*") )
+#define AG_cSLIDER_NAMED(n) AGcSLIDER( AG_cOBJECT_NAMED((n), "AG_Widget:AG_Slider:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agSliderClass;

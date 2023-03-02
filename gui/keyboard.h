@@ -414,6 +414,16 @@ typedef struct ag_keyboard {
 	AG_KeyMod modState;		/* Modifiers state */
 } AG_Keyboard;
 
+#define   AGKEYBOARD(obj)   ((AG_Keyboard *)(obj))
+#define  AGcKEYBOARD(obj)   ((const AG_Keyboard *)(obj))
+#define  AG_KEYBOARD_ISA(o) (((AGOBJECT(o)->cid & 0xffff0000) >> 16) == 0x0602)
+#define  AG_KEYBOARD_SELF()    AGKEYBOARD(  AG_OBJECT(0,         "AG_InputDevice:AG_Keyboard:*") )
+#define  AG_KEYBOARD_PTR(n)    AGKEYBOARD(  AG_OBJECT((n),       "AG_InputDevice:AG_Keyboard:*") )
+#define  AG_KEYBOARD_NAMED(n)  AGKEYBOARD(  AG_OBJECT_NAMED((n), "AG_InputDevice:AG_Keyboard:*") )
+#define AG_cKEYBOARD_SELF()   AGcKEYBOARD( AG_cOBJECT(0,         "AG_InputDevice:AG_Keyboard:*") )
+#define AG_cKEYBOARD_PTR(n)   AGcKEYBOARD( AG_cOBJECT((n),       "AG_InputDevice:AG_Keyboard:*") )
+#define AG_cKEYBOARD_NAMED(n) AGcKEYBOARD( AG_cOBJECT_NAMED((n), "AG_InputDevice:AG_Keyboard:*") )
+
 __BEGIN_DECLS
 extern AG_ObjectClass agKeyboardClass;
 

@@ -26,14 +26,15 @@ typedef struct ag_fixed {
 	int wPre, hPre;			/* Size hint */
 } AG_Fixed;
 
-#define AGFIXED(obj)            ((AG_Fixed *)(obj))
-#define AGCFIXED(obj)           ((const AG_Fixed *)(obj))
-#define AG_FIXED_SELF()          AGFIXED( AG_OBJECT(0,"AG_Widget:AG_Fixed:*") )
-#define AG_FIXED_PTR(n)          AGFIXED( AG_OBJECT((n),"AG_Widget:AG_Fixed:*") )
-#define AG_FIXED_NAMED(n)        AGFIXED( AG_OBJECT_NAMED((n),"AG_Widget:AG_Fixed:*") )
-#define AG_CONST_FIXED_SELF()   AGCFIXED( AG_CONST_OBJECT(0,"AG_Widget:AG_Fixed:*") )
-#define AG_CONST_FIXED_PTR(n)   AGCFIXED( AG_CONST_OBJECT((n),"AG_Widget:AG_Fixed:*") )
-#define AG_CONST_FIXED_NAMED(n) AGCFIXED( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Fixed:*") )
+#define   AGFIXED(o)        ((AG_Fixed *)(o))
+#define  AGcFIXED(o)        ((const AG_Fixed *)(o))
+#define  AG_FIXED_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x12)
+#define  AG_FIXED_SELF()    AGFIXED(  AG_OBJECT(0,         "AG_Widget:AG_Fixed:*") )
+#define  AG_FIXED_PTR(n)    AGFIXED(  AG_OBJECT((n),       "AG_Widget:AG_Fixed:*") )
+#define  AG_FIXED_NAMED(n)  AGFIXED(  AG_OBJECT_NAMED((n), "AG_Widget:AG_Fixed:*") )
+#define AG_cFIXED_SELF()   AGcFIXED( AG_cOBJECT(0,         "AG_Widget:AG_Fixed:*") )
+#define AG_cFIXED_PTR(n)   AGcFIXED( AG_cOBJECT((n),       "AG_Widget:AG_Fixed:*") )
+#define AG_cFIXED_NAMED(n) AGcFIXED( AG_cOBJECT_NAMED((n), "AG_Widget:AG_Fixed:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agFixedClass;

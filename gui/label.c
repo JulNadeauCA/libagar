@@ -632,7 +632,7 @@ AG_WidgetClass agLabelClass = {
 	{
 		"Agar(Widget:Label)",
 		sizeof(AG_Label),
-		{ 0,0 },
+		{ 1,0, AGC_LABEL, 0xE033 },
 		Init,
 		NULL,		/* reset */
 		Destroy,

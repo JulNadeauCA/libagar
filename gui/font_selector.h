@@ -50,14 +50,15 @@ typedef struct ag_font_selector {
 	AG_FontSelectorPreviewFn previewFn;     /* Preview function */
 } AG_FontSelector;
 
-#define AGFONTSELECTOR(obj)            ((AG_FontSelector *)(obj))
-#define AGCFONTSELECTOR(obj)           ((const AG_FontSelector *)(obj))
-#define AG_FONTSELECTOR_SELF()          AGFONTSELECTOR( AG_OBJECT(0,"AG_Widget:AG_FontSelector:*") )
-#define AG_FONTSELECTOR_PTR(n)          AGFONTSELECTOR( AG_OBJECT((n),"AG_Widget:AG_FontSelector:*") )
-#define AG_FONTSELECTOR_NAMED(n)        AGFONTSELECTOR( AG_OBJECT_NAMED((n),"AG_Widget:AG_FontSelector:*") )
-#define AG_CONST_FONTSELECTOR_SELF()   AGCFONTSELECTOR( AG_CONST_OBJECT(0,"AG_Widget:AG_FontSelector:*") )
-#define AG_CONST_FONTSELECTOR_PTR(n)   AGCFONTSELECTOR( AG_CONST_OBJECT((n),"AG_Widget:AG_FontSelector:*") )
-#define AG_CONST_FONTSELECTOR_NAMED(n) AGCFONTSELECTOR( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_FontSelector:*") )
+#define   AGFONTSELECTOR(o)        ((AG_FontSelector *)(o))
+#define  AGcFONTSELECTOR(o)        ((const AG_FontSelector *)(o))
+#define  AG_FONTSELECTOR_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x0F)
+#define  AG_FONTSELECTOR_SELF()    AGFONTSELECTOR(  AG_OBJECT(0,         "AG_Widget:AG_FontSelector:*") )
+#define  AG_FONTSELECTOR_PTR(n)    AGFONTSELECTOR(  AG_OBJECT((n),       "AG_Widget:AG_FontSelector:*") )
+#define  AG_FONTSELECTOR_NAMED(n)  AGFONTSELECTOR(  AG_OBJECT_NAMED((n), "AG_Widget:AG_FontSelector:*") )
+#define AG_cFONTSELECTOR_SELF()   AGcFONTSELECTOR( AG_cOBJECT(0,         "AG_Widget:AG_FontSelector:*") )
+#define AG_cFONTSELECTOR_PTR(n)   AGcFONTSELECTOR( AG_cOBJECT((n),       "AG_Widget:AG_FontSelector:*") )
+#define AG_cFONTSELECTOR_NAMED(n) AGcFONTSELECTOR( AG_cOBJECT_NAMED((n), "AG_Widget:AG_FontSelector:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agFontSelectorClass;

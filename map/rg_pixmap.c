@@ -255,7 +255,7 @@ static void
 SelectBrush(AG_Event *_Nonnull event)
 {
 	RG_Pixmap *px = AG_PTR(1);
-	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
+	AG_TlistItem *ti = AG_TLISTITEM_PTR(2);
 	RG_Brush *brush = ti->p1;
 
 	px->curbrush = (px->curbrush == brush) ? NULL : brush;
@@ -316,7 +316,7 @@ static void
 UpdateBrushOptions(AG_Event *_Nonnull event)
 {
 	AG_Textbox *tbName = AG_TEXTBOX_PTR(1);
-	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	AG_TlistItem *it = AG_TLISTITEM_PTR(2);
 	RG_Pixmap *spx;
 
 	if (it != NULL) {

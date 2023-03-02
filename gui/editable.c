@@ -1387,7 +1387,7 @@ AutocompleteSelected(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
 	AG_Editable *ed = AG_EDITABLE_PTR(1);
-	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	AG_TlistItem *it = AG_TLISTITEM_PTR(2);
 
 	AG_EditableSetString(ed, it->text);
 
@@ -2747,7 +2747,9 @@ PopupMenu(AG_Editable *_Nonnull ed)
 		int i;
 		
 		AG_MenuSeparator(pm->root);
-		mLang = AG_MenuNode(pm->root, _("Select Language"), NULL);
+		mLang = AG_MenuNode(pm->root,
+		    _(AGSI_IDEOGRAM AGSI_USER_W_3_SOUND_WAVES AGSI_RST
+		      " Select Language"), NULL);
 		for (i = 0; i < AG_LANG_LAST; i++) {
 			AG_TextEnt *te = &txt->ent[i];
 
@@ -3491,7 +3493,7 @@ AG_WidgetClass agEditableClass = {
 	{
 		"Agar(Widget:Editable)",
 		sizeof(AG_Editable),
-		{ 0,0 },
+		{ 1,0, AGC_EDITABLE, 0xE031 },
 		Init,
 		NULL,		/* reset */
 		Destroy,

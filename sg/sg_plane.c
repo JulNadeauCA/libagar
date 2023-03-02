@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2006-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -120,7 +120,7 @@ SG_NodeClass sgPlaneClass = {
 	{
 		"SG_Node:SG_Geom:SG_Plane",
 		sizeof(SG_Plane),
-		{ 0,0 },
+		{ 1,0, AGC_SG_PLANE, 0xE04C },
 		NULL,		/* init */
 		NULL,		/* reset */
 		NULL,		/* destroy */

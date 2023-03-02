@@ -74,10 +74,10 @@ typedef struct ag_file_dlg {
 #define AG_FILEDLG_VFILL           0x8000
 #define AG_FILEDLG_EXPAND          (AG_FILEDLG_HFILL|AG_FILEDLG_VFILL)
 #define AG_FILEDLG_INHERITED_FLAGS (AG_FILEDLG_MULTI | AG_FILEDLG_LOAD | \
-				    AG_FILEDLG_SAVE | AG_FILEDLG_ASYNC | \
-				    AG_FILEDLG_RESET_ONSHOW | AG_FILEDLG_NOBUTTONS | \
-				    AG_FILEDLG_MASK_EXT | AG_FILEDLG_MASK_HIDDEN | \
-				    AG_FILEDLG_NOMASKOPTS | AG_FILEDLG_NOTYPESELECT) 
+                                    AG_FILEDLG_SAVE | AG_FILEDLG_ASYNC | \
+                                    AG_FILEDLG_RESET_ONSHOW | AG_FILEDLG_NOBUTTONS | \
+                                    AG_FILEDLG_MASK_EXT | AG_FILEDLG_MASK_HIDDEN | \
+                                    AG_FILEDLG_NOMASKOPTS | AG_FILEDLG_NOTYPESELECT) 
 
 	char cwd[AG_PATHNAME_MAX];		/* Current working directory */
 	char cfile[AG_PATHNAME_MAX];		/* Current file path */
@@ -111,14 +111,15 @@ typedef struct ag_file_dlg {
 	AG_TAILQ_HEAD_(ag_file_type) types;	/* File type handlers */
 } AG_FileDlg;
 
-#define AGFILEDLG(obj)            ((AG_FileDlg *)(obj))
+#define  AGFILEDLG(obj)            ((AG_FileDlg *)(obj))
 #define AGCFILEDLG(obj)           ((const AG_FileDlg *)(obj))
+#define AG_FILEDLG_ISA(o) (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x11)
 #define AG_FILEDLG_SELF()          AGFILEDLG( AG_OBJECT(0,"AG_Widget:AG_FileDlg:*") )
 #define AG_FILEDLG_PTR(n)          AGFILEDLG( AG_OBJECT((n),"AG_Widget:AG_FileDlg:*") )
 #define AG_FILEDLG_NAMED(n)        AGFILEDLG( AG_OBJECT_NAMED((n),"AG_Widget:AG_FileDlg:*") )
-#define AG_CONST_FILEDLG_SELF()   AGCFILEDLG( AG_CONST_OBJECT(0,"AG_Widget:AG_FileDlg:*") )
-#define AG_CONST_FILEDLG_PTR(n)   AGCFILEDLG( AG_CONST_OBJECT((n),"AG_Widget:AG_FileDlg:*") )
-#define AG_CONST_FILEDLG_NAMED(n) AGCFILEDLG( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_FileDlg:*") )
+#define AG_cFILEDLG_SELF()   AGcFILEDLG( AG_cOBJECT(0,"AG_Widget:AG_FileDlg:*") )
+#define AG_cFILEDLG_PTR(n)   AGcFILEDLG( AG_cOBJECT((n),"AG_Widget:AG_FileDlg:*") )
+#define AG_cFILEDLG_NAMED(n) AGcFILEDLG( AG_cOBJECT_NAMED((n),"AG_Widget:AG_FileDlg:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agFileDlgClass;

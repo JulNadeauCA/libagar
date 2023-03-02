@@ -40,11 +40,9 @@ typedef struct ag_label {
 #define AG_LABEL_EXPAND (AG_LABEL_HFILL | AG_LABEL_VFILL)
 
 	char *_Nullable text;           /* Text buffer (for STATIC labels) */
-
 	int surface;                    /* Cached label surface */
 	int surfaceCtd;                 /* Cached ellipsis ("...") surface */
 	int wPre, hPre;                 /* Explicit size requisition */
-
 	enum ag_text_justify justify;   /* Justification mode */
 	enum ag_text_valign valign;     /* Vertical alignment */
 
@@ -55,14 +53,15 @@ typedef struct ag_label {
 	AG_SIZE_PADDING(_pad);
 } AG_Label;
 
-#define AGLABEL(obj)            ((AG_Label *)(obj))
-#define AGCLABEL(obj)           ((const AG_Label *)(obj))
-#define AG_LABEL_SELF()          AGLABEL( AG_OBJECT(0,"AG_Widget:AG_Label:*") )
-#define AG_LABEL_PTR(n)          AGLABEL( AG_OBJECT((n),"AG_Widget:AG_Label:*") )
-#define AG_LABEL_NAMED(n)        AGLABEL( AG_OBJECT_NAMED((n),"AG_Widget:AG_Label:*") )
-#define AG_CONST_LABEL_SELF()   AGCLABEL( AG_CONST_OBJECT(0,"AG_Widget:AG_Label:*") )
-#define AG_CONST_LABEL_PTR(n)   AGCLABEL( AG_CONST_OBJECT((n),"AG_Widget:AG_Label:*") )
-#define AG_CONST_LABEL_NAMED(n) AGCLABEL( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Label:*") )
+#define   AGLABEL(o)     ((AG_Label *)(o))
+#define  AGcLABEL(o)     ((const AG_Label *)(o))
+#define  AG_LABEL_ISA(o) (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x17)
+#define  AG_LABEL_SELF()    AGLABEL(  AG_OBJECT(0,         "AG_Widget:AG_Label:*") )
+#define  AG_LABEL_PTR(n)    AGLABEL(  AG_OBJECT((n),       "AG_Widget:AG_Label:*") )
+#define  AG_LABEL_NAMED(n)  AGLABEL(  AG_OBJECT_NAMED((n), "AG_Widget:AG_Label:*") )
+#define AG_cLABEL_SELF()   AGcLABEL( AG_cOBJECT(0,         "AG_Widget:AG_Label:*") )
+#define AG_cLABEL_PTR(n)   AGcLABEL( AG_cOBJECT((n),       "AG_Widget:AG_Label:*") )
+#define AG_cLABEL_NAMED(n) AGcLABEL( AG_cOBJECT_NAMED((n), "AG_Widget:AG_Label:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agLabelClass;

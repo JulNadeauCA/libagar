@@ -115,7 +115,7 @@ SelectedItem(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
 	AG_Combo *com = AG_COMBO_PTR(1);
-	AG_TlistItem *ti = AG_TLIST_ITEM_PTR(2);
+	AG_TlistItem *ti = AG_TLISTITEM_PTR(2);
 	AG_Window *panel;
 
 	AG_ObjectLock(com);
@@ -448,7 +448,7 @@ AG_WidgetClass agComboClass = {
 	{
 		"Agar(Widget:Combo)",
 		sizeof(AG_Combo),
-		{ 0,0 },
+		{ 1,0, AGC_COMBO, 0xE031 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

@@ -37,6 +37,8 @@ typedef struct ag_mpane {
 	Uint32 _pad;
 } AG_MPane;
 
+#define AG_MPANE_ISA(o) (((AGOBJECT(o)->cid & 0xffff0000) >> 16) == 0x0901)
+
 __BEGIN_DECLS
 extern AG_WidgetClass agMPaneClass;
 

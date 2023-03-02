@@ -16,11 +16,13 @@ typedef struct sg_light {
 	M_Real Kc;			/* Constant attenuation factor */
 	M_Real Kl;			/* Linear attenuation factor */
 	M_Real Kq;			/* Quadratic attenuation factor */
-#ifdef HAVE_GLU
-	GLUquadricObj *_Nonnull qo;	/* For rendering in editor */
-#endif
+	void *_Nullable qo;		/* Quadric for rendering in editor */
 	Uint8 _pad[8];
 } SG_Light;
+
+#define SG_LIGHT_ISA(o) (((AGOBJECT(o)->cid & 0xffff0000) >> 16) == 0x7A03)
+#define SGLIGHT(o)      ((SG_Light *)(o))
+#define SGCLIGHT(o)     ((const SG_Light *)(o))
 
 __BEGIN_DECLS
 extern SG_NodeClass sgLightClass;

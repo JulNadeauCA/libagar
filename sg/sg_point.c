@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -131,7 +131,7 @@ SG_NodeClass sgPointClass = {
 	{
 		"SG_Node:SG_Geom:SG_Point",
 		sizeof(SG_Point),
-		{ 0,0 },
+		{ 1,0, AGC_SG_POINT, 0xE013 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

@@ -45,44 +45,35 @@ typedef struct ag_radio {
 	AG_Timer moveTo;      /* Timer for keyboard motion */
 } AG_Radio;
 
-#define AGRADIO(obj)            ((AG_Radio *)(obj))
-#define AGCRADIO(obj)           ((const AG_Radio *)(obj))
-#define AG_RADIO_SELF()          AGRADIO( AG_OBJECT(0,"AG_Widget:AG_Radio:*") )
-#define AG_RADIO_PTR(n)          AGRADIO( AG_OBJECT((n),"AG_Widget:AG_Radio:*") )
-#define AG_RADIO_NAMED(n)        AGRADIO( AG_OBJECT_NAMED((n),"AG_Widget:AG_Radio:*") )
-#define AG_CONST_RADIO_SELF()   AGCRADIO( AG_CONST_OBJECT(0,"AG_Widget:AG_Radio:*") )
-#define AG_CONST_RADIO_PTR(n)   AGCRADIO( AG_CONST_OBJECT((n),"AG_Widget:AG_Radio:*") )
-#define AG_CONST_RADIO_NAMED(n) AGCRADIO( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Radio:*") )
+#define   AGRADIO(obj)      ((AG_Radio *)(obj))
+#define  AGcRADIO(obj)      ((const AG_Radio *)(obj))
+#define  AG_RADIO_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x1F)
+#define  AG_RADIO_SELF()    AGRADIO(  AG_OBJECT(0,        "AG_Widget:AG_Radio:*") )
+#define  AG_RADIO_PTR(n)    AGRADIO(  AG_OBJECT((n),      "AG_Widget:AG_Radio:*") )
+#define  AG_RADIO_NAMED(n)  AGRADIO(  AG_OBJECT_NAMED((n),"AG_Widget:AG_Radio:*") )
+#define AG_cRADIO_SELF()   AGcRADIO( AG_cOBJECT(0,        "AG_Widget:AG_Radio:*") )
+#define AG_cRADIO_PTR(n)   AGcRADIO( AG_cOBJECT((n),      "AG_Widget:AG_Radio:*") )
+#define AG_cRADIO_NAMED(n) AGcRADIO( AG_cOBJECT_NAMED((n),"AG_Widget:AG_Radio:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agRadioClass;
 
 AG_Radio *_Nonnull AG_RadioNewInt(void *_Nullable, Uint,
-                                  const char *_Nullable *_Nullable,
-                                  int *_Nonnull);
-
+                                  const char *_Nullable *_Nullable, int *_Nonnull);
 AG_Radio *_Nonnull AG_RadioNewUint(void *_Nullable, Uint,
-                                   const char *_Nullable *_Nullable,
-                                   Uint *_Nonnull);
-
-AG_Radio *_Nonnull AG_RadioNew(void *_Nullable, Uint,
-                               const char *_Nullable *_Nullable);
-
-AG_Radio *_Nonnull AG_RadioNewFn(void *_Nullable, Uint,
-                                 const char *_Nullable *_Nullable,
+                                   const char *_Nullable *_Nullable, Uint *_Nonnull);
+AG_Radio *_Nonnull AG_RadioNew(void *_Nullable, Uint, const char *_Nullable *_Nullable);
+AG_Radio *_Nonnull AG_RadioNewFn(void *_Nullable, Uint, const char *_Nullable *_Nullable,
                                  _Nonnull AG_EventFn, const char *_Nullable, ...);
 
 void AG_RadioSetDisposition(AG_Radio *_Nonnull, AG_RadioType);
-
 void AG_RadioItemsFromArray(AG_Radio *_Nonnull, const char *_Nonnull *_Nullable);
-
-int AG_RadioAddItemS(AG_Radio *_Nonnull, const char *_Nonnull);
-int AG_RadioAddItem(AG_Radio *_Nonnull, const char *_Nonnull, ...)
-                   FORMAT_ATTRIBUTE(printf,2,3);
-int AG_RadioAddItemHKS(AG_Radio *_Nonnull, AG_KeySym, const char *_Nonnull);
-int AG_RadioAddItemHK(AG_Radio *_Nonnull, AG_KeySym, const char *_Nonnull, ...)
-                     FORMAT_ATTRIBUTE(printf,3,4);
-
+int  AG_RadioAddItemS(AG_Radio *_Nonnull, const char *_Nonnull);
+int  AG_RadioAddItem(AG_Radio *_Nonnull, const char *_Nonnull, ...)
+                    FORMAT_ATTRIBUTE(printf,2,3);
+int  AG_RadioAddItemHKS(AG_Radio *_Nonnull, AG_KeySym, const char *_Nonnull);
+int  AG_RadioAddItemHK(AG_Radio *_Nonnull, AG_KeySym, const char *_Nonnull, ...)
+                      FORMAT_ATTRIBUTE(printf,3,4);
 void AG_RadioClearItems(AG_Radio *_Nonnull);
 void AG_RadioSizeHint(AG_Radio *_Nonnull, int, const char *);
 __END_DECLS

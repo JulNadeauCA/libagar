@@ -16,9 +16,6 @@
 # endif
 #endif
 
-#define AG_TLIST_ITEM_TAG "AgTlItm"
-#define AG_TLIST_ITEM_TAG_LEN 8
-
 /* Popup menu (TODO switch to AG_PopupMenu) */
 typedef struct ag_tlist_popup {
 	const char *_Nonnull iclass;          /* Apply to items of this class */
@@ -30,9 +27,7 @@ typedef struct ag_tlist_popup {
 
 /* A tree/list item */
 typedef struct ag_tlist_item {
-#ifdef AG_TYPE_SAFETY
-	char tag[AG_TLIST_ITEM_TAG_LEN]; /* Tagged non-object */
-#endif
+	Uint32 tag;                      /* Tagged non-object */
 	int label[3];                    /* Rendered item surface */
 	                                 /* 0=Disabled, 1=Enabled, 2=Selected */
 	int v;                           /* App-specific integer / sort key */
@@ -111,25 +106,28 @@ typedef struct ag_tlist {
 	AG_Color cBgLine[AG_WIDGET_NSTATES];  /* Background line color */
 } AG_Tlist;
 
-#define AGTLIST(obj)            ((AG_Tlist *)(obj))
-#define AGCTLIST(obj)           ((const AG_Tlist *)(obj))
+#define AGTLIST(o)            ((AG_Tlist *)(o))
+#define AGCTLIST(o)           ((const AG_Tlist *)(o))
+#define AG_TLIST_ISA(o)          (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x28)
 #define AG_TLIST_SELF()          AGTLIST( AG_OBJECT(0,"AG_Widget:AG_Tlist:*") )
 #define AG_TLIST_PTR(n)          AGTLIST( AG_OBJECT((n),"AG_Widget:AG_Tlist:*") )
 #define AG_TLIST_NAMED(n)        AGTLIST( AG_OBJECT_NAMED((n),"AG_Widget:AG_Tlist:*") )
-#define AG_CONST_TLIST_SELF()   AGCTLIST( AG_CONST_OBJECT(0,"AG_Widget:AG_Tlist:*") )
-#define AG_CONST_TLIST_PTR(n)   AGCTLIST( AG_CONST_OBJECT((n),"AG_Widget:AG_Tlist:*") )
-#define AG_CONST_TLIST_NAMED(n) AGCTLIST( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Tlist:*") )
+#define AG_cTLIST_SELF()   AGCTLIST( AG_cOBJECT(0,"AG_Widget:AG_Tlist:*") )
+#define AG_cTLIST_PTR(n)   AGCTLIST( AG_cOBJECT((n),"AG_Widget:AG_Tlist:*") )
+#define AG_cTLIST_NAMED(n) AGCTLIST( AG_cOBJECT_NAMED((n),"AG_Widget:AG_Tlist:*") )
 
+/* Tagged non-object */
+#define    AGTLISTITEM(p)       ((AG_TlistItem *)(p))
+#define   AGcTLISTITEM(p)       ((const AG_TlistItem *)(p))
 #ifdef AG_TYPE_SAFETY
-# define AG_TLIST_ITEM_PTR(v)       AG_TlistGetItemPtr(event,(v),0)
-# define AG_CONST_TLIST_ITEM_PTR(v) ((const AG_MenuItem *)AG_TlistGetItemPtr(event,(v),1))
+# define  AG_TLISTITEM_PTR(v)   AG_TlistGetItemPtr(event,(v),0)
+# define AG_cTLISTITEM_PTR(v)   AGcTLISTITEM( AG_TlistGetItemPtr(event,(v),1) )
 #else
-# define AG_TLIST_ITEM_PTR(v)       event->argv[v].data.p
-# define AG_CONST_TLIST_ITEM_PTR(v) event->argv[v].data.p
+# define  AG_TLISTITEM_PTR(v)   event->argv[v].data.p
+# define AG_cTLISTITEM_PTR(v)   AGcTLISTITEM( event->argv[v].data.p )
 #endif
-#define AGTLISTITEM(p)               ((AG_TlistItem *)(p))
-#define AG_TLIST_ITEM_SELF()         AG_TLIST_ITEM_PTR(0)
-#define AG_CONST_TLIST_ITEM_SELF()   AG_CONST_TLIST_ITEM_PTR(0)
+#define  AG_TLISTITEM_SELF()    AG_TLISTITEM_PTR(0)
+#define AG_cTLISTITEM_SELF()   AG_cTLISTITEM_PTR(0)
 
 #define AG_TLIST_FOREACH(it, tl) \
 	AG_TAILQ_FOREACH(it, &(tl)->items, items)
@@ -266,6 +264,8 @@ AG_TlistItem *_Nullable AG_TlistGetItemPtr(const AG_Event *_Nonnull, int, int);
 #endif
 
 #ifdef AG_LEGACY
+#define AG_TLIST_ITEM_PTR(v) AG_TLISTITEM_PTR(v)
+#define AG_TLIST_ITEM_SELF() AG_TLISTITEM_PTR(0)
 #define AG_TLIST_TREE 0
 #define AG_TLIST_EXPANDED AG_TLIST_ITEM_EXPANDED
 #define AG_TLIST_VISIBLE_CHILDREN AG_TLIST_ITEM_EXPANDED
@@ -274,7 +274,6 @@ AG_TlistItem *_Nullable AG_TlistGetItemPtr(const AG_Event *_Nonnull, int, int);
 #define AG_TlistPrescale(tl,text,n) AG_TlistSizeHint((tl),(text),(n))
 #define AG_TlistComparePtrsAndClasses(a,b) AG_TlistComparePtrsAndCats(a,b)
 #endif
-
 __END_DECLS
 
 #include <agar/gui/close.h>

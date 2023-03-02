@@ -32,14 +32,15 @@ typedef struct ag_icon {
 	AG_Timer toDblClick;		/* For double click detection */
 } AG_Icon;
 
-#define AGICON(obj)            ((AG_Icon *)(obj))
-#define AGCICON(obj)           ((const AG_Icon *)(obj))
-#define AG_ICON_SELF()          AGICON( AG_OBJECT(0,"AG_Widget:AG_Icon:*") )
-#define AG_ICON_PTR(n)          AGICON( AG_OBJECT((n),"AG_Widget:AG_Icon:*") )
-#define AG_ICON_NAMED(n)        AGICON( AG_OBJECT_NAMED((n),"AG_Widget:AG_Icon:*") )
-#define AG_CONST_ICON_SELF()   AGCICON( AG_CONST_OBJECT(0,"AG_Widget:AG_Icon:*") )
-#define AG_CONST_ICON_PTR(n)   AGCICON( AG_CONST_OBJECT((n),"AG_Widget:AG_Icon:*") )
-#define AG_CONST_ICON_NAMED(n) AGCICON( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Icon:*") )
+#define   AGICON(obj)   ((AG_Icon *)(obj))
+#define  AGcICON(obj)   ((const AG_Icon *)(obj))
+#define  AG_ICON_ISA(o) (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x16)
+#define  AG_ICON_SELF()    AGICON(  AG_OBJECT(0,         "AG_Widget:AG_Icon:*") )
+#define  AG_ICON_PTR(n)    AGICON(  AG_OBJECT((n),       "AG_Widget:AG_Icon:*") )
+#define  AG_ICON_NAMED(n)  AGICON(  AG_OBJECT_NAMED((n), "AG_Widget:AG_Icon:*") )
+#define AG_cICON_SELF()   AGcICON( AG_cOBJECT(0,         "AG_Widget:AG_Icon:*") )
+#define AG_cICON_PTR(n)   AGcICON( AG_cOBJECT((n),       "AG_Widget:AG_Icon:*") )
+#define AG_cICON_NAMED(n) AGcICON( AG_cOBJECT_NAMED((n), "AG_Widget:AG_Icon:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agIconClass;

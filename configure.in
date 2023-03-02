@@ -326,6 +326,7 @@ check(kqueue)
 check(timerfd)
 check(csidl)
 check(xbox)
+check(mprotect)
 
 # C compiler options
 c_define(_AGAR_INTERNAL)
@@ -1103,7 +1104,6 @@ if [ "${enable_au}" = 'yes' ]; then
 	config_script(agar-au-config,\
 		"-I${INCLDIR} ${PORTAUDIO_CFLAGS} ${SNDFILE_CFLAGS}",\
 		"-L${LIBDIR} -lag_au ${PORTAUDIO_LIBS} ${SNDFILE_LIBS}")
-
 	pkgconfig_mod(agar-au, "Agar audio library", \
 		"agar ${PORTAUDIO_PC} ${SNDFILE_PC}", "", \
 		"-I\${includedir}/agar", \
@@ -1143,7 +1143,6 @@ if [ "${enable_net}" != 'no' ]; then
 	config_script(agar-net-config,\
 		"-I${INCLDIR} ${ZLIB_CFLAGS}",\
 		"-L${LIBDIR} -lag_net ${ZLIB_LIBS}")
-
 	pkgconfig_mod(agar-net, "Agar network interface", "", "", \
 		"-I\${includedir}/agar ${ZLIB_CFLAGS}", \
 		"-L\${libdir} -lag_core", \
@@ -1154,7 +1153,6 @@ if [ "${enable_sg}" != 'no' ]; then
 	config_script(agar-sg-config,\
 		"-I${INCLDIR} ${AGAR_MATH_CFLAGS} ${GLU_CFLAGS}",\
 		"-L${LIBDIR} -lag_sg ${AGAR_MATH_LIBS} ${GLU_LIBS}")
-
 	pkgconfig_mod(agar-sg, "Agar 3D scene graph library", \
 		"agar-math agar", "", \
 		"-I\${includedir}/agar ${GLU_CFLAGS}", \

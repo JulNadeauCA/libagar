@@ -281,6 +281,8 @@ void AG_LowerBlit_Al(const AG_Surface *_Nonnull, const AG_Rect *_Nonnull,
                      AG_Surface *_Nonnull, const AG_Rect *_Nonnull);
 void AG_LowerBlit_Co(const AG_Surface *_Nonnull, const AG_Rect *_Nonnull,
                      AG_Surface *_Nonnull, const AG_Rect *_Nonnull);
+void AG_LowerBlit_IndexedSub8(const AG_Surface *_Nonnull, const AG_Rect *_Nonnull,
+                              AG_Surface *_Nonnull, const AG_Rect *_Nonnull);
 
 void AG_SurfaceBlit(const AG_Surface *_Nonnull, const AG_Rect *_Nullable,
 		    AG_Surface *_Nonnull, int,int);

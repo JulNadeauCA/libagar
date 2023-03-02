@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2011-2023 Julien Nadeau Carriere <vedge@csoft.net>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -82,7 +82,7 @@ SG_NodeClass sgRectangleClass = {
 	{
 		"SG_Node:SG_Geom:SG_Rectangle",
 		sizeof(SG_Rectangle),
-		{ 0,0 },
+		{ 1,0, AGC_SG_RECTANGLE, 0 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

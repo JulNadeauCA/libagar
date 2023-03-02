@@ -112,7 +112,7 @@ SG_ProgramUnbind(SG_Program *prog, SG_View *view)
 AG_ObjectClass sgProgramClass = {
 	"SG_Program",
 	sizeof(SG_Program),
-	{ 0,0 },
+	{ 0,0, AGC_SG_PROGRAM, 0xE017 },
 	Init,
 	NULL,			/* reset */
 	NULL,			/* destroy */

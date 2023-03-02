@@ -686,7 +686,7 @@ SelectInsn(AG_Event *_Nonnull event)
 #ifdef AG_THREADS
 	SG_Script *scr = SG_SCRIPT_PTR(1);
 #endif
-	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	AG_TlistItem *it = AG_TLISTITEM_PTR(2);
 	const int state = AG_INT(3);
 
 	if (strcmp(it->cat, "insn") == 0) {
@@ -907,13 +907,16 @@ InsertCreateInsnDlg(AG_Event *_Nonnull event)
 
 	/* Edit node parameters. */
 	ClearEditPane(e);
+
 	e->wEdit = (AG_Widget *)AG_BoxNewVert(e->paLeft->div[1], AG_BOX_EXPAND);
+
 	if (NODE_OPS(node)->edit != NULL) {
 		w = NODE_OPS(node)->edit(node, e->sv);
-		if (w != NULL && AG_OfClass(w, "AG_Widget:*"))
+		if (w != NULL && AG_WIDGET_ISA(w))
 			AG_ObjectAttach(e->wEdit, w);
 	}
-	e->boxBtns = AG_BoxNewHoriz(e->paLeft->div[1], AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
+	e->boxBtns = AG_BoxNewHoriz(e->paLeft->div[1], AG_BOX_HOMOGENOUS |
+	                                               AG_BOX_HFILL);
 	{
 		AG_ButtonNewFn(e->boxBtns, 0, _("Save"),
 		    InsertCreateInsn, "%p,%p,%p", e, parent, node);
@@ -1856,7 +1859,7 @@ Edit(void *_Nonnull obj)
 AG_ObjectClass sgScriptClass = {
 	"SG_Script",
 	sizeof(SG_Script),
-	{ 0,0 },
+	{ 0,0, AGC_SG_SCRIPT, 0xE03F },
 	Init,
 	Reset,
 	NULL,			/* destroy */

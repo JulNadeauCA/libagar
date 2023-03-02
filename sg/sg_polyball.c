@@ -242,7 +242,7 @@ SG_NodeClass sgPolyballClass = {
 	{
 		"SG_Node:SG_Object:SG_Polyball",
 		sizeof(SG_Polyball),
-		{ 0,0 },
+		{ 1,0, AGC_SG_POLYBALL, 0xE027 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

@@ -3,7 +3,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agarcore.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 February 19
+" Last Change:  2023 February 28
 
 source $VIMRUNTIME/syntax/c.vim
 
@@ -438,6 +438,41 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AG_TIMER_AUTO_FREE AG_TIMER_EXECD AG_TIMER_RESTART
   " core/begin.h
   syn keyword cConstant AG_INLINE AG_NULL
+  " core/classes.h
+  syn keyword cType AG_Class
+  syn keyword cConstant AGC_OBJECT AGC_CONFIG AGC_DB AGC_DB_HASH AGC_DB_MYSQL
+  syn keyword cConstant AGC_DB_OBJECT AGC_DB_BTREE
+  syn keyword cConstant AGC_DRIVER_SW AGC_DRIVER_MW AGC_DRIVER AGC_DRIVER_C64
+  syn keyword cConstant AGC_DRIVER_SDLGL AGC_DRIVER_SDLFB AG_DRIVER_DUMMY
+  syn keyword cConstant AGC_DRIVER_SDL2GL AGC_DRIVER_SDL2FB AGC_DRIVER_COCOA
+  syn keyword cConstant AGC_DRIVER_WGL AGC_DRIVER_GLX
+  syn keyword cConstant AGC_DRIVER_SDL2MW AGC_DRIVER_DUMMY
+  syn keyword cConstant AGC_INPUT_DEVICE AGC_MOUSE AGC_KEYBOARD AGC_JOYSTICK
+  syn keyword cConstant AGC_CONTROLLER AGC_FONT AGC_FONT_BF AGC_FONT_FT
+  syn keyword cConstant AGC_WIDGET
+  syn keyword cConstant AGC_WINDOW AGC_BOX AGC_BOX_HORIZ AGC_BOX_VERT
+  syn keyword cConstant AGC_MPANE AGC_NOTEBOOK_TAB
+  syn keyword cConstant AGC_STATUSBAR AGC_TITLEBAR AGC_TOOLBAR AGC_BUTTON
+  syn keyword cConstant AGC_CHECKBOX AGC_COMBO AGC_OBJECT_SELECTOR AGC_CONSOLE
+  syn keyword cConstant AGC_EDITABLE AGC_DIR_DLG AGC_FONT_SELECTOR AGC_FILE_DLG
+  syn keyword cConstant AGC_FIXED AGC_FIXED_PLOTTER AGC_GRAPH AGC_GLVIEW
+  syn keyword cConstant AGC_HSVPAL AGC_ICON AGC_LABEL AGC_MENU AGC_MENUVIEW
+  syn keyword cConstant AGC_MFSPINBUTTON AGC_MSPINBUTTON AGC_NOTEBOOK
+  syn keyword cConstant AGC_NUMERICAL AGC_PANE AGC_PIXMAP AGC_PROGRESSBAR
+  syn keyword cConstant AGC_RADIO AGC_SCROLLBAR AGC_SCROLLVIEW AGC_SEPARATOR
+  syn keyword cConstant AGC_SLIDER AGC_SOCKET AGC_TABLE AGC_TREETBL AGC_TEXTBOX
+  syn keyword cConstant AGC_TLIST AGC_UCOMBO AGC_VG_VIEW AGC_MAP_VIEW 
+  syn keyword cConstant AGC_MAP_OBJECT AGC_RG_TILESET AGC_VG AGC_MAP
+  syn keyword cConstant AGC_RG_TILEVIEW AGC_SK_VIEW AGC_SG AGC_SG_NODE
+  syn keyword cConstant AGC_SG_PROGRAM AGC_SG_TEXTURE AGC_SG_PALETTE AGC_SG_SCRIPT
+  syn keyword cConstant AGC_SG_DUMMY AGC_SG_CAMERA AGC_SG_LIGHT AGC_SG_GEOM
+  syn keyword cConstant AGC_SG_WIDGET AGC_SG_POINT AGC_SG_LINE AGC_SG_CIRCLE
+  syn keyword cConstant AGC_SG_SPHERE AGC_SG_PLANE AGC_SG_POLYGON AGC_SG_TRIANGLE
+  syn keyword cConstant AGC_SG_RECTANGLE AGC_SG_OBJECT AGC_SG_POLYBALL
+  syn keyword cConstant AGC_SG_POLYBOX AGC_SG_VOXEL AGC_SG_IMAGE AGC_SG_CG_PROGRAM
+  syn keyword cConstant AGC_SG_VIEW AGC_SK AGC_M_PLOTTER AGC_M_MATVIEW
+  syn keyword cConstant AGC_WIDGET_LAST
+
   " core/config.h
   syn keyword cType AG_Config AG_ConfigPathGroup AG_ConfigPath AG_ConfigPathQ
   syn keyword cConstant AG_CONFIG_PATH_DATA AG_CONFIG_PATH_FONTS
@@ -468,7 +503,8 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AG_SOURCE_FLOAT AG_SOURCE_DOUBLE AG_SOURCE_LONG_DOUBLE 
   syn keyword cConstant AG_SOURCE_STRING AG_SOURCE_COLOR_RGBA AG_SOURCE_STRING_PAD
   " core/db.h
-  syn keyword cType AG_Db AG_DbClass AG_Dbt AG_DbHashBT AG_DbMySQL AG_DbIterateFn
+  syn keyword cType AG_Db AG_DbClass AG_Dbt AG_DbEntry AG_DbHashBT AG_DbMySQL
+  syn keyword cType AG_Db AG_DbIterateFn
   syn keyword cConstant AG_DB_KEY_DATA AG_DB_KEY_NUMBER AG_DB_KEY_STRING
   syn keyword cConstant AG_DB_REC_VARIABLE AG_DB_REC_FIXED AG_DB_OPEN AG_DB_READONLY
   " core/dbobject.h
@@ -518,22 +554,17 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AG_LOAD_STRING_MAX
   " core/load_version.h
   syn keyword cType AG_Version
-  syn keyword cConstant AG_VERSION_NAME_MAX AG_VERSION_MAX
   " core/object.h
-  syn keyword cType AG_Object AG_ObjectHeader AG_ObjectPvt AG_ObjectClass
-  syn keyword cType AG_ObjectClassPvt AG_ObjectClassSpec AG_ObjectInitFn
+  syn keyword cType AG_Object AG_ObjectHeader AG_ObjectClass
+  syn keyword cType AG_ObjectClassSpec AG_ObjectInitFn
   syn keyword cType AG_ObjectResetFn AG_ObjectDestroyFn AG_ObjectLoadFn
   syn keyword cType AG_ObjectSaveFn AG_ObjectEditFn AG_Namespace
   syn keyword cConstant AG_OBJECT_NAME_MAX AG_OBJECT_TYPE_MAX AG_OBJECT_HIER_MAX 
   syn keyword cConstant AG_OBJECT_PATH_MAX AG_OBJECT_LIBS_MAX AG_OBJECT_CLASSTBLSIZE
   syn keyword cConstant AG_OBJECT_MAX_VARIABLES AG_OBJECT_TYPE_TAG AG_OBJECT_TYPE_TAG_LEN
-  syn keyword cConstant AG_OBJECT_FLOATING_VARS AG_OBJECT_NON_PERSISTENT
-  syn keyword cConstant AG_OBJECT_INDESTRUCTIBLE AG_OBJECT_RESIDENT
-  syn keyword cConstant AG_OBJECT_STATIC AG_OBJECT_READONLY AG_OBJECT_WAS_RESIDENT
-  syn keyword cConstant AG_OBJECT_REOPEN_ONLOAD AG_OBJECT_REMAIN_DATA
-  syn keyword cConstant AG_OBJECT_DEBUG AG_OBJECT_NAME_ONATTACH
-  syn keyword cConstant AG_OBJECT_CHLD_AUTOSAVE AG_OBJECT_DEBUG_DATA
-  syn keyword cConstant AG_OBJECT_INATTACH AG_OBJECT_INDETACH
+  syn keyword cConstant AG_OBJECT_STATIC AG_OBJECT_INDESTRUCTIBLE
+  syn keyword cConstant AG_OBJECT_READONLY AG_OBJECT_DEBUG
+  syn keyword cConstant AG_OBJECT_NAME_ONATTACH AG_OBJECT_DEBUG_DATA
   syn keyword cConstant AG_OBJECT_BOUND_EVENTS AG_OBJECT_SAVED_FLAGS
   " core/queue.h
   syn keyword cConstant AG_SLIST_HEAD AG_SLIST_HEAD_ AG_SLIST_ENTRY

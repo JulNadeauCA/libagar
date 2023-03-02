@@ -144,11 +144,6 @@ typedef struct ag_cursor_glx {
 } AG_CursorGLX;
 
 AG_DriverMwClass agDriverGLX;
-#if 0
-#define AGDRIVER_IS_GLX(drv) AG_OfClass((drv),"AG_Driver:AG_DriverMw:AG_DriverGLX")
-#else
-#define AGDRIVER_IS_GLX(drv) (AGDRIVER_CLASS(drv) == (AG_DriverClass *)&agDriverGLX)
-#endif
 
 #ifdef AG_WM_HINTS
 static Atom wmDeleteWindow, wmNetWmWindowOpacity, wmProtocols, wmTakeFocus,
@@ -412,11 +407,11 @@ LookupWindowByID(Window xw)
 	/* XXX TODO we can optimize based on numerical XIDs? */
 	AG_LockVFS(&agDrivers);
 	AGOBJECT_FOREACH_CHILD(glx, &agDrivers, ag_driver_glx) {
-		if (!AGDRIVER_IS_GLX(glx)) {
+		if (OBJECT(glx)->cid != AGC_DRIVER_GLX) {
 			continue;
 		}
 		if (glx->w == xw) {
-			win = AGDRIVER_MW(glx)->win;
+			win = AGDRIVERMW(glx)->win;
 			if (WIDGET(win)->drv == NULL) {	/* Being detached */
 				goto fail;
 			}
@@ -539,7 +534,7 @@ UpdateKeyboardAll(void)
 
 	AG_LockVFS(&agDrivers);
 	AGOBJECT_FOREACH_CHILD(drv, &agDrivers, ag_driver) {
-		if (!AGDRIVER_IS_GLX(drv)) {
+		if (OBJECT(drv)->cid != AGC_DRIVER_GLX) {
 			continue;
 		}
 		UpdateKeyboard(drv->kbd);
@@ -1961,7 +1956,7 @@ GLX_GetInputFocus(AG_Window *_Nonnull *_Nonnull rv)
 	AG_MutexUnlock(&agDisplayLock);
 
 	AGOBJECT_FOREACH_CHILD(glx, &agDrivers, ag_driver_glx) {
-		if (!AGDRIVER_IS_GLX(glx)) {
+		if (OBJECT(glx)->cid != AGC_DRIVER_GLX) {
 			continue;
 		}
 		if (glx->w && glx->w == wRet)
@@ -1971,7 +1966,7 @@ GLX_GetInputFocus(AG_Window *_Nonnull *_Nonnull rv)
 		AG_SetErrorS(_("Input focus is external to this application"));
 		return (-1);
 	}
-	*rv = AGDRIVER_MW(glx)->win;
+	*rv = AGDRIVERMW(glx)->win;
 	return (0);
 }
 
@@ -2206,8 +2201,8 @@ GLX_SetTransientFor(AG_Window *_Nonnull win, AG_Window *_Nullable forParent)
 	if (glx->w != 0) {
 		if (forParent != NULL &&
 		    (glxParent = (AG_DriverGLX *)WIDGET(forParent)->drv) != NULL &&
-		    AGDRIVER_IS_GLX(glxParent) &&
-		    (AGDRIVER_MW(glxParent)->flags & AG_DRIVER_MW_OPEN)) {
+		    (OBJECT(glxParent)->cid != AGC_DRIVER_GLX) &&
+		    (AGDRIVERMW(glxParent)->flags & AG_DRIVER_MW_OPEN)) {
 			XSetTransientForHint(agDisplay, glx->w, glxParent->w);
 		} else {
 			XSetTransientForHint(agDisplay, glx->w, None);
@@ -2401,8 +2396,7 @@ PollGLContext(AG_Event *_Nonnull event)
 	AG_TlistItem *it;
 	Uint i;
 
-	if (!AG_OBJECT_VALID(glx) ||
-	    !AG_OfClass(glx, "AG_Driver:AG_DriverMw:AG_DriverGLX:*")) {
+	if (!AG_OBJECT_VALID(glx) || OBJECT(glx)->cid != AGC_DRIVER_GLX) {
 		if (WIDGET(tl)->window != NULL) {
 			AG_ObjectDetach(WIDGET(tl)->window);
 			return;
@@ -2505,7 +2499,7 @@ AG_DriverMwClass agDriverGLX = {
 		{
 			"AG_Driver:AG_DriverMw:AG_DriverGLX",
 			sizeof(AG_DriverGLX),
-			{ 1,6 },
+			{ 1,7, AGC_DRIVER_GLX, 0xE01D },
 			Init,
 			NULL,		/* reset */
 			Destroy,

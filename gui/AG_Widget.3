@@ -815,7 +815,7 @@ is drawn as a pressed button if its "state" is 1), it may be necessary to
 monitor the value and redraw when it changes.
 .Fn AG_RedrawOnChange
 arranges for this to occur automatically (see below).
-.Sh CONTROLLING REDRAW
+.Sh REDRAWING
 .nr nS 1
 .Ft "void"
 .Fn AG_Redraw "AG_Widget *obj"
@@ -823,23 +823,22 @@ arranges for this to occur automatically (see below).
 .Ft "void"
 .Fn AG_RedrawOnChange "AG_Widget *obj" "int refresh_ms" "const char *binding_name"
 .Pp
-.Ft "void"
+.Ft "int"
 .Fn AG_RedrawOnTick "AG_Widget *obj" "int refresh_ms"
 .Pp
 .nr nS 0
 The
 .Fn AG_Redraw
-function signals that the widget must be redrawn to the video display.
+call signals that the widget must be redrawn to the display.
 It is equivalent to setting the
 .Va dirty
-variable of the widget's parent window to 1.
+flag on the parent window.
 If called from rendering context,
 .Fn AG_Redraw
 is a no-op.
 .Pp
-The
 .Fn AG_RedrawOnChange
-function arranges for the widget to be automatically redrawn whenever the
+arranges for the widget to be automatically redrawn whenever the
 value associated with the existing binding
 .Fa binding_name
 changes.
@@ -852,15 +851,17 @@ argument of -1 is passed, the effect of any previous
 .Fn AG_RedrawOnChange
 call with the specified binding is disabled.
 .Pp
+.Fn AG_RedrawOnTick
+enables or disables auto-refresh.
+Auto-refresh forces the widget to be redrawn unconditionally every
+.Fa refresh_ms
+milliseconds.
+If the
+.Fa refresh_ms
+argument is -1, auto-refresh is disabled.
 The
 .Fn AG_RedrawOnTick
-function arranges for the widget to be unconditionally redrawn at the
-specified interval in milliseconds.
-If a
-.Fa refresh_ms
-argument of -1 is passed, the effect of any previous
-.Fn AG_RedrawOnTick
-call is disabled.
+function returns the previous setting in ms (or -1 if auto-refresh was not set).
 .Sh WIDGET QUERIES
 .nr nS 1
 .Ft "AG_Window *"
@@ -888,27 +889,36 @@ returns the top-most focused widget under
 .Fa win .
 .Pp
 .Fn AG_WidgetFindPoint
-returns the top-most widget at display coordinates
+searches for the top-most widget which contains the point at display
+coordinates
+.Fa x ,
+.Fa y .
+.Pp
+.Fn AG_WidgetFindRect
+searches for the top-most widget which encloses the rectangle
+described by display coordinates
 .Fa x ,
 .Fa y ,
-which also is an instance of a the given
-.Fa className
-(see
-.Xr AG_ObjectClass 3 ,
-.Xr AG_OfClass 3 ) .
-The
-.Fn AG_WidgetFindRect
-variant requires that the widget enclose the whole given rectangle.
+.Fa w ,
+.Fa h
+completely.
 .Pp
-The pointer returned by
+Both
+.Fn AG_WidgetFindPoint
+and
+.Fn AG_WidgetFindRect
+will only match widgets that are instances of
+.Fa className .
+The pattern "AG_Widget:*" would match any class.
+For details on the class-membership test, see:
+.Xr AG_OfClass 3 .
+.Pp
+Under threads, the object pointer returned by
 .Fn AG_WidgetFindFocused ,
 .Fn AG_WidgetFindPoint
 and
 .Fn AG_WidgetFindRect
 is valid only for as long as the parent VFS is locked.
-.Pp
-See also:
-.Xr AG_ObjectFind 3 .
 .Sh RENDERING CONTROL
 .nr nS 1
 .Ft void
@@ -1002,11 +1012,16 @@ Both functions must be invoked from rendering context.
 The
 .Fn AG_WidgetDraw
 routine renders a widget to the display.
-It is typically invoked from an event loop routine (such as
-.Xr AG_EventLoop 3 ) ,
-to recursively draw the hierarchy of visible GUI elements.
+It is invoked from either the event loop routine (such as
+.Xr AG_EventLoop 3 )
+or from the
+.Fn draw
+operation of a widget.
+Container widgets must call
+.Fn AG_WidgetDraw
+explicitely in order to render their children.
 .Pp
-In the event loop,
+In an event loop,
 .Fn AG_WidgetDraw
 invocations must be enclosed between calls to
 .Fn AG_BeginRendering
@@ -1046,18 +1061,18 @@ routine renders the widget to a newly-allocated
 This surface should be freed after use.
 .Sh WIDGET ACTIONS
 User-generated events such as key presses or mouse button events can be
-connected to high-level Widget
-.Em actions ,
+connected to
+.Em high-level actions
 such as executing a specified routine or controlling a boolean.
-Widget actions are described by the
+The high-level actions of a widget are described by an array of
 .Fa AG_Action
-structure.
+structures.
 .Pp
 Where the conditions for execution of an Action are fixed (e.g., a specific
 mouse button was clicked, or a specific key was pressed), use of
 .Fn AG_ActionOn*
 is preferred over low-level event handlers
-(such as "key-down" or "mouse-button-down"), because it allows keyboard
+(such as "key-down" or "mouse-button-down") because it allows keyboard
 and mouse bindings to be configured by the end-user in a standard way.
 .Xr AG_Menu 3
 also provides interfaces for working with widget actions.
@@ -1230,28 +1245,29 @@ objects the following events:
 .Pp
 .Bl -tag -compact -width 2n
 .It Fn font-changed "void"
-The active font family or font attributes have changed.
-The new font may be accessed either via the
+The active font family, size or style attributes have changed.
+The new font may be accessed by the
 .Va font
-structure member, or using the
-.Dv AGWIDGET_FONT
-macro.
+pointer of
+.Nm .
 .It Fn padding-changed "void"
 The padding attribute has changed.
 .It Fn palette-changed "void"
 At least one entry in the color palette of the widget has changed.
 .It Fn widget-shown "void"
 The widget is now visible.
-NOTE: Handlers for this event should be set using
+User-defined handlers must be appended with
 .Xr AG_AddEvent 3
-as opposed to
-.Xr AG_SetEvent 3 .
+(as opposed to replaced by
+.Xr AG_SetEvent 3 )
+since the base class needs its own "widget-shown" handler.
 .It Fn widget-hidden "void"
 The widget is no longer visible.
-NOTE: Handlers for this event should be set using
+User-defined handlers must be appended with
 .Xr AG_AddEvent 3
-as opposed to
-.Xr AG_SetEvent 3 .
+(as opposed to replaced by
+.Xr AG_SetEvent 3 )
+since the base class needs its own "widget-hidden" handler.
 .It Fn widget-enabled "void"
 Input state has been enabled with
 .Xr AG_WidgetEnable 3 .
@@ -1263,13 +1279,14 @@ The widget now holds focus inside its parent container.
 .It Fn widget-lostfocus "void"
 The widget no longer holds focus.
 .It Fn widget-reshape "void"
-Widget size has changed and
+The widget was resized and
 .Dv USE_OPENGL
-is set (and the
+is set.
+The handler is expected to update the
 .Dv GL_PROJECTION
 or
 .Dv GL_MODELVIEW
-matrices may need to be updated).
+matrices.
 .It Fn widget-overlay "void"
 Invoked following the
 .Fn draw
@@ -1282,7 +1299,13 @@ operation; requires
 .Dv USE_OPENGL .
 .El
 .Pp
-The following events are usually generated by input devices:
+The following events are usually generated by input devices.
+.Pp
+DEPRECATED:
+As of Agar 1.7.0 the events described below have been superceded by the
+input device methods of
+.Ft AG_WidgetClass .
+If a method is defined then the method is called and no event is generated.
 .Pp
 .Bl -tag -compact -width 2n
 .It Fn mouse-motion "int x" "int y" "int xRel" "int yRel" "int buttons"
@@ -1381,7 +1404,7 @@ Entries are set by the current
 .Xr AG_StyleSheet 3 .
 Read-only (use
 .Fn AG_SetStyle
-to change) with one exception: before calling
+to modify) with one exception: before calling
 .Xr AG_WidgetDraw 3
 to render a child widget, a container widget may temporarily override and
 restore its palette entries.
@@ -1390,13 +1413,13 @@ Current font associated with the widget (see
 .Xr AG_Font 3 ) .
 Read-only (use
 .Fn AG_SetStyle
-or
-.Fn AG_SetFont
-to change).
+or the
+.Fn AG_SetFont*
+family of functions to modify).
 .It Ft AG_ActionVec *actions
 Dynamic array of
-.Ft AG_Widget
-structures describing high-level widget actions (see
+.Ft AG_Action
+structures describing high-level actions (see
 .Sx WIDGET ACTIONS ) .
 .El
 .Sh FLAGS

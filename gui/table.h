@@ -196,26 +196,25 @@ typedef struct ag_table {
 	AG_Timer dblClickTo;		/* For double click */
 } AG_Table;
 
-#define AGTABLE(p)              ((AG_Table *)(p))
-#define AGCTABLE(p)             ((const AG_Table *)(p))
-#define AG_TABLE_SELF()          AGTABLE( AG_OBJECT(0,"AG_Widget:AG_Table:*") )
-#define AG_TABLE_PTR(n)          AGTABLE( AG_OBJECT((n),"AG_Widget:AG_Table:*") )
-#define AG_TABLE_NAMED(n)        AGTABLE( AG_OBJECT_NAMED((n),"AG_Widget:AG_Table:*") )
-#define AG_CONST_TABLE_SELF()   AGCTABLE( AG_CONST_OBJECT(0,"AG_Widget:AG_Table:*") )
-#define AG_CONST_TABLE_PTR(n)   AGCTABLE( AG_CONST_OBJECT((n),"AG_Widget:AG_Table:*") )
-#define AG_CONST_TABLE_NAMED(n) AGCTABLE( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Table:*") )
+#define   AGTABLE(p)        ((AG_Table *)(p))
+#define  AGcTABLE(p)        ((const AG_Table *)(p))
+#define  AG_TABLE_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x25)
+#define  AG_TABLE_SELF()    AGTABLE(  AG_OBJECT(0,        "AG_Widget:AG_Table:*") )
+#define  AG_TABLE_PTR(n)    AGTABLE(  AG_OBJECT((n),      "AG_Widget:AG_Table:*") )
+#define  AG_TABLE_NAMED(n)  AGTABLE(  AG_OBJECT_NAMED((n),"AG_Widget:AG_Table:*") )
+#define AG_cTABLE_SELF()   AGcTABLE( AG_cOBJECT(0,        "AG_Widget:AG_Table:*") )
+#define AG_cTABLE_PTR(n)   AGcTABLE( AG_cOBJECT((n),      "AG_Widget:AG_Table:*") )
+#define AG_cTABLE_NAMED(n) AGcTABLE( AG_cOBJECT_NAMED((n),"AG_Widget:AG_Table:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agTableClass;
 
 AG_Table *_Nonnull AG_TableNew(void *_Nullable, Uint);
-
 AG_Table *_Nonnull AG_TableNewPolled(void *_Nullable, Uint,
                                      void (*_Nonnull fn)(AG_Event *_Nonnull),
 				     const char *_Nullable, ...);
 
 void AG_TableSetPollInterval(AG_Table *_Nonnull, Uint);
-
 void AG_TableSizeHint(AG_Table *_Nonnull, int, int);
 void AG_TableSetSeparator(AG_Table *_Nonnull, const char *_Nonnull);
 void AG_TableSetColHeight(AG_Table *_Nonnull, int);
@@ -248,16 +247,13 @@ void AG_TableSelectAllRows(AG_Table *_Nonnull);
 void AG_TableDeselectAllRows(AG_Table *_Nonnull);
 int  AG_TableRowSelected(AG_Table *_Nonnull, int);
 
-int  AG_TableAddCol(AG_Table *_Nonnull, const char *_Nullable,
-                    const char *_Nullable,
+int  AG_TableAddCol(AG_Table *_Nonnull, const char *_Nullable, const char *_Nullable,
 		    int (*_Nullable)(const void *_Nonnull, const void *_Nonnull));
-
 void AG_TableSelectAllCols(AG_Table *_Nonnull);
 void AG_TableDeselectAllCols(AG_Table *_Nonnull);
 
 int  AG_TableCompareCells(const AG_TableCell *_Nonnull,
                           const AG_TableCell *_Nonnull);
-
 AG_TableCell *_Nonnull AG_TableGetCell(AG_Table *_Nonnull, int,int)
                                       _Pure_Attribute;
 int  AG_TableCellSelected(AG_Table *_Nonnull, int,int) _Pure_Attribute;
@@ -270,14 +266,7 @@ int  AG_TableSaveASCII(AG_Table *_Nonnull, void *_Nonnull, char);
 
 #ifdef AG_LEGACY
 #define AG_TablePrescale(c,r) AG_TableSizeHint((c),(r))
-#define AG_TableSetSelectionColor(t,r,g,b,a) {				\
-	AG_WCOLOR((t),AG_SELECTION_COLOR).r = r;			\
-	AG_WCOLOR((t),AG_SELECTION_COLOR).g = g;			\
-	AG_WCOLOR((t),AG_SELECTION_COLOR).b = b;			\
-	AG_WCOLOR((t),AG_SELECTION_COLOR).a = a;			\
-	AG_Verbose("AG_TableSetSelectionColor() is deprecated\n");	\
-}
-#endif /* AG_LEGACY */
+#endif
 __END_DECLS
 
 #include <agar/gui/close.h>

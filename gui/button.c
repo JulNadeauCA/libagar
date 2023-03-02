@@ -848,7 +848,7 @@ AG_WidgetClass agButtonClass = {
 	{
 		"Agar(Widget:Button)",
 		sizeof(AG_Button),
-		{ 0,0 },
+		{ 1,0, AGC_BUTTON, 0xE012 },
 		Init,
 		NULL,		/* reset */
 		Destroy,

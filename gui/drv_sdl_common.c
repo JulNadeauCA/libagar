@@ -119,7 +119,7 @@ AG_InitVideoSDL(void *pDisplay, Uint flags)
 	}
 
 	agDriverOps = dc;
-	agDriverSw = AGDRIVER_SW(drv);
+	agDriverSw = AGDRIVERSW(drv);
 	return (0);
 fail:
 	AG_DestroyGUIGlobals();

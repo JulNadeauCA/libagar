@@ -515,7 +515,7 @@ AG_WidgetClass agScrollviewClass = {
 	{
 		"Agar(Widget:Scrollview)",
 		sizeof(AG_Scrollview),
-		{ 0,0 },
+		{ 1,0, AGC_SCROLLVIEW, 0xE02D },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2005-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -211,7 +211,7 @@ AG_WidgetClass agSeparatorClass = {
 	{
 		"Agar(Widget:Separator)",
 		sizeof(AG_Separator),
-		{ 0,0 },
+		{ 1,0, AGC_SEPARATOR, 0 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

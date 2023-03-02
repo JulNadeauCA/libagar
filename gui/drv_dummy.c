@@ -62,12 +62,6 @@ typedef struct ag_cursor_dummy {
 
 AG_DriverMwClass agDriverDUMMY;
 
-#if 0
-#define AGDRIVER_IS_DUMMY(drv) AG_OfClass((drv),"AG_Driver:AG_DriverMw:AG_DriverDUMMY")
-#else
-#define AGDRIVER_IS_DUMMY(drv) (AGDRIVER_CLASS(drv) == (AG_DriverClass *)&agDriverDUMMY)
-#endif
-
 static int  DUMMY_InitGlobals(void);
 static void DUMMY_PostResizeCallback(AG_Window *_Nonnull, AG_SizeAlloc *_Nonnull);
 static void DUMMY_PostMoveCallback(AG_Window *_Nonnull, AG_SizeAlloc *_Nonnull);
@@ -1074,7 +1068,7 @@ AG_DriverMwClass agDriverDUMMY = {
 		{
 			"AG_Driver:AG_DriverMw:AG_DriverDUMMY",
 			sizeof(AG_DriverDUMMY),
-			{ 1,6 },
+			{ 1,7, AGC_DRIVER_DUMMY, 0xE053 },
 			Init,
 			NULL,		/* reset */
 			Destroy,

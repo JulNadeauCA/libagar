@@ -6,7 +6,8 @@ typedef struct sg_point {
 	Uint8 _pad[12];
 } SG_Point;
 
-#define SGPOINT(n) ((SG_Point *)(n))
+#define SG_POINT_ISA(o) (((AGOBJECT(o)->cid & 0xffffff00) >> 8)  == 0x7A0402)
+#define SGPOINT(n)      ((SG_Point *)(n))
 
 __BEGIN_DECLS
 extern SG_NodeClass sgPointClass;

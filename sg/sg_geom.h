@@ -11,7 +11,9 @@ typedef struct sg_geom {
 	Uint8 _pad[14];
 } SG_Geom;
 
-#define SGGEOM(n) ((SG_Geom *)(n))
+#define SG_GEOM_ISA(o) (((AGOBJECT(o)->cid & 0xffff0000) >> 16) == 0x7A04)
+#define SGGEOM(n)      ((SG_Geom *)(n))
+#define SGCGEOM(n)     ((const SG_Geom *)(n))
 
 __BEGIN_DECLS
 extern SG_NodeClass sgGeomClass;

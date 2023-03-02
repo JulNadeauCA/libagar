@@ -133,6 +133,7 @@ const AG_TestCase *testCases[] = {
 	NULL
 };
 
+/* Build options */
 const char *agarBuildOpts[] = {
 #ifdef AG_DEBUG
 	"DEBUG  ",
@@ -170,6 +171,14 @@ const char *agarBuildOpts[] = {
 	NULL
 };
 
+/* Build library support */
+const char *agarBuildLibs[] = {
+#ifdef HAVE_OPENGL
+	"OPENGL ",
+#endif
+	NULL
+};
+
 TAILQ_HEAD_(ag_test_instance) tests;		/* Running tests */
 AG_Window *winMain;				/* Main window */
 AG_Statusbar *statusBar;
@@ -183,7 +192,7 @@ static void RunBench(AG_Event *);
 static void
 SelectedTest(AG_Event *event)
 {
-	AG_TlistItem *it = AG_TLIST_ITEM_PTR(1);
+	AG_TlistItem *it = AG_TLISTITEM_PTR(1);
 	AG_TestCase *tc = it->p1;
 
 	AG_ButtonText(btnTest, _("Run %s"), tc->name);
@@ -200,8 +209,15 @@ static void *
 RunBenchmarks(void *arg)
 {
 	AG_TestInstance *ti = arg;
+	AG_Console *console = ti->console;
+	int rv;
 
-	if (ti->tc->bench(ti) == 0) {
+	rv = ti->tc->bench(ti);
+
+	if (!AG_OBJECT_VALID(console) || !AG_CONSOLE_ISA(console))
+		return (NULL);
+
+	if (rv == 0) {
 		AG_ConsoleMsg(console, _("%s: Success"), ti->tc->name);
 	} else {
 		AG_ConsoleMsg(console, _("%s: Failed (%s)"), ti->tc->name, AG_GetError());
@@ -357,8 +373,14 @@ RunBench(AG_Event *event)
 		AG_ThreadCreate(&th, RunBenchmarks, ti);
 #else
 		if (tc->bench(ti) == 0) {
+			if (!AG_OBJECT_VALID(console)) {
+				return;
+			}
 			AG_ConsoleMsg(console, _("%s: Success"), tc->name);
 		} else {
+			if (!AG_OBJECT_VALID(console)) {
+				return;
+			}
 			AG_ConsoleMsg(console, _("%s: Failed (%s)"), tc->name,
 			    AG_GetError());
 			AG_LabelTextS(status, AG_GetError());
@@ -436,6 +458,7 @@ void
 TestExecBenchmark(void *obj, AG_Benchmark *bm)
 {
 	AG_TestInstance *ti = obj;
+	AG_Console *cons = ti->console;
 	Uint i, j, fIdx;
 #if defined(HAVE_64BIT)
 	Uint64 t1, t2;
@@ -445,14 +468,19 @@ TestExecBenchmark(void *obj, AG_Benchmark *bm)
 	Uint32 tTot, tRun;
 #endif
 
-	AG_RedrawOnTick(ti->console, 1);
+	if (AG_OBJECT_VALID(cons))
+		AG_RedrawOnTick(cons, 1);
+
 	for (fIdx = 0; fIdx < bm->nFuncs; fIdx++) {
 		char pbuf[64];
 		AG_BenchmarkFn *bfn = &bm->funcs[fIdx];
 		AG_ConsoleLine *cl;
 
 		bfn->clksMax = -1;
-		cl = AG_ConsoleMsg(ti->console, "\t%s: ...", bfn->name);
+		if (!AG_OBJECT_VALID(cons)) {
+			return;
+		}
+		cl = AG_ConsoleMsg(cons, "\t%s: ...", bfn->name);
 		if (cl == NULL) {
 			continue;
 		}
@@ -514,7 +542,9 @@ retry:
 			AG_ConsoleMsgEdit(cl, pbuf);
 		}
 	}
-	AG_RedrawOnTick(ti->console, -1);
+
+	if (AG_OBJECT_VALID(cons))
+		AG_RedrawOnTick(cons, -1);
 }
 
 #ifdef AG_UNICODE
@@ -617,7 +647,7 @@ ConsoleWindowDetached(AG_Event *event)
 static void
 TestInfo(AG_Event *event)
 {
-	const AG_TestCase *tc = AG_CONST_PTR(1);
+	const AG_TestCase *tc = AG_cPTR(1);
 
 	AG_TextMsg(AG_MSG_INFO,
 	    _("Test: " AGSI_BOLD "%s" AGSI_RST "\n"
@@ -634,7 +664,7 @@ TestViewSource(AG_Event *event)
 {
 	char path[AG_PATHNAME_MAX];
 	char file[AG_FILENAME_MAX];
-	const AG_TestCase *tc = AG_CONST_PTR(1);
+	const AG_TestCase *tc = AG_cPTR(1);
 	AG_Textbox *tb;
 	AG_Window *win;
 	char *s;
@@ -999,9 +1029,16 @@ main(int argc, char *argv[])
 
 		ln = AG_ConsoleMsg(console, _("Build options: " AGSI_FONT10));
 		AG_ColorFromString(&ln->c, "AntiqueWhite", NULL);
-		for (bopt = &agarBuildOpts[0]; *bopt != NULL; bopt++)
+		for (bopt = &agarBuildOpts[0]; *bopt != NULL; bopt++) {
 			AG_ConsoleMsgCatS(ln, *bopt);
-		
+		}
+		AG_ConsoleMsgCatS(ln, AGSI_RST);
+
+		ln = AG_ConsoleMsg(console, _("Build libs: " AGSI_FONT10));
+		AG_ColorFromString(&ln->c, "AntiqueWhite", NULL);
+		for (bopt = &agarBuildLibs[0]; *bopt != NULL; bopt++) {
+			AG_ConsoleMsgCatS(ln, *bopt);
+		}
 		AG_ConsoleMsgCatS(ln, AGSI_RST);
 
 		AG_ConsoleMsg(console, _("Available drivers:"));
@@ -1013,7 +1050,7 @@ main(int argc, char *argv[])
 			    dc->name,
 			    agDriverTypeNames[dc->type],
 			    agDriverWmTypeNames[dc->wm],
-			    AGCLASS(dc)->name);
+			    AGOBJECTCLASS(dc)->name);
 			if (AGWIDGET(win)->drvOps == dc) {
 				AG_ColorRGB_8(&ln->c, 0,255,0);
 				AG_ConsoleMsgCatS(ln, _(" [current]"));
@@ -1097,7 +1134,7 @@ fail:
 			    dc->name,
 			    agDriverTypeNames[dc->type],
 			    agDriverWmTypeNames[dc->wm],
-			    AGCLASS(dc)->name);
+			    AGOBJECTCLASS(dc)->name);
 		}
 	}
 	return (1);

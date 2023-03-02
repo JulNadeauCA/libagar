@@ -95,16 +95,14 @@ typedef struct ma_driver {
 	Uint8 nSprites;			/* Number of hardware sprites in use */
 } MA_Driver;
 
-#define AGDRIVER(obj)            ((MA_Driver *)(obj))
-#define AGCDRIVER(obj)           ((const MA_Driver *)(obj))
-#define MA_DRIVER_SELF()          AGDRIVER( AG_OBJECT(0,"MA_Driver:*") )
-#define MA_DRIVER_PTR(n)          AGDRIVER( AG_OBJECT((n),"MA_Driver:*") )
-#define MA_DRIVER_NAMED(n)        AGDRIVER( AG_OBJECT_NAMED((n),"MA_Driver:*") )
-#define MA_CONST_DRIVER_SELF()   AGCDRIVER( AG_CONST_OBJECT(0,"MA_Driver:*") )
-#define MA_CONST_DRIVER_PTR(n)   AGCDRIVER( AG_CONST_OBJECT((n),"MA_Driver:*") )
-#define MA_CONST_DRIVER_NAMED(n) AGCDRIVER( AG_CONST_OBJECT_NAMED((n),"MA_Driver:*") )
+#define   MADRIVER(o)        ((MA_Driver *)(o))
+#define  MAcDRIVER(o)        ((const MA_Driver *)(o))
+#define  MA_DRIVER_SELF()    MADRIVER(  AG_OBJECT(0,   "MA_Driver:*") )
+#define  MA_DRIVER_PTR(n)    MADRIVER(  AG_OBJECT((n), "MA_Driver:*") )
+#define MA_cDRIVER_SELF()   MAcDRIVER( AG_cOBJECT(0,   "MA_Driver:*") )
+#define MA_cDRIVER_PTR(n)   MAcDRIVER( AG_cOBJECT((n), "MA_Driver:*") )
 
-#define MADRIVER_CLASS(obj)	((struct ma_driver_class *)(AGOBJECT(obj)->cls))
+#define MADRIVER_CLASS(o) ((struct ma_driver_class *)(AGOBJECT(o)->cls))
 
 #define MADRIVER_BOUNDED_WIDTH(win,x)  (((x) < 0) ? 0 : ((x) > MAWIDGET(win)->w) ? (MAWIDGET(win)->w - 1) : (x))
 #define MADRIVER_BOUNDED_HEIGHT(win,y) (((y) < 0) ? 0 : ((y) > MAWIDGET(win)->h) ? (MAWIDGET(win)->h - 1) : (y))

@@ -40,7 +40,15 @@ typedef struct ag_font_ft {
 	Uint32 _pad;
 } AG_FontFt;
 
-#define AGFONTFT(font) ((AG_FontFt *)(font))
+#define   AGFONTFT(o)      ((AG_FontFt *)(o))
+#define  AGcFONTFT(o)      ((const AG_FontFt *)(o))
+#define  AG_FONTFT_ISA(o) (((AGOBJECT(o)->cid & 0xffff0000) >> 16) == 0x0702)
+#define  AG_FONTFT_SELF()    AGFONTFT(  AG_OBJECT(0,         "AG_Font:AG_FontFt:*") )
+#define  AG_FONTFT_PTR(n)    AGFONTFT(  AG_OBJECT((n),       "AG_Font:AG_FontFt:*") )
+#define  AG_FONTFT_NAMED(n)  AGFONTFT(  AG_OBJECT_NAMED((n), "AG_Font:AG_FontFt:*") )
+#define AG_cFONTFT_SELF()   AGcFONTFT( AG_cOBJECT(0,         "AG_Font:AG_FontFt:*") )
+#define AG_cFONTFT_PTR(n)   AGcFONTFT( AG_cOBJECT((n),       "AG_Font:AG_FontFt:*") )
+#define AG_cFONTFT_NAMED(n) AGcFONTFT( AG_cOBJECT_NAMED((n), "AG_Font:AG_FontFt:*") )
 
 __BEGIN_DECLS
 extern AG_FontClass agFontFtClass;

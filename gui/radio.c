@@ -885,7 +885,7 @@ AG_WidgetClass agRadioClass = {
 	{
 		"Agar(Widget:Radio)",
 		sizeof(AG_Radio),
-		{ 0,0, },
+		{ 1,0, AGC_RADIO, 0xE029 },
 		Init,
 		NULL,		/* reset */
 		Destroy,

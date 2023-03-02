@@ -168,8 +168,7 @@ BrowserOpenGeneric(AG_Object *ob)
 			break;
 	}
 	if (oent != NULL) {
-		if (AG_OBJECT_VALID(oent->win) &&
-		    AG_OfClass(oent->win, "AG_Widget:AG_Window:*")) {
+		if (AG_OBJECT_VALID(oent->win) && AG_WINDOW_ISA(oent->win)) {
 			AG_WindowShow(oent->win);
 			AG_WindowFocus(oent->win);
 			return;
@@ -204,8 +203,7 @@ AG_DEV_BrowserOpenData(void *p)
 			break;
 	}
 	if (oent != NULL) {
-		if (AG_OBJECT_VALID(oent->win) &&
-		    AG_OfClass(oent->win, "AG_Widget:AG_Window:*")) {
+		if (AG_OBJECT_VALID(oent->win) && AG_WINDOW_ISA(oent->win)) {
 			AG_WindowShow(oent->win);
 			AG_WindowFocus(oent->win);
 			return;
@@ -218,27 +216,25 @@ AG_DEV_BrowserOpenData(void *p)
 	if (ob->cls->edit == NULL)
 		return;
 
-	if (OBJECT_PERSISTENT(ob) && !OBJECT_RESIDENT(ob)) {
-		if (AG_ObjectLoadGenericFromFile(ob, NULL) == -1 ||
-		    AG_ObjectLoadDataFromFile(ob, &dataFound, NULL) == -1) {
-			if (!dataFound) {
-				if (AG_ObjectSaveAll(ob) == -1) {
-					AG_TextMsg(AG_MSG_ERROR, "%s: %s",
-					    ob->name, AG_GetError());
-					return;
-				}
-			} else {
+	if (AG_ObjectLoadGenericFromFile(ob, NULL) == -1 ||
+	    AG_ObjectLoadDataFromFile(ob, &dataFound, NULL) == -1) {
+		if (!dataFound) {
+			if (AG_ObjectSaveAll(ob) == -1) {
 				AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name,
 				    AG_GetError());
 				return;
 			}
+		} else {
+			AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name, AG_GetError());
+			return;
 		}
-		AG_PostEvent(ob, "edit-post-load", NULL);
 	}
+	AG_PostEvent(ob, "edit-post-load", NULL);
+
 	if ((editBox = ob->cls->edit(ob)) == NULL) {
 		return;
 	}
-	if (AG_OfClass(editBox, "AG_Widget:AG_Window:*")) {
+	if (AG_WINDOW_ISA(editBox)) {
 		win = (AG_Window *)editBox;
 	} else {
 		if ((win = AG_WindowNew(0)) == NULL) {
@@ -263,27 +259,16 @@ SaveObjectToFile(AG_Event *_Nonnull event)
 {
 	AG_Object *ob = AG_OBJECT_PTR(1);
 	const char *path = AG_STRING(2);
-	int loadedTmp = 0;
-	int dataFound;
 
 	Verbose("Saving <%s> %s to %s...", OBJECT_CLASS(ob)->name,
 	    OBJECT(ob)->name, (path[0] != '\0') ? path : "VFS");
 
-	/* Load the object temporarily if it is non-resident. */
-	if (!OBJECT_RESIDENT(ob)) {
-		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
-			if (dataFound)
-				goto fail;
-		}
-		AG_PostEvent(ob, "edit-post-load", NULL);
-		loadedTmp = 1;
-	}
-	if (path[0] != '\0') {
+	if (path[0] != '\0') {                                   /* Save as */
 		if (AG_ObjectSaveToFile(ob, path) == -1) {
 			AG_SetError("%s: %s", path, AG_GetError());
 			goto fail;
 		}
-	} else {
+	} else {                                                    /* Save */
 		if (AG_ObjectSaveAll(ob) == -1) {
 			AG_SetError("%s: %s", ob->name, AG_GetError());
 			goto fail;
@@ -291,50 +276,10 @@ SaveObjectToFile(AG_Event *_Nonnull event)
 	}
 
 	Verbose("OK\n");
-
-	if (loadedTmp) {
-		AG_ObjectReset(ob);
-	}
 	return;
 fail:
 	AG_TextMsgFromError();
 }
-
-#if 0
-static void
-ImportObject(AG_Event *_Nonnull event)
-{
-	AG_Object *ob = AG_OBJECT_PTR(1);
-	char *path = AG_STRING(2);
-	int loadedTmp = 0;
-	int dataFound;
-	
-	Verbose("Loading <%s> %s from %s...", OBJECT_CLASS(ob)->name,
-	    OBJECT(ob)->name, path);
-
-	/* Load the object temporarily if it is non-resident. */
-	if (!OBJECT_RESIDENT(ob)) {
-		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
-			if (dataFound)
-				goto fail;
-		}
-		loadedTmp = 1;
-		AG_PostEvent(ob, "edit-post-load", NULL);
-	}
-	if (AG_ObjectLoadFromFile(ob, path) == -1) {
-		AG_SetError("%s: %s", ob->name, AG_GetError());
-		goto fail;
-	}
-	Verbose("OK\n");
-
-	if (loadedTmp) {
-		AG_ObjectReset(ob);
-	}
-	return;
-fail:
-	AG_TextMsgFromError();
-}
-#endif
 
 static AG_Window *
 BrowserSaveToDlg(void *p, const char *name)
@@ -360,32 +305,6 @@ BrowserSaveToDlg(void *p, const char *name)
 	AG_WindowShow(win);
 	return (win);
 }
-
-#if 0
-static AG_Window *
-BrowserLoadFromDlg(void *p, const char *name)
-{
-	char ext[AG_OBJECT_HIER_MAX+3];
-	AG_Object *ob = p;
-	AG_Window *win;
-	AG_FileDlg *fd;
-
-	ext[0] = '*';
-	ext[1] = '.';
-	Strlcpy(&ext[2], ob->cls->name, sizeof(ext)-2);
-
-	if ((win = AG_WindowNew(0)) == NULL) {
-		return (NULL);
-	}
-	AG_WindowSetCaption(win, _("Load %s from..."), ob->name);
-	fd = AG_FileDlgNewMRU(win, "object-import",
-	    AG_FILEDLG_CLOSEWIN | AG_FILEDLG_LOAD | AG_FILEDLG_EXPAND);
-	AG_FileDlgAddType(fd, name, ext, ImportObject, "%p", ob);
-	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->cls->name);
-	AG_WindowShow(win);
-	return (win);
-}
-#endif
 
 static void
 ObjectOp(AG_Event *_Nonnull event)
@@ -439,14 +358,9 @@ ObjectOp(AG_Event *_Nonnull event)
 			}
 			break;
 		case OBJEDIT_EXPORT:
-			if (!OBJECT_PERSISTENT(ob)) {
-				AG_SetError(
-				    _("The `%s' object is non-persistent."),
-				    ob->name);
-			} else {
-				win = BrowserSaveToDlg(ob, _("Agar object file"));
-				if (win != NULL)
-					AG_WindowAttach(winParent, win);
+			win = BrowserSaveToDlg(ob, _("Agar object file"));
+			if (win != NULL) {
+				AG_WindowAttach(winParent, win);
 			}
 			break;
 		case OBJEDIT_DUP:
@@ -465,11 +379,6 @@ ObjectOp(AG_Event *_Nonnull event)
 			break;
 		case OBJEDIT_DESTROY:
 			if (it->p1 == vfsRoot) {
-				continue;
-			}
-			if (AG_ObjectInUse(ob)) {
-				AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name,
-				    AG_GetError());
 				continue;
 			}
 			if (ob->flags & AG_OBJECT_INDESTRUCTIBLE) {
@@ -497,9 +406,7 @@ PollObjectsFind(AG_Tlist *_Nonnull tl, AG_Object *_Nonnull pob, int depth)
 	AG_TlistItem *it;
 
 	Strlcpy(label, pob->name, sizeof(label));
-	if (OBJECT_RESIDENT(pob)) {
-		Strlcat(label, _(" (resident)"), sizeof(label));
-	}
+
 	it = AG_TlistAddPtr(tl, NULL, label, pob);
 	it->depth = depth;
 	it->cat = "object";
@@ -628,7 +535,7 @@ static void
 GenNewObjectMenu(AG_MenuItem *_Nonnull mParent, AG_ObjectClass *_Nonnull cls,
     AG_Object *_Nonnull vfsRoot, AG_Window *_Nonnull winParent)
 {
-	AG_ObjectClass *subcls;
+	AG_ObjectClass *Csub;
 	AG_MenuItem *mNode;
 
 	mNode = AG_MenuNode(mParent, cls->name, NULL);
@@ -636,10 +543,10 @@ GenNewObjectMenu(AG_MenuItem *_Nonnull mParent, AG_ObjectClass *_Nonnull cls,
 	AG_MenuAction(mNode, _("Create instance..."), NULL,
 	    CreateObjectDlg, "%p,%p,%p", vfsRoot, cls, winParent);
 
-	if (!TAILQ_EMPTY(&cls->pvt.sub)) {
+	if (!TAILQ_EMPTY(&cls->sub)) {
 		AG_MenuSeparator(mNode);
-		TAILQ_FOREACH(subcls, &cls->pvt.sub, pvt.subclasses)
-			GenNewObjectMenu(mNode, subcls, vfsRoot, winParent);
+		TAILQ_FOREACH(Csub, &cls->sub, subclasses)
+			GenNewObjectMenu(mNode, Csub, vfsRoot, winParent);
 	}
 }
 

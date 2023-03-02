@@ -70,14 +70,15 @@ typedef struct ag_console {
 	AG_TAILQ_HEAD_(ag_console_file) files;   /* Files being monitored */
 } AG_Console;
 
-#define AGCONSOLE(obj)            ((AG_Console *)(obj))
-#define AGCCONSOLE(obj)           ((const AG_Console *)(obj))
-#define AG_CONSOLE_SELF()          AGCONSOLE( AG_OBJECT(0,"AG_Widget:AG_Console:*") )
-#define AG_CONSOLE_PTR(n)          AGCONSOLE( AG_OBJECT((n),"AG_Widget:AG_Console:*") )
-#define AG_CONSOLE_NAMED(n)        AGCONSOLE( AG_OBJECT_NAMED((n),"AG_Widget:AG_Console:*") )
-#define AG_CONST_CONSOLE_SELF()   AGCCONSOLE( AG_CONST_OBJECT(0,"AG_Widget:AG_Console:*") )
-#define AG_CONST_CONSOLE_PTR(n)   AGCCONSOLE( AG_CONST_OBJECT((n),"AG_Widget:AG_Console:*") )
-#define AG_CONST_CONSOLE_NAMED(n) AGCCONSOLE( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Console:*") )
+#define   AGCONSOLE(obj)    ((AG_Console *)(obj))
+#define  AGcCONSOLE(obj)    ((const AG_Console *)(obj))
+#define  AG_CONSOLE_ISA(o)  (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x0D)
+#define  AG_CONSOLE_SELF()    AGCONSOLE(  AG_OBJECT(0,        "AG_Widget:AG_Console:*") )
+#define  AG_CONSOLE_PTR(n)    AGCONSOLE(  AG_OBJECT((n),      "AG_Widget:AG_Console:*") )
+#define  AG_CONSOLE_NAMED(n)  AGCONSOLE(  AG_OBJECT_NAMED((n),"AG_Widget:AG_Console:*") )
+#define AG_cCONSOLE_SELF()   AGcCONSOLE( AG_cOBJECT(0,        "AG_Widget:AG_Console:*") )
+#define AG_cCONSOLE_PTR(n)   AGcCONSOLE( AG_cOBJECT((n),      "AG_Widget:AG_Console:*") )
+#define AG_cCONSOLE_NAMED(n) AGcCONSOLE( AG_cOBJECT_NAMED((n),"AG_Widget:AG_Console:*") )
 
 __BEGIN_DECLS
 extern AG_WidgetClass agConsoleClass;

@@ -639,7 +639,7 @@ AG_WidgetClass agSocketClass = {
 	{
 		"Agar(Widget:Socket)",
 		sizeof(AG_Socket),
-		{ 0,0 },
+		{ 1,0, AGC_SOCKET, 0xE02E },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

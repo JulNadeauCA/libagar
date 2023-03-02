@@ -611,7 +611,7 @@ AG_WidgetClass agPaneClass = {
 	{
 		"Agar(Widget:Pane)",
 		sizeof(AG_Pane),
-		{ 0,0 },
+		{ 1,0, AGC_PANE, 0xE028 },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

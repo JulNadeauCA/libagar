@@ -54,7 +54,15 @@ typedef struct ag_touch_event {
 	};
 } AG_TouchEvent;
 
-#define AGINPUTDEV(obj) ((AG_InputDevice *)(obj))
+#define   AGINPUTDEVICE(obj)    ((AG_InputDevice *)(obj))
+#define  AGcINPUTDEVICE(obj)    ((const AG_InputDevice *)(obj))
+#define  AG_INPUTDEVICE_ISA(o) (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x06)
+#define  AG_INPUTDEVICE_SELF()    AGINPUTDEVICE(  AG_OBJECT(0,         "AG_InputDevice:*") )
+#define  AG_INPUTDEVICE_PTR(n)    AGINPUTDEVICE(  AG_OBJECT((n),       "AG_InputDevice:*") )
+#define  AG_INPUTDEVICE_NAMED(n)  AGINPUTDEVICE(  AG_OBJECT_NAMED((n), "AG_InputDevice:*") )
+#define AG_cINPUTDEVICE_SELF()   AGcINPUTDEVICE( AG_cOBJECT(0,         "AG_InputDevice:*") )
+#define AG_cINPUTDEVICE_PTR(n)   AGcINPUTDEVICE( AG_cOBJECT((n),       "AG_InputDevice:*") )
+#define AG_cINPUTDEVICE_NAMED(n) AGcINPUTDEVICE( AG_cOBJECT_NAMED((n), "AG_InputDevice:*") )
 
 __BEGIN_DECLS
 extern AG_ObjectClass agInputDeviceClass;

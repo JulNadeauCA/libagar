@@ -425,7 +425,7 @@ static void
 SelectedFace(AG_Event *_Nonnull event)
 {
 	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(1);
-	AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	AG_TlistItem *it = AG_TLISTITEM_PTR(2);
 	AG_Font *font;
 
 	Strlcpy(fs->curFace, it->text, sizeof(fs->curFace));
@@ -440,7 +440,7 @@ static void
 SelectedStyle(AG_Event *_Nonnull event)
 {
 	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(1);
-	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	const AG_TlistItem *it = AG_TLISTITEM_PTR(2);
 	AG_Font *font;
 
 	fs->curStyle = it->u;
@@ -453,7 +453,7 @@ static void
 SelectedSize(AG_Event *_Nonnull event)
 {
 	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(1);
-	const AG_TlistItem *it = AG_TLIST_ITEM_PTR(2);
+	const AG_TlistItem *it = AG_TLISTITEM_PTR(2);
 	AG_Font *font;
 
 	fs->curSize = (float)strtod(it->text, NULL);
@@ -1049,7 +1049,7 @@ AG_WidgetClass agFontSelectorClass = {
 	{
 		"Agar(Widget:FontSelector)",
 		sizeof(AG_FontSelector),
-		{ 0,0 },
+		{ 1,0, AGC_FONT_SELECTOR, 0xE01B },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

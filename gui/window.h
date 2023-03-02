@@ -285,24 +285,24 @@ void AG_WindowProcessQueued(void);
 
 AG_Window *AG_SettingsWindow(void);
 
-#define AGWINDOW(p)              ((AG_Window *)(p))
-#define AGCWINDOW(p)             ((const AG_Window *)(p))
-#define AG_WINDOW_SELF()          AGWINDOW( AG_OBJECT(0,"AG_Widget:AG_Window:*") )
-#define AG_WINDOW_PTR(n)          AGWINDOW( AG_OBJECT((n),"AG_Widget:AG_Window:*") )
-#define AG_WINDOW_NAMED(n)        AGWINDOW( AG_OBJECT_NAMED((n),"AG_Widget:AG_Window:*") )
-#define AG_CONST_WINDOW_SELF()   AGCWINDOW( AG_CONST_OBJECT(0,"AG_Widget:AG_Window:*") )
-#define AG_CONST_WINDOW_PTR(n)   AGCWINDOW( AG_CONST_OBJECT((n),"AG_Widget:AG_Window:*") )
-#define AG_CONST_WINDOW_NAMED(n) AGCWINDOW( AG_CONST_OBJECT_NAMED((n),"AG_Widget:AG_Window:*") )
+#define   AGWINDOW(p)        ((AG_Window *)(p))
+#define  AGcWINDOW(p)        ((const AG_Window *)(p))
+#define  AG_WINDOW_ISA(o)    (AGOBJECT(o)->cid == AGC_WINDOW)
+#define  AG_WINDOW_SELF()    AGWINDOW(  AG_OBJECT(0,         "AG_Widget:AG_Window") )
+#define  AG_WINDOW_PTR(n)    AGWINDOW(  AG_OBJECT((n),       "AG_Widget:AG_Window") )
+#define  AG_WINDOW_NAMED(n)  AGWINDOW(  AG_OBJECT_NAMED((n), "AG_Widget:AG_Window") )
+#define AG_cWINDOW_SELF()   AGcWINDOW( AG_cOBJECT(0,         "AG_Widget:AG_Window") )
+#define AG_cWINDOW_PTR(n)   AGcWINDOW( AG_cOBJECT((n),       "AG_Widget:AG_Window") )
+#define AG_cWINDOW_NAMED(n) AGcWINDOW( AG_cOBJECT_NAMED((n), "AG_Widget:AG_Window") )
 
-/* Canned fn,args arguments to AG_{Add,Set,Post}Event(3). */
+/* Canned "Window Detach", "Window Hide" and "Window Close" event handlers. */
 #define AGWINDETACH(win) AG_WindowDetachGenEv, "%p", (win)
 #define AGWINHIDE(win)   AG_WindowHideGenEv, "%p", (win)
 #define AGWINCLOSE(win)  AG_WindowCloseGenEv, "%p", (win)
 
-/* Iterators over direct descendants widgets. */
+/* Iterators */
 #define AG_FOREACH_WINDOW(var, ob) \
 	AGOBJECT_FOREACH_CHILD(var, ob, ag_window)
-
 #define AG_FOREACH_WINDOW_REVERSE(var, ob) \
 	AGOBJECT_FOREACH_CHILD_REVERSE(var, ob, ag_window)
 
@@ -314,13 +314,12 @@ AG_Window *AG_SettingsWindow(void);
 # define AG_WindowSetPaddingRight(w,p)  AG_WindowSetPadding((w),-1,(p),-1,-1)
 # define AG_WindowSetPaddingTop(w,p)    AG_WindowSetPadding((w),-1,-1,(p),-1)
 # define AG_WindowSetPaddingBottom(w,p) AG_WindowSetPadding((w),-1,-1,-1,(p))
- 
 void AG_WindowSetSpacing(AG_Window *_Nonnull, int) DEPRECATED_ATTRIBUTE;
 void AG_WindowSetPadding(AG_Window *_Nonnull, int,int,int,int) DEPRECATED_ATTRIBUTE;
 void AG_ViewAttach(AG_Window *_Nonnull) DEPRECATED_ATTRIBUTE;
 void AG_ViewDetach(AG_Window *_Nonnull) DEPRECATED_ATTRIBUTE;
 void AG_WindowSetVisibility(AG_Window *_Nonnull, int) DEPRECATED_ATTRIBUTE;
-int AG_WindowIntersect(AG_DriverSw *_Nonnull, int, int) DEPRECATED_ATTRIBUTE _Pure_Attribute;
+int  AG_WindowIntersect(AG_DriverSw *_Nonnull, int, int) DEPRECATED_ATTRIBUTE _Pure_Attribute;
 #endif /* AG_LEGACY */
 __END_DECLS
 

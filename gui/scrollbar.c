@@ -1134,16 +1134,11 @@ Edit(void *_Nonnull obj)
 	return (box);
 }
 
-#ifdef AG_LEGACY
-void AG_ScrollbarSetControlLength(AG_Scrollbar *_Nonnull sb, int len) { }
-int  AG_ScrollbarVisible(AG_Scrollbar *_Nonnull sb) { return AG_ScrollbarIsUseful(sb); }
-#endif
-
 AG_WidgetClass agScrollbarClass = {
 	{
 		"Agar(Widget:Scrollbar)",
 		sizeof(AG_Scrollbar),
-		{ 0,0 },
+		{ 1,0, AGC_SCROLLBAR, 0xE02B },
 		Init,
 		NULL,		/* reset */
 		NULL,		/* destroy */

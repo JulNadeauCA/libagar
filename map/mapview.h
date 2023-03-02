@@ -106,14 +106,15 @@ typedef struct map_view {
 	AG_SLIST_HEAD_(map_view_draw_cb) draw_cbs;	/* Post-draw callbacks */
 } MAP_View;
 
-#define MAPVIEW(obj)            ((MAP_View *)(obj))
-#define MAPCVIEW(obj)           ((const MAP_View *)(obj))
-#define MAP_VIEW_SELF()          MAPVIEW( AG_OBJECT(0,"AG_Widget:MAP_View:*") )
-#define MAP_VIEW_PTR(n)          MAPVIEW( AG_OBJECT((n),"AG_Widget:MAP_View:*") )
-#define MAP_VIEW_NAMED(n)        MAPVIEW( AG_OBJECT_NAMED((n),"AG_Widget:MAP_View:*") )
-#define MAP_CONST_VIEW_SELF()   MAPCVIEW( AG_CONST_OBJECT(0,"AG_Widget:MAP_View:*") )
-#define MAP_CONST_VIEW_PTR(n)   MAPCVIEW( AG_CONST_OBJECT((n),"AG_Widget:MAP_View:*") )
-#define MAP_CONST_VIEW_NAMED(n) MAPCVIEW( AG_CONST_OBJECT_NAMED((n),"AG_Widget:MAP_View:*") )
+#define   MAPVIEW(o)        ((MAP_View *)(o))
+#define  MAPcVIEW(o)        ((const MAP_View *)(o))
+#define  MAP_VIEW_ISA(o)    (((AGOBJECT(o)->cid & 0xff000000) >> 24) == 0x31)
+#define  MAP_VIEW_SELF()    MAPVIEW(  AG_OBJECT(0,         "AG_Widget:MAP_View:*") )
+#define  MAP_VIEW_PTR(n)    MAPVIEW(  AG_OBJECT((n),       "AG_Widget:MAP_View:*") )
+#define  MAP_VIEW_NAMED(n)  MAPVIEW(  AG_OBJECT_NAMED((n), "AG_Widget:MAP_View:*") )
+#define MAP_cVIEW_SELF()   MAPcVIEW( AG_cOBJECT(0,         "AG_Widget:MAP_View:*") )
+#define MAP_cVIEW_PTR(n)   MAPcVIEW( AG_cOBJECT((n),       "AG_Widget:MAP_View:*") )
+#define MAP_cVIEW_NAMED(n) MAPcVIEW( AG_cOBJECT_NAMED((n), "AG_Widget:MAP_View:*") )
 
 #define MAP_CAM(mv)	(mv)->map->cameras[(mv)->cam]
 #define MAP_ZOOM(mv)	MAP_CAM(mv).zoom
