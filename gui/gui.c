@@ -218,7 +218,7 @@ AG_InitGUIGlobals(void)
 {
 	void **cl;
 	AG_DriverClass **pd;
-	Uint i;
+	int i;
 
 	if (initedGlobals++ > 0) {
 		return (0);
@@ -231,6 +231,7 @@ AG_InitGUIGlobals(void)
 	AG_InitGlobalKeys();
 	AG_EditableInitClipboards();
 
+	/* Set a default recommended surface format. */
 	if ((agSurfaceFmt = TryMalloc(sizeof(AG_PixelFormat))) == NULL) {
 		return (-1);
 	}
@@ -247,7 +248,18 @@ AG_InitGUIGlobals(void)
 	    0xff000000
 #endif
 	);
-	
+
+	/* Initialize the blitter tables. */
+	/* TODO mprotect() */
+	for (i = 0; i < AG_SURFACE_MODE_LAST; i++) {
+		const int count = agLowerBlits_Std_Count[i];
+		const AG_Size size = (count * sizeof(AG_LowerBlit));
+
+		agLowerBlits[i] = Malloc(size);
+		memcpy(agLowerBlits[i], agLowerBlits_Std[i], size);
+		agLowerBlits_Count[i] = count;
+	}
+
 	agGUI = 1;
 	agRenderingContext = 0;
 
@@ -311,6 +323,9 @@ AG_DestroyGUIGlobals(void)
 	AG_PixelFormatFree(agSurfaceFmt);
 	free(agSurfaceFmt);
 	agSurfaceFmt = NULL;
+
+	for (i = 0; i < AG_SURFACE_MODE_LAST; i++)
+		free(agLowerBlits[i]);
 
 	AG_EditableDestroyClipboards();
 	AG_DestroyGlobalKeys();

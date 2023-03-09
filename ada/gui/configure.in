@@ -8,8 +8,8 @@
 #
 
 package("Agar-Ada-GUI")
-version("1.6.0")
-release("Nullability Complete")
+version("1.7.0")
+release("Ancient Egypt")
 
 config_guess("../../mk/config.guess")
 

@@ -947,13 +947,13 @@ echo '#ifndef PACKAGE' >$bb_o
 echo "#define PACKAGE \"$PACKAGE\"" >>$bb_o
 echo '#endif' >>$bb_o
 echo "hdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
-VERSION="1.6.0"
+VERSION="1.7.0"
 bb_o=$bb_incdir/version.h
 echo '#ifndef VERSION' >$bb_o
 echo "#define VERSION \"$VERSION\"" >>$bb_o
 echo '#endif' >>$bb_o
 echo "hdefs[\"VERSION\"] = \"$VERSION\"" >>configure.lua
-RELEASE="Nullability Complete"
+RELEASE="Ancient Egypt"
 bb_o=$bb_incdir/release.h
 echo '#ifndef RELEASE' >$bb_o
 echo "#define RELEASE \"$RELEASE\"" >>$bb_o
@@ -2897,6 +2897,7 @@ static const struct {
 	{ "AG_COLOR_FIRST", AG_COLOR_FIRST },
 	{ "AG_COLOR_LAST", AG_COLOR_LAST },
 	{ "AG_GRAPH_LABEL_MAX", AG_GRAPH_LABEL_MAX },
+	{ "AG_FONT_NAME_MAX", AG_FONT_NAME_MAX },
 	{ "AG_LABEL_MAX", AG_LABEL_MAX },
 	{ "AG_LABEL_MAX_POLLPTRS", AG_LABEL_MAX_POLLPTRS },
 	{ "AG_NOTEBOOK_LABEL_MAX", AG_NOTEBOOK_LABEL_MAX },

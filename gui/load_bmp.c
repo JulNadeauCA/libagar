@@ -377,20 +377,20 @@ AG_ReadSurfaceFromBMP(AG_DataSource *_Nonnull ds)
 	case 4:
 	case 8:
 		S = AG_SurfaceIndexed(biWidth, biHeight, biBitCount, 0);
-		Debug2(NULL, "BMP image (%ux%u; %u-bpp; INDEXED)\n",
+		Debug2(NULL, "Loading BMP (%ux%u; %u-bpp; INDEXED)\n",
 		    biWidth, biHeight, biBitCount);
 		break;
 	default:
 		S = AG_SurfaceRGBA(biWidth, biHeight, biBitCount, 0,
 		    Rmask, Gmask, Bmask, Amask);
 #if AG_MODEL == AG_LARGE
-		Debug2(NULL, "BMP image (%ux%u; %u-bpp; "
+		Debug2(NULL, "Loading BMP (%ux%u; %u-bpp; "
 		            "RGBA %08lx,%08lx,%08lx,%08lx)\n",
 			    biWidth, biHeight, biBitCount,
 			    (Ulong)Rmask, (Ulong)Gmask, (Ulong)Bmask,
 			    (Ulong)Amask);
 #else
-		Debug2(NULL, "BMP image (%ux%u; %u-bpp; "
+		Debug2(NULL, "Loading BMP (%ux%u; %u-bpp; "
 		            "RGBA %08x,%08x,%08x,%08x)\n",
 			    biWidth, biHeight, biBitCount,
 			    Rmask, Gmask, Bmask, Amask);

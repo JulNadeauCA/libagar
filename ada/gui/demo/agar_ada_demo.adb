@@ -61,9 +61,7 @@ begin
       (Integer'Image(Major) & "." &
        Integer'Image(Minor) & "." &
        Integer'Image(Patch));
-#if AG_MODEL = AG_SMALL
-    T_IO.Put_Line("Memory model: SMALL");
-elsif AG_MODEL = AG_MEDIUM
+#if AG_MODEL = AG_MEDIUM
     T_IO.Put_Line("Memory model: MEDIUM");
 #elsif AG_MODEL = AG_LARGE
     T_IO.Put_Line("Memory model: LARGE");
@@ -424,20 +422,25 @@ elsif AG_MODEL = AG_MEDIUM
       if Denis /= null then
         T_IO.Put_Line
           ("Denis W:" & C.unsigned'Image(Denis.W) &
-	         " H:" & C.unsigned'Image(Denis.H) &
-	         " Pitch:" & C.unsigned'Image(Denis.Pitch) &
-	         " Clip_X:" & C.int'Image(Denis.Clip_Rect.X) &
-	         " Clip_Y:" & C.int'Image(Denis.Clip_Rect.Y) &
-	         " Clip_W:" & C.int'Image(Denis.Clip_Rect.W) &
-	         " Clip_H:" & C.int'Image(Denis.Clip_Rect.H) &
-	         " Padding:" & C.unsigned'Image(Denis.Padding));
+	        " H:" & C.unsigned'Image(Denis.H) &
+	        " Pitch:" & C.unsigned'Image(Denis.Pitch) &
+	        " Clip_X:" & C.int'Image(Denis.Clip_Rect.X) &
+	        " Clip_Y:" & C.int'Image(Denis.Clip_Rect.Y) &
+	        " Clip_W:" & C.int'Image(Denis.Clip_Rect.W) &
+	        " Clip_H:" & C.int'Image(Denis.Clip_Rect.H) &
+	        " Padding:" & C.unsigned'Image(Denis.Padding));
         for Y in 1 .. 50 loop
           Degs := Degs + 30.0;
 
           Set_Alpha
             (Surface => Denis,
              Alpha   => Alpha);       -- Per-surface alpha
+
+#if AG_MODEL = AG_LARGE
+          Alpha := Alpha + 3084;
+#else
           Alpha := Alpha + 12;
+#end if;
 
           -- Render to target coordinates under Surf.
           for Z in 1 .. 3 loop

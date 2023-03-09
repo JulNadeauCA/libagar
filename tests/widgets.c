@@ -261,66 +261,47 @@ TestGUI(void *obj, AG_Window *win)
 /*	AG_PaneMoveDividerPct(hPane, 45); */
 	div = hPane->div[0];
 
-	/* Load a Windows bitmap file and display it in an AG_Pixmap(3). */
-	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar-1.bmp", path, sizeof(path)) == 0) {
-		if ((S = AG_SurfaceFromBMP(path)) == NULL) {
-			S = AG_TextRender(AG_GetError());
-		}
-		AG_PixmapFromSurface(div, AG_PIXMAP_HFILL | AG_PIXMAP_RESCALE, S);
-		AG_SurfaceFree(S);
-	} else {
-		S = AG_TextRender(AG_GetError());
-		AG_PixmapFromSurface(div, 0, S);
-		AG_SurfaceFree(S);
-	}
-
-	/* Load a 16-bit/color PNG file and display it in an AG_Pixmap(3). */
-#if AG_MODEL == AG_LARGE
-	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar64.png", path, sizeof(path)) == 0) {
-		if ((S = AG_SurfaceFromPNG(path)) == NULL) {
-			S = AG_TextRender(AG_GetError());
-		} else {
-#if 0
-			int x,y;
-
-/*			S->flags |= AG_SURFACE_TRACE; */
-
-			/*
-			 * Extract components from surface-encoded pixels
-			 * and re-encode the pixels from the extracted
-			 * components.
-			 * 
-			 * If pixel operations are working as expected on
-			 * 16-bit/color surfaces, the following code should be
-			 * a no-op and the original image appear unchanged.
-			 */
-			for (y = 0; y < S->h; y++) {
-				for (x = 0; x < S->w; x++) {
-					AG_Pixel px = AG_SurfaceGet(S, x,y);
-					AG_Color c;
-
-					AG_GetColor(&c, px, &S->format);
-#if 0
-					if (c.a > 0) {
-						c.r = AG_COLOR_LAST - (AG_Component)(((float)x / (float)S->w) * AG_COLOR_LASTD);
-						c.g = AG_COLOR_LAST - (AG_Component)(((float)x / (float)S->w) * AG_COLOR_LASTD);
-						c.b = AG_COLOR_LAST - (AG_Component)(((float)x / (float)S->w) * AG_COLOR_LASTD);
-					}
-#endif
-					AG_SurfacePut(S, x,y,
-					    AG_MapPixel(&S->format, &c));
-				}
+	hBox = AG_BoxNewHoriz(div, AG_BOX_HFILL);
+	{
+		/* Load an Indexed PNG file and display it in an AG_Pixmap(3). */
+		if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "parrot8.png",
+		    path, sizeof(path)) == 0) {
+			if ((S = AG_SurfaceFromPNG(path)) == NULL) {
+				S = AG_TextRender(AG_GetError());
+				AG_PixmapFromSurface(hBox, 0, S);
+				AG_SurfaceFree(S);
 			}
-#endif
+			AG_PixmapFromSurface(hBox, AG_PIXMAP_RESCALE, S);
+			AG_SurfaceFree(S);
 		}
-		AG_PixmapFromSurface(div, AG_PIXMAP_HFILL | AG_PIXMAP_RESCALE, S);
-		AG_SurfaceFree(S);
-	} else {
-		S = AG_TextRender(AG_GetError());
-		AG_PixmapFromSurface(div, 0, S);
-		AG_SurfaceFree(S);
+
+		/* Load a 32bpp BMP file and display it in an AG_Pixmap(3). */
+		if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar-1.bmp",
+		    path, sizeof(path)) == 0) {
+			if ((S = AG_SurfaceFromBMP(path)) == NULL) {
+				S = AG_TextRender(AG_GetError());
+			}
+			AG_PixmapFromSurface(hBox, AG_PIXMAP_RESCALE, S);
+			AG_SurfaceFree(S);
+		} else {
+			S = AG_TextRender(AG_GetError());
+			AG_PixmapFromSurface(hBox, 0, S);
+			AG_SurfaceFree(S);
+		}
+#if AG_MODEL == AG_LARGE
+		/* Load a 16bpc PNG file and display it in an AG_Pixmap(3). */
+		if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "agar64.png",
+		    path, sizeof(path)) == 0) {
+			if ((S = AG_SurfaceFromPNG(path)) == NULL) {
+				S = AG_TextRender(AG_GetError());
+				AG_PixmapFromSurface(hBox, 0, S);
+				AG_SurfaceFree(S);
+			}
+			AG_PixmapFromSurface(hBox, AG_PIXMAP_RESCALE, S);
+			AG_SurfaceFree(S);
+		}
+#endif
 	}
-#endif /* AG_LARGE */
 
 	AG_SeparatorNewHoriz(div);
 

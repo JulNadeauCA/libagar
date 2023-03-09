@@ -24,6 +24,7 @@ package Agar.Text is
   use type C.unsigned;
 
   -- Limits --
+  FONT_NAME_MAX       : constant Natural := $AG_FONT_NAME_MAX;
   TEXT_STATES_MAX     : constant C.unsigned := $AG_TEXT_STATES_MAX;
 
   -- Agar Font style flags --
@@ -166,8 +167,7 @@ package Agar.Text is
   end record
     with Convention => C;
 
-  type Font_Name is array (1 .. Agar.Object.NAME_MAX) of aliased c.char
-      with Convention => C;
+  type Font_Name is array (1 .. FONT_NAME_MAX) of aliased c.char with Convention => C;
   type Font_Family_Style_Access is access all C.unsigned with Convention => C;
   subtype Font_Family_Style_not_null_Access is not null Font_Family_Style_Access;
 

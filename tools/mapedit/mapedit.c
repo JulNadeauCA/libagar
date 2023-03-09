@@ -263,7 +263,7 @@ SaveMap(AG_Event *event)
 static void
 FileMenu(AG_Event *event)
 {
-	AG_MenuItem *m = AG_MENU_ITEM_PTR(1);
+	AG_MenuItem *m = AG_MENUITEM_PTR(1);
 
 	AG_MenuActionKb(m, _("New"), agIconDoc.s,
 	    AG_KEY_N, AG_KEYMOD_CTRL,
@@ -293,7 +293,7 @@ Undo(AG_Event *event)
 static void
 EditMenu(AG_Event *event)
 {
-	AG_MenuItem *m = AG_MENU_ITEM_PTR(1);
+	AG_MenuItem *m = AG_MENUITEM_PTR(1);
 	
 	if (mapFocused == NULL) { AG_MenuDisable(m); }
 

@@ -44,7 +44,9 @@ typedef struct ag_test_instance {
 
 typedef struct ag_benchmark_fn {
 	char *_Nonnull name;
-	void (*_Nonnull run)(void *_Nonnull ti);
+	void (*_Nonnull run)(void *_Nonnull ti, int arg);
+	int arg;
+	Uint32 _pad;
 #if defined(AG_HAVE_64BIT)
 	Uint64 clksMin, clksAvg, clksMax;
 #else

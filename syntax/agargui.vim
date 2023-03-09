@@ -3,7 +3,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agargui.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 March 1
+" Last Change:  2023 March 7
 
 " Agar-GUI (https://libagar.org/)
 if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
@@ -503,8 +503,12 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cType AG_SurfaceMode AG_GrayscaleMode AG_Palette AG_PixelFormat 
   syn keyword cType AG_AnimDispose AG_AnimFrameType AG_AnimFrame AG_SurfaceGuide
   syn keyword cType AG_Surface AG_AnimState AG_TextureEnvMode AG_AlphaFn
+  syn keyword cType AG_LowerBlit AG_LowerBlitFn
   syn keyword cConstant AG_SURFACE_PACKED AG_SURFACE_INDEXED AG_SURFACE_GRAYSCALE
+  syn keyword cConstant AG_SURFACE_MODE_LAST AG_SURFACE_ANY
   syn keyword cConstant AG_GRAYSCALE_BT709 AG_GRAYSCALE_RMY AG_GRAYSCALE_Y
+  syn keyword cConstant AG_LOWERBLIT_PSALPHA_SRC AG_LOWERBLIT_PSALPHA_DST
+  syn keyword cConstant AG_LOWERBLIT_COLORKEY_SRC AG_LOWERBLIT_COLORKEY_DST
   syn keyword cConstant AG_DISPOSE_UNSPECIFIED AG_DISPOSE_DO_NOT
   syn keyword cConstant AG_DISPOSE_BACKGROUND AG_DISPOSE_PREVIOUS
   syn keyword cConstant AG_ANIM_FRAME_NONE AG_ANIM_FRAME_PIXELS

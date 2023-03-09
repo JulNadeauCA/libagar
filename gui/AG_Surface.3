@@ -41,17 +41,19 @@ structure describes a graphics surface in one of:
 .Bl -tag -width "Grayscale Mode "
 .It Packed Mode
 .\" SYNC packed
-8- or 16-bit RGBA components packed into 8-, 16-, 24-, 32-, 48- or 64-bit
+8- or 16-bit RGBA components packed into 8-, 16-, 24-, 32-, 40-, 48- or 64-bit
 wide pixels.
 Components may be packed in any order (RGBA, BGRA, etc).
 The extraction bitmasks and shifts are part of the surface format.
 .It Indexed Mode
 .\" SYNC indexed
 1-, 2-, 4- or 8-bit per pixel palettized access mode.
-The palette is considered part of the surface format.
+The minimum pitch is 1 byte.
+The palette is part of the surface format.
 .It Grayscale Mode
 .\" SYNC grayscale
 16- or 32-bit grayscale (with alpha) packed into 32- or 64-bit wide pixels.
+The choice of standard for conversion to RGB is part of the surface format.
 .El
 .Pp
 Image transfers (blits) are supported between all modes, and should work
@@ -65,7 +67,7 @@ then alpha blending will be performed.
 Colorkeying (colorkey transparency) is also supported.
 If the source surface in a blit has a colorkey defined, then the blit will
 treat matching pixels as fully transparent and skip over them.
-The colorkey value is considered part of the surface format.
+The colorkey value is part of the surface format.
 .Pp
 Surfaces define a clipping rectangle (which spans the entire surface
 by default).
@@ -84,16 +86,16 @@ typography and other application-specific purposes).
 .Fn AG_SurfaceEmpty "void"
 .Pp
 .Ft "AG_Surface *"
-.Fn AG_SurfaceIndexed "Uint w" "Uint h" "int bitsPerPixel" "Uint flags"
+.Fn AG_SurfaceIndexed "Uint w" "Uint h" "int BitsPerPixel" "Uint flags"
 .Pp
 .Ft "AG_Surface *"
-.Fn AG_SurfaceGrayscale "Uint w" "Uint h" "int bitsPerPixel" "Uint flags"
+.Fn AG_SurfaceGrayscale "Uint w" "Uint h" "int BitsPerPixel" "Uint flags"
 .Pp
 .Ft "AG_Surface *"
-.Fn AG_SurfaceRGB "Uint w" "Uint h" "int bitsPerPixel" "Uint flags" "Uint32 Rmask" "Uint32 Gmask" "Uint32 Bmask"
+.Fn AG_SurfaceRGB "Uint w" "Uint h" "int BitsPerPixel" "Uint flags" "Uint32 Rmask" "Uint32 Gmask" "Uint32 Bmask"
 .Pp
 .Ft "AG_Surface *"
-.Fn AG_SurfaceRGBA "Uint w" "Uint h" "int bitsPerPixel" "Uint flags" "Uint32 Rmask" "Uint32 Gmask" "Uint32 Bmask" "Uint32 Amask"
+.Fn AG_SurfaceRGBA "Uint w" "Uint h" "int BitsPerPixel" "Uint flags" "Uint32 Rmask" "Uint32 Gmask" "Uint32 Bmask" "Uint32 Amask"
 .Pp
 .Ft "AG_Surface *"
 .Fn AG_SurfaceStdRGB "Uint w" "Uint h"
@@ -102,10 +104,10 @@ typography and other application-specific purposes).
 .Fn AG_SurfaceStdRGBA "Uint w" "Uint h"
 .Pp
 .Ft "AG_Surface *"
-.Fn AG_SurfaceFromPixelsRGB "void *pixels" "Uint w" "Uint h" "int bitsPerPixel" "Uint32 Rmask" "Uint32 Gmask" "Uint32 Bmask"
+.Fn AG_SurfaceFromPixelsRGB "void *pixels" "Uint w" "Uint h" "int BitsPerPixel" "Uint32 Rmask" "Uint32 Gmask" "Uint32 Bmask"
 .Pp
 .Ft "AG_Surface *"
-.Fn AG_SurfaceFromPixelsRGBA "void *pixels" "Uint w" "Uint h" "int bitsPerPixel" "Uint32 Rmask" "Uint32 Gmask" "Uint32 Bmask" "Uint32 Amask"
+.Fn AG_SurfaceFromPixelsRGBA "void *pixels" "Uint w" "Uint h" "int BitsPerPixel" "Uint32 Rmask" "Uint32 Gmask" "Uint32 Bmask" "Uint32 Amask"
 .Pp
 .Ft "AG_Surface *"
 .Fn AG_SurfaceFromFile "const char *path"
@@ -146,12 +148,6 @@ typography and other application-specific purposes).
 .Ft "void"
 .Fn AG_SurfaceSetPalette "AG_Surface *surface" "const AG_Palette *palette"
 .Pp
-.Ft "void"
-.Fn AG_SurfaceCopyPixels "AG_Surface *surface" "const Uint8 *src"
-.Pp
-.Ft "void"
-.Fn AG_SurfaceSetPixels "AG_Surface *surface" "const AG_Color *color"
-.Pp
 .Ft "int"
 .Fn AG_SurfaceResize "AG_Surface *surface" "Uint w" "Uint h"
 .Pp
@@ -178,11 +174,12 @@ is NULL, the
 field is left uninitialized (the caller can later use
 .Fn AG_PixelFormat*
 to initialize it).
-If the global
+If the global variable
 .Va agSurfaceFmt
-is passed under
-.Va format ,
-then Agar will select the "best" available mode closest to the native display.
+is passed as
+.Va format
+then the "best" available mode (the one closest to the native display) will
+be selected.
 Acceptable values for
 .Fa type
 include:
@@ -190,7 +187,7 @@ include:
 .Bl -tag -width "AG_SURFACE_GRAYSCALE "
 .It AG_SURFACE_PACKED
 .\" SYNC packed
-8- or 16-bit RGBA components packed into 8-, 16-, 24-, 32-, 48- or 64-bit
+8- or 16-bit RGBA components packed into 8-, 16-, 24-, 32-, 40-, 48- or 64-bit
 wide pixels.
 .It AG_SURFACE_INDEXED
 .\" SYNC indexed
@@ -237,9 +234,9 @@ by
 .Fa h
 pixels using an indexed pixel format with palette.
 The size of this palette is determined by
-.Fa bitsPerPixel .
-Entries in the palette are initialized to black except in monochrome (1-bpp)
-mode where colors (0,1) are initialized to (white,black).
+.Fa BitsPerPixel .
+The palette is initialized to a standard palette for 1/2/4-bpp modes.
+For 8-bpp mode, the initial palette is left uninitialized.
 .Pp
 .Fn AG_SurfaceGrayscale
 creates a new surface of
@@ -257,7 +254,7 @@ by
 .Fa h
 pixels using the specified packed-pixel format.
 In memory, pixels are encoded as contiguous blocks of
-.Fa bitsPerPixel
+.Fa BitsPerPixel
 bits, and the bitmasks specified in
 .Fa [RGB]mask
 are used to retrieve the individual 8-bit red, green, blue and alpha components.
@@ -265,9 +262,9 @@ are used to retrieve the individual 8-bit red, green, blue and alpha components.
 .Fn AG_SurfaceStdRGB
 and
 .Fn AG_SurfaceStdRGBA
-create a new 32-bit packed-pixel surface in an optimal format for blitting
-to the display (for framebuffer drivers), or for transferring to a texture
-(for OpenGL drivers).
+create a new packed-pixel surface in the "best" format for blitting directly
+to the display (for framebuffer based drivers) or for transferring to a texture
+unit (for OpenGL based drivers).
 .Pp
 .Fn AG_SurfaceFromPixelsRGB
 and
@@ -321,18 +318,6 @@ given array of
 .Fn AG_SurfaceSetPalette
 sets the entire colormap of a palettized surface from the given
 .Ft AG_Palette .
-.Pp
-.Fn AG_SurfaceCopyPixels
-copies pixel data from
-.Fa src
-to the surface.
-The pixel data is copied as-is without any conversion and is assumed
-to be in a format compatible with that of
-.Fa surface .
-.Pp
-.Fn AG_SurfaceSetPixels
-clears the surface with pixels of the given
-.Fa color .
 .Pp
 .Fn AG_SurfaceResize
 attempts to resize a surface to the specified dimensions.
@@ -526,18 +511,24 @@ The
 structure describes how pixels are encoded in memory:
 .Bd -literal
 .\" SYNTAX(c)
-                               /* Bits per pixel: | 1 2 4 8 16 24 32 64 |*/
-typedef enum ag_surface_mode { /* --------------- |---------------------|*/
-	AG_SURFACE_PACKED,     /* Packed RGB(A)   |     S   S  M  M  L  |*/
-	AG_SURFACE_INDEXED,    /* Palettized      | S S S S             |*/
-	AG_SURFACE_GRAYSCALE   /* Grayscale+Alpha |            M  M  L  |*/
+/*                     Bits/Pixel
+ *      Mode | 1 2 4 8 16 24 32 40 48 64 |
+ *     ----- |---------------------------|
+ *    PACKED |         M  M  M  L  L  L  |
+ *   INDEXED | M M M M                   |
+ * GRAYSCALE |         M  M  M        L  |
+ */
+typedef enum ag_surface_mode { 
+	AG_SURFACE_PACKED,     
+	AG_SURFACE_INDEXED,    
+	AG_SURFACE_GRAYSCALE   
 } AG_SurfaceMode;
 
 typedef struct ag_pixel_format {
 	AG_SurfaceMode mode;     /* Image type */
 	int BitsPerPixel;        /* Depth (in bits/pixel) */
 	int BytesPerPixel;       /* Depth (in bytes/pixel) */
-	int PixelsPerByte;       /* Pixels per byte (or 0 if >8bpp) */
+	int PixelsPerByteShift;  /* Shift to divide by pixels/byte */
 	union {
 		AG_Palette *palette;       /* Colormap for Indexed */
 		AG_GrayscaleMode graymode; /* Grayscale-RGB method */
@@ -564,14 +555,20 @@ typedef struct ag_pixel_format {
 .Ft "int"
 .Fn AG_PixelFormatIsSupported "AG_SurfaceMode mode" "int BitsPerPixel"
 .Pp
-.Ft "AG_PixelFormat *"
-.Fn AG_PixelFormatRGB "Uint8 bitsPerPixel" "AG_Pixel Rmask" "AG_Pixel Gmask" "AG_Pixel Bmask"
+.Ft "AG_Pixel"
+.Fn AG_PixelFormatMaximum "const AG_PixelFormat *pf"
 .Pp
-.Ft "AG_PixelFormat *"
-.Fn AG_PixelFormatRGBA "Uint8 bitsPerPixel" "AG_Pixel Rmask" "AG_Pixel Gmask" "AG_Pixel Bmask" "AG_Pixel Amask"
+.Ft "void"
+.Fn AG_PixelFormatRGB "AG_PixelFormat *pf" "int BitsPerPixel" "AG_Pixel Rmask" "AG_Pixel Gmask" "AG_Pixel Bmask"
 .Pp
-.Ft "AG_PixelFormat *"
-.Fn AG_PixelFormatIndexed "Uint8 bitsPerPixel"
+.Ft "void"
+.Fn AG_PixelFormatRGBA "AG_PixelFormat *pf" "int BitsPerPixel" "AG_Pixel Rmask" "AG_Pixel Gmask" "AG_Pixel Bmask" "AG_Pixel Amask"
+.Pp
+.Ft "void"
+.Fn AG_PixelFormatIndexed "AG_PixelFormat *pf", "int BitsPerPixel"
+.Pp
+.Ft "void"
+.Fn AG_PixelFormatGrayscale "AG_PixelFormat *pf" "int BitsPerPixel"
 .Pp
 .Ft "int"
 .Fn AG_PixelFormatCompare "const AG_PixelFormat *pf1" "const AG_PixelFormat *pf2"
@@ -586,24 +583,57 @@ function returns 1 if the given combination of encoding and bits per pixel
 is supported by the present Agar build.
 .Pp
 The
+.Fn AG_PixelFormatMaximum
+function returns the maximum pixel value representible by surfaces in the
+given format
+.Fa pf .
+.Pp
+The
 .Fn AG_PixelFormatRGB
 and
 .Fn AG_PixelFormatRGBA
-functions allocate a new structure describing packed-pixel encoding with RGB
-or RGBA components.
-The
+routines initialize an
+.Ft AG_PixelFormat
+structure describing a surface in
+.Em packed-pixel
+format of depth
+.Fa BitsPerPixel .
+The arguments
 .Fa [RGBA]mask
-arguments specify the bitmasks used to retrieve the individual components from
-memory.
+specify the bitmasks used to extract individual color components (and alpha)
+from the surface in memory.
 .Pp
+The
 .Fn AG_PixelFormatIndexed
-creates a new pixel-format structure for indexed pixel encoding.
-This involves allocating a new palette.
+routine initializes an
+.Ft AG_PixelFormat
+structure describing a surface in
+.Em indexed
+format.
+Agar considers the palette to be part of the
+.Ft AG_PixelFormat
+structure so the palette itself is allocated as well.
 The size of this palette is determined by
-.Fa bitsPerPixel ,
-and all palette entries are initialized to black.
-If 2 bpp is given, the first palette entry is initialized to white and the
-second entry is initialized to black.
+.Fa BitsPerPixel
+and palette entries are initialized to black (except in the 1bpp case,
+where entry 0 is also initialized to white).
+.Pp
+The
+.Fn AG_PixelFormatGrayscale
+routine initializes an
+.Ft AG_PixelFormat
+structure describing a surface in
+.Em grayscale
+format.
+Supported depths are 16-, 32- and 64-bpp.
+The grayscale format also includes an alpha channel which can be ignored
+if transparency is not needed.
+The global
+.Va agGrayscaleMode
+determines the default conversion standard to use when converting between
+grayscale and RGB.
+The default is
+.Dv AG_GRAYSCALE_BT709 .
 .Pp
 .Fn AG_PixelFormatCompare
 compares two pixel formats.
@@ -659,22 +689,22 @@ frees all resources allocated by an
 .Fn AG_SurfacePut64_At "AG_Surface *s" "Uint8 *p" "Uint64 px"
 .Pp
 .Ft "void"
-.Fn AG_SurfaceBlend "AG_Surface *s" "int x" "int y" "const AG_Color *c" "AG_AlphaFn fn"
+.Fn AG_SurfaceBlend "AG_Surface *s" "int x" "int y" "const AG_Color *c"
 .Pp
 .Ft "void"
-.Fn AG_SurfaceBlend_At "AG_Surface *s" "Uint8 *p" "const AG_Color *c" "AG_AlphaFn fn"
+.Fn AG_SurfaceBlend_At "AG_Surface *s" "Uint8 *p" "const AG_Color *c"
 .Pp
 .Ft "void"
-.Fn AG_SurfaceBlendRGB8 "AG_Surface *s" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a" "AG_AlphaFn fn"
+.Fn AG_SurfaceBlendRGB8 "AG_Surface *s" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
 .Pp
 .Ft "void"
-.Fn AG_SurfaceBlendRGB8_At "AG_Surface *s" "Uint8 *p" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a" "AG_AlphaFn fn"
+.Fn AG_SurfaceBlendRGB8_At "AG_Surface *s" "Uint8 *p" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
 .Pp
 .Ft "void"
-.Fn AG_SurfaceBlendRGB16 "AG_Surface *s" "int x" "int y" "Uint16 r" "Uint16 g" "Uint16 b" "Uint16 a" "AG_AlphaFn fn"
+.Fn AG_SurfaceBlendRGB16 "AG_Surface *s" "int x" "int y" "Uint16 r" "Uint16 g" "Uint16 b" "Uint16 a"
 .Pp
 .Ft "void"
-.Fn AG_SurfaceBlendRGB16_At "AG_Surface *s" "Uint8 *p" "Uint16 r" "Uint16 g" "Uint16 b" "Uint16 a" "AG_AlphaFn fn"
+.Fn AG_SurfaceBlendRGB16_At "AG_Surface *s" "Uint8 *p" "Uint16 r" "Uint16 g" "Uint16 b" "Uint16 a"
 .Pp
 .Ft void
 .Fn AG_GetColor "AG_Color *dst" "AG_Pixel px" "const AG_PixelFormat *pf"
@@ -762,7 +792,7 @@ returns a 32-bit representation of the pixel at unchecked coordinates
 .Fa y
 in a 1- to 64-bpp surface
 .Fa s .
-If the surface is 48- or 64-bpp,
+If the given surface is more than 32-bpp,
 .Fn AG_SurfaceGet32
 returns a compressed 32-bit approximation.
 The
@@ -799,9 +829,9 @@ writes to the pixel at unchecked coordinates
 .Fa y
 in a 1- to 64- surface
 .Fa s .
-If the surface is 48- or 64-bpp,
+If the given surface is more than 32-bpp,
 .Fn AG_SurfacePut32
-writes a decompressed approximation.
+writes a decompressed value.
 The
 .Fn AG_SurfacePut32_At
 form writes to the pixel at address
@@ -824,18 +854,13 @@ in an 8- to 64-bpp surface
 .Pp
 The
 .Fn AG_SurfaceBlend
-function performs alpha blending of a color
+routine blends the color
 .Fa c
 against the pixel at unchecked coordinates
 .Fa x ,
 .Fa y
 in a surface
 .Fa s .
-The alpha component of the resulting pixel is determined by
-.Fa fn
-(see
-.Xr AG_BlendFn 3
-for details).
 .Pp
 The
 .Fn AG_SurfaceBlend_At
@@ -844,8 +869,7 @@ variant performs alpha blending of a color
 against the pixel at byte address
 .Fa p
 in surface
-.Fa s
-(minimum 8-bpp).
+.Fa s .
 .Pp
 The
 .Fn AG_SurfaceBlendRGB{8,16}
@@ -930,11 +954,8 @@ Agar 1.6.0 added support for 48- and 64-bit modes (under LARGE),
 Grayscale+Alpha and 1/2/4-bit Indexed modes.
 Agar 1.6.0 introduced
 .Fn AG_SurfaceSetAddress ,
-.Fn AG_SurfaceSetColors ,
-.Fn AG_SurfaceSetPalette ,
-.Fn AG_SurfaceCopyPixels
+.Fn AG_SurfaceSetColors
 and
-.Fn AG_SurfaceSetPixels .
-.Fn AG_SurfaceStdGL
-is now a deprecated alias for
-.Fn AG_SurfaceStdRGBA .
+.Fn AG_SurfaceSetPalette .
+Agar 1.7.0 added support for 40-bit color as well as optimized blitters
+and optimized rectangle fills.

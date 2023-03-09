@@ -1769,7 +1769,7 @@ AG_PopupDestroy(AG_PopupMenu *pm)
 
 #ifdef AG_TYPE_SAFETY
 /*
- * Accessor for AG_[CONST_]MENU_ITEM_PTR().
+ * Accessor for AG_MENUITEM_PTR() and AG_cMENUITEM_PTR().
  */
 AG_MenuItem *
 AG_MenuGetItemPtr(const AG_Event *event, int idx, int isConst)
@@ -1781,7 +1781,7 @@ AG_MenuGetItemPtr(const AG_Event *event, int idx, int isConst)
 	}
 	if (isConst) {
 		if ((V->info.pFlags & AG_VARIABLE_P_READONLY) == 0)
-			AG_FatalError("AG_MENU_CONST_ITEM_PTR() argument isn't const. "
+			AG_FatalError("AG_cMENUITEM_PTR() argument isn't const. "
 			              "Did you mean AG_MENUITEM_PTR()?");
 	} else {
 		if (V->info.pFlags & AG_VARIABLE_P_READONLY)

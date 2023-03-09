@@ -37,10 +37,12 @@ ag_pixel_format_is_supported(AG_SurfaceMode mode, int BitsPerPixel)
 		switch (BitsPerPixel) {
 		case 32:
 		case 24:
-		case 16:
-		case 8:
+#if AG_MODEL == AG_LARGE
 		case 64:
 		case 48:
+		case 40:
+#endif
+		case 16:
 			return (1);
 		}
 		break;
@@ -55,8 +57,11 @@ ag_pixel_format_is_supported(AG_SurfaceMode mode, int BitsPerPixel)
 		break;
 	case AG_SURFACE_GRAYSCALE:
 		switch (BitsPerPixel) {
+		case 16:
 		case 32:
+#if AG_MODEL == AG_LARGE
 		case 64:
+#endif
 			return (1);
 		}
 		break;
@@ -83,7 +88,6 @@ ag_pixel_format_compare(const AG_PixelFormat *a, const AG_PixelFormat *b)
 	}
 	switch (a->mode) {
 	case AG_SURFACE_PACKED:
-	default:
 		return !(a->Rmask == b->Rmask &&
 			 a->Gmask == b->Gmask &&
 			 a->Bmask == b->Bmask &&
@@ -99,8 +103,9 @@ ag_pixel_format_compare(const AG_PixelFormat *a, const AG_PixelFormat *b)
 #endif
 		return memcmp(a->palette->colors, b->palette->colors,
 		              a->palette->nColors * sizeof(AG_Color));
+	default:
 	case AG_SURFACE_GRAYSCALE:
-		return !(a->graymode == b->graymode);
+		return (0);
 	}
 }
 
@@ -142,9 +147,10 @@ ag_map_pixel32(const AG_PixelFormat *pf, const AG_Color *c)
 
 # define AG_EXTRACT_COMPONENT16(rv, mask, shift, loss)		\
 	tmp = (px & mask) >> shift;				\
-	(rv) = (tmp << loss) + (tmp >> (16 - (loss << 1)))
+	(rv) = (tmp << loss) | (tmp >> (16 - (loss << 1)))
+
 /*
- * Map 16-bit RGB components to a 64-bit (1- to 64-bpp) pixel.
+ * Map 16bpc RGB components to a 64-bit (1- to 64-bpp) pixel.
  */
 # ifdef AG_INLINE_HEADER
 static __inline__ Uint64 _Pure_Attribute
@@ -170,7 +176,7 @@ ag_map_pixel64_rgb16(const AG_PixelFormat *pf, Uint16 r, Uint16 g, Uint16 b)
 }
 
 /*
- * Map 16-bit RGBA components to a 64-bit (1- to 64-bpp) pixel.
+ * Map 16bpc RGBA components to a 64-bit (1- to 64-bpp) pixel.
  */
 # ifdef AG_INLINE_HEADER
 static __inline__ Uint64 _Pure_Attribute
@@ -185,10 +191,10 @@ ag_map_pixel64_rgba16(const AG_PixelFormat *pf,
 	switch (pf->mode) {
 	case AG_SURFACE_PACKED:
 	default:
-		return (r >> pf->Rloss) << pf->Rshift |
-		       (g >> pf->Gloss) << pf->Gshift |
-		       (b >> pf->Bloss) << pf->Bshift |
-		      ((a >> pf->Aloss) << pf->Ashift & pf->Amask);
+		return ((Uint64)r >> pf->Rloss) << pf->Rshift |
+		       ((Uint64)g >> pf->Gloss) << pf->Gshift |
+		       ((Uint64)b >> pf->Bloss) << pf->Bshift |
+		      (((Uint64)a >> pf->Aloss) << pf->Ashift & pf->Amask);
 	case AG_SURFACE_INDEXED:
 		return AG_MapPixelIndexed(pf, r,g,b,a);
 	case AG_SURFACE_GRAYSCALE:
@@ -238,12 +244,12 @@ ag_get_color64_rgb16(Uint64 px, const AG_PixelFormat *pf,
 	} else if (pf->mode == AG_SURFACE_GRAYSCALE) {
 		Uint16 dummy;
 
-		AG_GetColor64_Gray16(px, pf->graymode, r,g,b, &dummy);
+		AG_GetColor64_Gray16(px, r,g,b, &dummy);
 	}
 }
 
 /*
- * Extract 16-bit RGBA components from a 64-bit (1- to 64-bpp) pixel.
+ * Extract 16bpc RGBA components from a 64-bit (1- to 64-bpp) pixel.
  */
 # ifdef AG_INLINE_HEADER
 static __inline__ void
@@ -264,14 +270,15 @@ ag_get_color64_rgba16(Uint64 px, const AG_PixelFormat *pf,
 		AG_EXTRACT_COMPONENT16(*b, pf->Bmask, pf->Bshift, pf->Bloss);
 		AG_EXTRACT_COMPONENT16(*a, pf->Amask, pf->Ashift, pf->Aloss);
 	} else if (pf->mode == AG_SURFACE_INDEXED) {
-		const AG_Color *c = &pf->palette->colors[px % pf->palette->nColors];
+		const AG_Color *c = &pf->palette->colors[px %
+		                                         pf->palette->nColors];
 
 		*r = c->r;
 		*g = c->g;
 		*b = c->b;
 		*a = c->a;
 	} else if (pf->mode == AG_SURFACE_GRAYSCALE) {
-		AG_GetColor64_Gray16(px, pf->graymode, r,g,b,a);
+		AG_GetColor64_Gray16(px, r,g,b,a);
 	}
 }
 
@@ -297,7 +304,7 @@ ag_get_color64_rgb8(Uint64 px, const AG_PixelFormat *pf,
 }
 
 /*
- * Extract compressed 8-bit RGBA components from a 64-bit (1- to 64-bpp) pixel.
+ * Extract compressed 8bpc RGBA components from a 64-bit (1- to 64-bpp) pixel.
  */
 # ifdef AG_INLINE_HEADER
 static __inline__ void
@@ -334,7 +341,7 @@ Uint32
 ag_surface_get32(const AG_Surface *S, int x, int y)
 #endif
 {
-#ifdef AG_DEBUG
+#ifdef DEBUG_SURFACE_GET
 	if (x < 0 || y < 0 || x >= S->w || y >= S->h)
 		AG_FatalErrorF("Illegal AG_SurfaceGet32() access (%d,%d in %ux%u)", x,y, S->w, S->h);
 #endif
@@ -364,24 +371,72 @@ ag_surface_get32_at(const AG_Surface *S, const Uint8 *p)
 		return (*(Uint32 *)p);
 	case 24:
 #if AG_BYTEORDER == AG_BIG_ENDIAN
-		return ((p[0] << 16) +
-		        (p[1] << 8) +
+		return ((p[0] << 16) |
+		        (p[1] << 8) |
 		         p[2]);
 #else
-		return  (p[0] +
-		        (p[1] << 8) +
+		return  (p[0] |
+		        (p[1] << 8) |
 		        (p[2] << 16));
 #endif
-	case 16:
-		return (*(Uint16 *)p);
 #if AG_MODEL == AG_LARGE
 	case 64:
-	case 48: {
-		AG_Color c;
-		AG_GetColor64(&c, *(Uint64 *)p, &S->format);
-		return AG_MapPixel32(&S->format, &c);
-	}
-#endif
+		{
+			AG_Color c;
+
+			AG_GetColor64(&c, *(Uint64 *)p, &S->format);
+			return AG_MapPixel32(&S->format, &c);
+		}
+		break;
+	case 48:
+		{
+			Uint64 px;
+			AG_Color c;
+
+# if AG_BYTEORDER == AG_BIG_ENDIAN
+			px = ((Uint64)p[0] << 40) |
+			     ((Uint64)p[1] << 32) |
+			     ((Uint64)p[2] << 24) |
+			     ((Uint64)p[3] << 16) |
+			     ((Uint64)p[4] <<  8) |
+			      (Uint64)p[5];
+# else
+			px =  (Uint64)p[0] |
+			     ((Uint64)p[1] <<  8) |
+			     ((Uint64)p[2] << 16) |
+			     ((Uint64)p[3] << 24) |
+			     ((Uint64)p[4] << 32) |
+			     ((Uint64)p[5] << 40);
+# endif
+			AG_GetColor64(&c, px, &S->format);
+			return AG_MapPixel32(&S->format, &c);
+		}
+	case 40:
+		{
+			Uint64 px;
+			AG_Color c;
+
+# if AG_BYTEORDER == AG_BIG_ENDIAN
+			px = (((Uint64)p[0] << 32) |
+			      ((Uint64)p[1] << 24) |
+			      ((Uint64)p[2] << 16) |
+			      ((Uint64)p[3] <<  8) |
+			       (Uint64)p[4];
+# else
+			px =   (Uint64)p[0] |
+			      ((Uint64)p[1] <<  8) |
+			      ((Uint64)p[2] << 16) |
+			      ((Uint64)p[3] << 24) |
+			      ((Uint64)p[4] << 32);
+# endif
+			AG_GetColor64(&c, px, &S->format);
+			return AG_MapPixel32(&S->format, &c);
+		}
+#endif /* AG_LARGE */
+	case 16:
+		return (*(Uint16 *)p);
+	default:
+		break;
 	}
 	return (*p);
 }
@@ -398,7 +453,7 @@ Uint64
 ag_surface_get64(const AG_Surface *S, int x, int y)
 # endif
 {
-# ifdef AG_DEBUG
+# ifdef DEBUG_SURFACE_GET
 	if (x < 0 || y < 0 || x >= S->w || y >= S->h)
 		AG_FatalErrorF("Illegal AG_SurfaceGet64() access "
 		               "(%d,%d in %ux%u)", x, y, S->w, S->h);
@@ -428,34 +483,50 @@ ag_surface_get64_at(const AG_Surface *S, const Uint8 *p)
 		return (*(Uint32 *)p);
 	case 24:
 # if AG_BYTEORDER == AG_BIG_ENDIAN
-		return ((p[0] << 16) +
-		        (p[1] << 8) +
+		return ((p[0] << 16) |
+		        (p[1] <<  8) |
 		         p[2]);
 # else
-		return  (p[0] +
-		        (p[1] << 8) +
+		return  (p[0] |
+		        (p[1] <<  8) |
 		        (p[2] << 16));
+# endif
+	case 64:
+		return (*(Uint64 *)p);
+	case 40:
+# if AG_BYTEORDER == AG_BIG_ENDIAN
+		return ((Uint64)p[0] << 32) |
+		       ((Uint64)p[1] << 24) |
+		       ((Uint64)p[2] << 16) |
+		       ((Uint64)p[3] <<  8) |
+		        (Uint64)p[4];
+# else
+		return  (Uint64)p[0] |
+		       ((Uint64)p[1] <<  8) |
+		       ((Uint64)p[2] << 16) |
+		       ((Uint64)p[3] << 24) |
+		       ((Uint64)p[4] << 32);
+# endif
+	case 48:
+# if AG_BYTEORDER == AG_BIG_ENDIAN
+		return ((Uint64)p[0] << 40) |
+		       ((Uint64)p[1] << 32) |
+		       ((Uint64)p[2] << 24) |
+		       ((Uint64)p[3] << 16) |
+		       ((Uint64)p[4] <<  8) |
+		        (Uint64)p[5];
+# else
+		return  (Uint64)p[0] |
+		       ((Uint64)p[1] <<  8) |
+		       ((Uint64)p[2] << 16) |
+		       ((Uint64)p[3] << 24) |
+		       ((Uint64)p[4] << 32) |
+		       ((Uint64)p[5] << 40);
 # endif
 	case 16:
 		return (*(Uint16 *)p);
-	case 64:
-		return (*(Uint64 *)p);
-	case 48:
-# if AG_BYTEORDER == AG_BIG_ENDIAN
-		return (((Uint64)p[0] << 40) +
-		        ((Uint64)p[1] << 32) +
-		        ((Uint64)p[2] << 24) +
-		        ((Uint64)p[3] << 16) +
-		        ((Uint64)p[4] << 8) +
-		         (Uint64)p[5]);
-# else
-		return ((Uint64)p[0] +
-		        ((Uint64)p[1] << 8) +
-		        ((Uint64)p[2] << 16) +
-			((Uint64)p[3] << 24) +
-			((Uint64)p[4] << 32) +
-			((Uint64)p[5] << 40));
-# endif
+	default:
+		break;
 	}
 	return (*p);
 }
@@ -483,7 +554,7 @@ ag_surface_put32(AG_Surface *S, int x, int y, Uint32 px)
 }
 
 /*
- * Write to the (8- to 32-bit) pixel at address p in surface S.
+ * Write to the (8- to 64-bit) pixel at address p in surface S.
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
@@ -508,19 +579,67 @@ ag_surface_put32_at(AG_Surface *S, Uint8 *p, Uint32 px)
 		p[2] = (px >> 16) & 0xff;
 #endif
 		break;
+
+#if AG_MODEL == AG_LARGE
+	case 64:
+		{
+			AG_Color c;
+
+			AG_GetColor32(&c, px, &S->format);
+			*(Uint64 *)p = AG_MapPixel64(&S->format, &c);
+			break;
+		}
+	case 48:
+		{
+			AG_Color c;
+			Uint64 px64;
+
+			AG_GetColor32(&c, px, &S->format);
+			px64 = AG_MapPixel64(&S->format, &c);
+# if AG_BYTEORDER == AG_BIG_ENDIAN
+			p[0] = (px64 >> 40) & 0xff;
+			p[1] = (px64 >> 32) & 0xff;
+			p[2] = (px64 >> 24) & 0xff;
+			p[3] = (px64 >> 16) & 0xff;
+			p[4] = (px64 >> 8)  & 0xff;
+			p[5] = (px64)       & 0xff;
+# else
+			p[0] = (px64)       & 0xff;
+			p[1] = (px64 >> 8)  & 0xff;
+			p[2] = (px64 >> 16) & 0xff;
+			p[3] = (px64 >> 24) & 0xff;
+			p[4] = (px64 >> 32) & 0xff;
+			p[5] = (px64 >> 40) & 0xff;
+# endif
+			break;
+		}
+	case 40:
+		{
+			AG_Color c;
+			Uint64 px64;
+
+			AG_GetColor32(&c, px, &S->format);
+			px64 = AG_MapPixel64(&S->format, &c);
+# if AG_BYTEORDER == AG_BIG_ENDIAN
+			p[0] = (px64 >> 32) & 0xff;
+			p[1] = (px64 >> 24) & 0xff;
+			p[2] = (px64 >> 16) & 0xff;
+			p[3] = (px64 >> 8)  & 0xff;
+			p[4] = (px64)       & 0xff;
+# else
+			p[0] = (px64)       & 0xff;
+			p[1] = (px64 >> 8)  & 0xff;
+			p[2] = (px64 >> 16) & 0xff;
+			p[3] = (px64 >> 24) & 0xff;
+			p[4] = (px64 >> 32) & 0xff;
+# endif
+			break;
+		}
+#endif /* AG_LARGE */
+
 	case 16:
 		*(Uint16 *)p = (Uint16)px;
 		break;
-#if AG_MODEL == AG_LARGE
-	case 64:                                             /* Decompressed */
-	case 48: {
-		AG_Color c;
-
-		AG_GetColor32(&c, px, &S->format);
-		*(Uint64 *)p = AG_MapPixel64(&S->format, &c);
-		break;
-	}
-#endif
 	default:
 		*p = (Uint8)px;
 		break;
@@ -563,6 +682,9 @@ ag_surface_put64_at(AG_Surface *S, Uint8 *p, Uint64 px)
 	case 32:
 		*(Uint32 *)p = px;
 		break;
+	case 64:
+		*(Uint64 *)p = px;
+		break;
 	case 24:
 #if AG_BYTEORDER == AG_BIG_ENDIAN
 		p[0] = (px >> 16) & 0xff;
@@ -574,13 +696,42 @@ ag_surface_put64_at(AG_Surface *S, Uint8 *p, Uint64 px)
 		p[2] = (px >> 16) & 0xff;
 #endif
 		break;
+	case 48:
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+		p[0] = (px >> 40) & 0xff;
+		p[1] = (px >> 32) & 0xff;
+		p[2] = (px >> 24) & 0xff;
+		p[3] = (px >> 16) & 0xff;
+		p[4] = (px >> 8)  & 0xff;
+		p[5] = (px)       & 0xff;
+#else
+		p[0] = (px)       & 0xff;
+		p[1] = (px >> 8)  & 0xff;
+		p[2] = (px >> 16) & 0xff;
+		p[3] = (px >> 24) & 0xff;
+		p[4] = (px >> 32) & 0xff;
+		p[5] = (px >> 40) & 0xff;
+#endif
+		break;
+	case 40:
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+		p[0] = (px >> 32) & 0xff;
+		p[1] = (px >> 24) & 0xff;
+		p[2] = (px >> 16) & 0xff;
+		p[3] = (px >> 8)  & 0xff;
+		p[4] = (px)       & 0xff;
+#else
+		p[0] = (px)       & 0xff;
+		p[1] = (px >> 8)  & 0xff;
+		p[2] = (px >> 16) & 0xff;
+		p[3] = (px >> 24) & 0xff;
+		p[4] = (px >> 32) & 0xff;
+#endif
+		break;
 	case 16:
 		*(Uint16 *)p = (Uint16)px;
 		break;
-	case 64:
-	case 48:
-		*(Uint64 *)p = px;
-		break;
+	case 8:
 	default:
 		*p = (Uint8)px;
 		break;
@@ -588,103 +739,87 @@ ag_surface_put64_at(AG_Surface *S, Uint8 *p, Uint64 px)
 }
 
 /*
- * Blend 16-bit RGBA components with the pixel at x,y and overwrite it with
- * the result. No clipping. Target pixel alpha is set according to fn.
+ * Blend 16bpc RGBA components with the pixel at x,y and overwrite it with
+ * the result. No clipping is done.
  */
 # ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_SurfaceBlendRGB16(AG_Surface *_Nonnull S, int x, int y,
-    Uint16 r, Uint16 g, Uint16 b, Uint16 a, AG_AlphaFn fn)
+    Uint16 r, Uint16 g, Uint16 b, Uint16 a)
 # else
 void
 ag_surface_blend_rgb16(AG_Surface *S, int x, int y,
-    Uint16 r, Uint16 g, Uint16 b, Uint16 a, AG_AlphaFn fn)
+    Uint16 r, Uint16 g, Uint16 b, Uint16 a)
 # endif
 {
 	AG_Color c = { r,g,b,a };
 
 	AG_SurfaceBlend_At(S, S->pixels +
-	    y*S->pitch +
-	    x*S->format.BytesPerPixel,
-	    &c, fn);
+	    y * S->pitch +
+	    x * S->format.BytesPerPixel,
+	    &c);
 }
 
 /*
- * Blend 16-bit RGBA components with the pixel at address p and overwrite it
- * with the result.  No clipping is done. Set target alpha according to fn.
+ * Blend 16bpc RGBA components with the pixel at address p and overwrite it
+ * with the result.  No clipping is done.
  */
 # ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_SurfaceBlendRGB16_At(AG_Surface *_Nonnull S, Uint8 *_Nonnull p,
-    Uint16 r, Uint16 g, Uint16 b, Uint16 a, AG_AlphaFn fn)
+    Uint16 r, Uint16 g, Uint16 b, Uint16 a)
 # else
 void
 ag_surface_blend_rgb16_at(AG_Surface *S, Uint8 *p,
-    Uint16 r, Uint16 g, Uint16 b, Uint16 a, AG_AlphaFn fn)
+    Uint16 r, Uint16 g, Uint16 b, Uint16 a)
 # endif
 {
 	AG_Color c = { r,g,b,a };
 
-	AG_SurfaceBlend_At(S,p, &c, fn);
+	AG_SurfaceBlend_At(S,p, &c);
 }
 #endif /* AG_LARGE */
 
 /*
  * Blend a color c with the pixel at x,y and overwrite it with the result.
- * No clipping is done. Sets the pixel's alpha component according to fn.
+ * No clipping is done.
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
-AG_SurfaceBlend(AG_Surface *_Nonnull S, int x, int y, const AG_Color *_Nonnull c,
-    AG_AlphaFn fn)
+AG_SurfaceBlend(AG_Surface *_Nonnull S, int x, int y, const AG_Color *_Nonnull c)
 #else
 void
-ag_surface_blend(AG_Surface *S, int x, int y, const AG_Color *c, AG_AlphaFn fn)
+ag_surface_blend(AG_Surface *S, int x, int y, const AG_Color *c)
 #endif
 {
 	AG_SurfaceBlend_At(S, S->pixels +
-	    y*S->pitch +
-	    x*S->format.BytesPerPixel,
-	    c, fn);
+	    y * S->pitch +
+	    x * S->format.BytesPerPixel,
+	    c);
 }
 
 /*
  * Blend a color c with the pixel at address p and overwrite it with the result.
- * No clipping is done. Sets the pixel's alpha component according to fn.
+ * No clipping is done.
  */
 #ifdef AG_INLINE_HEADER
 static __inline__ void
 AG_SurfaceBlend_At(AG_Surface *_Nonnull S, Uint8 *_Nonnull p,
-    const AG_Color *_Nonnull c, AG_AlphaFn fn)
+    const AG_Color *_Nonnull c)
 #else
 void
-ag_surface_blend_at(AG_Surface *S, Uint8 *p, const AG_Color *_Nonnull c,
-    AG_AlphaFn fn)
+ag_surface_blend_at(AG_Surface *S, Uint8 *p, const AG_Color *_Nonnull c)
 #endif
 {
-	AG_Pixel px = AG_SurfaceGet_At(S,p);
 	AG_Color pc;
+	AG_Pixel px;
 	AG_Component ca;
 
-	if ((S->flags & AG_SURFACE_COLORKEY) &&		/* No blending needed */
-	    (px == S->colorkey)) {
-		AG_SurfacePut_At(S, p, AG_MapPixel(&S->format, c));
-		return;
-	}
-	pc.a = AG_COLOR_LAST;				/* compiler happy */
+	px = AG_SurfaceGet_At(S,p);
 	AG_GetColor(&pc, px, &S->format);
 	ca = c->a;
-	switch (fn) {
-	case AG_ALPHA_OVERLAY:
-		pc.a = ((pc.a+ca) > AG_COLOR_LAST) ? AG_COLOR_LAST : (pc.a+ca);
-		break;
-	case AG_ALPHA_DST:        /* pc.a = pc.a */			break;
-	case AG_ALPHA_SRC:           pc.a = ca;				break;
-	case AG_ALPHA_ZERO:          pc.a = 0;				break;
-	case AG_ALPHA_ONE_MINUS_DST: pc.a = AG_COLOR_LAST - pc.a;	break;
-	case AG_ALPHA_ONE_MINUS_SRC: pc.a = AG_COLOR_LAST - ca;		break;
-	case AG_ALPHA_ONE: default:  pc.a = AG_COLOR_LAST;		break;
-	}
+	pc.a = ((pc.a + ca) > AG_COLOR_LAST) ? AG_COLOR_LAST : (pc.a + ca);
+
 	AG_SurfacePut_At(S, p,
 	    AG_MapPixel_RGBA(&S->format,
 	        pc.r + (((c->r - pc.r) * ca) >> AG_COMPONENT_BITS),

@@ -76,6 +76,7 @@ const char *dataFiles[] = {
 	"sword-socket.bmp",
 	"sq-agar.bmp",
 	"sq-agar.png",
+	"champden.png",
 	SRC_GUI "license.txt:license.txt",
 	SRC_FONTS "agar-minimal-12.png:agar-minimal-12.png",
 	SRC_FONTS "agar-minimal.agbf:agar-minimal.agbf",

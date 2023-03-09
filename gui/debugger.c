@@ -677,7 +677,7 @@ static void
 ContextualMenu(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_PTR(1);
-	AG_MenuItem *mi = AG_MENU_ITEM_PTR(2);
+	AG_MenuItem *mi = AG_MENUITEM_PTR(2);
 	AG_TlistItem *ti = AG_TlistSelectedItem(tl);
 	AG_Window *win;
 

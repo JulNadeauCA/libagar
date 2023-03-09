@@ -584,37 +584,18 @@ package body Agar.Surface is
   end;
   
   --
-  -- Return a string describing a blending function.
-  --
-  function Alpha_Func_Name
-    (Func : Alpha_Func) return String is
-  begin
-    case Func is
-    when ALPHA_OVERLAY       => return "src+dst";
-    when ALPHA_ZERO          => return "zero";
-    when ALPHA_ONE           => return "one";
-    when ALPHA_SRC           => return "src";
-    when ALPHA_DST           => return "dst";
-    when ALPHA_ONE_MINUS_DST => return "1-dst";
-    when ALPHA_ONE_MINUS_SRC => return "1-src";
-    end case;
-  end;
-  
-  --
   -- Blend a target pixel against a specified color. The target pixel's
   -- alpha component is computed according to Func (by pixel address).
   --
   procedure Blend_Pixel
     (Surface : in Surface_not_null_Access;
      Pixel   : in Pixel_not_null_Access;
-     Color   : in Color_not_null_Access;
-     Func    : in Alpha_Func := ALPHA_OVERLAY) is
+     Color   : in Color_not_null_Access) is
   begin
     AG_SurfaceBlend_At
       (Surface => Surface,
        Pixel   => Pixel,
-       Color   => Color,
-       Func    => Alpha_Func'Pos(Func));
+       Color   => Color);
   end;
 
   --
@@ -624,15 +605,13 @@ package body Agar.Surface is
   procedure Blend_Pixel
     (Surface  : in Surface_not_null_Access;
      X,Y      : in Natural;
-     Color    : in Color_not_null_Access;
-     Func     : in Alpha_Func := ALPHA_OVERLAY) is
+     Color    : in Color_not_null_Access) is
   begin
     AG_SurfaceBlend
       (Surface => Surface,
        X       => C.int(X),
        Y       => C.int(Y),
-       Color   => Color,
-       Func    => Alpha_Func'Pos(Func));
+       Color   => Color);
   end;
   
   --

@@ -4,8 +4,6 @@
  * This program tests the Agar math library (ag_math).
  */
 
-#include <agar/config/ag_enable_string.h>
-
 #include "agartest.h"
 
 #include <agar/math/m.h>
@@ -338,6 +336,9 @@ Bench(void *obj)
 	const M_VectorOps3 *prevVecOps3 = mVecOps3;
 	const M_MatrixOps44 *prevMatOps44 = mMatOps44;
 
+	TestMsg(ti, "");
+	TestMsg(ti, AGSI_LEAGUE_SPARTAN "A G A R - M A T H   M I C R O B E N C H M A R K S");
+
 #if defined(INLINE_SSE)
 	TestMsg(ti, "M_Vector3 Microbenchmark (INLINE SSE):");
 	TestExecBenchmark(obj, &mathBenchVector3);
@@ -366,8 +367,9 @@ Bench(void *obj)
 const AG_TestCase mathTest = {
 	AGSI_IDEOGRAM AGSI_MATH_X_EQUALS AGSI_RST,
 	"math",
-	N_("Test the ag_math library"),
-	"1.6.0",
+	N_("Test Agar's math library. Run multiple times to create threads."
+	   AGSI_IDEOGRAM AGSI_THREADS AGSI_RST),
+	"1.7.0",
 	0,
 	sizeof(MyTestInstance),
 	Init,

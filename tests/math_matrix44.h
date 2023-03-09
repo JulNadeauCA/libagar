@@ -11,7 +11,7 @@ UseMatrix(const M_Matrix44 *M)
 }
 
 static void
-MatrixZero44(void *ti)
+MatrixZero44(void *ti, int arg)
 {
 	M_Matrix44 M[10];
 	int i;
@@ -19,7 +19,7 @@ MatrixZero44(void *ti)
 	for (i = 0; i < 10; i++) { UseMatrix(&M[i]); }
 }
 static void
-MatrixZero44v(void *ti)
+MatrixZero44v(void *ti, int arg)
 {
 	M_Matrix44 M[10];
 	int i;
@@ -28,7 +28,7 @@ MatrixZero44v(void *ti)
 }
 
 static void
-MatrixIdentity44(void *ti)
+MatrixIdentity44(void *ti, int arg)
 {
 	M_Matrix44 M[10];
 	int i;
@@ -36,7 +36,7 @@ MatrixIdentity44(void *ti)
 	for (i = 0; i < 10; i++) { UseMatrix(&M[i]); }
 }
 static void
-MatrixIdentity44v(void *ti)
+MatrixIdentity44v(void *ti, int arg)
 {
 	M_Matrix44 M[10];
 	int i;
@@ -45,7 +45,7 @@ MatrixIdentity44v(void *ti)
 }
 
 static void
-MatrixInvert44(void *ti)
+MatrixInvert44(void *ti, int arg)
 {
 	M_Matrix44 M[2], Minv[2];
 	int i;
@@ -55,7 +55,7 @@ MatrixInvert44(void *ti)
 }
 
 static void
-MatrixTranspose44(void *ti)
+MatrixTranspose44(void *ti, int arg)
 {
 	M_Matrix44 M[6], Mt[6];
 	int i;
@@ -64,7 +64,7 @@ MatrixTranspose44(void *ti)
 	for (i = 0; i < 6; i++) { UseMatrix(&Mt[i]); }
 }
 static void
-MatrixTranspose44p(void *ti)
+MatrixTranspose44p(void *ti, int arg)
 {
 	M_Matrix44 M[6], Mt[6];
 	int i;
@@ -73,7 +73,7 @@ MatrixTranspose44p(void *ti)
 	for (i = 0; i < 6; i++) { UseMatrix(&Mt[i]); }
 }
 static void
-MatrixTranspose44v(void *ti)
+MatrixTranspose44v(void *ti, int arg)
 {
 	M_Matrix44 M[6];
 	int i;
@@ -83,7 +83,7 @@ MatrixTranspose44v(void *ti)
 }
 
 static void
-MatrixMult44(void *ti)
+MatrixMult44(void *ti, int arg)
 {
 	M_Matrix44 A[3], B[3], AB[3];
 	int i;
@@ -92,7 +92,7 @@ MatrixMult44(void *ti)
 	for (i = 0; i < 3; i++) { UseMatrix(&AB[i]); }
 }
 static void
-MatrixMult44v(void *ti)
+MatrixMult44v(void *ti, int arg)
 {
 	M_Matrix44 A[3], B[3];
 	int i;
@@ -102,7 +102,7 @@ MatrixMult44v(void *ti)
 }
 
 static void
-MatrixCopy44(void *ti)
+MatrixCopy44(void *ti, int arg)
 {
 	M_Matrix44 A[6], B[6];
 	int i;
@@ -112,7 +112,7 @@ MatrixCopy44(void *ti)
 }
 
 static void
-MatrixRotateAxis44(void *ti)
+MatrixRotateAxis44(void *ti, int arg)
 {
 	M_Matrix44 A[6];
 	M_Vector3 b[6];
@@ -127,7 +127,7 @@ MatrixRotateAxis44(void *ti)
 	for (i = 0; i < 6; i++) { realJunk = A[i].m[0][0]; }
 }
 static void
-MatrixRotate44I(void *ti)
+MatrixRotate44I(void *ti, int arg)
 {
 	M_Matrix44 A[6];
 	M_Real theta[6];
@@ -140,7 +140,7 @@ MatrixRotate44I(void *ti)
 	for (i = 0; i < 6; i++) { realJunk = A[i].m[0][0]; }
 }
 static void
-MatrixTranslate44(void *ti)
+MatrixTranslate44(void *ti, int arg)
 {
 	M_Matrix44 A[6];
 	M_Vector3 b[6];
@@ -153,7 +153,7 @@ MatrixTranslate44(void *ti)
 	for (i = 0; i < 6; i++) { realJunk = A[i].m[0][0]; }
 }
 static void
-MatrixTranslateX44(void *ti)
+MatrixTranslateX44(void *ti, int arg)
 {
 	M_Matrix44 A[6];
 	M_Real t[6];
@@ -166,7 +166,7 @@ MatrixTranslateX44(void *ti)
 	for (i = 0; i < 6; i++) { realJunk = A[i].m[0][0]; }
 }
 static void
-MatrixScale44(void *ti)
+MatrixScale44(void *ti, int arg)
 {
 	M_Matrix44 A[6];
 	M_Vector4 b[6];
@@ -179,7 +179,7 @@ MatrixScale44(void *ti)
 	for (i = 0; i < 6; i++) { realJunk = A[i].m[0][0]; }
 }
 static void
-MatrixUniScale44(void *ti)
+MatrixUniScale44(void *ti, int arg)
 {
 	M_Matrix44 A[6];
 	M_Real s[6];

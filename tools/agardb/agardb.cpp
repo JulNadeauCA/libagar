@@ -663,7 +663,7 @@ Agardb::GUI::SelectTarget(AG_Event *event)
 void
 Agardb::GUI::MenuTargets(AG_Event *event)
 {
-	AG_MenuItem *mi = AG_MENU_ITEM_PTR(1);
+	AG_MenuItem *mi = AG_MENUITEM_PTR(1);
 	lldb::SBDebugger &db = g_agardb->GetDebugger();
 	const Uint32 numTargets = db.GetNumTargets();
 	Uint32 i;

@@ -55,9 +55,9 @@ AG_PixmapNew(void *parent, Uint flags, Uint w, Uint h)
 	return (px);
 }
 
-/* Create new pixmap from the copy of the contents of a given surface. */
+/* Create new pixmap from the given surface. A copy of the surface is used. */
 AG_Pixmap *
-AG_PixmapFromSurface(void *parent, Uint flags, const AG_Surface *su)
+AG_PixmapFromSurface(void *parent, Uint flags, const AG_Surface *S)
 {
 	AG_Pixmap *px;
 
@@ -70,14 +70,16 @@ AG_PixmapFromSurface(void *parent, Uint flags, const AG_Surface *su)
 
 	AG_ObjectAttach(parent, px);
 
-	AG_WidgetMapSurface(px, (su) ? AG_SurfaceConvert(su, agSurfaceFmt) :
-	                               AG_SurfaceEmpty());
+	AG_WidgetMapSurface(px, (S != NULL) ?
+	    AG_SurfaceConvert(S, agSurfaceFmt) :
+	    AG_SurfaceEmpty());
+
 	return (px);
 }
 
 /* Create new pixmap by mapping the given surface (potentially unsafe). */
 AG_Pixmap *
-AG_PixmapFromSurfaceNODUP(void *parent, Uint flags, AG_Surface *su)
+AG_PixmapFromSurfaceNODUP(void *parent, Uint flags, AG_Surface *S)
 {
 	AG_Pixmap *px;
 
@@ -90,17 +92,17 @@ AG_PixmapFromSurfaceNODUP(void *parent, Uint flags, AG_Surface *su)
 
 	AG_ObjectAttach(parent, px);
 
-	AG_WidgetMapSurfaceNODUP(px, su);
+	AG_WidgetMapSurfaceNODUP(px, S);
 	return (px);
 }
 
 /* Create a new pixmap from the contents of a surface scaled to w x h. */
 AG_Pixmap *
-AG_PixmapFromSurfaceScaled(void *parent, Uint flags, const AG_Surface *su,
+AG_PixmapFromSurfaceScaled(void *parent, Uint flags, const AG_Surface *S,
     Uint w, Uint h)
 {
 	AG_Pixmap *px;
-	AG_Surface *suScaled = NULL;
+	AG_Surface *Sscaled = NULL;
 
 	px = Malloc(sizeof(AG_Pixmap));
 	AG_ObjectInit(px, &agPixmapClass);
@@ -111,11 +113,11 @@ AG_PixmapFromSurfaceScaled(void *parent, Uint flags, const AG_Surface *su,
 
 	AG_ObjectAttach(parent, px);
 
-	if (su != NULL) {
-		if ((suScaled = AG_SurfaceScale(su, w,h, 0)) == NULL) {
+	if (S != NULL) {
+		if ((Sscaled = AG_SurfaceScale(S, w,h, 0)) == NULL) {
 			AG_FatalError(NULL);
 		}
-		AG_WidgetMapSurface(px, suScaled);
+		AG_WidgetMapSurface(px, Sscaled);
 	} else {
 		AG_WidgetMapSurface(px, AG_SurfaceEmpty());
 	}
@@ -255,26 +257,26 @@ AG_PixmapAddSurfaceScaled(AG_Pixmap *px, const AG_Surface *Sorig,
 int
 AG_PixmapAddSurfaceFromFile(AG_Pixmap *px, const char *path)
 {
-	AG_Surface *suFile, *su;
+	AG_Surface *Sfile, *S;
 	int name;
 
-	if ((suFile = AG_SurfaceFromFile(path)) == NULL) {
+	if ((Sfile = AG_SurfaceFromFile(path)) == NULL) {
 		return (-1);
 	}
-	if ((su = AG_SurfaceConvert(suFile, agSurfaceFmt)) == NULL) {
-		AG_SurfaceFree(suFile);
+	if ((S = AG_SurfaceConvert(Sfile, agSurfaceFmt)) == NULL) {
+		AG_SurfaceFree(Sfile);
 		return (-1);
 	}
 	
 	AG_OBJECT_ISA(px, "AG_Widget:AG_Pixmap:*");
 	AG_ObjectLock(px);
 
-	name = AG_WidgetMapSurface(px, su);
+	name = AG_WidgetMapSurface(px, S);
 	px->flags |= AG_PIXMAP_UPDATE;
 
 	AG_ObjectUnlock(px);
 
-	AG_SurfaceFree(suFile);
+	AG_SurfaceFree(Sfile);
 	return (name);
 }
 
@@ -425,6 +427,8 @@ Draw(void *_Nonnull obj)
 			UpdateScaled(px);
 			px->flags &= ~(AG_PIXMAP_UPDATE);
 		}
+
+		/* TODO pre-check if blending necessary */
 		AG_PushBlendingMode(px, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 
 		AG_WidgetBlitSurface(px, px->sScaled,

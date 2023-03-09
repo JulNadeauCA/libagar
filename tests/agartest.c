@@ -11,7 +11,20 @@
 #include <string.h>
 
 #include <agar/config/ag_unicode.h>
+#include <agar/config/have_freetype.h>
+#include <agar/config/have_fontconfig.h>
+#include <agar/config/have_gettext.h>
+#include <agar/config/have_glu.h>
+#include <agar/config/have_iconv.h>
+#include <agar/config/have_jpeg.h>
 #include <agar/config/have_opengl.h>
+#include <agar/config/have_png.h>
+#include <agar/config/have_portaudio.h>
+#include <agar/config/have_sdl2.h>
+#include <agar/config/have_sdl.h>
+#include <agar/config/have_sndfile.h>
+#include <agar/config/have_x11.h>
+#include <agar/config/have_xinerama.h>
 
 #include <agar/core/agsi.h>
 
@@ -40,6 +53,7 @@ extern const AG_TestCase rendertosurfaceTest;
 extern const AG_TestCase scrollbarTest;
 extern const AG_TestCase scrollviewTest;
 extern const AG_TestCase socketsTest;
+extern const AG_TestCase surfaceTest;
 extern const AG_TestCase tableTest;
 extern const AG_TestCase textboxTest;
 extern const AG_TestCase textdlgTest;
@@ -98,6 +112,7 @@ const AG_TestCase *testCases[] = {
 	&scrollbarTest,
 	&scrollviewTest,
 	&socketsTest,
+	&surfaceTest,
 	&tableTest,
 	&textboxTest,
 	&textdlgTest,
@@ -173,8 +188,47 @@ const char *agarBuildOpts[] = {
 
 /* Build library support */
 const char *agarBuildLibs[] = {
+#ifdef HAVE_FREETYPE
+	"FREETYPE  ",
+#endif
+#ifdef HAVE_FONTCONFIG
+	"FONTCONFIG  ",
+#endif
+#ifdef HAVE_GETTEXT
+	"GETTEXT  ",
+#endif
+#ifdef HAVE_GLU
+	"GLU  ",
+#endif
+#ifdef HAVE_ICONV
+	"ICONV  ",
+#endif
+#ifdef HAVE_JPEG
+	"JPEG  ",
+#endif
 #ifdef HAVE_OPENGL
-	"OPENGL ",
+	"OPENGL  ",
+#endif
+#ifdef HAVE_PNG
+	"PNG  ",
+#endif
+#ifdef HAVE_PORTAUDIO
+	"PORTAUDIO  ",
+#endif
+#ifdef HAVE_SDL2
+	"SDL2  ",
+#endif
+#ifdef HAVE_SDL
+	"SDL  ",
+#endif
+#ifdef HAVE_SNDFILE
+	"SNDFILE  ",
+#endif
+#ifdef HAVE_X11
+	"X11  ",
+#endif
+#ifdef HAVE_XINERAMA
+	"XINERAMA  ",
 #endif
 	NULL
 };
@@ -212,10 +266,10 @@ RunBenchmarks(void *arg)
 	AG_Console *console = ti->console;
 	int rv;
 
-	rv = ti->tc->bench(ti);
-
-	if (!AG_OBJECT_VALID(console) || !AG_CONSOLE_ISA(console))
+	if (!AG_OBJECT_VALID(console) || !AG_CONSOLE_ISA(console)) {
 		return (NULL);
+	}
+	rv = ti->tc->bench(ti);
 
 	if (rv == 0) {
 		AG_ConsoleMsg(console, _("%s: Success"), ti->tc->name);
@@ -314,6 +368,7 @@ RunTest(AG_Event *event)
 		}
 	}
 	if (tc->bench != NULL) {
+		AG_RedrawOnTick(console, 250);   /* XXX workaround */
 		RunBench(event);
 	}
 	if (tc->testGUI != NULL) {
@@ -468,9 +523,6 @@ TestExecBenchmark(void *obj, AG_Benchmark *bm)
 	Uint32 tTot, tRun;
 #endif
 
-	if (AG_OBJECT_VALID(cons))
-		AG_RedrawOnTick(cons, 1);
-
 	for (fIdx = 0; fIdx < bm->nFuncs; fIdx++) {
 		char pbuf[64];
 		AG_BenchmarkFn *bfn = &bm->funcs[fIdx];
@@ -490,7 +542,7 @@ TestExecBenchmark(void *obj, AG_Benchmark *bm)
 retry:
 				t1 = rdtsc();
 				for (j = 0; j < bm->iterations; j++) {
-					bfn->run(ti);
+					bfn->run(ti, bfn->arg);
 				}
 				t2 = rdtsc();
 				tRun = (t2 - t1) / bm->iterations;
@@ -523,7 +575,7 @@ retry:
 			for (i = 0, tTot = 0; i < bm->runs; i++) {
 				t1 = AG_GetTicks();
 				for (j = 0; j < bm->iterations; j++) {
-					bfn->run(ti);
+					bfn->run(ti, bfn->arg);
 				}
 				t2 = AG_GetTicks();
 				tRun = (t2 - t1);
@@ -542,9 +594,6 @@ retry:
 			AG_ConsoleMsgEdit(cl, pbuf);
 		}
 	}
-
-	if (AG_OBJECT_VALID(cons))
-		AG_RedrawOnTick(cons, -1);
 }
 
 #ifdef AG_UNICODE
@@ -779,10 +828,13 @@ main(int argc, char *argv[])
 
 	TAILQ_INIT(&tests);
 
-	while ((c = AG_Getopt(argc, argv, "CWqd:s:t:v?hp:", &optArg, &optInd)) != -1) {
+	while ((c = AG_Getopt(argc, argv, "CDWqd:s:t:v?hp:", &optArg, &optInd)) != -1) {
 		switch (c) {
 		case 'C':
 			noConsoleRedir = 1;
+			break;
+		case 'D':
+			agDebugLvl = 2;
 			break;
 		case 'W':
 			initFlags |= AG_SOFT_TIMERS;

@@ -223,12 +223,14 @@ RG_TextureEdit(void *vfsRoot, RG_Texture *tex)
 		AG_LabelNewS(ntab, 0, _("T-coordinate wrapping: "));
 		AG_RadioNewUint(ntab, AG_RADIO_HFILL, wrapModes, &tex->wrap_t);
 	}
+#if 0
 	ntab = AG_NotebookAdd(nb, _("Blending"), AG_BOX_VERT);
 	{
 		AG_LabelNewS(ntab, 0, _("Blending function: "));
 		AG_RadioNewInt(ntab, AG_RADIO_HFILL, agAlphaFuncNames,
 		    &tex->blend_func);
 	}
+#endif
 
 	num = AG_NumericalNew(win, 0, NULL, _("Overall alpha: "));
 	AG_BindUint8(num, "value", &tex->alpha);

@@ -597,25 +597,17 @@ package Agar.Surface is
     with Import, Convention => C, Link_Name => "AG_ReadSurfaceFromJPEG";
 
   --
-  -- Return a string describing a blending function.
-  --
-  function Alpha_Func_Name
-    (Func : Alpha_Func) return String;
-
-  --
   -- Blend a target pixel against a specified color. The target pixel's
   -- alpha component is computed according to Func.
   --
   procedure Blend_Pixel
     (Surface : in Surface_not_null_Access;
      Pixel   : in Pixel_not_null_Access;
-     Color   : in Color_not_null_Access;
-     Func    : in Alpha_Func := ALPHA_OVERLAY);
+     Color   : in Color_not_null_Access);
   procedure Blend_Pixel
     (Surface  : in Surface_not_null_Access;
      X,Y      : in Natural;
-     Color    : in Color_not_null_Access;
-     Func     : in Alpha_Func := ALPHA_OVERLAY);
+     Color    : in Color_not_null_Access);
  
   --
   -- Return the native-width packed pixel corresponding to a Color
@@ -939,9 +931,6 @@ package Agar.Surface is
      Palette : in Palette_not_null_Access) return C.int
     with Import, Convention => C, Link_Name => "AG_SurfaceSetPalette";
    
-  -- TODO AG_SurfaceCopyPixels()
-  -- TODO AG_SurfaceSetPixels()
-
   procedure AG_SurfaceBlit
     (Source   : in Surface_not_null_Access;
      Src_Rect : in Rect_Access;
@@ -1004,15 +993,13 @@ package Agar.Surface is
   procedure AG_SurfaceBlend
     (Surface : in Surface_not_null_Access;
      X,Y     : in C.int;
-     Color   : in Color_not_null_Access;
-     Func    : in C.unsigned)
+     Color   : in Color_not_null_Access)
     with Import, Convention => C, Link_Name => "ag_surface_blend";
 
   procedure AG_SurfaceBlend_At
     (Surface : in Surface_not_null_Access;
      Pixel   : in Pixel_not_null_Access;
-     Color   : in Color_not_null_Access;
-     Func    : in C.unsigned)
+     Color   : in Color_not_null_Access)
     with Import, Convention => C, Link_Name => "ag_surface_blend_at";
 
   procedure AG_FillRect

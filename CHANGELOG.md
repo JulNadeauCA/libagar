@@ -6,6 +6,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**sdl2fb**](https://libagar.org/man3/AG_DriverSDL2FB): New driver for SDL 2.0 (single-window; frame-buffer mode).
 - [**sdl2gl**](https://libagar.org/man3/AG_DriverSDL2GL): New driver for SDL 2.0 (single-window; OpenGL mode).
 - [**sdl2mw**](https://libagar.org/man3/AG_DriverSDL2MW): New driver for SDL 2.0 (multi-window; OpenGL mode).
+- [**AG_Color**](https://libagar.org/man3/AG_Color): Add compression / decompression macros for 4/12/24/48-bit values.
 - [**AG_Driver**](https://libagar.org/man3/AG_Driver): New operation: `setMouseAutoCapture` (enable, disable or reset mouse auto-capture on button-down).
 - [**AG_DriverSw**](https://libagar.org/man3/AG_DriverSw): New option `clampOnResize` (clamp active Agar windows against new display size).
 - [**AG_Error**](https://libagar.org/man3/AG_Error): New function `AG_Debug2()` (output debug message when debug level is >= 2).
@@ -17,6 +18,11 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Improve the object validity test by using a pseudo-random signature generated on initialization. Make validity and class-membership testing possible outside of Debug builds.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): New function `AG_ObjectFreeChildrenOfType()`.
 - [**AG_Radio**](https://libagar.org/man3/AG_Radio): New `HOMOGENOUS` option to divide space equally between items. Thanks Stephen!
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Add standard palettes for 1/2/4/8-bit modes. New Indexed surfaces are now initialized with a standard palette by default.
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Add support for 40- and 48-bpp surfaces.
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Introduce optimized blitter tables.
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): New function `AG_PixelFormatMaximum()` to return the maximum possible pixel value for a given format.
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): New function `AG_SurfaceBlend8()` for blending 1/2/4/8-bpp surfaces against an `AG_Color` using the closest approximation available.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Embed 4 general-purpose 16-bit guides. Guides are useful for typography, graphics and other applications.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): The surface returned by `AG_TextRender()` now includes Ascent information under `Guide 0`.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): New function `AG_TextRenderRTL()` for rendering text right-to-left.
@@ -40,7 +46,9 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**MAP**](https://libagar.org/man3/MAP): Added Undo/Redo and History Buffer to Map Editor. New function `MAP_ClearHistory()`.
 - [**MAP**](https://libagar.org/man3/MAP): Added validity tests to `MAP_Node` and `MAP_Item`.
 - [**MAP**](https://libagar.org/man3/MAP): Added persistent Library to the Map Editor. The `pLibs` pointer of `MAP` may be used to specify an alternate `AG_Object` as VFS Root for the Library. Similarly, `pMaps` may be used to specify an alternate VFS Root for loaded Maps.
-- `install-agartest.exe` installer for agartest on Windows.
+- [**agartest**](https://libagar.org/man1/agartest): New test/benchmark module `surface` for testing conversions and pixel/surface operations between surfaces in different modes and formats.
+- [**agartest**](https://libagar.org/man1/agartest): New command-line option `-D` (enable debugging).
+- [**agartest**](https://libagar.org/man1/agartest): New installer `install-agartest.exe` for Windows.
 - Provide copies of the OFL as separate files (OFL11.txt and LICENSE.ofl).
 - Install a copy of the generated Makefile.config as ${DATADIR}/agar.mk.
 - Install a copy of the generated configure.lua as ${DATADIR}/agar.lua.
@@ -49,6 +57,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - Added Vim syntax files (under the `syntax/` directory) complete with all types and constants.
 
 ### Removed
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Removed the `fn` argument from the `AG_SurfaceBlend*()` family of functions. Use separate routines to implement different blending arithmetic.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Removed `AG_ObjectPage{In,Out}()` and unused flags `AG_OBJECT_FLOATING_VARS`, `AG_OBJECT_NON_PERSISTENT`, `AG_OBJECT_RESIDENT`, `AG_OBJECT_REOPEN_ONLOAD`, `AG_OBJECT_REMAIN_DATA` and `AG_OBJECT_CHLD_AUTOSAVE`.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): Removed `AG_UnusedFont()` and the reference counter in `AG_Font`.
 - 
@@ -62,6 +71,10 @@ New function [AG_UnusedFont()](https://libagar.org/man3/AG_UnusedFont) for decre
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Event argument accessor macros of the form `AG_CONST_FOO_PTR()` are now defined as `AG_cFOO_PTR()`.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): In `AG_ObjectGenName()`, convert the prefix (class name) to lowercase in its entirety.
 - [**AG_Printf**](https://libagar.org/man3/AG_Printf): When formatting floating-point, handle positive and negative infinity.
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Replaced the `PixelsPerByte` field by `PixelsPerByteShift` to allow for more efficient arithmetic when handling < 8-bpp surfaces.
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): In `AG_SurfaceCopy()`, handle 8-bpp copies to same-format surfaces using block copy.
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): In `AG_SurfaceCopy()`, add an optimized case for sources surfaces in <= 8-bpp.
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): In `AG_SurfaceCopy()`, add an optimized case for grayscale source surfaces.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): The `agFontAdjustments[]` table has been updated and expanded to include common system fonts.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Improved appearance and typography fixes. Improved performance of the renderer using state-dependent opaque labels to avoid the need for blending.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Now applies the "padding" attribute on a per-item basis.
@@ -79,6 +92,11 @@ New function [AG_UnusedFont()](https://libagar.org/man3/AG_UnusedFont) for decre
 - [**wgl**](https://libagar.org/man3/AG_DriverWGL): Fixed a bug in cursor handling. When showing a window initially, perform size allocation after having initialized the cursors so that the initial cursor-change areas are correctly established.
 - `install-sdk.exe` now installs include files in `include\x86` or `include\x64`.
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): Fixed styling errors. Honor the `#disabled` state.
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Fix loading of PNG files in 16bpc format (the surface was not being initialized with the correct 64-bit masks). Fix transparency to colorkey translation when loading a PNG in an Indexed format.
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Fix conversion between Indexed/Grayscale and other modes.
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Fix conversion between 64-bpp and other modes.
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Honor surface padding in `AG_SurfaceFromPixelsRGB()` and `AG_SurfaceFromPixelsRGBA()`.
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): `AG_MapPixelIndexed()` now uses the Euclidean distance method.
 - [**AG_Table**](https://libagar.org/man3/AG_Table): Fixed an off-by-one which caused a missing cursor-change area for column resize.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): `AG_SetDefaultFont()` now takes effect immediately.
 - [**AG_Textbox**](https://libagar.org/man3/AG_Textbox), [**AG_Editable**](https://libagar.org/man3/AG_Editable) and [**AG_Console**](https://libagar.org/man3/AG_Console): Fix horizontal scrolling (Shift + Mouse Wheel) behavior.
@@ -180,6 +198,7 @@ New function [AG_UnusedFont()](https://libagar.org/man3/AG_UnusedFont) for decre
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Removed the `AG_ObjectDep` structure and linkage. Dependencies are now represented with less overhead using [AG_Variables](https://libagar.org/man3/AG_Variable).
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Removed the `save_pfx` and `archivePath` fields (replaced by the _"archive-path"_ property).
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Remove typed virtual functions. This improves performance and allows `AG_Get*()` functions to be declared `pure` in unthreaded builds.
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Remove redundant routines `AG_SurfaceCopyPixels()` and `AG_SurfaceSetPixels()`.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Removed the options `NOSPACING` and `TABLE_EMBEDDABLE` which are no longer relevant.
 
 ### Changed

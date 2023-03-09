@@ -64,26 +64,69 @@ typedef struct ag_color_name {
 } AG_ColorName;
 
 #define AG_4to8(c)    (Uint8)((float)(c)/15.0f * 255.0f)
+#define AG_4to12(c)  (Uint16)((float)(c)/15.0f * 4096.0f)
 #define AG_4to16(c)  (Uint16)((float)(c)/15.0f * 65535.0f)
+#define AG_4to24(c)  (Uint32)((float)(c)/15.0f * 16777215.0f)
 #define AG_4to32(c)  (Uint32)((float)(c)/15.0f * 4294967295.0f)
+#define AG_4to48(c)  (Uint64)((float)(c)/15.0f * 281474976710655.0f)
+
 #define AG_8to4(c)    (Uint8)((float)(c)/255.0f * 15.0f)
+#define AG_8to12(c)  (Uint16)((float)(c)/255.0f * 4096.0f)
 #define AG_8to16(c)  (Uint16)((float)(c)/255.0f * 65535.0f)
+#define AG_8to24(c)  (Uint32)((float)(c)/255.0f * 16777215.0f)
 #define AG_8to32(c)  (Uint32)((float)(c)/255.0f * 4294967295.0f)
+#define AG_8to48(c)  (Uint64)((float)(c)/255.0f * 281474976710655.0f)
+
+#define AG_12to4(c)   (Uint8)((float)(c)/4096.0f * 15.0f)
+#define AG_12to8(c)   (Uint8)((float)(c)/4096.0f * 255.0f)
+#define AG_12to16(c) (Uint16)((float)(c)/4096.0f * 65535.0f)
+#define AG_12to24(c) (Uint32)((float)(c)/4096.0f * 16777215.0f)
+#define AG_12to32(c) (Uint32)((float)(c)/4096.0f * 4294967295.0f)
+#define AG_12to48(c) (Uint64)((float)(c)/4096.0f * 281474976710655.0f)
+
 #define AG_16to4(c)   (Uint8)((float)(c)/65535.0f * 15.0f)
 #define AG_16to8(c)   (Uint8)((float)(c)/65535.0f * 255.0f)
+#define AG_16to12(c) (Uint16)((float)(c)/65535.0f * 4096.0f)
+#define AG_16to24(c) (Uint32)((float)(c)/65535.0f * 16777215.0f)
 #define AG_16to32(c) (Uint32)((float)(c)/65535.0f * 4294967295.0f)
+#define AG_16to48(c) (Uint64)((float)(c)/65535.0f * 281474976710655.0f)
+
+#define AG_24to4(c)   (Uint8)((float)(c)/16777215.0f * 15.0f)
+#define AG_24to8(c)   (Uint8)((float)(c)/16777215.0f * 255.0f)
+#define AG_24to12(c) (Uint16)((float)(c)/16777215.0f * 4096.0f)
+#define AG_24to16(c) (Uint16)((float)(c)/16777215.0f * 65535.0f)
+#define AG_24to32(c) (Uint32)((float)(c)/16777215.0f * 4294967295.0f)
+#define AG_24to48(c) (Uint64)((float)(c)/16777215.0f * 281474976710655.0f)
+
 #define AG_32to4(c)   (Uint8)((float)(c)/4294967295.0f * 15.0f)
 #define AG_32to8(c)   (Uint8)((float)(c)/4294967295.0f * 255.0f)
+#define AG_32to12(c)  (Uint8)((float)(c)/4294967295.0f * 4096.0f)
 #define AG_32to16(c) (Uint16)((float)(c)/4294967295.0f * 65535.0f)
+#define AG_32to24(c) (Uint32)((float)(c)/4294967295.0f * 16777215.0f)
+#define AG_32to48(c) (Uint64)((float)(c)/4294967295.0f * 281474976710655.0f)
+
+#define AG_48to4(c)   (Uint8)((float)(c)/281474976710655.0f * 15.0f)
+#define AG_48to8(c)   (Uint8)((float)(c)/281474976710655.0f * 255.0f)
+#define AG_48to12(c)  (Uint8)((float)(c)/281474976710655.0f * 4096.0f)
+#define AG_48to16(c) (Uint16)((float)(c)/281474976710655.0f * 65535.0f)
+#define AG_48to24(c) (Uint32)((float)(c)/281474976710655.0f * 16777215.0f)
+#define AG_48to32(c) (Uint32)((float)(c)/281474976710655.0f * 4294967295.0f)
 
 #if AG_MODEL == AG_LARGE
 
 # define AG_4toH(c)      AG_4to16(c)
 # define AG_8toH(c)      AG_8to16(c)
+# define AG_12toH(c)     AG_12to16(c)
 # define AG_16toH(c)     (c)
+# define AG_24toH(c)     AG_24to16(c)
+# define AG_48toH(c)     AG_48to16(c)
+
 # define AG_Hto4(c)      AG_16to4(c)
 # define AG_Hto8(c)      AG_16to8(c)
+# define AG_Hto12(c)     AG_16to12(c)
 # define AG_Hto16(c)     (c)
+# define AG_Hto24(c)     AG_16to24(c)
+# define AG_Hto48(c)     AG_16to48(c)
 
 # define AG_ColorWhite(c) AG_ColorRGBA_16((c),0xffff,0xffff,0xffff,0xffff)
 # define AG_ColorBlack(c) AG_ColorRGBA_16((c),0x0000,0x0000,0x0000,0xffff)
@@ -97,10 +140,17 @@ typedef struct ag_color_name {
 
 # define AG_4toH(c)      AG_4to8(c)
 # define AG_8toH(c)      (c)
+# define AG_12toH(c)     AG_12to8(c)
 # define AG_16toH(c)     AG_16to8(c)
+# define AG_24toH(c)     AG_24to8(c)
+# define AG_48toH(c)     AG_48to8(c)
+
 # define AG_Hto4(c)      AG_8to4(c)
 # define AG_Hto8(c)      (c)
+# define AG_Hto12(c)     AG_8to12(c)
 # define AG_Hto16(c)     AG_8to16(c)
+# define AG_Hto24(c)     AG_8to24(c)
+# define AG_Hto48(c)     AG_8to48(c)
 
 # define AG_ColorWhite(c)  AG_ColorRGBA_8((c),255,255,255,255)
 # define AG_ColorBlack(c)  AG_ColorRGBA_8((c),0,0,0,255)

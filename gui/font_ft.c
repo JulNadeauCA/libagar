@@ -730,8 +730,7 @@ Render(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 	
 					for (x = 0; x < w; x++) {
 						if ((cFg.a = AG_8toH(*src++)) > 0) {
-							AG_SurfaceBlend_At(S, dst, &cFg,
-							    AG_ALPHA_DST);
+							AG_SurfaceBlend_At(S, dst, &cFg);
 						}
 						dst += BytesPerPixel;
 					}

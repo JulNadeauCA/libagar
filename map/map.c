@@ -2371,7 +2371,7 @@ LayerPopupMenu(AG_Event *_Nonnull event)
 {
 	MAP *map = MAP_PTR(1);
 	AG_Tlist *tlLayers = AG_TLIST_PTR(2);
-	AG_MenuItem *menu = AG_MENU_ITEM_PTR(3);
+	AG_MenuItem *menu = AG_MENUITEM_PTR(3);
 	MAP_Layer *layer;
 
 	if ((layer = AG_TlistSelectedItemPtr(tlLayers)) == NULL) {

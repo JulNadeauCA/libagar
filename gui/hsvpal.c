@@ -1007,9 +1007,7 @@ RenderStatic(AG_HSVPal *_Nonnull pal)
 			for (x = pal->rPrev.x, i=0, c.a=0;
 			     x < pal->rPrev.x + pal->rPrev.w;
 			     x++, i++) {
-				AG_SurfaceBlendRGB(S, x,y,
-				    c.r, c.g, c.b, c.a,
-				    AG_ALPHA_SRC);
+				AG_SurfaceBlend(S, x,y, &c);
 
 				c.a = i*AG_OPAQUE/pal->rPrev.w;
 			}

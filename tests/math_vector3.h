@@ -5,7 +5,7 @@
  */
 
 static void
-VectorZero3(void *ti)
+VectorZero3(void *ti, int arg)
 {
 	M_Vector3 v[4];
 	int i;
@@ -20,7 +20,7 @@ VectorZero3(void *ti)
 	}
 }
 static void
-VectorGet3(void *ti)
+VectorGet3(void *ti, int arg)
 {
 	M_Real f[3];
 	M_Vector3 v;
@@ -32,7 +32,7 @@ VectorGet3(void *ti)
 	if (v.x > RandomReal(ti)) { realJunk = v.x; }
 }
 static void
-VectorSet3(void *ti)
+VectorSet3(void *ti, int arg)
 {
 	M_Real f[3];
 	M_Vector3 v;
@@ -44,7 +44,7 @@ VectorSet3(void *ti)
 	if (v.x > RandomReal(ti)) { realJunk = v.x; }
 }
 static void
-VectorCopy3(void *ti)
+VectorCopy3(void *ti, int arg)
 {
 	M_Vector3 rOrig = RandomVector3(ti);
 	M_Vector3 vDup;
@@ -53,7 +53,7 @@ VectorCopy3(void *ti)
 	if (vDup.x > RandomReal(ti)) { realJunk = vDup.x; }
 }
 static void
-VectorFlip3(void *ti)
+VectorFlip3(void *ti, int arg)
 {
 	M_Vector3 vMir;
 
@@ -61,7 +61,7 @@ VectorFlip3(void *ti)
 	if (vMir.x > RandomReal(ti)) { realJunk = vMir.x; }
 }
 static void
-VectorLen3(void *ti)
+VectorLen3(void *ti, int arg)
 {
 	M_Real len1, len2;
 
@@ -70,7 +70,7 @@ VectorLen3(void *ti)
 	if (len1 > len2) { realJunk = len1+len2; }
 }
 static void
-VectorLen3p(void *ti)
+VectorLen3p(void *ti, int arg)
 {
 	M_Vector3 v = RandomVector3(ti);
 	M_Real len1, len2;
@@ -80,7 +80,7 @@ VectorLen3p(void *ti)
 	if (len1 > len2) { realJunk = len1+len2; }
 }
 static void
-VectorDot3(void *ti)
+VectorDot3(void *ti, int arg)
 {
 	M_Vector3 v[8];
 	M_Real dots[6];
@@ -96,7 +96,7 @@ VectorDot3(void *ti)
 	for (i = 0; i < 6; i++) { realJunk += dots[i]; }
 }
 static void
-VectorDot3p(void *ti)
+VectorDot3p(void *ti, int arg)
 {
 	M_Vector3 v[8];
 	M_Real dots[6];
@@ -112,7 +112,7 @@ VectorDot3p(void *ti)
 	for (i = 0; i < 6; i++) { realJunk += dots[i]; }
 }
 static void
-VectorDistance3(void *ti)
+VectorDistance3(void *ti, int arg)
 {
 	M_Vector3 v[8];
 	M_Real dots[6];
@@ -128,7 +128,7 @@ VectorDistance3(void *ti)
 	for (i = 0; i < 6; i++) { realJunk += dots[i]; }
 }
 static void
-VectorDistance3p(void *ti)
+VectorDistance3p(void *ti, int arg)
 {
 	M_Vector3 v[8];
 	M_Real dots[6];
@@ -144,7 +144,7 @@ VectorDistance3p(void *ti)
 	for (i = 0; i < 6; i++) { realJunk += dots[i]; }
 }
 static void
-VectorNorm3(void *ti)
+VectorNorm3(void *ti, int arg)
 {
 	M_Vector3 v[6], vNorm[6];
 	int i;
@@ -154,7 +154,7 @@ VectorNorm3(void *ti)
 	for (i = 0; i < 6; i++) { realJunk += vNorm[i].x; }
 }
 static void
-VectorNorm3p(void *ti)
+VectorNorm3p(void *ti, int arg)
 {
 	M_Vector3 v[6], vNorm[6];
 	int i;
@@ -164,7 +164,7 @@ VectorNorm3p(void *ti)
 	for (i = 0; i < 6; i++) { realJunk += vNorm[i].x; }
 }
 static void
-VectorNorm3v(void *ti)
+VectorNorm3v(void *ti, int arg)
 {
 	M_Vector3 v[6];
 	int i;
@@ -173,7 +173,7 @@ VectorNorm3v(void *ti)
 	for (i = 0; i < 6; i++) { M_VecNorm3v(&v[i]); }
 }
 static void
-VectorCross3(void *ti)
+VectorCross3(void *ti, int arg)
 {
 	M_Vector3 v[8], x[6];
 	int i;
@@ -188,7 +188,7 @@ VectorCross3(void *ti)
 	for (i = 0; i < 6; i++) { realJunk += x[i].x; }
 }
 static void
-VectorCross3p(void *ti)
+VectorCross3p(void *ti, int arg)
 {
 	M_Vector3 v[8], x[6];
 	int i;
@@ -204,7 +204,7 @@ VectorCross3p(void *ti)
 }
 
 static void
-VectorNormCross3(void *ti)
+VectorNormCross3(void *ti, int arg)
 {
 	M_Vector3 v[4], x[3];
 	int i;
@@ -216,7 +216,7 @@ VectorNormCross3(void *ti)
 	for (i = 0; i < 3; i++) { realJunk += x[i].x; }
 }
 static void
-VectorNormCross3p(void *ti)
+VectorNormCross3p(void *ti, int arg)
 {
 	M_Vector3 v[4], x[3];
 	int i;
@@ -229,7 +229,7 @@ VectorNormCross3p(void *ti)
 }
 
 static void
-VectorScale3(void *ti)
+VectorScale3(void *ti, int arg)
 {
 	M_Vector3 a[6], b[6];
 	int i;
@@ -239,7 +239,7 @@ VectorScale3(void *ti)
 	for (i = 0; i < 6; i++) { realJunk += b[i].x; }
 }
 static void
-VectorScale3p(void *ti)
+VectorScale3p(void *ti, int arg)
 {
 	M_Vector3 a[6], b[6];
 	int i;
@@ -249,7 +249,7 @@ VectorScale3p(void *ti)
 	for (i = 0; i < 6; i++) { realJunk += b[i].x; }
 }
 static void
-VectorScale3v(void *ti)
+VectorScale3v(void *ti, int arg)
 {
 	M_Vector3 v[6];
 	int i;
@@ -259,7 +259,7 @@ VectorScale3v(void *ti)
 	for (i = 0; i < 6; i++) { realJunk += v[i].x; }
 }
 static void
-VectorAdd3(void *ti)
+VectorAdd3(void *ti, int arg)
 {
 	M_Vector3 a[6], b[6], c[6];
 	int i;
@@ -269,7 +269,7 @@ VectorAdd3(void *ti)
 	for (i = 0; i < 6; i++) { realJunk += c[i].x; }
 }
 static void
-VectorAdd3p(void *ti)
+VectorAdd3p(void *ti, int arg)
 {
 	M_Vector3 a[6], b[6], c[6];
 	int i;
@@ -279,7 +279,7 @@ VectorAdd3p(void *ti)
 	for (i = 0; i < 6; i++) { realJunk += c[i].x; }
 }
 static void
-VectorAdd3v(void *ti)
+VectorAdd3v(void *ti, int arg)
 {
 	M_Vector3 a[6], b[6];
 	int i;
@@ -290,7 +290,7 @@ VectorAdd3v(void *ti)
 }
 
 static void
-VectorAvg3(void *ti)
+VectorAvg3(void *ti, int arg)
 {
 	M_Vector3 a[6], b[6], c[6];
 	int i;
@@ -301,7 +301,7 @@ VectorAvg3(void *ti)
 }
 
 static void
-VectorAvg3p(void *ti)
+VectorAvg3p(void *ti, int arg)
 {
 	M_Vector3 a[6], b[6], c[6];
 	int i;
@@ -312,7 +312,7 @@ VectorAvg3p(void *ti)
 }
 
 static void
-VectorLERP3(void *ti)
+VectorLERP3(void *ti, int arg)
 {
 	M_Vector3 a[6], b[6], c[6];
 	int i;
@@ -323,7 +323,7 @@ VectorLERP3(void *ti)
 }
 
 static void
-VectorSum3(void *ti)
+VectorSum3(void *ti, int arg)
 {
 	M_Vector3 v[12], vOut;
 	int i;

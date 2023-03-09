@@ -57,19 +57,19 @@
 AG_FlagDescrRO agArchExtnNames[] = {
 	{ AG_EXT_CPUID,            "CPUID" },                 /* CPUID Insn */
 	{ AG_EXT_MMX,              "MMX" },
-	{ AG_EXT_MMX_EXT,        _("MMX + AMD Extensions") },
+	{ AG_EXT_MMX_EXT,          "MMX+AMD Exts" },
 	{ AG_EXT_3DNOW,            "3dNow!" },
-	{ AG_EXT_3DNOW_EXT,      _("3dNow! + Extensions") },
-	{ AG_EXT_3DNOW_PREFETCH,   "3dNow! " AGSI_CODE" PREFETCH/PREFETCHW" AGSI_RST },
+	{ AG_EXT_3DNOW_EXT,        "3dNow!+Exts" },
+	{ AG_EXT_3DNOW_PREFETCH,   "3dNow! PREFETCH" },
 	{ AG_EXT_ALTIVEC,          "AltiVec" },
 	{ AG_EXT_SSE,              "SSE" },
 	{ AG_EXT_SSE2,             "SSE2" },
 	{ AG_EXT_SSE3,             "SSE3"  },
 	{ AG_EXT_SSSE3,            "SSSE3" },
-	{ AG_EXT_SSE4A,          _("SSE4a Extensions") },
+	{ AG_EXT_SSE4A,            "SSE4a" },
 	{ AG_EXT_SSE41,            "SSE41" },
 	{ AG_EXT_SSE42,            "SSE42" },
-	{ AG_EXT_SSE5A,          _("SSE5a Extensions") },
+	{ AG_EXT_SSE5A,            "SSE5a" },
 	{ AG_EXT_SSE_MISALIGNED, _("Misaligned SSE Mode") },
 	{ AG_EXT_LONG_MODE,      _("Long Mode") },
 	{ AG_EXT_RDTSCP,           "RDTSCP" },                /* RDTSC Insn */
@@ -82,7 +82,7 @@ AG_FlagDescrRO agArchExtnNames[] = {
 	{ AG_EXT_HTT,              "HTT" },         /* Hyper-Threading Tech */
 	{ AG_EXT_MON,              "MON" },          /* MONITOR/MWAIT Insns */
 	{ AG_EXT_VMX,              "VMX" },        /* Virtual Machine Extns */
-	{ 0,                     NULL }
+	{ 0,                       NULL }
 };
 
 static AG_Font *agConfigSelectedFont = NULL;
@@ -193,7 +193,7 @@ AG_DEV_ConfigWindow(AG_Config *_Nullable cfg)
 			for (fd = &agArchExtnNames[0]; fd->bitmask != 0; fd++) {
 				if (agCPU.ext & fd->bitmask) {
 					Strlcat(extns, fd->descr, sizeof(extns));
-					if (i++ == 9) {
+					if (i++ == 6) {
 						i = 0;
 						Strlcat(extns, ",\n", sizeof(extns));
 					} else {
@@ -400,6 +400,7 @@ AG_DEV_ConfigWindow(AG_Config *_Nullable cfg)
 		AG_ButtonNewFn(box, 0, _("Save"), SaveConfig, NULL);
 	}
 
+	AG_WindowSetMinSize(win, 400, 250);
 	AG_WindowSetPosition(win, AG_WINDOW_MC, 0);
 
 	return (win);

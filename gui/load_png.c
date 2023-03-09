@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2010-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -131,11 +131,8 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 	png_bytep *volatile pData = NULL;
 	png_structp png;
 	png_infop info;
+	AG_Pixel Rmask, Gmask, Bmask, Amask;
 	png_uint_32 width, height;
-	Uint32 Rmask=0, Gmask=0, Bmask=0, Amask=0;
-#ifdef AG_DEBUG
-	AG_Offset start = AG_Tell(ds);
-#endif
 	int depth, colorType, intlaceType, channels, row;
 
 	if ((png = png_create_read_struct(PNG_LIBPNG_VER_STRING,NULL,NULL,NULL))
@@ -160,24 +157,6 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 	    colorType == PNG_COLOR_TYPE_GA)
 		png_set_expand_gray_1_2_4_to_8(png);
 #endif
-	if (png_get_valid(png, info, PNG_INFO_tRNS)) {
-		png_color_16 *tc;
-		Uint8 *trans;
-		AG_Pixel colorkey;
-	        int nTrans;
-
-		png_get_tRNS(png, info, &trans, &nTrans, &tc);
-		colorkey = AG_MapPixel_RGB16(&S->format,
-		    tc->red, tc->green, tc->blue);
-#if AG_MODEL == AG_LARGE
-		Debug2(NULL, "PNG transparent colorkey: 0x%llx\n",
-		    (unsigned long long)colorkey);
-#else
-		Debug2(NULL, "PNG transparent colorkey: 0x%x\n", colorkey);
-#endif
-	        AG_SurfaceSetColorKey(S, AG_SURFACE_COLORKEY, colorkey);
-	}
-
 	/* Update png_info structure per our requirements. */
 	png_read_update_info(png, info);
 
@@ -198,37 +177,76 @@ AG_ReadSurfaceFromPNG(AG_DataSource *ds)
 		break;
 	case PNG_COLOR_TYPE_RGB:
 	case PNG_COLOR_TYPE_RGB_ALPHA:
-#if AG_BYTEORDER == AG_BIG_ENDIAN
+#if AG_MODEL == AG_LARGE
+		if (depth > 8) {
+# if AG_BYTEORDER == AG_BIG_ENDIAN
+			Rmask = 0xffff000000000000;
+			Gmask = 0x0000ffff00000000;
+			Bmask = 0x00000000ffff0000;
+			Amask = (channels == 4) ?
+			        0x000000000000ffff : 0;
+# else
+			Rmask = 0x000000000000ffff;
+			Gmask = 0x00000000ffff0000;
+			Bmask = 0x0000ffff00000000;
+			Amask = (channels == 4) ?
+			        0xffff000000000000 : 0;
+# endif
+		} else
+#endif /* AG_LARGE */
 		{
-			const int s = (channels == 4) ? 0 : 8;
-			Rmask = 0xff000000 >> s;
-			Gmask = 0x00ff0000 >> s;
-			Bmask = 0x0000ff00 >> s;
-			Amask = 0x000000ff >> s;
-		}
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+			Rmask = 0xff000000;
+			Gmask = 0x00ff0000;
+			Bmask = 0x0000ff00;
+			Amask = (channels == 4) ?
+				0x000000ff : 0;
 #else
-		Rmask = 0x000000ff;
-		Gmask = 0x0000ff00;
-		Bmask = 0x00ff0000;
-		Amask = (channels == 4) ? 0xff000000 : 0;
+			Rmask = 0x000000ff;
+			Gmask = 0x0000ff00;
+			Bmask = 0x00ff0000;
+			Amask = (channels == 4) ?
+				0xff000000 : 0;
 #endif
-		S = AG_SurfaceRGBA(width, height, depth*channels, 0,
+		}
+
+		S = AG_SurfaceRGBA(width, height,
+		    (depth * channels), 0,
 		    Rmask, Gmask, Bmask, Amask);
 		break;
 	}
 	if (S == NULL)
 		goto fail;
+
+	if (png_get_valid(png, info, PNG_INFO_tRNS)) {
+		png_color_16 *tc;
+		Uint8 *trans;
+		AG_Pixel colorkey;
+	        int nTrans;
+
+		png_get_tRNS(png, info, &trans, &nTrans, &tc);
+		colorkey = AG_MapPixel_RGB16(&S->format,
+		    tc->red, tc->green, tc->blue);
+#if AG_MODEL == AG_LARGE
+		Debug2(NULL, "PNG transparent colorkey: 0x%llx\n",
+		    (unsigned long long)colorkey);
+#else
+		Debug2(NULL, "PNG transparent colorkey: 0x%x\n", colorkey);
+#endif
+	        AG_SurfaceSetColorKey(S, AG_SURFACE_COLORKEY, colorkey);
+	}
 	
-	if ((pData = TryMalloc(sizeof(png_bytep)*height)) == NULL) {
+	if ((pData = TryMalloc(sizeof(png_bytep) * height)) == NULL) {
 		goto fail;
 	}
-	for (row = 0; row < (int)height; row++)
+	for (row = 0; row < height; row++)
 		pData[row] = (png_bytep)S->pixels + row*S->pitch;
 
-	Debug2(NULL, "PNG image (%ux%u; %d-bpp (%d x %d-ch) %s at 0x%lx (->%p) via libpng (%s)\n",
+	Debug2(NULL,
+	    "Loading PNG (%ux%u; %d-bpp (%d x %d-ch) %s mode (libpng %s)\n",
 	    width, height, depth*channels, depth, channels,
 	    agSurfaceModeNames[S->format.mode],
-	    (long)start, S, PNG_LIBPNG_VER_STRING);
+	    PNG_LIBPNG_VER_STRING);
 
 	png_read_image(png, pData);
 
@@ -297,12 +315,6 @@ AG_SurfaceExportPNG(const AG_Surface *S, const char *path, Uint flags)
 	int i, x,y, w,h;
 	Uint8 *pSrc;
 
-#ifdef AG_DEBUG
-	if (S->flags & AG_SURFACE_TRACE) {
-		Debug(NULL, "Surface <%p>: Export to PNG via libpng (%s)\n", S,
-		    PNG_LIBPNG_VER_STRING);
-	}
-#endif
 	if ((f = fopen(path, "wb")) == NULL) {
 		AG_SetError("%s: %s", path, AG_GetError());
 		return (-1);
@@ -326,9 +338,6 @@ AG_SurfaceExportPNG(const AG_Surface *S, const char *path, Uint flags)
 
 	if (S->format.mode == AG_SURFACE_INDEXED) {
 		pngType = PNG_COLOR_TYPE_PALETTE;
-#ifdef AG_DEBUG
-		if (pal == NULL) { AG_FatalError("pal=NULL"); }
-#endif
 		if (S->format.BitsPerPixel > 8) {
 			AG_SetErrorS("Indexed PNG images must be <= 8 bpp");
 			goto fail;
@@ -344,12 +353,11 @@ AG_SurfaceExportPNG(const AG_Surface *S, const char *path, Uint flags)
 			pngType = PNG_COLOR_TYPE_RGB;
 		
 		}
-		if (S->format.BitsPerPixel == 64 ||
-		    S->format.BitsPerPixel == 48) {
+		if (S->format.BitsPerPixel > 32) {
 #if AG_MODEL == AG_LARGE
 			depth = 16;
 #else
-			AG_SetErrorS("48- and 64-bpp modes require AG_LARGE");
+			AG_SetErrorS("modes > 32bpp require AG_LARGE");
 			goto fail;
 #endif
 		} else {
@@ -368,7 +376,7 @@ AG_SurfaceExportPNG(const AG_Surface *S, const char *path, Uint flags)
 	    (flags & AG_EXPORT_PNG_ADAM7) ? PNG_INTERLACE_ADAM7 : PNG_INTERLACE_NONE,
 	    PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
-	if ((rows = png_malloc(png, h*sizeof(png_byte *))) == NULL) {
+	if ((rows = png_malloc(png, h * sizeof(png_byte *))) == NULL) {
 		AG_SetErrorS("png_malloc rows");
 		goto fail;
 	}
@@ -376,11 +384,15 @@ AG_SurfaceExportPNG(const AG_Surface *S, const char *path, Uint flags)
 	
 	switch (pngType) {
 	case PNG_COLOR_TYPE_RGB_ALPHA:
-		BytesPerPixel = ((depth >> 3) << 2) * sizeof(png_byte);
+		BytesPerPixel = ((depth >> 3) << 2);
 		SrcBytesPerPixel = S->format.BytesPerPixel;
+
 		Debug2(NULL, "Saving %ux%u %dbpp surface <%p> to %s [RGBA%d]\n",
 		    w,h, S->format.BitsPerPixel, S, path, depth);
-		for (y=0, pSrc=S->pixels; y < h; y++) {
+
+		for (y = 0, pSrc = S->pixels;
+		     y < h;
+		     y++) {
 			if ((row = png_malloc(png, w*BytesPerPixel)) == NULL) {
 				goto fail_row;
 			}
@@ -417,11 +429,15 @@ AG_SurfaceExportPNG(const AG_Surface *S, const char *path, Uint flags)
 		}
 		break;
 	case PNG_COLOR_TYPE_RGB:
-		BytesPerPixel = 3 * (depth >> 3) * sizeof(png_byte);
+		BytesPerPixel = 3 * (depth >> 3);
 		SrcBytesPerPixel = S->format.BytesPerPixel;
+
 		Debug2(NULL, "Saving %ux%u %dbpp surface <%p> to %s [RGB%d]\n",
 		    w,h, S->format.BitsPerPixel, S, path, depth);
-		for (y=0, pSrc=S->pixels; y < h; y++) {
+
+		for (y = 0, pSrc = S->pixels;
+		     y < h;
+		     y++) {
 			if ((row = png_malloc(png, w*BytesPerPixel)) == NULL) {
 				goto fail_row;
 			}
@@ -460,6 +476,7 @@ AG_SurfaceExportPNG(const AG_Surface *S, const char *path, Uint flags)
 		Debug2(NULL,
 		    "Saving %ux%u %dbpp surface %p to %s [%u-color PLTE]\n",
 		    w,h, S->format.BitsPerPixel, S, path, pal->nColors);
+
 		plte = (png_colorp)TryMalloc(pal->nColors * sizeof(png_color));
 		if (plte == NULL) {
 			goto fail;
@@ -471,15 +488,18 @@ AG_SurfaceExportPNG(const AG_Surface *S, const char *path, Uint flags)
 		}
 		png_set_PLTE(png, info, plte, pal->nColors);
 
-		for (y=0, pSrc=S->pixels; y < h; y++) {
+		for (y = 0, pSrc = S->pixels;
+		     y < h;
+		     y++) {
 			png_byte *row;
 			size_t len;
 
 			if (S->format.BitsPerPixel < 8) {
-				len = w*sizeof(png_byte)/S->format.PixelsPerByte; 
-				/* TODO zero copy */
+				len = w >> S->format.PixelsPerByteShift; 
 				if ((row = png_malloc(png, len)) == NULL) {
-					for (y--; y >= 0; y--) { png_free(png, rows[y]); }
+					for (y--; y >= 0; y--) {
+						png_free(png, rows[y]);
+					}
 					png_free(png, rows);
 					AG_SetErrorS("png_malloc row");
 					goto fail;
@@ -488,18 +508,19 @@ AG_SurfaceExportPNG(const AG_Surface *S, const char *path, Uint flags)
 				memcpy(row, pSrc, len);
 				pSrc += len;
 			} else {
-				/* TODO zero copy */
-				len = w*sizeof(png_byte);
-				row = png_malloc(png, w*sizeof(png_byte));
+				len = w;
+				row = png_malloc(png, w);
 				if (row == NULL) {
-					for (y--; y >= 0; y--) { png_free(png, rows[y]); }
+					for (y--; y >= 0; y--) {
+						png_free(png, rows[y]);
+					}
 					png_free(png, rows);
 					AG_SetErrorS("png_malloc row");
 					goto fail;
 				}
 				rows[y] = row;
-				memcpy(row, pSrc, w*sizeof(png_byte));
-				pSrc += w*sizeof(png_byte);
+				memcpy(row, pSrc, w);
+				pSrc += w;
 			}
 		}
 		break;
@@ -524,7 +545,9 @@ AG_SurfaceExportPNG(const AG_Surface *S, const char *path, Uint flags)
 
 	if (setjmp(png_jmpbuf(png))) {
 		AG_SetErrorS("png_write_image() failed");
-		for (y = 0; y < h; y++) { png_free(png, rows[y]); }
+		for (y = 0; y < h; y++) {
+			png_free(png, rows[y]);
+		}
 		png_free(png, rows);
 		goto fail;
 	}

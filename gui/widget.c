@@ -42,7 +42,6 @@
 #include <ctype.h>
 
 /* #define DEBUG_FOCUS */
-/* #define DEBUG_SURFACES */
 
 /* Style Properties */
 const char *agStyleAttributes[] = {
@@ -2063,21 +2062,10 @@ AG_WidgetMapSurface(void *obj, AG_Surface *S)
 	wid->surfaces[id] = S;
 	wid->surfaceFlags[id] = 0;
 	wid->textures[id] = 0;
-
 #ifdef AG_DEBUG
-	if (S != NULL) {
-# ifdef DEBUG_SURFACES
-		Debug(wid, "Map surface %d -> [ S=%dx%d-%d ]\n", id,
-		    S->w, S->h, S->format.BitsPerPixel);
-# endif
+	if (S != NULL)
 		S->flags |= AG_SURFACE_MAPPED;
-	} else {
-# ifdef DEBUG_SURFACES
-		Debug(wid, "Map surface %d -> [ NULL ]\n", id);
-# endif
-	}
-#endif /* AG_DEBUG */
-
+#endif
 	AG_ObjectUnlock(wid);
 	return (id);
 }
@@ -2098,9 +2086,6 @@ AG_WidgetUpdateSurface(void *obj, int id)
 		AG_FatalError("No such surface");
 # endif
 	wid->surfaceFlags[id] |= AG_WIDGET_SURFACE_REGEN;
-#endif
-#ifdef DEBUG_SURFACES
-	Debug(obj, "Regen surface %d\n", id);
 #endif
 }
 
@@ -2155,21 +2140,10 @@ AG_WidgetReplaceSurface(void *obj, int id, AG_Surface *S)
 #endif
 		AG_SurfaceFree(Sprev);
 	}
-
 #ifdef AG_DEBUG
-	if (S != NULL) {
-# ifdef DEBUG_SURFACES
-		Debug(wid, "Replace surface %d -> [ S=%dx%d-%d ]\n",
-		    id, S->w, S->h, S->format.BitsPerPixel);
-# endif
+	if (S != NULL)
 		S->flags |= AG_SURFACE_MAPPED;
-	} else {
-# ifdef DEBUG_SURFACES
-		Debug(wid, "Replace surface %d -> [ NULL ]\n", id);
-# endif
-	}
-#endif /* AG_DEBUG */
-
+#endif
 	wid->surfaces[id] = S;
 	wid->surfaceFlags[id] &= ~(AG_WIDGET_SURFACE_NODUP);
 

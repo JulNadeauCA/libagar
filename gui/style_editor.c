@@ -164,7 +164,7 @@ PollWidgets(AG_Event *_Nonnull event)
 	
 	AG_TlistBegin(tl);
 
-	if (tgt != NULL && AG_OBJECT_VALID(tgt)) {
+	if (tgt != NULL && AG_OBJECT_VALID(tgt) && AG_WIDGET_ISA(tgt)) {
 		FindWindows(tl, tgt, 0);
 	} else {
 		TargetRoot();
@@ -240,10 +240,10 @@ static void
 PollAttributes(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
-	AG_Widget *tgt = AG_WIDGET_PTR(1);
+	AG_Widget *tgt = AG_PTR(1);
 	const char **attr;
 
-	if (!AG_OBJECT_VALID(tgt))
+	if (!AG_OBJECT_VALID(tgt) || !AG_WIDGET_ISA(tgt))
 		return;
 
 	AG_TlistBegin(tl);
@@ -640,7 +640,7 @@ static void
 MenuForWindow(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_PTR(1);
-	AG_MenuItem *mi = AG_MENU_ITEM_PTR(2);
+	AG_MenuItem *mi = AG_MENUITEM_PTR(2);
 	AG_TlistItem *ti = AG_TlistSelectedItem(tl);
 	AG_Window *win = ti->p1;
 

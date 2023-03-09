@@ -63,8 +63,6 @@ typedef struct ag_menu_item {
 /* Tagged Non-Object */
 #define    AGMENUITEM(p)      ((AG_MenuItem *)(p))
 #define   AGcMENUITEM(p)      ((const AG_MenuItem *)(p))
-#define   AG_MENUITEM_SELF()  AGMENUITEM(  AG_MENUITEM_PTR(0) )
-#define  AG_cMENUITEM_SELF() AGcMENUITEM( AG_cMENUITEM(0) )
 
 #ifdef AG_TYPE_SAFETY
 # define  AG_MENUITEM_VALID(p)     (AGMENUITEM(p)->tag == agNonObjectSignature)

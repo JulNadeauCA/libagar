@@ -86,6 +86,8 @@ Init(void *_Nonnull obj)
 
 	AGWIDGET(bez)->flags |= (AG_WIDGET_FOCUSABLE | AG_WIDGET_UNFOCUSED_MOTION |
 	                         AG_WIDGET_USE_TEXT | AG_WIDGET_USE_MOUSEOVER);
+
+	bez->label = -1;
 }
 
 AG_WidgetClass myBezierWidgetClass = {
