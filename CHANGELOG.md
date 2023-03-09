@@ -15,6 +15,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): When an `AG_MenuView` is detached, immediately invalidate the `view` pointers of its `AG_MenuItem`.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Introduce numerical class IDs and `*_ISA()` macros.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Improve the object validity test by using a pseudo-random signature generated on initialization. Make validity and class-membership testing possible outside of Debug builds.
+- [**AG_Object**](https://libagar.org/man3/AG_Object): New function `AG_ObjectFreeChildrenOfType()`.
 - [**AG_Radio**](https://libagar.org/man3/AG_Radio): New `HOMOGENOUS` option to divide space equally between items. Thanks Stephen!
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Embed 4 general-purpose 16-bit guides. Guides are useful for typography, graphics and other applications.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): The surface returned by `AG_TextRender()` now includes Ascent information under `Guide 0`.

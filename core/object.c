@@ -667,7 +667,8 @@ AG_ObjectFreeChildrenLockless(AG_Object *obj)
 	struct ag_objectq detached;
 
 #ifdef AG_TYPE_SAFETY
-	if (!AG_OBJECT_VALID(obj)) { AG_FatalErrorV("E37", "Parent object is invalid"); }
+	if (!AG_OBJECT_VALID(obj))
+		AG_FatalErrorV("E37", "Parent object is invalid");
 #endif
 	TAILQ_INIT(&detached);
 
@@ -708,6 +709,61 @@ AG_ObjectFreeChildren(void *pObj)
 	AG_ObjectFreeChildrenLockless(obj);
 	AG_ObjectUnlock(obj);
 }
+
+#if AG_MODEL != AG_SMALL
+void
+AG_ObjectFreeChildrenOfTypeLockless(AG_Object *obj, const char *pattern)
+{
+	AG_Object *child, *childNext;
+	struct ag_objectq detached;
+
+#ifdef AG_TYPE_SAFETY
+	if (!AG_OBJECT_VALID(obj))
+		AG_FatalErrorV("E37", "Parent object is invalid");
+#endif
+	TAILQ_INIT(&detached);
+
+	for (child = TAILQ_FIRST(&obj->children);
+	     child != TAILQ_END(&obj->children);
+	     child = childNext) {
+		childNext = TAILQ_NEXT(child, cobjs);
+	
+		if (!AG_OfClass(child, pattern))
+			continue;
+#ifdef DEBUG_OBJECT
+		if (child->name[0] != '\0') {
+			Debug(obj, "Detaching child: %s\n", child->name);
+		} else {
+			Debug(obj, "Detaching child: <%p>\n", child);
+		}
+#endif
+		AG_ObjectDetachLockless(child);
+		TAILQ_REMOVE(&obj->children, child, cobjs);
+		TAILQ_INSERT_TAIL(&detached, child, cobjs);
+	}
+
+	for (child = TAILQ_FIRST(&detached);
+	     child != TAILQ_END(&detached);
+	     child = childNext) {
+		childNext = TAILQ_NEXT(child, cobjs);
+		AG_ObjectDestroy(child);
+	}
+}
+
+/* Detach and destroy matching child objects under a given parent. */
+void
+AG_ObjectFreeChildrenOfType(void *pObj, const char *pattern)
+{
+	AG_Object *obj = pObj;
+
+	if (!AG_OBJECT_VALID(obj))
+		return;
+
+	AG_ObjectLock(obj);
+	AG_ObjectFreeChildrenOfTypeLockless(obj, pattern);
+	AG_ObjectUnlock(obj);
+}
+#endif /* !AG_SMALL */
 
 /* Destroy the object variables. */
 void

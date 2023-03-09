@@ -768,6 +768,12 @@ typedef struct ag_object_header {
 .Ft "void"
 .Fn AG_ObjectFreeChildren "AG_Object *obj"
 .Pp
+.Ft "void"
+.Fn AG_ObjectFreeChildrenOfType "AG_Object *obj" "const char *pattern"
+.Pp
+.Ft "void"
+.Fn AG_ObjectFreeChildrenOfTypeLockless "AG_Object *obj" "const char *pattern"
+.Pp
 .nr nS 0
 .Fn AG_ObjectReset
 restores the state of an object to some initial state.
@@ -810,13 +816,31 @@ clears the
 .Xr AG_Variable 3
 table of the object.
 .Pp
+The
 .Fn AG_ObjectFreeChildren
+routine invokes
+.Fn AG_ObjectDetach
+and
+.Fn AG_ObjectDestroy
+over every child object under
+.Fa parent .
+.Pp
+.Fn AG_ObjectFreeChildrenOfType
 invokes
 .Fn AG_ObjectDetach
 and
 .Fn AG_ObjectDestroy
-on all child objects under
-.Fa parent .
+on every child object under
+.Fa parent
+which is an instance of the class described by
+.Fa pattern
+(see
+.Xr AG_OfClass 3 ) .
+The
+.Fn AG_ObjectFreeChildrenOfTypeLockless
+variant assumes
+.Fa obj
+is locked.
 .Sh THREADS
 .nr nS 1
 .Ft "void"

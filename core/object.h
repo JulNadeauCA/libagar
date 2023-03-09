@@ -390,6 +390,10 @@ void AG_ObjectMoveToTail(void *_Nonnull);
 #endif
 
 void AG_ObjectDestroy(void *_Nonnull);
+#if AG_MODEL != AG_SMALL
+void AG_ObjectFreeChildrenOfTypeLockless(AG_Object *_Nonnull, const char *_Nonnull);
+void AG_ObjectFreeChildrenOfType(void *_Nonnull, const char *_Nonnull);
+#endif
 void AG_ObjectFreeVariables(void *_Nonnull);
 void AG_ObjectFreeChildren(void *_Nonnull);
 void AG_ObjectFreeChildrenLockless(AG_Object *_Nonnull);
