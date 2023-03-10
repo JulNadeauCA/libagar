@@ -5388,22 +5388,22 @@ echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
 		if [ "${byte_order}" = "" ]
  then
 			case "${host}" in
-			*-*-mingw32*)
-				echo "*"
-				echo "* Assuming ${host} to be little-endian."
-				echo "*"
+			armel-* | sh5el-* | earmvel-* | i*86-* | mips*el-* | mipsel-* | powerpcle-* | powerpc64le-* | riscv*-* | vax-* | x86_64-*)
 				byte_order="LE"
+				;;
+			aarch64_be-* | armeb-* | avr32-* | earmveb-* | hppa*-* | m68k-* | mc68* | mips*eb-* | mipseb-* | openrisc-* | powerpc-* | rs6000-* | sh3eb-* | sparc*-*)
+				byte_order="BE"
 				;;
 			*)
 				echo "*"
-				echo "* Cannot guess the byte order of ${host}."
+				echo "* Could not guess the byte order of ${host}."
 				echo "* Please use --byte-order=LE or --byte-order=BE"
 				echo "*"
 				exit 1
 				;;
 			esac
 		fi
-		echo "checking for byte order...${byte_order} (given)"
+		echo "checking for byte order...${byte_order} (${host} default)"
 	fi
 $ECHO_N 'checking for byte order...'
 $ECHO_N '# checking for byte order...' >>config.log
