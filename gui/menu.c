@@ -122,12 +122,36 @@ OnWindowClose(AG_Event *_Nonnull event)
 }
 
 static void
+OnWindowShown(AG_Event *_Nonnull event)
+{
+	AG_Window *win = AG_WINDOW_SELF();
+	AG_Driver *drv = WIDGET(win)->drv;
+
+	if (AGDRIVER_CLASS(drv)->setMouseAutoCapture != NULL)
+		AGDRIVER_CLASS(drv)->setMouseAutoCapture(drv, 0);  /* Disable */
+}
+
+static void
+OnWindowHidden(AG_Event *_Nonnull event)
+{
+	AG_Window *win = AG_WINDOW_SELF();
+	AG_Driver *drv = WIDGET(win)->drv;
+
+	if (AGDRIVER_CLASS(drv)->setMouseAutoCapture != NULL)
+		AGDRIVER_CLASS(drv)->setMouseAutoCapture(drv, -1);  /* Reset */
+}
+
+static void
 OnMouseButtonDown(AG_Event *_Nonnull event)
 {
 	AG_Window *win = AG_WINDOW_SELF();
 	AG_Menu *m = AG_MENU_PTR(1);
+	AG_Driver *drv = WIDGET(m)->drv;
 	const int x = AG_INT(2);
 	const int y = AG_INT(3);
+
+	if (AGDRIVER_CLASS(drv)->setMouseAutoCapture != NULL)
+		AGDRIVER_CLASS(drv)->setMouseAutoCapture(drv, 0);  /* Disable */
 
 	if (x < 0 || y < 0 || x > WIDTH(win) || y > HEIGHT(win)) {
 #ifdef DEBUG_EXPAND
@@ -333,6 +357,8 @@ AG_MenuExpand(void *parent, AG_MenuItem *mi, int x1, int y1)
 	WIDGET(win)->flags |= AG_WIDGET_UNFOCUSED_BUTTONDOWN;
 	AG_SetEvent(win, "mouse-button-down", OnMouseButtonDown, "%p", m);
 	AG_SetEvent(win, "window-close", OnWindowClose, "%p", m);
+	AG_AddEvent(win, "window-shown", OnWindowShown, "%p", m);
+	AG_AddEvent(win, "window-hidden", OnWindowHidden, "%p", m);
 	
 	mi->view = mv = Malloc(sizeof(AG_MenuView));
 	AG_ObjectInit(mv, &agMenuViewClass);
