@@ -262,6 +262,7 @@ MANLINKS+=AG_Object.3:AG_ObjectFreeEvents.3
 MANLINKS+=AG_Object.3:AG_ObjectFreeVariables.3
 MANLINKS+=AG_Object.3:AG_ObjectFreeChildren.3
 MANLINKS+=AG_Object.3:AG_ObjectFreeChildrenOfType.3
+MANLINKS+=AG_Object.3:AG_ObjectFreeChildrenOfTypeLockless.3
 MANLINKS+=AG_Object.3:AG_ObjectLock.3
 MANLINKS+=AG_Object.3:AG_ObjectUnlock.3
 MANLINKS+=AG_Object.3:AG_LockVFS.3

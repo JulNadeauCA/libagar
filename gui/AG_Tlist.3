@@ -148,6 +148,8 @@ Implied by
 .Fn AG_TlistNewPolled .
 .It AG_TLIST_FIXED_HEIGHT
 Don't reset the item height on "font-changed".
+.It AG_TLIST_NO_LINES
+Don't draw lines between nodes.
 .It AG_TLIST_NO_KEYREPEAT
 Disable keyrepeat behavior.
 .It AG_TLIST_NO_SELECTED
@@ -774,8 +776,8 @@ and
 appeared in Agar 1.6.0.
 Options
 .Dv AG_TLIST_EXPAND_NODES ,
-.Dv AG_TLIST_FIXED_HEIGHT
-and
+.Dv AG_TLIST_FIXED_HEIGHT ,
+.Dv AG_TLIST_NO_LINES ,
 .Dv AG_TLIST_NO_KEYREPEAT
 and the per-item flag
 .Dv AG_TLIST_ITEM_DISABLED

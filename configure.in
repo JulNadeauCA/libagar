@@ -237,7 +237,6 @@ bbc | c64 | c128 | geos | nes)
 				;;
 			esac
 		fi
-		echo "checking for byte order...${byte_order} (${host} default)"
 	fi
 	check(byte_order)
 	;;

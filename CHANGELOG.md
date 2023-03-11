@@ -34,6 +34,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New option `AG_TLIST_EXPAND_NODES`. Display nodes (items with children) initially in expanded state.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New option `AG_TLIST_NO_SCALE_ICON`. Disable icon scaling when the icon width exceeds the standard width.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New option `AG_TLIST_FIXED_HEIGHT`. Don't reset the item height on "font-changed".
+- [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New options `AG_TLIST_NO_LINES` and `AG_TLIST_NO_BGLINES`. Disable lines connecting nodes or background lines.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New item flag `AG_TLIST_ITEM_DISABLED`. Disable the item individually (prevent selection and display in "disabled" state).
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Improve keyboard navigation. Allow RIGHT/LEFT keys to Expand/Collapse node items.
 - [**AG_Event**](https://libagar.org/man3/AG_Event): New macro [AG_EVENT_DUMP](https://libagar.org/man3/AG_EVENT_DUMP) to produce a listing of `argv[]` arguments on the console.
@@ -60,8 +61,6 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Removed the `fn` argument from the `AG_SurfaceBlend*()` family of functions. Use separate routines to implement different blending arithmetic.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Removed `AG_ObjectPage{In,Out}()` and unused flags `AG_OBJECT_FLOATING_VARS`, `AG_OBJECT_NON_PERSISTENT`, `AG_OBJECT_RESIDENT`, `AG_OBJECT_REOPEN_ONLOAD`, `AG_OBJECT_REMAIN_DATA` and `AG_OBJECT_CHLD_AUTOSAVE`.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): Removed `AG_UnusedFont()` and the reference counter in `AG_Font`.
-- 
-New function [AG_UnusedFont()](https://libagar.org/man3/AG_UnusedFont) for decrementing reference count on a font.
 
 ### Changed
 - Build system updates so configure scripts are smaller and no longer emit unnecessary defines such as `foo_cflags.h` for dependent libraries. Those definitions are always available from `${DATADIR}/agar.mk`.

@@ -5403,7 +5403,6 @@ echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
 				;;
 			esac
 		fi
-		echo "checking for byte order...${byte_order} (${host} default)"
 	fi
 $ECHO_N 'checking for byte order...'
 $ECHO_N '# checking for byte order...' >>config.log

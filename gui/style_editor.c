@@ -678,6 +678,22 @@ CloseStyleEditorWindow(AG_Event *_Nonnull event)
 	agStyleEditorTgtWindow = NULL;
 }
 
+static void
+FilterChanged(AG_Event *event)
+{
+	AG_Textbox *tb = AG_TEXTBOX_SELF();
+	AG_Tlist *tlWidgets = AG_TLIST_PTR(1);
+	char s[4];
+
+	AG_TextboxCopyString(tb, s, sizeof(s));
+
+	if (s[0] != '\0') {
+		tlWidgets->flags |= AG_TLIST_NO_LINES;
+	} else {
+		tlWidgets->flags &= ~(AG_TLIST_NO_LINES);
+	}
+}
+
 /*
  * Open the Style Editor window (with tgt at the root).
  */
@@ -743,6 +759,7 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 		AG_TextboxBindUTF8(tb, agStyleEditorFilter,
 		    sizeof(agStyleEditorFilter));
 		AG_TextboxSetPlaceholderS(tb, _("Filter widgets..."));
+		AG_SetEvent(tb, "textbox-postchg", FilterChanged, "%p", tl);
 
 		AG_ObjectAttach(pane->div[0], tl);
 

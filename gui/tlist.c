@@ -617,6 +617,8 @@ Draw(void *_Nonnull obj)
 	const int hItem_2 = (hItem >> 1);
 	const int rOffs = tl->rOffs;
 	const int disabled = (WIDGET(tl)->flags & AG_WIDGET_DISABLED);
+	const int drawLines   = !(tl->flags & AG_TLIST_NO_LINES);
+	const int drawBgLines = !(tl->flags & AG_TLIST_NO_BGLINES);
 	const AG_Color *cLine   = &WCOLOR(tl,LINE_COLOR);
 	const AG_Color *cBg     = &WCOLOR(tl,BG_COLOR);
 	const AG_Color *cBgLine = &tl->cBgLine[WIDGET(tl)->state];
@@ -628,7 +630,8 @@ Draw(void *_Nonnull obj)
 
 	UpdatePolled(tl);
 
-	memset(tl->expLevels, 0, tl->nExpLevels * sizeof(int));
+	if (drawLines)
+		memset(tl->expLevels, 0, tl->nExpLevels * sizeof(int));
 
 	AG_DrawBoxSunk(tl, &r, cBg);                     /* Background area */
 
@@ -649,7 +652,7 @@ Draw(void *_Nonnull obj)
 			if (it->selected)
 				selPos = -1;             /* For SCROLLTOSEL */
 
-			if (itNext != NULL) {
+			if (itNext != NULL && drawLines) {
 				if (itNext->depth > it->depth) {
 					SetExpansionLevel(tl, it->depth, 1);
 				} else if (itNext->depth < it->depth) {
@@ -659,7 +662,7 @@ Draw(void *_Nonnull obj)
 			continue;                                /* Clipped */
 		}
 		if (y >= yLast) {                               /* Overflow */
-			if (itNext == NULL) {
+			if (itNext == NULL || !drawLines) {
 				break;                       /* End of list */
 			}
 			if (itNext->depth > it->depth) {
@@ -673,9 +676,9 @@ Draw(void *_Nonnull obj)
 				     j < (it->depth - 1);
 				     j++) {
 					AG_DrawLineV(tl,
-					    (j * hItem) + hItem_2,     /* x */
-					    y,                        /* y2 */
-					    tl->expLevels[j+1],       /* y1 */
+					    (j * hItem)+hItem_2, /* x */
+					    y,                  /* y2 */
+					    tl->expLevels[j+1], /* y1 */
 					    cBg);
 				}
 				SetExpansionLevel(tl, it->depth, 0);
@@ -801,7 +804,7 @@ Draw(void *_Nonnull obj)
 		/*
 		 * Tree lines (forward).
 		 */
-		if (it->depth > 0) {
+		if (it->depth > 0 && drawLines) {
 			for (j = 0; j < it->depth - 1; j++) {
 				if (!tl->expLevels[j]) {
 					continue;
@@ -827,34 +830,36 @@ Draw(void *_Nonnull obj)
 			}
 		}
 
-		/*
-		 * Tree lines (backtracking).
-		 */
-		if (itNext != NULL) {
-			if (itNext->depth > it->depth) {
-				SetExpansionLevel(tl, it->depth, y+hItem_2+1);
-			} else if (itNext->depth < it->depth) {
-				if ((it->depth - itNext->depth) > 1) {
-					for (j = itNext->depth;  /* Backtrack */
-					     j < it->depth - 1;
-					     j++) {
-						AG_DrawLineV(tl,
-						    j*hItem + hItem_2,   /* x */
-						    tl->expLevels[j+1], /* y1 */
-						    y + hItem,          /* y2 */
-						    cBg);
+		if (drawLines) {
+			/*
+			 * Tree lines (backtracking).
+			 */
+			if (itNext != NULL) {
+				if (itNext->depth > it->depth) {
+					SetExpansionLevel(tl, it->depth, y+hItem_2+1);
+				} else if (itNext->depth < it->depth) {
+					if ((it->depth - itNext->depth) > 1) {
+						for (j = itNext->depth;  /* Backtrack */
+						     j < it->depth - 1;
+						     j++) {
+							AG_DrawLineV(tl,
+							    j*hItem + hItem_2,   /* x */
+							    tl->expLevels[j+1], /* y1 */
+							    y + hItem,          /* y2 */
+							    cBg);
+						}
 					}
+					SetExpansionLevel(tl, it->depth, 0);
 				}
-				SetExpansionLevel(tl, it->depth, 0);
 			}
+	
+			AG_DrawLineH(tl,
+			    ((it->depth - 1) * hItem) + (hItem >> 1),   /* x1 */
+			    (    (it->depth) * hItem) + (hItem >> 1),   /* x2 */
+			    y + (hItem >> 1),                            /* y */
+			    cLine);
 		}
-
-		AG_DrawLineH(tl,
-		    ((it->depth - 1) * hItem) + (hItem >> 1),       /* x1 */
-		    (    (it->depth) * hItem) + (hItem >> 1),       /* x2 */
-		    y + (hItem >> 1),                               /* y */
-		    cLine);
-
+	
 		if (it->flags & AG_TLIST_HAS_CHILDREN) {
 			DrawExpandCollapse(tl,it,
 			    (it->depth * hItem),
@@ -863,7 +868,8 @@ Draw(void *_Nonnull obj)
 
 		y += hItem;
 
-		AG_DrawLineH(tl, 0, (tl->r.w - 2), y, cBgLine);
+		if (drawBgLines)
+			AG_DrawLineH(tl, 0, (tl->r.w - 2), y, cBgLine);
 	}
 
 	if (!selSeen && (tl->flags & AG_TLIST_SCROLLTOSEL)) {

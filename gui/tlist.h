@@ -75,6 +75,8 @@ typedef struct ag_tlist {
 #define AG_TLIST_REFRESH       0x0400      /* Repopulate now (polled mode) */
 #define AG_TLIST_EXPAND_NODES  0x0800      /* Expand node items (items with children) by default */
 #define AG_TLIST_NO_KEYREPEAT  0x1000      /* Disable keyrepeat behavior */
+#define AG_TLIST_NO_LINES      0x2000      /* Don't draw lines connecting items */
+#define AG_TLIST_NO_BGLINES    0x4000      /* Don't draw lines in background */
 #define AG_TLIST_EXPAND        (AG_TLIST_HFILL | AG_TLIST_VFILL)
 
 	int item_h;                     /* Item height */

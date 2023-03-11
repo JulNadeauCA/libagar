@@ -3,7 +3,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agargui.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 March 7
+" Last Change:  2023 March 10
 
 " Agar-GUI (https://libagar.org/)
 if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
@@ -644,6 +644,7 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_TLIST_HFILL AG_TLIST_VFILL AG_TLIST_FIXED_HEIGHT
   syn keyword cConstant AG_TLIST_STATELESS AG_TLIST_SCROLLTOSEL AG_TLIST_REFRESH
   syn keyword cConstant AG_TLIST_EXPAND_NODES AG_TLIST_EXPAND AG_TLIST_NO_KEYREPEAT
+  syn keyword cConstant AG_TLIST_NO_LINES AG_TLIST_NO_BGLINES
   " gui/tlist.h
   syn keyword cType AG_TlistPopup AG_TlistItem AG_TlistItemQ AG_Tlist 
   syn keyword cType AG_TlistCompareFn
