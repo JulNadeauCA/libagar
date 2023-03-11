@@ -27,10 +27,17 @@ typedef struct {
 static void
 RandomizeColors(MyTestInstance *ti)
 {
+#ifdef HAVE_RAND48
 	ti->randColorNoA.r = ti->randColorA.r = (AG_Component)lrand48();
 	ti->randColorNoA.g = ti->randColorA.g = (AG_Component)lrand48();
 	ti->randColorNoA.b = ti->randColorA.b = (AG_Component)lrand48();
  	                     ti->randColorA.a = (AG_Component)lrand48();
+#else
+	ti->randColorNoA.r = ti->randColorA.r = AG_OPAQUE;
+	ti->randColorNoA.g = ti->randColorA.g = AG_OPAQUE;
+	ti->randColorNoA.b = ti->randColorA.b = 0;
+ 	                     ti->randColorA.a = AG_OPAQUE;
+#endif
 	ti->randColorNoA.a = AG_OPAQUE;
 }
 
@@ -302,8 +309,10 @@ Champden(AG_Event *event)
 
 		xWiggle = S->w - Schampden->w;
 		yWiggle = S->h - Schampden->h;
+#ifdef HAVE_RAND48
 		if (xWiggle > 0) { xWiggle = (int)lrand48() % xWiggle; }
 		if (yWiggle > 0) { yWiggle = (int)lrand48() % yWiggle; }
+#endif
 		AG_SurfaceBlit(Schampden, NULL, S, xWiggle, yWiggle);
 	}
 
@@ -324,8 +333,10 @@ Parrot(AG_Event *event)
 
 		xWiggle = S->w - Sparrot->w;
 		yWiggle = S->h - Sparrot->h;
+#ifdef HAVE_RAND48
 		if (xWiggle > 0) { xWiggle = (int)lrand48() % xWiggle; }
 		if (yWiggle > 0) { yWiggle = (int)lrand48() % yWiggle; }
+#endif
 		AG_SurfaceBlit(Sparrot, NULL, S, xWiggle, yWiggle);
 	}
 
