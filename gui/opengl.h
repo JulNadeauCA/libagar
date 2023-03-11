@@ -16,6 +16,7 @@
 # endif
 
 # ifdef _USE_OPENGL_FRAMEWORK
+#  define GL_SILENCE_DEPRECATION
 #  include <OpenGL/gl.h>
 #  ifdef HAVE_GLEXT
 #  include <OpenGL/glext.h>
