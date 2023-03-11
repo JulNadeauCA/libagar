@@ -85,6 +85,8 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**MAP**](https://libagar.org/man3/MAP): `MAP_NodeSwapLayers()` now requires the map to be locked.
 
 ### Fixed
+- Define `GL_SILENCE_DEPRECATION` under MacOS. Thanks Gaetan Brouilles!
+- Fixed outdated test for Cygwin. Thanks [Walter](https://github.com/WallyZambotti)!
 - Fixed compilation problem with `core/dir.c` under [NetBSD](https://NetBSD.org).
 - Fixed compilation problem with `core/inline_byteswap.h` and `core/cpuinfo.c` on powerpc64. Thanks Mark Linimon!
 - Fixed `double` <-> `long` conversion warnings in `math/m_sparse*`.

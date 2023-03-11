@@ -1489,8 +1489,8 @@ echo '# C: HAVE_CYGWIN' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"

@@ -1545,8 +1545,8 @@ echo '# C: HAVE_CYGWIN' >>config.log
 echo "cat << EOT >conftest$$.c" >>config.log
 cat conftest$$.c>>config.log
 echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest$$ conftest$$.c 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2875,6 +2875,7 @@ static const struct {
 	{ "AG_COLOR_FIRST", AG_COLOR_FIRST },
 	{ "AG_COLOR_LAST", AG_COLOR_LAST },
 	{ "AG_GRAPH_LABEL_MAX", AG_GRAPH_LABEL_MAX },
+	{ "AG_FONT_NAME_MAX", AG_FONT_NAME_MAX },
 	{ "AG_LABEL_MAX", AG_LABEL_MAX },
 	{ "AG_LABEL_MAX_POLLPTRS", AG_LABEL_MAX_POLLPTRS },
 	{ "AG_NOTEBOOK_LABEL_MAX", AG_NOTEBOOK_LABEL_MAX },
