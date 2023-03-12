@@ -78,6 +78,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Improved appearance and typography fixes. Improved performance of the renderer using state-dependent opaque labels to avoid the need for blending.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Now applies the "padding" attribute on a per-item basis.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): `AG_TlistSetCompareFn()` now returns a pointer to the previous compare function.
+- [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Make the comparison function of `AG_TlistSort()` ANSI-aware. Ignore SGR sequences as well as ideogram-range Unicodes.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): In `AG_WidgetSensitive()`, use the `window` pointer to avoid an unnecessary traversal of parent objects.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Prevent delivery of redundant "widget-shown" or "widget-hidden" events if `AG_WidgetShow()` and `AG_WidgetHide()` are called multiple times.
 - [**MAP**](https://libagar.org/man3/MAP): Performance improvements in threaded mode. Decoupled the memory allocation of nodes from the `MAP` thread in `MAP_AllocNodes()`. Removed redundant lock operations. Removed lock in `MAP_NodeCopy()`.

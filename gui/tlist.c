@@ -2155,13 +2155,87 @@ AG_TlistScrollToSelection(AG_Tlist *tl)
 	AG_ObjectUnlock(tl);
 }
 
+/* Compare items by their text content (ignoring any ANSI SGR sequences). */
 static int
-CompareText(const void *_Nonnull p1, const void *_Nonnull p2)
+CompareText(const void *_Nonnull pA, const void *_Nonnull pB)
 {
-	const AG_TlistItem *a = *(const AG_TlistItem **)p1;
-	const AG_TlistItem *b = *(const AG_TlistItem **)p2;
+	AG_TextANSI ansi;
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
+	const AG_TlistItem *a = *(const AG_TlistItem **)pA;
+	const AG_TlistItem *b = *(const AG_TlistItem **)pB;
+	AG_Char *bufA, *bufB, *sa, *sb;
+	int rv;
 
-	return strcoll(a->text, b->text);
+	if ((bufA = AG_ImportUnicode("UTF-8", a->text, NULL, NULL)) == NULL) {
+		return (-1);
+	}
+	if ((bufB = AG_ImportUnicode("UTF-8", b->text, NULL, NULL)) == NULL) {
+		free(bufA);
+		return (-1);
+	}
+	sa = bufA;
+	sb = bufB;
+	while (*sa != '\0') {
+		if (sa[0] >= 0x40 && sa[1] <= 0x5f && sa[2] != '\0') {
+			if (AG_TextParseANSI(ts, &ansi, &sa[1]) == 0) {
+				sa += ansi.len;
+				continue;
+			}
+		}
+		if (sb[0] >= 0x40 && sb[1] <= 0x5f && sb[2] != '\0') {
+			if (AG_TextParseANSI(ts, &ansi, &sb[1]) == 0) {
+				sb += ansi.len;
+				continue;
+			}
+		}
+		if (*sa != *sb) {
+			/*
+			 * TODO Unicode collation
+			 */
+
+			if ((*sa >= AGSI_AGARIDEO_BEGIN && *sa <= AGSI_AGARIDEO_END) ||
+			    (*sb >= AGSI_AGARIDEO_BEGIN && *sb <= AGSI_AGARIDEO_END) ||
+			    (*sa >= AGSI_MISCSYMPIC_BEGIN && *sa <= AGSI_MISCSYMPIC_END) ||
+			    (*sb >= AGSI_MISCSYMPIC_BEGIN && *sb <= AGSI_MISCSYMPIC_END) ||
+			    (*sa >= AGSI_GENPUNCT_BEGIN && *sa <= AGSI_GENPUNCT_END) ||
+			    (*sb >= AGSI_GENPUNCT_BEGIN && *sb <= AGSI_GENPUNCT_END) ||
+			    (*sa >= AGSI_ARROWS_BEGIN && *sa <= AGSI_ARROWS_END) ||
+			    (*sb >= AGSI_ARROWS_BEGIN && *sb <= AGSI_ARROWS_END) ||
+			    (*sa >= AGSI_MATHOPS_BEGIN && *sa <= AGSI_MATHOPS_END) ||
+			    (*sb >= AGSI_MATHOPS_BEGIN && *sb <= AGSI_MATHOPS_END) ||
+			    (*sa >= AGSI_MISCTECH_BEGIN && *sa <= AGSI_MISCTECH_END) ||
+			    (*sb >= AGSI_MISCTECH_BEGIN && *sb <= AGSI_MISCTECH_END) ||
+			    (*sa >= AGSI_CTRLPICS_BEGIN && *sa <= AGSI_CTRLPICS_END) ||
+			    (*sb >= AGSI_CTRLPICS_BEGIN && *sb <= AGSI_CTRLPICS_END) ||
+			    (*sa >= AGSI_GEOSHAPES_BEGIN && *sa <= AGSI_GEOSHAPES_END) ||
+			    (*sb >= AGSI_GEOSHAPES_BEGIN && *sb <= AGSI_GEOSHAPES_END) ||
+			    (*sa >= AGSI_MISCSYM_BEGIN && *sa <= AGSI_MISCSYM_END) ||
+			    (*sb >= AGSI_MISCSYM_BEGIN && *sb <= AGSI_MISCSYM_END) ||
+			    (*sa >= AGSI_DINGBATS_BEGIN && *sa <= AGSI_DINGBATS_END) ||
+			    (*sb >= AGSI_DINGBATS_BEGIN && *sb <= AGSI_DINGBATS_END) ||
+			    (*sa >= AGSI_MISCSYMPIC_BEGIN && *sa <= AGSI_MISCSYMPIC_END) ||
+			    (*sb >= AGSI_MISCSYMPIC_BEGIN && *sb <= AGSI_MISCSYMPIC_END) ||
+			    (*sa >= AGSI_EMOTICONS_BEGIN && *sa <= AGSI_EMOTICONS_END) ||
+			    (*sb >= AGSI_EMOTICONS_BEGIN && *sb <= AGSI_EMOTICONS_END))
+			{
+				sa++;
+				sb++;
+				continue;
+			} else {
+				break;
+			}
+		}
+		sa++;
+		sb++;
+	}
+
+	rv = *(const Uint8 *)sa -                    /* ASCII difference */
+	     *(const Uint8 *)sb;
+
+	free(bufA);
+	free(bufB);
+
+	return (rv);
 }
 
 /* Sort list items by text using quicksort. */
@@ -2191,6 +2265,7 @@ AG_TlistSort(AG_Tlist *tl)
 	free(items);
 }
 
+/* Compare items by their integer values v. */
 static int
 CompareInts(const void *_Nonnull p1, const void *_Nonnull p2)
 {

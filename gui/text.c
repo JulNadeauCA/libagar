@@ -1197,7 +1197,7 @@ AG_TextExportUnicode_StripANSI(const char *encoding, char *dst, const AG_Char *u
 # ifdef HAVE_ICONV
 		return ExportUnicodeICONV(encoding, dst, ucs, dstSize);
 # else
-		AG_SetError("No such encoding: \"%s\"", encoding);
+		AG_SetErrorS("No such encoding");
 		return (-1);
 # endif
 	}

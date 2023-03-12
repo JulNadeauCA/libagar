@@ -194,6 +194,8 @@ AG_ReadSurface(AG_DataSource *ds)
 		AG_PixelFormatGrayscale(&pf, BitsPerPixel);
 		pf.graymode = AG_ReadUint8(ds);
 		break;
+	default:
+		break;
 	}
 	if ((s = AG_SurfaceNew(&pf, w,h, flags)) == NULL) {
 		return (NULL);
