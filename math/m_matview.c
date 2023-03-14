@@ -329,7 +329,7 @@ AG_WidgetClass mMatviewClass = {
 	{
 		"AG_Widget:M_Matview",
 		sizeof(M_Matview),
-		{ 0,0 },
+		{ 0,0, AGC_M_MATVIEW, 0xE09D },
 		Init,
 		NULL,		/* reset */
 		Destroy,

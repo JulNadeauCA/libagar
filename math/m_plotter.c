@@ -1101,7 +1101,7 @@ AG_WidgetClass mPlotterClass = {
 	{
 		"AG_Widget:M_Plotter",
 		sizeof(M_Plotter),
-		{ 0,0 },
+		{ 0,0, AGC_M_PLOTTER, 0x223F },
 		Init,
 		NULL,			/* reset */
 		Destroy,
