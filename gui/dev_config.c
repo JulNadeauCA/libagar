@@ -55,33 +55,33 @@
  * CPU-specific architecture extension names.
  */
 AG_FlagDescrRO agArchExtnNames[] = {
-	{ AG_EXT_CPUID,            "CPUID" },                 /* CPUID Insn */
-	{ AG_EXT_MMX,              "MMX" },
-	{ AG_EXT_MMX_EXT,          "MMX+AMD Exts" },
-	{ AG_EXT_3DNOW,            "3dNow!" },
-	{ AG_EXT_3DNOW_EXT,        "3dNow!+Exts" },
-	{ AG_EXT_3DNOW_PREFETCH,   "3dNow! PREFETCH" },
-	{ AG_EXT_ALTIVEC,          "AltiVec" },
-	{ AG_EXT_SSE,              "SSE" },
-	{ AG_EXT_SSE2,             "SSE2" },
-	{ AG_EXT_SSE3,             "SSE3"  },
-	{ AG_EXT_SSSE3,            "SSSE3" },
-	{ AG_EXT_SSE4A,            "SSE4a" },
-	{ AG_EXT_SSE41,            "SSE41" },
-	{ AG_EXT_SSE42,            "SSE42" },
-	{ AG_EXT_SSE5A,            "SSE5a" },
+	{ AG_EXT_CPUID,          _(AGSI_CODE "CPUID" AGSI_RST " Instruction") },
+	{ AG_EXT_MMX,            "MMX" },
+	{ AG_EXT_MMX_EXT,        _("MMX + AMD extensions") },
+	{ AG_EXT_3DNOW,          "3dNow!" },
+	{ AG_EXT_3DNOW_EXT,      _("3dNow! + extensions") },
+	{ AG_EXT_3DNOW_PREFETCH, "3dNow! " AGSI_CODE "PREFETCH" },
+	{ AG_EXT_ALTIVEC,        "AltiVec" },
+	{ AG_EXT_SSE,            "SSE" },
+	{ AG_EXT_SSE2,           "SSE2" },
+	{ AG_EXT_SSE3,           "SSE3"  },
+	{ AG_EXT_SSSE3,          "SSSE3" },
+	{ AG_EXT_SSE4A,          "SSE4a" },
+	{ AG_EXT_SSE41,          "SSE41" },
+	{ AG_EXT_SSE42,          "SSE42" },
+	{ AG_EXT_SSE5A,          "SSE5a" },
 	{ AG_EXT_SSE_MISALIGNED, _("Misaligned SSE Mode") },
 	{ AG_EXT_LONG_MODE,      _("Long Mode") },
-	{ AG_EXT_RDTSCP,           "RDTSCP" },                /* RDTSC Insn */
-	{ AG_EXT_FXSR,             "FXSR" },
-	{ AG_EXT_PAGE_NX,          "PAGE_NX" },                      /* W^X */
+	{ AG_EXT_RDTSCP,         _(AGSI_CODE "RDTSCP" AGSI_RST " Instruction") },
+	{ AG_EXT_FXSR,           "FXSR" },
+	{ AG_EXT_PAGE_NX,        "PAGE_NX (W^X)" },
 	{ AG_EXT_ONCHIP_FPU,     _("On-chip FPU") },
-	{ AG_EXT_TSC,              "TSC" },           /* Time Stamp Counter */
-	{ AG_EXT_CMOV,             "CMOV" },            /* Conditional Move */
-	{ AG_EXT_CLFLUSH,          "CLFLUSH" },         /* Cache-Line Flush */
-	{ AG_EXT_HTT,              "HTT" },         /* Hyper-Threading Tech */
-	{ AG_EXT_MON,              "MON" },          /* MONITOR/MWAIT Insns */
-	{ AG_EXT_VMX,              "VMX" },        /* Virtual Machine Extns */
+	{ AG_EXT_TSC,            _("Time Stamp Counter") },
+	{ AG_EXT_CMOV,           _("Conditional Move") },
+	{ AG_EXT_CLFLUSH,        _("Cache-Line Flush") },
+	{ AG_EXT_HTT,            _("Hyper-Threading Technology") },
+	{ AG_EXT_MON,            _(AGSI_CODE "MONITOR/MWAIT" AGSI_RST " Instructions") },
+	{ AG_EXT_VMX,            _("Virtual Machine Extensions") },
 	{ 0,                       NULL }
 };
 
@@ -150,6 +150,20 @@ PollJoysticks(AG_Event *_Nonnull event)
 }
 #endif /* HAVE_SDL2 */
 
+static void
+ExpandArchExts(AG_Event *_Nonnull event)
+{
+	AG_UCombo *com = AG_UCOMBO_SELF();
+	AG_Tlist *tl = com->list;
+	AG_FlagDescrRO *fd;
+
+	for (fd = &agArchExtnNames[0]; fd->bitmask != 0; fd++) {
+		if (agCPU.ext & fd->bitmask)
+			AG_TlistAddS(tl, NULL, _(fd->descr));
+	}
+	AG_TlistSizeHintLargest(tl, 10);
+}
+
 /*
  * Configuration dialog for general Agar settings.
  */
@@ -177,72 +191,68 @@ AG_DEV_ConfigWindow(AG_Config *_Nullable cfg)
 	tab = AG_NotebookAdd(nb,
 	    _(AGSI_IDEOGRAM AGSI_AGAR_AG AGSI_RST " Settings"),
 	    AG_BOX_VERT);
+	AG_SetPadding(tab, "8");
 	{
-		AG_Box *boxArch;
-		AG_Label *lbl;
+		AG_Box *boxCPU;
+		AG_UCombo *com;
+		char iconText[16];
+		Uint32 uch[2];
 
-		AG_SetPadding(tab, "8");
+		/*
+		 * Agar Driver.
+		 */
+		uch[0] = AGOBJECT_CLASS(drv)->ver.unicode;
+		uch[1] = '\0';
+		if (AG_ExportUnicode("UTF-8", iconText, uch, sizeof(iconText)) == -1) {
+			iconText[0] = '\0';
+		}
+		AG_LabelNew(tab, AG_LABEL_HFILL,
+		    _("Driver: "
+		      AGSI_IDEOGRAM "%s" AGSI_RST
+		      AGSI_MONOALGUE "%s" AGSI_RST
+		      " (%d bpp%s%s)."),
+		    iconText,
+		    OBJECT_CLASS(drv)->name,
+		    (drv->videoFmt) ? drv->videoFmt->BitsPerPixel : 32,
+		    (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_SDL) ?
+		    ", " AGSI_IDEOGRAM AGSI_SDL AGSI_RST : "",
+		    (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL) ?
+		    ", " AGSI_IDEOGRAM AGSI_OPENGL AGSI_RST : "");
 
-		boxArch = AG_BoxNewHoriz(tab, AG_BOX_HFILL);
+		/*
+		 * CPU Architecture.
+		 */
+		boxCPU = AG_BoxNewHoriz(tab, 0);
+		AG_SetPadding(boxCPU, 0);
 		{
-			char extns[160], *c;
-			AG_FlagDescrRO *fd;
-			int i = 0;
-
-			extns[0] = '\0';
-			for (fd = &agArchExtnNames[0]; fd->bitmask != 0; fd++) {
-				if (agCPU.ext & fd->bitmask) {
-					Strlcat(extns, fd->descr, sizeof(extns));
-					if (i++ == 6) {
-						i = 0;
-						Strlcat(extns, ",\n", sizeof(extns));
-					} else {
-						Strlcat(extns, ", ", sizeof(extns));
-					}
-				}
-			}
-			if ((c = strrchr(extns, ',')) != NULL)
-				*c = '\0';
-
 			if (agCPU.icon != 0) {
-				Uint32 uch[2];
-				char iconText[16];
-
 				uch[0] = agCPU.icon;
 				uch[1] = '\0';
 				if (AG_ExportUnicode("UTF-8", iconText, uch,
 				    sizeof(iconText)) == -1) {
 					iconText[0] = '\0';
 				}
-				lbl = AG_LabelNew(boxArch, AG_LABEL_HFILL,
-				    _("Platform: " AGSI_LEAGUE_SPARTAN" %s " AGSI_RST
-				      AGSI_IDEOGRAM "%s" AGSI_RST " "
-				      AGSI_ITALIC "\"%s\"" AGSI_RST
-				      " (%s)."),
-			   	    (agCPU.arch[0]!='\0') ? agCPU.arch : _("Unknown"),
+				AG_LabelNew(boxCPU, AG_LABEL_HFILL,
+				    _("Platform: "
+				      AGSI_LEAGUE_SPARTAN " %s " AGSI_RST
+				      AGSI_IDEOGRAM "%s" AGSI_RST
+				      AGSI_ITALIC "\"%s\"" AGSI_RST),
+			   	    (agCPU.arch[0] != '\0') ? agCPU.arch :
+				                              _("Unknown"),
 				    iconText,
-				    agCPU.vendorID, extns);
+				    agCPU.vendorID);
 			} else {
-				lbl = AG_LabelNew(boxArch, 0,
+				AG_LabelNew(boxCPU, 0,
 				    _("Platform: " AGSI_LEAGUE_SPARTAN "%s " AGSI_RST
-				      AGSI_ITALIC "\"%s\"" AGSI_RST
-				      " (%s)."),
+				      AGSI_ITALIC "\"%s\"" AGSI_RST),
 			   	    (agCPU.arch[0]!='\0') ? agCPU.arch : _("Unknown"),
-				    agCPU.vendorID, extns);
+				    agCPU.vendorID);
 			}
-			AG_SetFontSize(lbl, "90%");
-		}
 
-		lbl = AG_LabelNew(tab, AG_LABEL_HFILL,
-		    _("Driver class: "
-		      AGSI_CYAN AGSI_LEAGUE_SPARTAN "%s" AGSI_RST
-		      " (%d bpp, SDL=%s, OpenGL=%s)."),
-		    OBJECT_CLASS(drv)->name,
-		    (drv->videoFmt) ? drv->videoFmt->BitsPerPixel : 32,
-		    (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_SDL) ? _("Yes") : _("No"),
-		    (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL) ? _("Yes") : _("No"));
-		AG_SetFontSize(lbl, "90%");
-		AG_SetPadding(lbl, "0 0 0 10");
+			com = AG_UComboNew(boxCPU, 0);
+			AG_SetEvent(com, "ucombo-expanded", ExpandArchExts, NULL);
+			AG_ButtonTextS(com->button, _("Extensions..."));
+		}
 
 		AG_SeparatorNewHoriz(tab);
 
