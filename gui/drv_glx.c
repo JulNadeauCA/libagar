@@ -102,6 +102,11 @@ static XComposeStatus xkbCompStatus;             /* For key composition */
 static _Nonnull_Mutex AG_Mutex agDisplayLock;    /* Lock on agDisplay */
 static Display *_Nullable      agDisplay = NULL; /* X display handle */
 
+#ifdef AG_UNICODE
+static XIM agXIM = 0;
+static XIC agXIC = 0;
+#endif
+
 static Window agClipboardWindow;                 /* For managing SelectionRequest */
 static int    agClipboardSelectionWaiting = 0;   /* Waiting on clipboard event */
 
@@ -221,6 +226,15 @@ GLX_DestroyGlobals(void)
 
 	if (agDisplay) {
 		int *intFds, nIntFds, i;
+
+#ifdef AG_UNICODE
+		if (agXIC) {
+			XUnsetICFocus(agXIC);
+			XDestroyIC(agXIC);
+		}
+		if (agXIM)
+			XCloseIM(agXIM);
+#endif /* AG_UNICODE */
 		
 		AG_DelEventSink(glxEventSink); glxEventSink = NULL;
 		AG_DelEventEpilogue(glxEventEpilogue); glxEventEpilogue = NULL;
@@ -660,12 +674,27 @@ GLX_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 		/* FALLTHROUGH */
 	case KeyPress:
 		AG_MutexLock(&agDisplayLock);
-		if (XLookupString(&xev.xkey, xkbBuf, sizeof(xkbBuf),
-		    NULL, &xkbCompStatus) >= 1) {
-			ch = (Uint8)xkbBuf[0];	/* XXX */
+#ifdef AG_UNICODE
+		if (agXIC) {
+			XwcLookupString(agXIC, &xev.xkey,
+			    (wchar_t *)&ch, 1, NULL, NULL);
+		} else {
+			if (XLookupString(&xev.xkey, xkbBuf, sizeof(xkbBuf),
+			    NULL, &xkbCompStatus) >= 1) {
+				ch = (Uint8)xkbBuf[0];	/* XXX */
+			} else {
+				ch = 0;
+			}
+		}
+#else
+		if (XLookupString(&xev.xkey, xkbBuf, sizeof(xkbBuf), NULL,
+		    &xkbCompStatus) >= 1) {
+			ch = (Uint8)xkbBuf[0];
 		} else {
 			ch = 0;
 		}
+#endif /* AG_UNICODE */
+
 		if (!LookupKeyCode(xev.xkey.keycode, &ks)) {
 			AG_SetError(_("Keyboard event: Unknown keycode: %d"),
 			    (int)xev.xkey.keycode);
@@ -2366,6 +2395,19 @@ GLX_InitGlobals(void)
 	wmNetWmStateBelow = XInternAtom(agDisplay, "_NET_WM_STATE_BELOW", True);
 	wmNetWmWindowType = XInternAtom(agDisplay, "_NET_WM_WINDOW_TYPE", True);
 	wmNetWmWindowOpacity = XInternAtom(agDisplay, "_NET_WM_WINDOW_OPACITY", True);
+#endif
+
+#ifdef AG_UNICODE
+	/* Initialize X Input Methods */
+	XSetLocaleModifiers("");
+	agXIM = XOpenIM(agDisplay, 0, 0, 0);
+	if(!agXIM) {
+		XSetLocaleModifiers("@im=none");
+		agXIM = XOpenIM(agDisplay, 0, 0, 0);
+	}
+	agXIC = XCreateIC(agXIM, XNInputStyle, XIMPreeditNothing |
+	                                       XIMStatusNothing, NULL);
+	XSetICFocus(agXIC);
 #endif
 
 	agClipboardWindow = None;

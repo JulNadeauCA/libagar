@@ -6,6 +6,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**sdl2fb**](https://libagar.org/man3/AG_DriverSDL2FB): New driver for SDL 2.0 (single-window; frame-buffer mode).
 - [**sdl2gl**](https://libagar.org/man3/AG_DriverSDL2GL): New driver for SDL 2.0 (single-window; OpenGL mode).
 - [**sdl2mw**](https://libagar.org/man3/AG_DriverSDL2MW): New driver for SDL 2.0 (multi-window; OpenGL mode).
+- [**glx**](https://libagar.org/man3/AG_DriverGLX): Add support for X Input Methods. Thanks sr20det!
 - [**AG_Color**](https://libagar.org/man3/AG_Color): Add compression / decompression macros for 4/12/24/48-bit values.
 - [**AG_Driver**](https://libagar.org/man3/AG_Driver): New operation: `setMouseAutoCapture` (enable, disable or reset mouse auto-capture on button-down).
 - [**AG_DriverSw**](https://libagar.org/man3/AG_DriverSw): New option `clampOnResize` (clamp active Agar windows against new display size).
