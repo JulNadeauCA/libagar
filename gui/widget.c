@@ -331,11 +331,13 @@ OnAttach(AG_Event *_Nonnull event)
 		SetParentDriver(wid, AGDRIVER(parent));
 	} else {
 #ifdef AG_VERBOSITY
-		AG_FatalErrorF("Cannot attach <%s> %s to <%s> %s",
+		AG_FatalErrorF("Cannot attach "
+		               "(" AGSI_CYAN "%s *" AGSI_RST ") %s to "
+		               "(" AGSI_CYAN "%s *" AGSI_RST ") %s",
 		    OBJECT_CLASS(wid)->name, OBJECT(wid)->name, 
-		    OBJECT_CLASS(wid)->name, OBJECT(parent)->name);
+		    OBJECT_CLASS(parent)->name, OBJECT(parent)->name);
 #else
-		AG_FatalError("Cannot attach to this");
+		AG_FatalError("Widget cannot attach to parent");
 #endif
 	}
 }
