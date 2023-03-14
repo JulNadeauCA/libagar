@@ -91,6 +91,10 @@ package Agar.Classes is
      AGC_MAP_VIEW,
      AGC_RG_TILEVIEW,
      AGC_SK_VIEW,
+     AGC_SG_VIEW,
+     AGC_M_PLOTTER,
+     AGC_M_MATVIEW,
+     AGC_WIDGET_LAST
      AGC_VG,
      AGC_MAP,
      AGC_MAP_OBJECT,
@@ -119,9 +123,7 @@ package Agar.Classes is
      AGC_SG_POLYBOX,
      AGC_SG_VOXEL,
      AGC_SG_IMAGE,
-     AGC_SK,
-     AGC_M_PLOTTER,
-     AGC_M_MATVIEW)
+     AGC_SK)
       with Convention => C;
 
   for AG_Class use (
@@ -195,10 +197,15 @@ package Agar.Classes is
      AGC_TEXTBOX         => 16#27_000001#,
      AGC_TLIST           => 16#28_000001#,
      AGC_UCOMBO          => 16#29_000001#,
-     AGC_VG_VIEW         => 16#30_000001#,
-     AGC_MAP_VIEW        => 16#31_000001#,
-     AGC_RG_TILEVIEW     => 16#32_000001#,
-     AGC_SK_VIEW         => 16#33_000001#,
+     AGC_VG_VIEW         => 16#2A_000001#,
+     AGC_MAP_VIEW        => 16#2B_000001#,
+     AGC_RG_TILEVIEW     => 16#2C_000001#,
+     AGC_SK_VIEW         => 16#2D_000001#,
+     AGC_SG_VIEW         => 16#2E_000001#,
+     AGC_M_PLOTTER       => 16#2F_000001#,
+     AGC_M_MATVIEW       => 16#30_000001#,
+     AGC_WIDGET_LAST     => 16#30_000001#,
+
      AGC_VG              => 16#71_000001#,
      AGC_MAP             => 16#72_000001#,
      AGC_MAP_OBJECT      => 16#73_000001#,
@@ -227,9 +234,7 @@ package Agar.Classes is
      AGC_SG_POLYBOX      => 16#7A0502_01#,
      AGC_SG_VOXEL        => 16#7A06_0001#,
      AGC_SG_IMAGE        => 16#7A07_0001#,
-     AGC_SK              => 16#7B_000001#,
-     AGC_M_PLOTTER       => 16#7C_000001#,
-     AGC_M_MATVIEW       => 16#7D_000001#);
+     AGC_SK              => 16#7B_000001#);
 
   for AG_Class'Size use C.int'Size;
 

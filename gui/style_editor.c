@@ -574,6 +574,7 @@ TargetWidget(AG_Event *_Nonnull event)
 
 		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL |
 		                        AG_TEXTBOX_RETURN_BUTTON, "+ ");
+		AG_SetMargin(tb, "0 0 10 0");
 
 		AG_TextboxAutocomplete(tb, CompleteAttribute, NULL);
 

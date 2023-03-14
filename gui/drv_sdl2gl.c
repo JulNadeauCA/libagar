@@ -680,7 +680,7 @@ AG_DriverSwClass agDriverSDL2GL = {
 		{
 			"AG_Driver:AG_DriverSw:AG_DriverSDL2GL",
 			sizeof(AG_DriverSDL2GL),
-			{ 1,7, AGC_DRIVER_SDL2GL, 0xE01D },
+			{ 1,7, AGC_DRIVER_SDL2GL, 0xE097 },
 			Init,
 			NULL,		/* reset */
 			NULL,		/* destroy */

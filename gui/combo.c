@@ -348,7 +348,6 @@ Init(void *_Nonnull obj)
 	
 	tb = com->tbox = AG_TextboxNewS(com, AG_TEXTBOX_COMBO | AG_TEXTBOX_EXCL, NULL);
 	AG_SetEvent(tb, "textbox-return", Return, "%p", com);
-	AG_SetString(tb, "padding", "inherit");
 	AG_WidgetForwardFocus(com, tb);
 
 	btn = com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY |

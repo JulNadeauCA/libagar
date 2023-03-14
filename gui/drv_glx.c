@@ -2499,7 +2499,7 @@ AG_DriverMwClass agDriverGLX = {
 		{
 			"AG_Driver:AG_DriverMw:AG_DriverGLX",
 			sizeof(AG_DriverGLX),
-			{ 1,7, AGC_DRIVER_GLX, 0xE01D },
+			{ 1,7, AGC_DRIVER_GLX, 0xE094 },
 			Init,
 			NULL,		/* reset */
 			Destroy,

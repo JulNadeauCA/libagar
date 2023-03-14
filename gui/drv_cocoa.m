@@ -1663,7 +1663,7 @@ AG_DriverMwClass agDriverCocoa = {
 		{
 			"AG_Driver:AG_DriverMw:AG_DriverCocoa",
 			sizeof(AG_DriverCocoa),
-			{ 1,6, AGC_DRIVER_COCOA, 0xE053 },
+			{ 1,7, AGC_DRIVER_COCOA, 0xE098 },
 			Init,
 			NULL,		/* reset */
 			Destroy,

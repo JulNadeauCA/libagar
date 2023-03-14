@@ -338,7 +338,6 @@ Edit(void *obj)
 	    _("Button Count: %u\n"
 	      "Button State: 0x%x\n"
 	      "Cursor Position: %d,%d [%d %d]"),
-	    AGINPUTDEVICE(mouse)->desc,
 	    &mouse->nButtons, &mouse->btnState,
 	    &mouse->x, &mouse->y,
 	    &mouse->xRel, &mouse->yRel);

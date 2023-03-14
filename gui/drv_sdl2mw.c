@@ -878,7 +878,7 @@ AG_DriverMwClass agDriverSDL2MW = {
 		{
 			"AG_Driver:AG_DriverMw:AG_DriverSDL2MW",
 			sizeof(AG_DriverSDL2MW),
-			{ 1,7, AGC_DRIVER_SDL2MW, 0xE039 },
+			{ 1,7, AGC_DRIVER_SDL2MW, 0xE097 },
 			Init,
 			NULL,		/* reset */
 			NULL,		/* destroy */

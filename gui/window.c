@@ -2084,34 +2084,35 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Window *win = obj;
 	AG_Widget *chld;
-	AG_SizeReq rChld, rTbar;
 	AG_Titlebar *tbar = win->tbar;
+	AG_SizeReq req;
 	const int spacingVert = WIDGET(win)->spacingVert;
-	const int wTotal = WIDGET(win)->paddingLeft + (win->wBorderSide << 1) +
-	                   WIDGET(win)->paddingRight;
-	int nWidgets;
+	const int wPadding = WIDGET(win)->paddingLeft + (win->wBorderSide << 1) +
+	                     WIDGET(win)->paddingRight;
 
-	r->w = wTotal;
+	r->w = wPadding;
 	r->h = WIDGET(win)->paddingBottom + win->wBorderBot +
 	       WIDGET(win)->paddingTop;
 
 	if (tbar) {
-		AG_WidgetSizeReq(tbar, &rTbar);
-		r->w = MAX(r->w, rTbar.w);
-		r->h += rTbar.h;
+		AG_WidgetSizeReq(tbar, &req);
+		r->w = MAX(r->w, req.w);
+		r->h += req.h;
 	}
-	nWidgets = 0;
 	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
 		if (chld == WIDGET(tbar)) {
 			continue;
 		}
 		AG_OBJECT_ISA(chld, "AG_Widget:*");
-		AG_WidgetSizeReq(chld, &rChld);
-		r->w = MAX(r->w, rChld.w + wTotal);
-		r->h += rChld.h + spacingVert;
-		nWidgets++;
+
+		AG_WidgetSizeReq(chld, &req);
+		req.w += (chld->marginLeft + chld->marginRight);
+		req.h += (chld->marginTop + chld->marginBottom);
+
+		r->w = MAX(r->w, req.w + wPadding);
+		r->h += (req.h + spacingVert);
 	}
-	if (nWidgets > 0 && r->h >= spacingVert)
+	if (r->h >= spacingVert)
 		r->h -= spacingVert;
 }
 
@@ -2120,14 +2121,18 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Window *win = obj;
 	AG_Widget *chld;
-	AG_SizeReq rChld;
-	AG_SizeAlloc aChld;
+	AG_SizeReq req;
+	AG_SizeAlloc alloc;
 	AG_Rect r;
-	const int spacingVert = WIDGET(win)->spacingVert;
+	const int spacing = WIDGET(win)->spacingVert;
 	const int wBorderSide = win->wBorderSide;
 	const int wBorderBot = win->wBorderBot;
-	int wAvail, hAvail, totFixed, nWidgets;
+	int wAvail, hAvail, hReqd, nWidgets, x, y;
 
+	/*
+	 * Set cursor-change areas over the window resize controls
+	 * (used with single-window drivers).
+	 */
 	if (wBorderSide > 0) {
 		r.x = 0;
 		r.y = 0;
@@ -2160,52 +2165,70 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		    AG_LLDIAG_CURSOR);
 	}
 
+	/*
+	 * Widget size requisition. Get the sum height in pixels requested
+	 * by (non-VFILL) child widgets. Allocate the space to the widgets
+	 * and the remainder to the VFILL widget if one exists.
+	 */
+
 	wAvail = a->w - WIDGET(win)->paddingLeft - WIDGET(win)->paddingRight -
 	         (wBorderSide << 1);
 	hAvail = a->h - WIDGET(win)->paddingTop - WIDGET(win)->paddingBottom -
-	          wBorderBot;
-
+	         wBorderBot;
 	nWidgets = 0;
-	totFixed = 0;
+	hReqd = 0;
 	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
 		AG_OBJECT_ISA(chld, "AG_Widget:*");
-		AG_WidgetSizeReq(chld, &rChld);
+
+		AG_WidgetSizeReq(chld, &req);
+		req.h += chld->marginTop + chld->marginBottom;
+
 		if ((chld->flags & AG_WIDGET_VFILL) == 0) {
-			totFixed += rChld.h;
+			hReqd += req.h;
 		}
 		if (chld != WIDGET(win->tbar)) {
-			totFixed += spacingVert;
+			hReqd += spacing;
 		}
 		nWidgets++;
 	}
-	if (nWidgets > 0 && totFixed >= spacingVert)
-		totFixed -= spacingVert;
+	if (hReqd >= spacing)
+		hReqd -= spacing;
 
-	if (win->tbar) {					/* Titlebar */
-		AG_WidgetSizeReq(win->tbar, &rChld);
-		aChld.x = 0;
-		aChld.y = 0;
-		aChld.w = a->w;
-		aChld.h = rChld.h;
-		AG_WidgetSizeAlloc(win->tbar, &aChld);
-		aChld.x = WIDGET(win)->paddingLeft + wBorderSide;
-		aChld.y = WIDGET(win)->paddingTop + rChld.h;
-	} else {
-		aChld.x = WIDGET(win)->paddingLeft + wBorderSide;
-		aChld.y = WIDGET(win)->paddingTop;
-	}
-	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {		/* Widgets */
+	/* Size and position the child widgets. */
+	x = WIDGET(win)->paddingLeft + wBorderSide;
+	y = 0;
+
+	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
+		Uint flags;
+
 		AG_OBJECT_ISA(chld, "AG_Widget:*");
-		AG_WidgetSizeReq(chld, &rChld);
-		if (chld == WIDGET(win->tbar)) {
+
+		AG_WidgetSizeReq(chld, &req);
+
+		if (chld == WIDGET(win->tbar)) {     /* Titlebar (no spacing) */
+			alloc.x = 0;
+			alloc.y = 0;
+			alloc.w = a->w;
+			alloc.h = req.h;
+			AG_WidgetSizeAlloc(chld, &alloc);
+			y += alloc.h;
 			continue;
 		}
-		aChld.w = (chld->flags & AG_WIDGET_HFILL) ?
-		          wAvail : MIN(wAvail,rChld.w);
-		aChld.h = (chld->flags & AG_WIDGET_VFILL) ?
-		          hAvail-totFixed : rChld.h;
-		AG_WidgetSizeAlloc(chld, &aChld);
-		aChld.y += aChld.h + spacingVert;
+
+		flags = chld->flags;
+
+		alloc.x = x + chld->marginLeft;
+		alloc.y = y + chld->marginTop;
+		alloc.w = (flags & AG_WIDGET_HFILL) ?
+		          (wAvail - chld->marginLeft - chld->marginRight) :
+			  MIN(wAvail, req.w);
+		alloc.h = (flags & AG_WIDGET_VFILL) ?
+		          (hAvail - hReqd) :
+			  req.h;
+
+		AG_WidgetSizeAlloc(chld, &alloc);
+
+		y += alloc.h + spacing + chld->marginTop + chld->marginBottom;
 	}
 
 	win->r.x = 0;
@@ -2250,6 +2273,7 @@ AG_WindowSetPosition(AG_Window *win, enum ag_window_alignment alignment,
 	AG_ObjectLock(win);
 
 	win->alignment = alignment;
+
 	AG_SETFLAGS(win->flags, AG_WINDOW_TILING, tiling);
 
 	AG_ObjectUnlock(win);
@@ -2259,9 +2283,6 @@ AG_WindowSetPosition(AG_Window *win, enum ag_window_alignment alignment,
 void
 AG_WindowSetCloseAction(AG_Window *win, enum ag_window_close_action mode)
 {
-	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
-	AG_ObjectLock(win);
-
 	switch (mode) {
 	case AG_WINDOW_HIDE:
 		AG_SetEvent(win, "window-close", AGWINHIDE(win));
@@ -2273,8 +2294,6 @@ AG_WindowSetCloseAction(AG_Window *win, enum ag_window_close_action mode)
 		AG_UnsetEvent(win, "window-close");
 		break;
 	}
-
-	AG_ObjectUnlock(win);
 }
 
 /* Update Agar's built-in titlebar from window caption. */

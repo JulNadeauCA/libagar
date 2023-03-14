@@ -1396,7 +1396,7 @@ AG_DriverMwClass agDriverWGL = {
 		{
 			"AG_Driver:AG_DriverMw:AG_DriverWGL",
 			sizeof(AG_DriverWGL),
-			{ 1,7, AGC_DRIVER_WGL, 0xE01D },
+			{ 1,7, AGC_DRIVER_WGL, 0xE093 },
 			NULL,		/* init */
 			NULL,		/* reset */
 			NULL,		/* destroy */

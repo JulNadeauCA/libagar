@@ -1803,7 +1803,7 @@ AG_DriverSwClass agDriverSDLFB = {
 		{
 			"AG_Driver:AG_DriverSw:AG_DriverSDLFB",
 			sizeof(AG_DriverSDLFB),
-			{ 1,7, AGC_DRIVER_SDLFB, 0xE024 },
+			{ 1,7, AGC_DRIVER_SDLFB, 0xE096 },
 			Init,
 			NULL,		/* reset */
 			Destroy,

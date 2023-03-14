@@ -615,7 +615,8 @@ Init(void *_Nonnull obj)
 	tb = num->input = AG_TextboxNewS(num, AG_TEXTBOX_EXCL, NULL);
 	AG_TextboxBindUTF8(tb, num->inTxt, sizeof(num->inTxt));
 	AG_TextboxSizeHint(tb, "8888.88");
-	AG_SetPadding(tb, "inherit");
+/*	AG_SetPadding(tb, "inherit"); */
+
 	AG_SetEvent(tb, "textbox-return",  UpdateFromText,"%p,%i",num,1);
 	AG_SetEvent(tb, "textbox-changed", UpdateFromText,"%p,%i",num,0);
 	AG_AddEvent(tb->ed, "widget-lostfocus", LostFocus,"%p",num);
