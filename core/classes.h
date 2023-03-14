@@ -92,14 +92,14 @@ typedef enum ag_class {
 	AGC_TEXTBOX         = 0x27000001,  /* AG_Widget -> AG_Textbox */
 	AGC_TLIST           = 0x28000001,  /* AG_Widget -> AG_Tlist */
 	AGC_UCOMBO          = 0x29000001,  /* AG_Widget -> AG_UCombo */
-	AGC_VG_VIEW         = 0x30000001,  /* AG_Widget -> VG_View (ag_vg) */
-	AGC_MAP_VIEW        = 0x31000001,  /* AG_Widget -> MAP_View (ag_map) */
-	AGC_RG_TILEVIEW     = 0x32000001,  /* AG_Widget -> RG_Tileview (ag_map) */
-	AGC_SK_VIEW         = 0x33000001,  /* AG_Widget -> SK_View (ag_sk) */
-	AGC_SG_VIEW         = 0x34000001,  /* AG_Widget -> SG_View (ag_sg) */
-	AGC_WIDGET_LAST     = 0x35000000,
-
-	/* End of widget range */
+	AGC_VG_VIEW         = 0x2A000001,  /* AG_Widget -> VG_View (ag_vg) */
+	AGC_MAP_VIEW        = 0x2B000001,  /* AG_Widget -> MAP_View (ag_map) */
+	AGC_RG_TILEVIEW     = 0x2C000001,  /* AG_Widget -> RG_Tileview (ag_map) */
+	AGC_SK_VIEW         = 0x2D000001,  /* AG_Widget -> SK_View (ag_sk) */
+	AGC_SG_VIEW         = 0x2E000001,  /* AG_Widget -> SG_View (ag_sg) */
+	AGC_M_PLOTTER       = 0x2F000001,  /* AG_Widget -> M_Plotter */
+	AGC_M_MATVIEW       = 0x30000001,  /* AG_Widget -> M_Matview */
+	AGC_WIDGET_LAST     = 0x30000001,
 
 	AGC_VG              = 0x71000001,  /* VG (in ag_vg) */
 	AGC_MAP             = 0x72000001,  /* MAP (in ag_map) */
@@ -130,9 +130,7 @@ typedef enum ag_class {
 	AGC_SG_POLYBOX      = 0x7A050201,          /* SG_Polybox */
 	AGC_SG_VOXEL        = 0x7A060001,      /* SG_Voxel */
 	AGC_SG_IMAGE        = 0x7A070001,      /* SG_Image */
-	AGC_SK              = 0x7B000001,  /* SK */
-	AGC_M_PLOTTER       = 0x7C000001,  /* M_Plotter */
-	AGC_M_MATVIEW       = 0x7D000001,  /* M_Matview */
+	AGC_SK              = 0x7B000001   /* SK */
 } AG_Class;
 
 #else /* AG_SMALL */

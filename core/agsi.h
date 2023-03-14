@@ -202,6 +202,7 @@
 /*
  * General Punctuation ("SQ" = "SQUARE").
  */
+#define AGSI_GENPUNCT_BEGIN 0x2009
 #define AGSI_THIN_SPACE              "\xE2\x80\x89"	/* U+2009 */
 #define AGSI_HYPHEN                  "\xE2\x80\x90"	/* U+2010 */
 #define AGSI_NON_BREAKING_HYPHEN     "\xE2\x80\x91"	/* U+2011 */
@@ -287,9 +288,11 @@
 #define AGSI_INH_ARABIC_FORM_SHAPING "\xE2\x81\xAC"	/* U+206C Inhibit Arabic Form Shaping */
 #define AGSI_ACT_ARABIC_FORM_SHAPING "\xE2\x81\xAD"	/* U+206D Activate Arabic Form Shaping */
 #define AGSI_NATIONAL_DIGIT_SHAPES   "\xE2\x81\xAE"	/* U+206E */
+#define AGSI_GENPUNCT_END 0x206E
 /*
  * Superscripts and Subscripts.
  */
+#define AGSI_SUPERSCRIPTS_BEGIN 0x2070
 #define AGSI_SUPERSCRIPT_0           "\xE2\x81\xB0"	/* U+2070 Superscript Zero */
 #define AGSI_SUPERSCRIPT_SMALL_I     "\xE2\x81\xB1"	/* U+2071 Superscript Latin Small Letter I */
 #define AGSI_SUPERSCRIPT_4           "\xE2\x81\xB4"	/* U+2074 Superscript Four */
@@ -304,6 +307,8 @@
 #define AGSI_SUPERSCRIPT_L_PAREN     "\xE2\x81\xBD"	/* U+207D Superscript Left Parenthesis */
 #define AGSI_SUPERSCRIPT_R_PAREN     "\xE2\x81\xBE"	/* U+207E Superscript Right Parenthesis */
 #define AGSI_SUPERSCRIPT_SMALL_N     "\xE2\x81\xBF"	/* U+207F Superscript Latin Small Letter N */
+#define AGSI_SUPERSCRIPTS_END 0x207F
+#define AGSI_SUBSCRIPTS_BEGIN 0x2080
 #define AGSI_SUBSCRIPT_0             "\xE2\x82\x80"	/* U+2080 Subscript 0 */
 #define AGSI_SUBSCRIPT_1             "\xE2\x82\x81"	/* U+2081 Subscript 1 */
 #define AGSI_SUBSCRIPT_2             "\xE2\x82\x82"	/* U+2082 Subscript 2 */
@@ -331,9 +336,11 @@
 #define AGSI_SUBSCRIPT_SMALL_P       "\xE2\x82\x9A"	/* U+209A Latin Subscript Small Letter P */
 #define AGSI_SUBSCRIPT_SMALL_S       "\xE2\x82\x9B"	/* U+209B Latin Subscript Small Letter S */
 #define AGSI_SUBSCRIPT_SMALL_T       "\xE2\x82\x9C"	/* U+209C Latin Subscript Small Letter T */
+#define AGSI_SUBSCRIPTS_END 0x209C
 /*
  * Number Forms.
  */
+#define AGSI_ROMANNUM_BEGIN 0x2160
 #define AGSI_ROMAN_NUMERAL_1            "\xE2\x85\xA0"      /* U+2160 */
 #define AGSI_ROMAN_NUMERAL_2            "\xE2\x85\xA1"      /* U+2161 */
 #define AGSI_ROMAN_NUMERAL_3            "\xE2\x85\xA2"      /* U+2162 */
@@ -372,9 +379,11 @@
 #define AGSI_ROMAN_NUMERAL_REVERSED_100 "\xE2\x85\x83"      /* U+2183 */
 #define AGSI_LATIN_SMALL_REVERSED_C     "\xE2\x85\x84"      /* U+2184 Latin Small Letter Reversed C */
 #define AGSI_ROMAN_NUMERAL_6_LATE_FORM  "\xE2\x85\x85"      /* U+2185 */
+#define AGSI_ROMANNUM_END 0x2185
 /*
  * Arrows ("L" = "LEFT", "U" = "UP", "R" = "RIGHT", "D" = "DOWN").
  */
+#define AGSI_ARROWS_BEGIN 0x2190
 #define AGSI_L_ARROW                  "\xE2\x86\x90" /* U+2190 Leftwards Arrow */
 #define AGSI_UP_ARROW                 "\xE2\x86\x91" /* U+2191 Upwards Arrow */
 #define AGSI_R_ARROW                  "\xE2\x86\x92" /* U+2192 Rightwards Arrow */
@@ -487,11 +496,13 @@
 #define AGSI_L_OPEN_HEADED_ARROW      "\xE2\x86\xFD" /* U+21FD Leftwards Open-Headed Arrow */
 #define AGSI_R_OPEN_HEADED_ARROW      "\xE2\x86\xFE" /* U+21FE Rightwards Open-Headed Arrow */
 #define AGSI_LR_OPEN_HEADED_ARROW     "\xE2\x86\xFF" /* U+21FF Left Right Open-Headed Arrow */
+#define AGSI_ARROWS_END 0x21FF
 
 /*
  * Mathematical Operators ("GT" = "GREATER_THAN", "LT" = "LESS_THAN",
  * "SM" = "SMALL", "APPROX" = "APPROXIMATELY", "HSTROKE" = "HORIZONTAL_STROKE").
  */
+#define AGSI_MATHOPS_BEGIN 0x2200
 #define AGSI_FOR_ALL                                "\xE2\x88\x80" /* U+2200 */
 #define AGSI_COMPLEMENT                             "\xE2\x88\x81" /* U+2201 */
 #define AGSI_PARTIAL_DIFFERENTIAL                   "\xE2\x88\x82" /* U+2202 */
@@ -749,9 +760,11 @@
 #define AGSI_CONTAINS_W_OVERBAR                     "\xE2\x8B\xBD" /* U+22FD Contains With Overbar */
 #define AGSI_SM_CONTAINS_W_OVERBAR                  "\xE2\x8B\xBE" /* U+22FE Small Contains With Overbar */
 #define AGSI_Z_NOTATION_BAG_MEMBERSHIP              "\xE2\x8B\xBF" /* U+22FF */
+#define AGSI_MATHOPS_END 0x22FF
 /*
  * Miscellaneous Technical ("PAREN" = "PARENTHESIS", "SQ" = "SQUARE").
  */
+#define AGSI_MISCTECH_BEGIN 0x2300
 #define AGSI_DIAMETER_SIGN                  "\xE2\x8C\x80" /* U+2300 */
 #define AGSI_ELECTRIC_ARROW                 "\xE2\x8C\x81" /* U+2301 */
 #define AGSI_HOUSE                          "\xE2\x8C\x82" /* U+2302 */
@@ -818,14 +831,18 @@
 #define AGSI_FLATNESS                       "\xE2\x8F\xA5" /* U+23E5 */
 #define AGSI_DECIMAL_EXPONENT_SYMBOL        "\xE2\x8F\xA8" /* U+23E8 */
 #define AGSI_STOPWATCH                      "\xE2\x8F\xB1" /* U+23F1 */
+#define AGSI_MISCTECH_END 0x23F1
 /*
  * Control Pictures.
  */
+#define AGSI_CTRLPICS_BEGIN 0x2422
 #define AGSI_BLANK_SYMBOL     "\xE2\x90\xA2"       /* U+2422 */
 #define AGSI_OPEN_BOX         "\xE2\x90\xA3"       /* U+2423 */
+#define AGSI_CTRLPICS_END 0x2423
 /*
  * Enclosed Alphanumerics.
  */
+#define AGSI_CIRCLED_DIGITS_BEGIN 0x2460
 #define AGSI_CIRCLED_DIGIT_1  "\xE2\x91\xA0"       /* U+2460 */
 #define AGSI_CIRCLED_DIGIT_2  "\xE2\x91\xA1"       /* U+2461 */
 #define AGSI_CIRCLED_DIGIT_3  "\xE2\x91\xA2"       /* U+2462 */
@@ -836,19 +853,29 @@
 #define AGSI_CIRCLED_DIGIT_8  "\xE2\x91\xA7"       /* U+2467 */
 #define AGSI_CIRCLED_DIGIT_9  "\xE2\x91\xA8"       /* U+2468 */
 #define AGSI_CIRCLED_DIGIT_10 "\xE2\x91\xA9"       /* U+2469 */
+#define AGSI_CIRCLED_DIGITS_END 0x2469
 /*
  * Geometric Shapes.
  */
-#define AGSI_DOTTED_CIRCLE    "\xE2\x97\x8C"       /* U+25CC */
+#define AGSI_GEOSHAPES_BEGIN 0x25AD
+#define AGSI_WHITE_RECTANGLE            "\xE2\x96\xAD"       /* U+25AD */
+#define AGSI_WHITE_UP_POINTING_TRIANGLE "\xE2\x96\xB3"       /* U+25B3 */
+#define AGSI_DOTTED_CIRCLE              "\xE2\x97\x8C"       /* U+25CC */
+#define AGSI_GEOSHAPES_END 0x25CC
 /*
  * Miscellaneous Symbols.
  */
+#define AGSI_MISCSYM_BEGIN 0x2607
+#define AGSI_LIGHTNING         "\xE2\x98\x87"       /* U+2607 */
 #define AGSI_WHEEL_OF_DHARMA   "\xE2\x98\xB8"       /* U+2638 */
+#define AGSI_SCALES            "\xE2\x9A\x96"       /* U+2696 */
 #define AGSI_GEAR              "\xE2\x9A\x99"       /* U+2699 */
 #define AGSI_WHEELCHAIR_SYMBOL "\xE2\x99\xBF"       /* U+267F */
+#define AGSI_MISCSYM_END 0x267F
 /*
  * Dingbats.
  */
+#define AGSI_DINGBATS_BEGIN 0x270C
 #define AGSI_VICTORY_HAND            "\xE2\x9C\x8C" /* U+270C */
 #define AGSI_WRITING_HAND            "\xE2\x9C\x8D" /* U+270D */
 #define AGSI_LOWER_R_PENCIL          "\xE2\x9C\x8E" /* U+270E Lower Right Pencil */
@@ -866,9 +893,11 @@
 #define AGSI_WHT_4_POINTED_STAR      "\xE2\x9C\xA7" /* U+2727 White Four Pointed Star */
 #define AGSI_CCW_CLOSED_CIRCLE_ARROW "\xE2\xA5\x80" /* U+2940 Anticlockwise Closed Circle Arrow */
 #define AGSI_CW_CLOSED_CIRCLE_ARROW  "\xE2\xA5\x81" /* U+2941 Clockwise Closed Circle Arrow */
+#define AGSI_DINGBATS_END 0x2941
 /*
  * Miscellaneous Symbols and Pictographs.
  */
+#define AGSI_MISCSYMPIC_BEGIN 0x1F311
 #define AGSI_NEW_MOON             "\xF0\x9F\x8C\x91" /* U+1F311 */
 #define AGSI_WAXING_CRESCENT_MOON "\xF0\x9F\x8C\x92" /* U+1F312 */
 #define AGSI_FIRST_QUARTER_MOON   "\xF0\x9F\x8C\x93" /* U+1F313 */
@@ -888,14 +917,17 @@
 #define AGSI_PILE_OF_POO          "\xF0\x9F\x92\xA9" /* U+1F4A9 */
 #define AGSI_FLOPPY_DISK          "\xF0\x9F\x92\xBE" /* U+1F4BE */
 #define AGSI_DVD                  "\xF0\x9F\x93\x80" /* U+1F4C0 */
+#define AGSI_CAMERA               "\xF0\x9F\x93\xB7" /* U+1F4F7 */
 #define AGSI_SPKR_W_3_SOUND_WAVES "\xF0\x9F\x94\x8A" /* U+1F50A Speaker With Three Sound Waves */
 #define AGSI_JOYSTICK             "\xF0\x9F\x95\xB9" /* U+1F579 */
 #define AGSI_LOWER_L_PENCIL       "\xF0\x9F\x96\x89" /* U+1F589 Lower Left Pencil */
 #define AGSI_TWO_BUTTON_MOUSE     "\xF0\x9F\x96\xB0" /* U+1F5B0 */
+#define AGSI_MISCSYMPIC_END 0x1F5B0
 
 /*
  * Emoticons ("SML" = "SMILING", "OM" = "OPEN_MOUTH").
  */
+#define AGSI_EMOTICONS_BEGIN 0x1F600
 #define AGSI_GRINNING_FACE                    "\xF0\x9F\x98\x80" /* U+1F600 */
 #define AGSI_GRINNING_FACE_W_SML_EYES         "\xF0\x9F\x98\x81" /* U+1F601 Grinning Face With Smiling Eyes */
 #define AGSI_FACE_W_TEARS_OF_JOY              "\xF0\x9F\x98\x82" /* U+1F602 Face With Tears Of Joy */
@@ -963,11 +995,13 @@
 #define AGSI_WEARY_CAT_FACE                   "\xF0\x9F\x99\x80" /* U+1F640 */
 #define AGSI_UPSIDE_DOWN_FACE                 "\xF0\x9F\x99\x83" /* U+1F643 */
 #define AGSI_CONSTRUCTION_SIGN                "\xF0\x9F\x9A\xA7" /* U+1F6A7 */
+#define AGSI_EMOTICONS_END 0x1F6A7
 /*
  * Agar Ideograms (Algue Private Use Area).
  */
-#define AGSI_BLACK_AGAR            "\xEE\x80\x80"  /* U+E000 Logo Filled */
-#define AGSI_WHITE_AGAR            "\xEE\x80\x81"  /* U+E001 Logo Outline */
+#define AGSI_AGARIDEO_BEGIN 0xE000
+#define AGSI_BLACK_AGAR            "\xEE\x80\x80"  /* U+E000 Black Agar Logo */
+#define AGSI_WHITE_AGAR            "\xEE\x80\x81"  /* U+E001 White Agar Logo */
 #define AGSI_MENUBOOL_TRUE         "\xEE\x80\x82"  /* U+E002 Menu Boolean True */
 #define AGSI_MENUBOOL_FALSE        "\xEE\x80\x83"  /* U+E003 Menu Boolean False */
 #define AGSI_KEYMOD_HYPHEN         "\xEE\x80\x84"  /* U+E004 Keyboard-Modifier Hyphen */
@@ -1091,4 +1125,33 @@
 #define AGSI_PPC64_ARCH            "\xEE\x82\x83" /* U+E083 PPC64 Architecture */
 #define AGSI_SNES_LOGO             "\xEE\x82\x84" /* U+E084 SNES Logo */
 #define AGSI_RISCV_ARCH            "\xEE\x82\x85" /* U+E085 RISCV Architecture */
+#define AGSI_HORIZONTAL_RULE       "\xEE\x82\x86" /* U+E086 Horizontal Rule */
+#define AGSI_VERTICAL_RULE         "\xEE\x82\x87" /* U+E087 Vertical Rule */
+#define AGSI_MEASURED_AREA         "\xEE\x82\x88" /* U+E088 Measured Area */
+#define AGSI_MEASURED_VOLUME       "\xEE\x82\x89" /* U+E089 Measured Volume */
+#define AGSI_MEASURED_TEMP         "\xEE\x82\x8A" /* U+E08A Measured Temperature */
+#define AGSI_PRESSURE_GAUGE        "\xEE\x82\x8B" /* U+E08B Pressure Gauge */
+#define AGSI_BELL_JAR              "\xEE\x82\x8C" /* U+E08C Bell Jar */
+#define AGSI_BELL_JAR_W_VACUUM     "\xEE\x82\x8D" /* U+E08D Bell Jar with Vacuum */
+#define AGSI_BELL_JAR_W_PRESSURE   "\xEE\x82\x8E" /* U+E08E Bell Jar with Pressure */
+#define AGSI_VERTEX                "\xEE\x82\x8F" /* U+E08F Vertex */
+#define AGSI_WHITE_POLYGON         "\xEE\x82\x90" /* U+E090 White Polygon */
+#define AGSI_WHITE_OCTAGON         "\xEE\x82\x91" /* U+E091 White Octagon */
+#define AGSI_VOXEL                 "\xEE\x82\x92" /* U+E092 Voxel */
+#define AGSI_OPENGL                "\xEE\x82\x93" /* U+E093 OpenGL */
+#define AGSI_GLX                   "\xEE\x82\x94" /* U+E094 GLX */
+#define AGSI_XORG                  "\xEE\x82\x95" /* U+E095 Xorg */
+#define AGSI_SDL                   "\xEE\x82\x96" /* U+E096 SDL */
+#define AGSI_SDL2                  "\xEE\x82\x97" /* U+E097 SDL2 */
+#define AGSI_APPLE_LOGO            "\xEE\x82\x98" /* U+E098 Apple Logo */
+#define AGSI_COFFEE_BEAN           "\xEE\x82\x99" /* U+E099 Coffee Bean */
+#define AGSI_MATRIX_A              "\xEE\x82\x9A" /* U+E09A Matrix A */
+#define AGSI_MATRIX_B              "\xEE\x82\x9B" /* U+E09B Matrix B */
+#define AGSI_NULL_MATRIX           "\xEE\x82\x9C" /* U+E09C Null Matrix */
+#define AGSI_IDENTITY_MATRIX       "\xEE\x82\x9D" /* U+E09D Identity Matrix */
+#define AGSI_TOOLBAR               "\xEE\x82\x9E" /* U+E09E Toolbar */
+#define AGSI_SHUFFLE               "\xEE\x82\x9F" /* U+E09F Shuffle */
+
+
+#define AGSI_AGARIDEO_END 0xE09B
 

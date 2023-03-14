@@ -1002,9 +1002,13 @@ fail:
 # endif /* HAVE_ICONV */
 
 /*
- * Return an internal UCS-4 buffer from the given string and specified
- * encoding. Optionally returns number of characters converted in
- * pOutLen, and allocated buffer size in pOutSize.
+ * Convert s from the given encoding to a newly-allocated UCS-4 buffer.
+ *
+ * Return the number of characters converted into pOutLen (if not NULL).
+ * Return the total allocated buffer size into pOutSize (if not NULL).
+ *
+ * Return NULL if insufficient memory is available, or if the encoding
+ * is not valid.
  */
 AG_Char *
 AG_ImportUnicode(const char *encoding, const char *s, AG_Size *pOutLen,

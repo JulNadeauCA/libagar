@@ -3,7 +3,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agarcore.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 February 28
+" Last Change:  2023 March 14
 
 source $VIMRUNTIME/syntax/c.vim
 
@@ -51,6 +51,7 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AGSI_CJK 
   syn keyword cConstant AGSI_APPCMD AGSI_WINCMD AGSI_APPCMD_NAME AGSI_WINCMD_NAME
   " core/agsi.h (general punctuation)
+  syn keyword cConstant AGSI_GENPUNCT_BEGIN
   syn keyword cConstant AGSI_THIN_SPACE AGSI_HYPHEN AGSI_NON_BREAKING_HYPHEN
   syn keyword cConstant AGSI_FIGURE_DASH AGSI_EN_DASH AGSI_EM_DASH
   syn keyword cConstant AGSI_HBAR AGSI_DOUBLE_VERTICAL_LINE
@@ -83,13 +84,17 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AGSI_INH_SYMMETRIC_SWAPPING AGSI_ACT_SYMMETRIC_SWAPPING
   syn keyword cConstant AGSI_INH_ARABIC_FORM_SHAPING AGSI_ACT_ARABIC_FORM_SHAPING
   syn keyword cConstant AGSI_NATIONAL_DIGIT_SHAPES
+  syn keyword cConstant AGSI_GENPUNCT_END
   " core/agsi.h (superscripts and subscripts)
+  syn keyword cConstant AGSI_SUPERSCRIPTS_BEGIN
   syn keyword cConstant AGSI_SUPERSCRIPT_0 AGSI_SUPERSCRIPT_SMALL_I
   syn keyword cConstant AGSI_SUPERSCRIPT_4 AGSI_SUPERSCRIPT_5 AGSI_SUPERSCRIPT_6
   syn keyword cConstant AGSI_SUPERSCRIPT_7 AGSI_SUPERSCRIPT_8 AGSI_SUPERSCRIPT_9
   syn keyword cConstant AGSI_SUPERSCRIPT_PLUS AGSI_SUPERSCRIPT_MINUS
   syn keyword cConstant AGSI_SUPERSCRIPT_EQUALS AGSI_SUPERSCRIPT_L_PAREN
   syn keyword cConstant AGSI_SUPERSCRIPT_R_PAREN AGSI_SUPERSCRIPT_SMALL_N
+  syn keyword cConstant AGSI_SUPERSCRIPTS_END
+  syn keyword cConstant AGSI_SUBSCRIPTS_BEGIN
   syn keyword cConstant AGSI_SUBSCRIPT_0 AGSI_SUBSCRIPT_1 AGSI_SUBSCRIPT_2
   syn keyword cConstant AGSI_SUBSCRIPT_3 AGSI_SUBSCRIPT_4 AGSI_SUBSCRIPT_5
   syn keyword cConstant AGSI_SUBSCRIPT_6 AGSI_SUBSCRIPT_7 AGSI_SUBSCRIPT_8
@@ -102,7 +107,9 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AGSI_SUBSCRIPT_SMALL_M AGSI_SUBSCRIPT_SMALL_N
   syn keyword cConstant AGSI_SUBSCRIPT_SMALL_P AGSI_SUBSCRIPT_SMALL_S
   syn keyword cConstant AGSI_SUBSCRIPT_SMALL_T
+  syn keyword cConstant AGSI_SUBSCRIPTS_END
   " core/agsi.h (number forms)
+  syn keyword cConstant AGSI_ROMANNUM_BEGIN
   syn keyword cConstant AGSI_ROMAN_NUMERAL_1 AGSI_ROMAN_NUMERAL_2
   syn keyword cConstant AGSI_ROMAN_NUMERAL_3 AGSI_ROMAN_NUMERAL_4
   syn keyword cConstant AGSI_ROMAN_NUMERAL_5 AGSI_ROMAN_NUMERAL_6
@@ -122,7 +129,9 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AGSI_ROMAN_NUMERAL_1000_C_D AGSI_ROMAN_NUMERAL_5000
   syn keyword cConstant AGSI_ROMAN_NUMERAL_10000 AGSI_ROMAN_NUMERAL_REVERSED_100
   syn keyword cConstant AGSI_LATIN_SMALL_REVERSED_C AGSI_ROMAN_NUMERAL_6_LATE_FORM
+  syn keyword cConstant AGSI_ROMANNUM_END
   " core/agsi.h (arrows)
+  syn keyword cConstant AGSI_ARROWS_BEGIN
   syn keyword cConstant AGSI_L_ARROW AGSI_UP_ARROW AGSI_R_ARROW AGSI_DN_ARROW
   syn keyword cConstant AGSI_LR_ARROW AGSI_UPDN_ARROW 
   syn keyword cConstant AGSI_NW_ARROW AGSI_NE_ARROW AGSI_SE_ARROW AGSI_SW_ARROW
@@ -174,7 +183,9 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AGSI_L_ARROW_W_DBL_VSTROKE AGSI_R_ARROW_W_DBL_VSTROKE
   syn keyword cConstant AGSI_LR_ARROW_W_DBL_VSTROKE AGSI_L_OPEN_HEADED_ARROW 
   syn keyword cConstant AGSI_R_OPEN_HEADED_ARROW AGSI_LR_OPEN_HEADED_ARROW
+  syn keyword cConstant AGSI_ARROWS_END
   " core/agsi.h (mathematical operators)
+  syn keyword cConstant AGSI_MATHOPS_BEGIN
   syn keyword cConstant AGSI_FOR_ALL AGSI_COMPLEMENT AGSI_PARTIAL_DIFFERENTIAL
   syn keyword cConstant AGSI_THERE_EXISTS AGSI_THERE_DOES_NOT_EXIST
   syn keyword cConstant AGSI_EMPTY_SET AGSI_INCREMENT AGSI_NABLA AGSI_ELEMENT_OF
@@ -296,7 +307,9 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AGSI_CONTAINS_WITH_VBAR_AT_END_OF_HSTROKE
   syn keyword cConstant AGSI_SM_CONTAINS_WITH_VBAR_AT_END_OF_HSTROKE
   syn keyword cConstant AGSI_SM_CONTAINS_WITH_OVERBAR AGSI_Z_NOTATION_BAG_MEMBERSHIP
+  syn keyword cConstant AGSI_MATHOPS_END
   " core/agsi.h (miscellaneous technical)
+  syn keyword cConstant AGSI_MISCTECH_BEGIN
   syn keyword cConstant AGSI_DIAMETER_SIGN AGSI_ELECTRIC_ARROW AGSI_HOUSE
   syn keyword cConstant AGSI_UP_ARROWHEAD AGSI_DN_ARROWHEAD AGSI_PROJECTIVE
   syn keyword cConstant AGSI_PERSPECTIVE AGSI_WAVY_LINE AGSI_L_CEILING AGSI_R_CEILING
@@ -325,18 +338,31 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AGSI_INTEGRAL_EXTENSION AGSI_RETURN_SYMBOL AGSI_EJECT_SYMBOL
   syn keyword cConstant AGSI_BENZENE_RING_W_CIRCLE AGSI_FLATNESS
   syn keyword cConstant AGSI_DECIMAL_EXPONENT_SYMBOL AGSI_STOPWATCH
+  syn keyword cConstant AGSI_MISCTECH_END
   " core/agsi.h (control pictures)
+  syn keyword cConstant AGSI_CTRLPICS_BEGIN
   syn keyword cConstant AGSI_BLANK_SYMBOL AGSI_OPEN_BOX
+  syn keyword cConstant AGSI_CTRLPICS_END
   " core/agsi.h (enclosed alphanumerics)
+  syn keyword cConstant AGSI_CIRCLED_DIGITS_BEGIN
   syn keyword cConstant AGSI_CIRCLED_DIGIT_1 AGSI_CIRCLED_DIGIT_2 AGSI_CIRCLED_DIGIT_3
   syn keyword cConstant AGSI_CIRCLED_DIGIT_4 AGSI_CIRCLED_DIGIT_5 AGSI_CIRCLED_DIGIT_6
   syn keyword cConstant AGSI_CIRCLED_DIGIT_7 AGSI_CIRCLED_DIGIT_8 AGSI_CIRCLED_DIGIT_9
   syn keyword cConstant AGSI_CIRCLED_DIGIT_10
+  syn keyword cConstant AGSI_CIRCLED_DIGITS_END
   " core/agsi.h (geometric shapes)
+  syn keyword cConstant AGSI_GEOSHAPES_BEGIN
+  syn keyword cConstant AGSI_WHITE_RECTANGLE AGSI_WHITE_UP_POINTING_TRIANGLE
   syn keyword cConstant AGSI_DOTTED_CIRCLE
+  syn keyword cConstant AGSI_GEOSHAPES_END
   " core/agsi.h (miscellaneous symbols)
-  syn keyword cConstant AGSI_WHEEL_OF_DHARMA AGSI_GEAR AGSI_WHEELCHAIR_SYMBOL
+  syn keyword cConstant AGSI_MISCSYM_BEGIN
+  syn keyword cConstant AGSI_LIGHTNING
+  syn keyword cConstant AGSI_WHEEL_OF_DHARMA AGSI_SCALES AGSI_GEAR
+  syn keyword cConstant AGSI_WHEELCHAIR_SYMBOL
+  syn keyword cConstant AGSI_MISCSYM_END
   " core/agsi.h (dingbats)
+  syn keyword cConstant AGSI_DINGBATS_BEGIN
   syn keyword cConstant AGSI_VICTORY_HAND AGSI_WRITING_HAND AGSI_LOWER_R_PENCIL
   syn keyword cConstant AGSI_PENCIL AGSI_UPPER_RIGHT_PENCIL AGSI_WHITE_NIB
   syn keyword cConstant AGSI_BLACK_NIB AGSI_CHECK_MARK AGSI_HEAVY_CHECK_MARK
@@ -344,7 +370,9 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AGSI_BALLOT_X AGSI_HEAVY_BALLOT_X
   syn keyword cConstant AGSI_BLK_4_POINTED_STAR AGSI_WHT_4_POINTED_STAR
   syn keyword cConstant AGSI_CCW_CLOSED_CIRCLE_ARROW AGSI_CW_CLOSED_CIRCLE_ARROW
+  syn keyword cConstant AGSI_DINGBATS_END
   " core/agsi.h (miscellaneous symbols and pictographs)
+  syn keyword cConstant AGSI_MISCSYMPIC_BEGIN
   syn keyword cConstant AGSI_NEW_MOON AGSI_WAXING_CRESCENT_MOON
   syn keyword cConstant AGSI_FIRST_QUARTER_MOON AGSI_WAXING_GIBBOUS_MOON
   syn keyword cConstant AGSI_FULL_MOON AGSI_WANING_GIBBOUS_MOON
@@ -352,10 +380,12 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AGSI_ARTISTS_PALETTE
   syn keyword cConstant AGSI_ANT AGSI_MOUSE_FACE AGSI_COW_FACE AGSI_CAT_FACE
   syn keyword cConstant AGSI_MONKEY_FACE AGSI_TEE_SHIRT AGSI_JEANS
-  syn keyword cConstant AGSI_PILE_OF_POO AGSI_FLOPPY_DISK AGSI_DVD 
+  syn keyword cConstant AGSI_PILE_OF_POO AGSI_FLOPPY_DISK AGSI_DVD AGSI_CAMERA
   syn keyword cConstant AGSI_SPKR_W_3_SOUND_WAVES AGSI_JOYSTICK AGSI_LOWER_L_PENCIL
   syn keyword cConstant AGSI_TWO_BUTTON_MOUSE
+  syn keyword cConstant AGSI_MISCSYMPIC_END
   " core/agsi.h (emoticons)
+  syn keyword cConstant AGSI_EMOTICONS_BEGIN
   syn keyword cConstant AGSI_GRINNING_FACE AGSI_GRINNING_FACE_W_SML_EYES
   syn keyword cConstant AGSI_FACE_W_TEARS_OF_JOY AGSI_SML_FACE_W_OM
   syn keyword cConstant AGSI_SML_FACE_W_OM_AND_SML_EYES
@@ -388,8 +418,10 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AGSI_CAT_FACE_W_WRY_SMILE AGSI_KISSING_CAT_FACE_W_CLOSED_EYES
   syn keyword cConstant AGSI_POUTING_CAT_FACE AGSI_CRYING_CAT_FACE AGSI_WEARY_CAT_FACE
   syn keyword cConstant AGSI_UPSIDE_DOWN_FACE AGSI_CONSTRUCTION_SIGN
+  syn keyword cConstant AGSI_EMOTICONS_END
   "
   " core/agsi.h (in Algue; Agar Extensions - Private Use Area)
+  syn keyword cConstant AGSI_AGARIDEO_BEGIN
   syn keyword cConstant AGSI_BLACK_AGAR AGSI_WHITE_AGAR AGSI_MENUBOOL_TRUE
   syn keyword cConstant AGSI_MENUBOOL_FALSE AGSI_KEYMOD_HYPHEN AGSI_MENU_EXPANDER
   syn keyword cConstant AGSI_BOX_VERT AGSI_BOX_HORIZ AGSI_BUTTON AGSI_BEZIER
@@ -430,7 +462,16 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AGSI_I386_ARCH AGSI_JSON AGSI_NES_CONTROLLER
   syn keyword cConstant AGSI_MIPS32_ARCH AGSI_MIPS64_ARCH AGSI_N64_LOGO
   syn keyword cConstant AGSI_IA64_ARCH AGSI_PPC32_ARCH AGSI_PPC64_ARCH
-  syn keyword cConstant AGSI_SNES_LOGO AGSI_RISCV_ARCH
+  syn keyword cConstant AGSI_SNES_LOGO AGSI_RISCV_ARCH AGSI_HORIZONTAL_RULE
+  syn keyword cConstant AGSI_VERTICAL_RULE AGSI_MEASURED_AREA AGSI_MEASURED_VOLUME
+  syn keyword cConstant AGSI_MEASURED_TEMP AGSI_PRESSURE_GAUGE
+  syn keyword cConstant AGSI_BELL_JAR AGSI_BELL_JAR_W_VACUUM AGSI_BELL_JAR_W_PRESSURE
+  syn keyword cConstant AGSI_VERTEX AGSI_WHITE_POLYGON AGSI_WHITE_OCTAGON
+  syn keyword cConstant AGSI_VOXEL AGSI_OPENGL AGSI_GLX AGSI_XORG AGSI_SDL
+  syn keyword cConstant AGSI_SDL2 AGSI_APPLE_LOGO AGSI_COFFEE_BEAN
+  syn keyword cConstant AGSI_MATRIX_A AGSI_MATRIX_B AGSI_NULL_MATRIX
+  syn keyword cConstant AGSI_IDENTITY_MATRIX AGSI_TOOLBAR AGSI_SHUFFLE
+  syn keyword cConstant AGSI_AGARIDEO_END
 
   " core/agtime.h
   syn keyword cType AG_Timer AG_TimerFn AG_TimerPvt AG_TimeOps

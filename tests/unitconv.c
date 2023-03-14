@@ -30,18 +30,19 @@ TestGUI(void *obj, AG_Window *win)
 		const char *name;
 		const AG_Unit *p;
 	} units[] = {
-		{ "Len", agLengthUnits },
-		{ "Ang", agAngleUnits },
-		{ "Mass", agMassUnits },
-		{ "Area", agAreaUnits },
-		{ "Vol", agVolumeUnits },
-		{ "Spd", agSpeedUnits },
-		{ "Time", agTimeUnits },
-		{ "Temp", AG_UNIT(agTemperatureUnits) },
-		{ "Pwr", agPowerUnits },
-		{ "Press", agPressureUnits },
-		{ "Vac", agVacuumUnits }
+		{ AGSI_IDEOGRAM AGSI_HORIZONTAL_RULE   AGSI_RST " Len",   agLengthUnits },
+		{ AGSI_IDEOGRAM AGSI_MEASURED_ANGLE    AGSI_RST " Ang",   agAngleUnits },
+		{ AGSI_IDEOGRAM AGSI_SCALES            AGSI_RST " Mass",  agMassUnits },
+		{ AGSI_IDEOGRAM AGSI_MEASURED_AREA     AGSI_RST " Area",  agAreaUnits },
+		{ AGSI_IDEOGRAM AGSI_MEASURED_VOLUME   AGSI_RST " Vol",   agVolumeUnits },
+		{ AGSI_IDEOGRAM AGSI_STOPWATCH         AGSI_RST " Spd",   agSpeedUnits },
+		{ AGSI_IDEOGRAM AGSI_EMPTY_HOURGLASS   AGSI_RST " Time",  agTimeUnits },
+		{ AGSI_IDEOGRAM AGSI_MEASURED_TEMP     AGSI_RST " Temp",  agTemperatureUnits },
+		{ AGSI_IDEOGRAM AGSI_LIGHTNING         AGSI_RST " Pow",   agPowerUnits },
+		{ AGSI_IDEOGRAM AGSI_PRESSURE_GAUGE    AGSI_RST " Press", agPressureUnits },
+		{ AGSI_IDEOGRAM AGSI_BELL_JAR_W_VACUUM AGSI_RST " Vac",   agVacuumUnits }
 	};
+	const int nUnits = sizeof(units) / sizeof(units[0]);
 	int i;
 	AG_Toolbar *tb;
 
@@ -50,8 +51,7 @@ TestGUI(void *obj, AG_Window *win)
 	tb = AG_ToolbarNew(win, AG_TOOLBAR_HORIZ, 2, AG_TOOLBAR_HOMOGENOUS |
 	                                             AG_TOOLBAR_STICKY |
 						     AG_TOOLBAR_HFILL);
-
-	for (i = 0; i < sizeof(units)/sizeof(units[0]); i++) {
+	for (i = 0; i < nUnits; i++) {
 		if (i == 6) {
 			AG_ToolbarRow(tb, 1);
 		}
@@ -62,7 +62,10 @@ TestGUI(void *obj, AG_Window *win)
 	AG_SeparatorNewHoriz(win);
 
 	n1 = AG_NumericalNewS(win, AG_NUMERICAL_HFILL, "in", "Value: ");
+	AG_SetMargin(n1, "0 0 10 0");
 	n2 = AG_NumericalNewS(win, AG_NUMERICAL_HFILL, "mm", "Value: ");
+	AG_SetFontSize(n1, "140%");
+	AG_SetFontSize(n2, "140%");
 	AG_BindDouble(n1, "value", &value);
 	AG_BindDouble(n2, "value", &value);
 	AG_NumericalSizeHint(n1, "0000.00");

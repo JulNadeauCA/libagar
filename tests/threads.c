@@ -48,6 +48,7 @@ CreateWindowMT(void *arg)
 	AG_LabelNew(win, 0, "This window was created in a separate thread");
 
 	AG_WindowAttach(ti->winParent, win);
+	AG_WindowSetPosition(win, AG_WINDOW_TC, 1);
 	AG_WindowShow(win);
 	return (NULL);
 }
@@ -170,6 +171,7 @@ CreateSleepingWorker(AG_Event *event)
 	AG_BindInt(pb, "max", &ti->sleeping.max);
 	ti->sleeping.lbl = AG_LabelNew(win, AG_LABEL_HFILL, "...");
 /*	AG_WindowAttach(ti->winParent, win); */
+	AG_WindowSetPosition(win, AG_WINDOW_BC, 1);
 	AG_WindowShow(win);
 
 	AG_ThreadCreate(&ti->sleeping.th, SleepingWorker, ti);
@@ -205,6 +207,7 @@ CreateSpinningWorker(AG_Event *event)
 	AG_BindInt(pb, "max", &ti->spinning.max);
 	ti->spinning.lbl = AG_LabelNew(win, AG_LABEL_HFILL, "...");
 /*	AG_WindowAttach(ti->winParent, win); */
+	AG_WindowSetPosition(win, AG_WINDOW_BC, 1);
 	AG_WindowShow(win);
 
 	AG_ThreadCreate(&ti->spinning.th, SpinningWorker, ti);
