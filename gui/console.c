@@ -716,6 +716,8 @@ Init(void *_Nonnull obj)
 	cons->pm = NULL;
 	cons->pos = -1;
 	cons->sel = 0;
+	cons->gcCounter = 0;
+	cons->gcTrigger = 128;
 	cons->r.x = 0;
 	cons->r.y = 0;
 	cons->r.w = 0;
@@ -1005,6 +1007,31 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 
 	if ((cons->flags & AG_CONSOLE_NOAUTOSCROLL) == 0)
 		cons->scrollTo = &cons->nLines;
+
+	if (++cons->gcCounter > cons->gcTrigger) {
+		Uint i;
+
+		for (i = 0;
+		     i < cons->nLines;
+		     i++) {
+			AG_ConsoleLine *ln = cons->lines[i];
+			int j;
+
+			if (i >= cons->rOffs &&
+			    i <  cons->rOffs + cons->rVisible)
+				continue;
+
+			for (j = 0; j < 2; j++) {
+				if (ln->surface[j] != -1) {
+					AG_WidgetUnmapSurface(cons,
+					    ln->surface[j]);
+					ln->surface[j] = -1;
+				}
+			}
+		}
+
+		cons->gcCounter = 0;
+	}
 
 	AG_Redraw(cons);
 	AG_ObjectUnlock(cons);

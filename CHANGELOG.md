@@ -94,6 +94,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - Fixed `double` <-> `long` conversion warnings in `math/m_sparse*`.
 - [**wgl**](https://libagar.org/man3/AG_DriverWGL): Fixed a bug in cursor handling. When showing a window initially, perform size allocation after having initialized the cursors so that the initial cursor-change areas are correctly established.
 - `install-sdk.exe` now installs include files in `include\x86` or `include\x64`.
+- [**AG_Console**](https://libagar.org/man3/AG_Console): Garbage-collect generated textures more efficiently.
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): Fixed styling errors. Honor the `#disabled` state.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Fix loading of PNG files in 16bpc format (the surface was not being initialized with the correct 64-bit masks). Fix transparency to colorkey translation when loading a PNG in an Indexed format.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Fix conversion between Indexed/Grayscale and other modes.

@@ -64,7 +64,8 @@ typedef struct ag_console {
 	AG_Rect r;                               /* View area */
 	Uint *_Nullable scrollTo;                /* Scrolling request */
 	int pos, sel;                            /* Position and selection */
-
+	int gcCounter;                           /* Garbage collection counter */
+	int gcTrigger;                           /* Garbage collection threshold */
 	struct ag_popup_menu *_Nullable pm;      /* Active popup menu */
 	AG_Timer beginSelectTo;	                 /* Timer for double-click */
 	AG_TAILQ_HEAD_(ag_console_file) files;   /* Files being monitored */
