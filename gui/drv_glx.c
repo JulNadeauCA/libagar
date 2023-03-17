@@ -435,7 +435,7 @@ LookupWindowByID(Window xw)
 	}
 fail:
 	AG_UnlockVFS(&agDrivers);
-	AG_SetErrorS("X event from unknown window");
+	AG_SetErrorS(_("X event from unknown window"));
 	return (NULL);
 }
 
@@ -677,23 +677,18 @@ GLX_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 #ifdef AG_UNICODE
 		if (agXIC) {
 			XwcLookupString(agXIC, &xev.xkey,
-			    (wchar_t *)&ch, 1, NULL, NULL);
-		} else {
-			if (XLookupString(&xev.xkey, xkbBuf, sizeof(xkbBuf),
-			    NULL, &xkbCompStatus) >= 1) {
-				ch = (Uint8)xkbBuf[0];	/* XXX */
+			    (wchar_t *)&ch, 1,
+			    NULL, NULL);
+		} else
+#endif /* AG_UNICODE */
+		{
+			if (XLookupString(&xev.xkey, xkbBuf,
+			    sizeof(xkbBuf), NULL, &xkbCompStatus) >= 1) {
+				ch = (AG_Char)xkbBuf[0];
 			} else {
 				ch = 0;
 			}
 		}
-#else
-		if (XLookupString(&xev.xkey, xkbBuf, sizeof(xkbBuf), NULL,
-		    &xkbCompStatus) >= 1) {
-			ch = (Uint8)xkbBuf[0];
-		} else {
-			ch = 0;
-		}
-#endif /* AG_UNICODE */
 
 		if (!LookupKeyCode(xev.xkey.keycode, &ks)) {
 			AG_SetError(_("Keyboard event: Unknown keycode: %d"),
@@ -1263,7 +1258,7 @@ CreateClipboardWindow(void)
 	    -10, -10, 1, 1, 0,
 	    CopyFromParent, InputOnly, CopyFromParent, 0, &xwAttrs);
 	if (agClipboardWindow == 0) {
-		AG_SetErrorS("Clipboard window could not be created");
+		AG_SetErrorS(_("Clipboard window could not be created"));
 		return (-1);
 	}
 	XFlush(agDisplay);
@@ -1517,7 +1512,7 @@ GLX_OpenWindow(AG_Window *_Nonnull win, const AG_Rect *_Nonnull r, int depthReq,
 	    CWColormap | CWBackPixmap | CWBorderPixel | CWEventMask,
 	    &xwAttrs);
 	if (glx->w == 0) {
-		AG_SetErrorS("XCreateWindow failed");
+		AG_SetErrorS(_("XCreateWindow failed"));
 		goto fail_unlock;
 	}
 
@@ -2255,7 +2250,7 @@ GLX_SetOpacity(AG_Window *_Nonnull win, float f)
 		    (Uchar *)&opacity, 1);
 		return (0);
 	} else {
-		AG_SetErrorS("No opacity");
+		AG_SetErrorS(_("No opacity"));
 		return (-1);
 	}
 #else

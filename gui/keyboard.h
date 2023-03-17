@@ -393,10 +393,11 @@ typedef unsigned int AG_KeyMod;
 #define AG_KEYMOD_CAPSLOCK   0x2000             /* Caps lock */
 #define AG_KEYMOD_MODE       0x4000             /* Mode key */
                         /*   0x8000 Reserved */
-#define AG_KEYMOD_CTRL  (AG_KEYMOD_LCTRL  | AG_KEYMOD_RCTRL)
-#define AG_KEYMOD_SHIFT (AG_KEYMOD_LSHIFT | AG_KEYMOD_RSHIFT)
-#define AG_KEYMOD_ALT   (AG_KEYMOD_LALT   | AG_KEYMOD_RALT)
-#define AG_KEYMOD_META  (AG_KEYMOD_LMETA  | AG_KEYMOD_RMETA)
+#define AG_KEYMOD_CTRL      (AG_KEYMOD_LCTRL | AG_KEYMOD_RCTRL)
+#define AG_KEYMOD_SHIFT     (AG_KEYMOD_LSHIFT | AG_KEYMOD_RSHIFT)
+#define AG_KEYMOD_ALT       (AG_KEYMOD_LALT | AG_KEYMOD_RALT)
+#define AG_KEYMOD_META      (AG_KEYMOD_LMETA | AG_KEYMOD_RMETA)
+#define AG_KEYMOD_ALT_SHIFT (AG_KEYMOD_ALT | AG_KEYMOD_SHIFT)
 #define AG_KEYMOD_ANY   0xffff		/* Any modifier */
 
 struct ag_window;
@@ -432,7 +433,7 @@ extern const int agKeySymCount;
 
 AG_Keyboard *_Nullable AG_KeyboardNew(void *_Nonnull, const char *_Nonnull);
 
-int AG_KeyboardUpdate(AG_Keyboard *_Nonnull, AG_KeyboardAction, AG_KeySym);
+void AG_KeyboardUpdate(AG_Keyboard *_Nonnull, AG_KeyboardAction, AG_KeySym);
 int AG_ProcessKey(AG_Keyboard *_Nonnull, struct ag_window *_Nonnull,
                   AG_KeyboardAction, AG_KeySym, AG_Char);
 

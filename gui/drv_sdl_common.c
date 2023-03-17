@@ -69,15 +69,15 @@ AG_InitVideoSDL(void *pDisplay, Uint flags)
 #endif
 	    ) {
 		if (flags & AG_VIDEO_SDL) {
-			AG_SetError("AG_VIDEO_SDL flag requested, but "
-			            "display surface has SDL_OPENGL set");
+			AG_SetErrorS(_("AG_VIDEO_SDL flag requested and "
+			               "display surface is SDL_OPENGL"));
 			goto fail;
 		}
 		useGL = 1;
 	} else {
 		if (flags & AG_VIDEO_OPENGL) {
-			AG_SetError("AG_VIDEO_OPENGL flag requested, but "
-			            "display surface is missing SDL_OPENGL");
+			AG_SetErrorS(_("AG_VIDEO_OPENGL flag requested and "
+			               "display surface is !SDL_OPENGL"));
 			goto fail;
 		}
 	}
@@ -96,7 +96,7 @@ AG_InitVideoSDL(void *pDisplay, Uint flags)
 		}
 	}
 	if (dc == NULL) {
-		AG_SetError("No compatible %s driver is available",
+		AG_SetError(_("No compatible %s driver is available"),
 		    useGL ? "SDL/OpenGL" : "SDL");
 		goto fail;
 	}
@@ -134,7 +134,7 @@ AG_SetVideoSurfaceSDL(void *pDisplay)
 {
 	if (agDriverSw == NULL ||
 	    !(agDriverOps->flags & AG_DRIVER_SDL)) {
-		AG_SetError("Current driver is not an SDL driver");
+		AG_SetErrorS(_("Current driver is not an SDL driver"));
 		return (-1);
 	}
 	if (AGDRIVER_SW_CLASS(agDriverSw)->setVideoContext(agDriverSw,
@@ -572,7 +572,7 @@ AG_SDL_SetRefreshRate(void *obj, int fps)
 	AG_DriverSw *dsw = obj;
 
 	if (fps < 1) {
-		AG_SetError("Invalid refresh rate");
+		AG_SetErrorS(_("Invalid refresh rate"));
 		return (-1);
 	}
 	dsw->rNom = 1000/fps;
@@ -611,7 +611,7 @@ AG_SDL_CreateCursor(void *obj, Uint w, Uint h, const Uint8 *data,
 	    ac->w, ac->h,
 	    ac->xHot, ac->yHot);
 	if (sc == NULL) {
-		AG_SetError("SDL_CreateCursor failed");
+		AG_SetErrorS(_("SDL_CreateCursor() failed"));
 		goto fail;
 	}
 	ac->p = (void *)sc;

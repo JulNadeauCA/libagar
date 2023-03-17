@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,9 +60,9 @@ Insert(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 #endif
 
 #ifdef AG_UNICODE
-	if (!(ed->flags & AG_EDITABLE_NO_ALT_LATIN1)) {
+	if (agLatinInput && !(ed->flags & AG_EDITABLE_NO_ALT_LATIN1)) {
 		for (i = 0; ; i++) {
-			const struct ag_key_mapping *km = &agKeymapLATIN1[i];
+			const struct ag_key_mapping *km = &agKeymapLatin1[i];
 
 			if (keysym == km->key) {
 				if (((keymod & AG_KEYMOD_ALT) &&
@@ -90,8 +90,8 @@ Insert(AG_Editable *_Nonnull ed, AG_EditableBuffer *_Nonnull buf,
 		return (0);
 
 #ifdef AG_UNICODE
-	if (agTextComposition) {
-		if ((nIns = AG_KeyInputCompose(ed, ch, ins)) == 0)
+	if (agLatinComposition) {
+		if ((nIns = AG_KeyComposeLatin(ed, ch, ins)) == 0)
 			return (0);
 	} else
 #endif

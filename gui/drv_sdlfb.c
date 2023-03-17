@@ -97,7 +97,7 @@ SDLFB_Open(void *_Nonnull obj, const char *_Nullable spec)
 	AG_DriverSDLFB *sfb = obj;
 	
 	if (nDrivers != 0) {
-		AG_SetError("Multiple SDL displays are not supported");
+		AG_SetErrorS(_("Multiple SDL displays are not supported"));
 		return (-1);
 	}
 
@@ -108,7 +108,7 @@ SDLFB_Open(void *_Nonnull obj, const char *_Nullable spec)
 		if (AG_Defined(drv, "joy")) { sdlFlags |= SDL_INIT_JOYSTICK; }
 
 		if (SDL_Init(sdlFlags) == -1) {
-			AG_SetError("SDL_Init() failed: %s", SDL_GetError());
+			AG_SetError(_("SDL_Init() failed: %s"), SDL_GetError());
 			return (-1);
 		}
 		initedSDL = 1;
@@ -1585,8 +1585,7 @@ SDLFB_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 	}
 	if ((S = sfb->s = SDL_SetVideoMode((int)w, (int)h, newDepth, sFlags))
 	    == NULL) {
-		AG_SetError("Setting %dx%dx%d mode: %s", w, h, newDepth,
-		    SDL_GetError());
+		AG_SetError("Mode %dx%dx%d: %s", w, h, newDepth, SDL_GetError());
 		return (-1);
 	}
 	SDL_EnableUNICODE(1);
@@ -1726,7 +1725,7 @@ SDLFB_VideoResize(void *_Nonnull obj, Uint w, Uint h)
 	                     SDL_RESIZABLE | SDL_NOFRAME);
 	                          
 	if ((S = SDL_SetVideoMode(w, h, 0, sFlags)) == NULL) {
-		AG_SetError("Cannot resize display to %ux%u: %s", w, h,
+		AG_SetError(_("Cannot resize display to %ux%u (%s)"), w, h,
 		    SDL_GetError());
 		return (-1);
 	}

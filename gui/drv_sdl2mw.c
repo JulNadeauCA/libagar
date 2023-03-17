@@ -48,8 +48,8 @@
 
 /* #define DEBUG_DISPLAY */
 
-static int nDrivers = 0;                        /* Drivers open */
-static int initedSDL = 0;			/* Inited TIMERS and EVENTS */
+static int nDrivers = 0;                /* Drivers open */
+static int initedSDL = 0;               /* Inited TIMERS and EVENTS */
 
 AG_EventSink *_Nullable sdl2mwEventEpilogue = NULL; /* Event sink epilogue */
 AG_EventSink *_Nullable sdl2mwEventSpinner = NULL;  /* For agTimeOps_renderer */
@@ -131,7 +131,7 @@ SDL2MW_Open(void *_Nonnull obj, const char *_Nullable spec)
 
 	if (!initedSDL) {
 		if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO) == -1) {
-			AG_SetError("SDL_Init() failed: %s", SDL_GetError());
+			AG_SetError(_("SDL_Init() failed: %s"), SDL_GetError());
 			return (-1);
 		}
 		initedSDL = 1;
@@ -195,7 +195,7 @@ SDL2MW_Open(void *_Nonnull obj, const char *_Nullable spec)
 					if ((smw->outPath = TryStrdup(buf)) == NULL)
 						return (-1);
 				} else {
-					AG_SetError("Invalid out= argument: `%s'", buf);
+					AG_SetError(_("Invalid out= argument: `%s'"), buf);
 					return (-1);
 				}
 				if (AG_Defined(drv, "outFirst")) {
@@ -617,7 +617,7 @@ SDL2MW_RaiseWindow(AG_Window *_Nonnull win)
 static int
 SDL2MW_LowerWindow(AG_Window *_Nonnull win)
 {
-	AG_SetErrorS("Not implemented");
+	AG_SetErrorS(_("Not implemented"));
 	return (-1);
 }
 
@@ -625,14 +625,14 @@ static int
 SDL2MW_ReparentWindow(AG_Window *_Nonnull win, AG_Window *_Nonnull winParent,
     int x, int y)
 {
-	AG_SetErrorS("Not implemented");
+	AG_SetErrorS(_("Not implemented"));
 	return (-1);
 }
 
 static int
 SDL2MW_GetInputFocus(AG_Window *_Nonnull *_Nonnull rv)
 {
-	AG_SetErrorS("Not implemented");
+	AG_SetErrorS(_("Not implemented"));
 	return (-1);
 }
 
@@ -708,7 +708,7 @@ SDL2MW_MoveResizeWindow(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 #if 0
 	SDL_GetWindowSize(smw->window, &w, &h);
 	if (w != a->w || h != a->h) {
-		SDL_SetErrorS("SDL_SetWindowSize failed");
+		SDL_SetErrorS(_("SDL_SetWindowSize failed"));
 		return (-1);
 	}
 #endif

@@ -336,8 +336,12 @@ AG_DEV_ConfigWindow(AG_Config *_Nullable cfg)
 
 		AG_SpacerNewHoriz(tab);
 
-		AG_CheckboxNewInt(tab, 0, _("Unicode Character Composition"),
-		    &agTextComposition);
+		AG_CheckboxNewInt(tab, 0,
+		   _("Latin Character Input "
+		     "(with " AGSI_COURIER "Alt/Shift" AGSI_RST ")"),
+		    &agLatinInput);
+		AG_CheckboxNewInt(tab, 0, _("Latin Character Composition"),
+		    &agLatinComposition);
 	}
 
 	tab = AG_NotebookAdd(nb,

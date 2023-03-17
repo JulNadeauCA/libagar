@@ -445,7 +445,7 @@ AG_SDL2_SetRefreshRate(void *obj, int fps)
 	AG_DriverSw *dsw = obj;
 
 	if (fps < 1) {
-		AG_SetError("Invalid refresh rate");
+		AG_SetError(_("Invalid refresh rate"));
 		return (-1);
 	}
 	dsw->rNom = 1000/fps;
@@ -484,7 +484,7 @@ AG_SDL2_CreateCursor(void *obj, Uint w, Uint h, const Uint8 *data,
 	    ac->w, ac->h,
 	    ac->xHot, ac->yHot);
 	if (sc == NULL) {
-		AG_SetError("SDL_CreateCursor failed");
+		AG_SetError(_("SDL_CreateCursor() failed"));
 		goto fail;
 	}
 	ac->p = (void *)sc;
@@ -544,7 +544,7 @@ AG_SDL2_GetDisplaySize(Uint *w, Uint *h)
 		*h = mode.h;
 		return (0);
 	}
-	AG_SetErrorS("SDL: No video displays");
+	AG_SetErrorS(_("No video display"));
 	return (-1);
 }
 
@@ -644,7 +644,7 @@ AG_SDL2_PendingEvents(void *obj)
 }
 
 /* Convert an SDL2 SDL_Scancode to an AG_KeySym */
-static __inline__ const AG_KeySym
+static __inline__ AG_KeySym
 AG_SDL2_KeySymFromScancode(const SDL_Scancode scancode)
 {
 	switch (scancode) {
@@ -980,7 +980,8 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		    (Uint)ev->key.keysym.scancode);
 #endif
 		if ((ev->key.keysym.sym & SDLK_SCANCODE_MASK) != 0) {
-			dev->key.ks = AG_SDL2_KeySymFromScancode(ev->key.keysym.scancode);
+			dev->key.ks = AG_SDL2_KeySymFromScancode(
+			    ev->key.keysym.scancode);
 		} else {
 			dev->key.ks = (AG_KeySym)ev->key.keysym.sym;
 		}
@@ -995,7 +996,9 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		AG_KeyboardUpdate(drv->kbd, AG_KEY_PRESSED, dev->key.ks);
 
 		dev->type = AG_DRIVER_KEY_DOWN;
-		dev->key.ucs = AG_SDL_KeySymToUcs4(ev->key.keysym.sym);
+		dev->key.ucs = AG_SDL_KeySymToUCS4(ev->key.keysym.sym,
+		    drv->kbd->modState);
+
 		break;
 	case SDL_KEYUP:
 #ifdef DEBUG_KEYBOARD
@@ -1013,7 +1016,8 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 			drv = WIDGET(dev->win)->drv;
 		}
 		if ((ev->key.keysym.sym & SDLK_SCANCODE_MASK) != 0) {
-			dev->key.ks = AG_SDL2_KeySymFromScancode(ev->key.keysym.scancode);
+			dev->key.ks = AG_SDL2_KeySymFromScancode(
+			    ev->key.keysym.scancode);
 		} else {
 			dev->key.ks = (AG_KeySym)ev->key.keysym.sym;
 		}
@@ -1021,7 +1025,9 @@ AG_SDL2_TranslateEvent(void *obj, const SDL_Event *ev, AG_DriverEvent *dev)
 		AG_KeyboardUpdate(drv->kbd, AG_KEY_RELEASED, dev->key.ks);
 
 		dev->type = AG_DRIVER_KEY_UP;
-		dev->key.ucs = AG_SDL_KeySymToUcs4(ev->key.keysym.sym);
+		dev->key.ucs = AG_SDL_KeySymToUCS4(ev->key.keysym.sym,
+		    drv->kbd->modState);
+
 		break;
 	case SDL_WINDOWEVENT:
 		if (isMW) {

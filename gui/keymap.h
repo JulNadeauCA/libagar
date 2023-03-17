@@ -29,20 +29,15 @@ struct ag_key_mapping {
 };
 
 __BEGIN_DECLS
-/* Map AG_Keysym to AG_Editable(3) ops */
-extern const struct ag_keycode agKeymap[];
+extern const struct ag_keycode agKeymap[];    /* Map keysym to Editable ops */
 
 #ifdef AG_UNICODE
+/* Built-in input method for LATIN-1 characters. */
+extern const struct ag_key_mapping agKeymapLatin1[];
+extern const struct ag_key_composition agKeyComposeMapLatin[];
+extern const int                       agKeyComposeMapLatinSize;
 
-/* Alternate (ALT+SHIFT) entry method for LATIN1 chars. */
-extern const struct ag_key_mapping agKeymapLATIN1[];
-
-/* Alternate key composition map. */
-extern const struct ag_key_composition agCompositionMap[];
-extern const int                       agCompositionMapSize;
-
-int AG_KeyInputCompose(struct ag_editable *_Nonnull, AG_Char, AG_Char *_Nonnull);
-
+int AG_KeyComposeLatin(struct ag_editable *_Nonnull, AG_Char, AG_Char *_Nonnull);
 #endif /* AG_UNICODE */
 __END_DECLS
 

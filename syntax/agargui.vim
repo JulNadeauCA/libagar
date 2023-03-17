@@ -3,7 +3,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agargui.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 March 10
+" Last Change:  2023 March 16
 
 " Agar-GUI (https://libagar.org/)
 if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
@@ -368,7 +368,7 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_KEYMOD_LMETA AG_KEYMOD_RMETA
   syn keyword cConstant AG_KEYMOD_NUMLOCK AG_KEYMOD_CAPSLOCK AG_KEYMOD_MODE
   syn keyword cConstant AG_KEYMOD_CTRL AG_KEYMOD_SHIFT AG_KEYMOD_ALT
-  syn keyword cConstant AG_KEYMOD_META AG_KEYMOD_ANY
+  syn keyword cConstant AG_KEYMOD_META AG_KEYMOD_ANY AG_KEYMOD_ALT_SHIFT
   " gui/label.h
   syn keyword cType AG_Label
   syn keyword cConstant AG_LABEL_MAX AG_LABEL_MAX_POLLPTRS AG_SMALL_LABEL_MAX

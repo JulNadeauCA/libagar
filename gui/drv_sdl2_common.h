@@ -72,7 +72,8 @@ void AG_SDL2_ControllerAdded(void *, int);
 void AG_SDL2_JoystickAdded(void *, int);
 void AG_SDL2_JoystickRemoved(void *, int);
 
-Uint AG_SDL_KeySymToUcs4(Uint32);
+Uint32 AG_SDL_KeySymToUCS4(Uint32, Uint)
+                          _Pure_Attribute;
 __END_DECLS
 
 #include <agar/gui/close.h>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2019 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,9 +24,7 @@
  */
 
 /*
- * Input composition. This is useful for those platforms lacking proper
- * support for international keyboard input, or in special cases where
- * Unicode keyboard translation is disabled for performance reasons.
+ * Built-in input method for LATIN-1 characters.
  */
 
 #include <agar/config/ag_unicode.h>
@@ -37,33 +35,39 @@
 #include <agar/gui/editable.h>
 #include <agar/gui/keymap.h>
 
+/* Implement input character composition for AG_Editable(3) input. */
 int
-AG_KeyInputCompose(AG_Editable *ed, AG_Char key, AG_Char *ins)
+AG_KeyComposeLatin(AG_Editable *ed, AG_Char key, AG_Char *ins)
 {
 	int i;
 
 	if (ed->compose != 0) {
-		for (i = 0; i < agCompositionMapSize; i++) {
-			if (agCompositionMap[i].comp == ed->compose &&
-			    agCompositionMap[i].key == key)
-				break;
-		}
-		if (i < agCompositionMapSize) {		/* Insert composition */
-			ins[0] = agCompositionMap[i].res;
+		if (ed->compose == key) {
+			ins[0] = key;
 			ed->compose = 0;
 			return (1);
-		} else {				/* Insert as-is */
+		}
+		for (i = 0; i < agKeyComposeMapLatinSize; i++) {
+			if (agKeyComposeMapLatin[i].comp == ed->compose &&
+			    agKeyComposeMapLatin[i].key == key)
+				break;
+		}
+		if (i < agKeyComposeMapLatinSize) {   /* Insert composition */
+			ins[0] = agKeyComposeMapLatin[i].res;
 			ed->compose = 0;
+			return (1);
+		} else {                                    /* Insert as-is */
 			ins[0] = ed->compose;
 			ins[1] = key;
+			ed->compose = 0;
 			return (2);
 		}
 	} else {
-		for (i = 0; i < agCompositionMapSize; i++) {
-			if (agCompositionMap[i].comp == key)
+		for (i = 0; i < agKeyComposeMapLatinSize; i++) {
+			if (agKeyComposeMapLatin[i].comp == key)
 				break;
 		}
-		if (i < agCompositionMapSize) {		/* Wait until next */
+		if (i < agKeyComposeMapLatinSize) {      /* Wait until next */
 			ed->compose = key;
 			return (0);
 		} else {
@@ -74,7 +78,7 @@ AG_KeyInputCompose(AG_Editable *ed, AG_Char key, AG_Char *ins)
 	return (0);
 }
 
-const struct ag_key_composition agCompositionMap[] = {
+const struct ag_key_composition agKeyComposeMapLatin[] = {
 	{ 0x0060, 0x0020, 0x0060 },  /* GRAVE ACCENT */
 	{ 0x0060, 0x0061, 0x00e0 },  /* LATIN SMALL LETTER A */
 	{ 0x0060, 0x0041, 0x00c0 },  /* LATIN CAPITAL LETTER A */
@@ -149,7 +153,7 @@ const struct ag_key_composition agCompositionMap[] = {
 	{ 0x005e, 0x0077, 0x0175 },  /* LATIN SMALL LETTER W */
 	{ 0x005e, 0x0057, 0x0174 },  /* LATIN CAPITAL LETTER W */
 };
-const int agCompositionMapSize = sizeof(agCompositionMap) /
-                                 sizeof(agCompositionMap[0]);
+const int agKeyComposeMapLatinSize = sizeof(agKeyComposeMapLatin) /
+                                     sizeof(agKeyComposeMapLatin[0]);
 
 #endif /* AG_UNICODE */

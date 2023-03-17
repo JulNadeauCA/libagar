@@ -83,7 +83,7 @@ SDLGL_Open(void *_Nonnull obj, const char *_Nullable spec)
 	AG_DriverSDLGL *sgl = obj;
 	
 	if (nDrivers != 0) {
-		AG_SetError("Multiple SDL displays are not supported");
+		AG_SetErrorS(_("Multiple SDL displays are not supported"));
 		return (-1);
 	}
 
@@ -94,7 +94,7 @@ SDLGL_Open(void *_Nonnull obj, const char *_Nullable spec)
 		if (AG_Defined(drv, "joy")) { sdlFlags |= SDL_INIT_JOYSTICK; }
 
 		if (SDL_Init(sdlFlags) == -1) {
-			AG_SetError("SDL_Init() failed: %s", SDL_GetError());
+			AG_SetError(_("SDL_Init() failed: %s"), SDL_GetError());
 			return (-1);
 		}
 		initedSDL = 1;
@@ -330,7 +330,7 @@ SDLGL_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 				if ((sgl->outPath = TryStrdup(buf)) == NULL)
 					return (-1);
 			} else {
-				AG_SetError("Invalid out= argument: `%s'", buf);
+				AG_SetError(_("Invalid out= argument: `%s'"), buf);
 				return (-1);
 			}
 			if (AG_Defined(drv, "outFirst")) {
@@ -370,8 +370,7 @@ SDLGL_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 	}
 	if ((sgl->s = SDL_SetVideoMode((int)w, (int)h, newDepth, sFlags))
 	    == NULL) {
-		AG_SetError("Setting %dx%dx%d mode: %s", w, h, newDepth,
-		    SDL_GetError());
+		AG_SetError("Mode %dx%dx%d: %s", w, h, newDepth, SDL_GetError());
 		return (-1);
 	}
 	SDL_EnableUNICODE(1);
@@ -434,7 +433,7 @@ SDLGL_OpenVideoContext(void *_Nonnull obj, void *_Nonnull ctx, Uint flags)
 	SDL_Surface *ctxSu = (SDL_Surface *)ctx;
 
 	if (!(ctxSu->flags & SDL_OPENGL)) {
-		AG_SetError("Given display surface is not SDL_OPENGL");
+		AG_SetErrorS(_("Context surface is !SDL_OPENGL"));
 		return (-1);
 	}
 

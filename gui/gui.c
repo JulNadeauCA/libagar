@@ -102,7 +102,8 @@ static struct {
 	{ "PageIncrement",        &agPageIncrement        },
 	{ "AutocompleteDelay",    &agAutocompleteDelay    },
 	{ "AutocompleteRate",     &agAutocompleteRate     },
-	{ "TextComposition",      &agTextComposition      },
+	{ "LatinInput",           &agLatinInput           },
+	{ "LatinComposition",     &agLatinComposition     },
 	{ "ScreenshotQuality",    &agScreenshotQuality    },
 	{ "TextTabWidth",         &agTextTabWidth         },
 	{ "TextBlinkRate",        &agTextBlinkRate        },
@@ -197,7 +198,8 @@ int agPageIncrement = 4;		/* Pgup/Pgdn scrolling increment */
 int agAutocompleteDelay = 1;		/* Delay before autocomplete (ms) */
 int agAutocompleteRate = 80;		/* Autocomplete refresh rate (ms) */
 int agScreenshotQuality = 100;		/* JPEG quality in % */
-int agTextComposition = 1;		/* Input character composition */
+int agLatinInput = 1;			/* Latin character input with Alt/Shift */
+int agLatinComposition = 0;		/* Latin character composition */
 int agTextTabWidth = 40;		/* Tab width (px) */
 int agTextBlinkRate = 500;		/* Cursor blink rate (ms) */
 int agGLdebugOutput = 0;		/* Enable GL_DEBUG_OUTPUT */

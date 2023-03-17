@@ -93,14 +93,14 @@ SDL2GL_Open(void *_Nonnull obj, const char *_Nullable spec)
 	AG_DriverSDL2GL *sgl = obj;
 
 	if (nDrivers != 0) {
-		AG_SetError("Multiple SDL2 driver instances are not supported");
+		AG_SetError(_("Multiple SDL2 driver instances are not supported"));
 		return (-1);
 	}
 
 	/* Initialize SDL's video subsystem. */
 	if (!initedSDL) {
 		if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO) == -1) {
-			AG_SetError("SDL_Init() failed: %s", SDL_GetError());
+			AG_SetError(_("SDL_Init() failed: %s"), SDL_GetError());
 			return (-1);
 		}
 		initedSDL = 1;
@@ -337,7 +337,7 @@ SDL2GL_OpenVideo(void *_Nonnull obj, Uint w, Uint h, int depth, Uint flags)
 				if ((sgl->outPath = TryStrdup(buf)) == NULL)
 					return (-1);
 			} else {
-				AG_SetError("Invalid out= argument: `%s'", buf);
+				AG_SetError(_("Invalid out= argument: `%s'"), buf);
 				return (-1);
 			}
 			if (AG_Defined(drv, "outFirst")) {

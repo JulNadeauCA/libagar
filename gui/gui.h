@@ -37,7 +37,7 @@ extern int agKbdDelay, agKbdRepeat;
 extern int agMouseDblclickDelay, agMouseSpinDelay, agMouseSpinIval,
            agMouseScrollIval, agScrollButtonIval, agPageIncrement,
            agAutocompleteDelay, agAutocompleteRate, agScreenshotQuality;
-extern int agTextComposition, agTextTabWidth, agTextBlinkRate;
+extern int agLatinInput, agLatinComposition, agTextTabWidth, agTextBlinkRate;
 extern int agGLdebugOutput, agGLuseNPOT;
 extern double agZoomValues[AG_ZOOM_MAX];
 

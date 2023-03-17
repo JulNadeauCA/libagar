@@ -380,24 +380,20 @@ Destroy(void *_Nonnull obj)
  * event. Drivers are only required to update this state for keys in the
  * AG_KEY_ASCII_START to AG_KEY_ASCII_END range, as well as modifier keys.
  */
-int
+void
 AG_KeyboardUpdate(AG_Keyboard *kbd, AG_KeyboardAction action, AG_KeySym ks)
 {
 	Uint ms = kbd->modState;
 
-	if (ks >= kbd->keyCount) {		/* Ignore bad keysym */
-#ifdef AG_DEBUG
-		Debug(kbd, "Bad keysym 0x%x\n", ks);
-#endif
-		return (0);
-	}
+	if (ks >= kbd->keyCount)                       /* Ignore bad keysym */
+		return;
 
 	/* Update the keyboard state. */
 	switch (action) {
 	case AG_KEY_PRESSED:
 		switch (ks) {
 		case AG_KEY_NONE:
-			return (0);
+			return;
 		case AG_KEY_NUMLOCK:
 			ms ^= AG_KEYMOD_NUMLOCK;
 			if ((ms & AG_KEYMOD_NUMLOCK) == 0) {
@@ -427,7 +423,7 @@ AG_KeyboardUpdate(AG_Keyboard *kbd, AG_KeyboardAction action, AG_KeySym ks)
 		case AG_KEY_NONE:
 		case AG_KEY_NUMLOCK:
 		case AG_KEY_CAPSLOCK:
-			return (0);
+			return;
 		case AG_KEY_LCTRL:	ms &= ~AG_KEYMOD_LCTRL;		break;
 		case AG_KEY_RCTRL:	ms &= ~AG_KEYMOD_RCTRL;		break;
 		case AG_KEY_LSHIFT:	ms &= ~AG_KEYMOD_LSHIFT;	break;
@@ -441,14 +437,11 @@ AG_KeyboardUpdate(AG_Keyboard *kbd, AG_KeyboardAction action, AG_KeySym ks)
 		}
 		break;
 	default:
-		return (0);
+		return;
 	}
+
 	kbd->modState = ms;
-	if (kbd->keyState[ks] == (int)action) {
-		return (0);
-	}
 	kbd->keyState[ks] = (int)action;
-	return (1);
 }
 
 /* Post a key-up event to widgets with the UNFOCUSED_KEYUP flag set. */
