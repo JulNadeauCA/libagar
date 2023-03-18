@@ -84,8 +84,11 @@ void AG_LabelValign(AG_Label *_Nonnull, enum ag_text_valign);
 
 void AG_LabelText(AG_Label *_Nonnull, const char *_Nonnull, ...)
                  FORMAT_ATTRIBUTE(printf,2,3);
-
 void AG_LabelTextS(AG_Label *_Nonnull, const char *_Nonnull);
+
+void AG_LabelAppend(AG_Label *_Nonnull, const char *_Nonnull, ...)
+                   FORMAT_ATTRIBUTE(printf,2,3);
+void AG_LabelAppendS(AG_Label *_Nonnull, const char *_Nonnull);
 
 #ifdef AG_LEGACY
 # define AG_LABEL_NOMINSIZE 0x004 /* Has been the default behavior since 1.5 */

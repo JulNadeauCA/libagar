@@ -425,6 +425,47 @@ AG_LabelTextS(AG_Label *lbl, const char *s)
 	AG_ObjectUnlock(lbl);
 }
 
+/* Append to the text displayed by the label (format string). */
+void
+AG_LabelAppend(AG_Label *lbl, const char *fmt, ...)
+{
+	va_list ap;
+	char *s;
+
+	va_start(ap, fmt);
+	Vasprintf(&s, fmt, ap);
+	va_end(ap);
+
+	AG_LabelAppendS(lbl, s);
+	free(s);
+}
+
+/* Append to the text displayed by the label (C string). */
+void
+AG_LabelAppendS(AG_Label *lbl, const char *s)
+{
+	char *textNew;
+	AG_Size lenPrev, lenNew, sLen;
+
+	sLen = strlen(s);
+
+	AG_OBJECT_ISA(lbl, "AG_Widget:AG_Label:*");
+	AG_ObjectLock(lbl);
+
+	lenPrev = strlen(lbl->text);
+	lenNew = lenPrev + sLen;
+	textNew = TryRealloc(lbl->text, lenNew+1);
+	if (textNew == NULL)
+		goto out;
+
+	memcpy(&textNew[lenPrev], s, sLen+1);
+	lbl->text = textNew;
+	lbl->flags |= AG_LABEL_REGEN;
+	AG_Redraw(lbl);
+out:
+	AG_ObjectUnlock(lbl);
+}
+
 /* Calculate offset for horizontal justify */
 static __inline__ int
 JustifyOffset(const AG_Label *_Nonnull lbl, int w, int wLine)

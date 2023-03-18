@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -66,6 +66,12 @@ on rendering).
 .Ft void
 .Fn AG_LabelTextS "AG_Label *label" "const char *s"
 .Pp
+.Ft void
+.Fn AG_LabelAppend "AG_Label *label" "const char *format" "..."
+.Pp
+.Ft void
+.Fn AG_LabelAppendS "AG_Label *label" "const char *s"
+.Pp
 .Ft "void"
 .Fn AG_LabelSetFont "AG_Label *label" "AG_Font *font"
 .Pp
@@ -116,9 +122,10 @@ values for
 and
 .Fn AG_LabelNewPolled .
 .Pp
-The
 .Fn AG_LabelText
-function changes the current label text.
+changes the text contents of the label to the given string.
+.Fn AG_LabelAppend
+appends the given string to the existing text.
 .Pp
 The
 .Fn AG_LabelSetFont
@@ -274,5 +281,8 @@ AG_LabelNewPolled(parent, 0, "Polled label: %[myVec]", &v);
 The
 .Nm
 widget first appeared in Agar 1.0.
-In Agar 1.5.0, the formatting engine for "polled labels" was rewritten
-and generalized.
+In Agar 1.5.0, the formatting engine which implements polled labels was
+rewritten and generalized.
+The
+.Fn AG_LabelAppend
+function appeared in Agar 1.7.0.
