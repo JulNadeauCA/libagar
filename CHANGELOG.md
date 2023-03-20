@@ -64,6 +64,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Text**](https://libagar.org/man3/AG_Text): Removed `AG_UnusedFont()` and the reference counter in `AG_Font`.
 
 ### Changed
+- Ctrl + Mouse Wheel may now be used to change the zoom level on a window.
 - Build system updates so configure scripts are smaller and no longer emit unnecessary defines such as `foo_cflags.h` for dependent libraries. Those definitions are always available from `${DATADIR}/agar.mk`.
 - Don't install headers from disabled libraries.
 - [**AG_Color**](https://libagar.org/man3/AG_Color): Handle `rgb16()` format in [AG_ColorFromString()](https://libagar.org/man3/AG_ColorFromString).

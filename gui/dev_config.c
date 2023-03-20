@@ -348,13 +348,15 @@ AG_DEV_ConfigWindow(AG_Config *_Nullable cfg)
 	    _(AGSI_IDEOGRAM AGSI_TWO_BUTTON_MOUSE AGSI_RST " Mouse"),
 	    AG_BOX_VERT);
 	{
+		AG_Checkbox *cb;
+		AG_Numerical *num;
+
 		AG_SetPadding(tab, "8");
 
-		AG_NumericalNewIntR(tab, AG_NUMERICAL_HFILL, "ms",
+		num = AG_NumericalNewIntR(tab, AG_NUMERICAL_HFILL, "ms",
 		    _("Double Click Threshold: "),
 		    &agMouseDblclickDelay, 1, 10000);
-
-		AG_SpacerNewHoriz(tab);
+		AG_SetMargin(num, "0 0 10 0");
 
 		AG_NumericalNewIntR(tab, AG_NUMERICAL_HFILL, "ms",
 		    _("Spin Delay: "), &agMouseSpinDelay, 1, 10000);
@@ -362,6 +364,12 @@ AG_DEV_ConfigWindow(AG_Config *_Nullable cfg)
 		    _("Spin Interval: "), &agMouseSpinIval, 1, 10000);
 		AG_NumericalNewIntR(tab, AG_NUMERICAL_HFILL, "ms",
 		    _("Scroll Interval: "), &agMouseScrollIval, 1, 10000);
+
+		cb = AG_CheckboxNewInt(tab, 0,
+		    _("Zoom with " AGSI_CODE "Ctrl" AGSI_RST " + Mouse Wheel"),
+		    &agCtrlMouseWheelAction);
+
+		AG_SetMargin(cb, "10 0 0 0");
 	}
 
 	tab = AG_NotebookAdd(nb,

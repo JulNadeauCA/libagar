@@ -38,7 +38,7 @@ extern int agMouseDblclickDelay, agMouseSpinDelay, agMouseSpinIval,
            agMouseScrollIval, agScrollButtonIval, agPageIncrement,
            agAutocompleteDelay, agAutocompleteRate, agScreenshotQuality;
 extern int agLatinInput, agLatinComposition, agTextTabWidth, agTextBlinkRate;
-extern int agGLdebugOutput, agGLuseNPOT;
+extern int agGLdebugOutput, agGLuseNPOT, agCtrlMouseWheelAction;
 extern double agZoomValues[AG_ZOOM_MAX];
 
 #ifdef AG_WIDGETS

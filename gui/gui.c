@@ -109,6 +109,7 @@ static struct {
 	{ "TextBlinkRate",        &agTextBlinkRate        },
 	{ "GLdebugOutput",        &agGLdebugOutput        },
 	{ "GLuseNPOT",            &agGLuseNPOT            },
+	{ "CtrlMouseWheelAction", &agCtrlMouseWheelAction },
 };
 const Uint agGUIOptionCount = sizeof(agGUIOptions) / sizeof(agGUIOptions[0]);
 
@@ -204,11 +205,12 @@ int agTextTabWidth = 40;		/* Tab width (px) */
 int agTextBlinkRate = 500;		/* Cursor blink rate (ms) */
 int agGLdebugOutput = 0;		/* Enable GL_DEBUG_OUTPUT */
 int agGLuseNPOT = 1;			/* Use non-power-of-two textures */
+int agCtrlMouseWheelAction = 1;		/* Ctrl + Mouse Wheel action (1=zoom) */
 
 double agZoomValues[AG_ZOOM_MAX] = {
-	55.0, 60.0, 65.00, 70.00, 75.00, 80.00, 90.00, 95.00,
-	100.00, 110.00, 120.00, 133.00, 150.00, 170.00,
-	200.00, 210.00, 220.00, 240.00, 250.00, 300.00
+	50.0, 60.0, 65.00, 70.00, 75.00, 80.00, 83.00, 85.00,
+	90.00, 95.00, 100.00, 110.00, 120.00, 133.00, 150.00,
+	170.00, 200.00, 240.00, 260.00, 300.00
 };
 
 /*

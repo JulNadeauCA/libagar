@@ -273,6 +273,17 @@ AG_ProcessMouseButtonDown(AG_Window *win, int x, int y, AG_MouseButton button)
 		}
 	}
 
+	if ((WIDGET(win)->drv->kbd->modState & AG_KEYMOD_CTRL) &&
+	    agCtrlMouseWheelAction == 1) {
+		if (button == AG_MOUSE_WHEELUP) {
+			AG_ZoomIn();
+			return;
+		} else if (button == AG_MOUSE_WHEELDOWN) {
+			AG_ZoomOut();
+			return;
+		}
+	}
+
 	OBJECT_FOREACH_CHILD(wid, win, ag_widget)
 		PostMouseButtonDown(win, wid, x, y, button);
 }
