@@ -196,13 +196,655 @@
 #endif
 
 /*
+ * Unicode character ranges.
+ *
+ * ("COMB" = "COMBINING", "DIACRIT" = "DIACRITICAL", "EXT" = "EXTENDED", 
+ *  "SUPPL" = "SUPPL", "SYLL" = "SYLLABICS", "SYM" = "SYMBOL").
+ */
+#define AGSI_BASIC_LATIN_BEGIN                 0x000
+#define AGSI_BASIC_LATIN_END                   0x07f
+#define AGSI_LATIN1_SUPPL_BEGIN                0x080  /* Latin-1 Supplement */
+#define AGSI_LATIN1_SUPPL_END                  0x0ff
+#define AGSI_LATIN_EXT_A_BEGIN                 0x100  /* Latin Extended A */
+#define AGSI_LATIN_EXT_A_END                   0x17f
+#define AGSI_LATIN_EXT_B_BEGIN                 0x180  /* Latin Extended B */
+#define AGSI_LATIN_EXT_B_END                   0x24f
+#define AGSI_IPA_EXTENSIONS_BEGIN              0x250
+#define AGSI_IPA_EXTENSIONS_END                0x2af
+#define AGSI_SPACING_MODIFIER_LETTERS_BEGIN    0x2b0
+#define AGSI_SPACING_MODIFIER_LETTERS_END      0x2ff
+#define AGSI_COMB_DIACRIT_MARKS_BEGIN          0x300 /* Combining Diacritical Marks */
+#define AGSI_COMB_DIACRIT_MARKS_END            0x36f
+#define AGSI_GREEK_AND_COPTIC_BEGIN            0x370
+#define AGSI_GREEK_AND_COPTIC_END              0x3ff
+#define AGSI_CYRILLIC_BEGIN                    0x400
+#define AGSI_CYRILLIC_END                      0x4ff
+#define AGSI_CYRILLIC_SUPPL_BEGIN              0x500  /* Cyrillic Supplement */
+#define AGSI_CYRILLIC_SUPPL_END                0x52f
+#define AGSI_ARMENIAN_BEGIN                    0x530
+#define AGSI_ARMENIAN_END                      0x58f
+#define AGSI_HEBREW_BEGIN                      0x590
+#define AGSI_HEBREW_END                        0x5ff
+#define AGSI_ARABIC_BEGIN                      0x600
+#define AGSI_ARABIC_END                        0x6ff
+#define AGSI_SYRIAC_BEGIN                      0x700
+#define AGSI_SYRIAC_END                        0x74f
+#define AGSI_ARABIC_SUPPL_BEGIN                0x750  /* Arabic Supplement */
+#define AGSI_ARABIC_SUPPL_END                  0x77f
+#define AGSI_THAANA_END                        0x780
+#define AGSI_THAANA_BEGIN                      0x7bf
+#define AGSI_NKO_BEGIN                         0x7c0
+#define AGSI_NKO_END                           0x7ff
+#define AGSI_SAMARITAN_BEGIN                   0x800
+#define AGSI_SAMARITAN_END                     0x83f
+#define AGSI_MANDAIC_BEGIN                     0x840
+#define AGSI_MANDAIC_END                       0x85f
+#define AGSI_SYRIAC_SUPPL_BEGIN                0x860  /* Syriac Supplement */
+#define AGSI_SYRIAC_SUPPL_END                  0x86f
+#define AGSI_ARABIC_EXT_B_BEGIN                0x870  /* Arabic Extended B */
+#define AGSI_ARABIC_EXT_B_END                  0x89f
+#define AGSI_ARABIC_EXT_A_BEGIN                0x8a0  /* Arabic Extended A */
+#define AGSI_ARABIC_EXT_A_END                  0x8ff
+#define AGSI_DEVANAGARI_BEGIN                  0x900
+#define AGSI_DEVANAGARI_END                    0x97f
+#define AGSI_BENGALI_BEGIN                     0x980
+#define AGSI_BENGALI_END                       0x9ff
+#define AGSI_GURMUKHI_BEGIN                    0xa00
+#define AGSI_GURMUKHI_END                      0xa7f
+#define AGSI_GUJARATI_BEGIN                    0xa80
+#define AGSI_GUJARATI_END                      0xaff
+#define AGSI_ORIYA_BEGIN                       0xb00
+#define AGSI_ORIYA_END                         0xb7f
+#define AGSI_TAMIL_BEGIN                       0xb80
+#define AGSI_TAMIL_END                         0xbff
+#define AGSI_TELUGU_BEGIN                      0xc00
+#define AGSI_TELUGU_END                        0xc7f
+#define AGSI_KANNADA_BEGIN                     0xc80
+#define AGSI_KANNADA_END                       0xcff
+#define AGSI_MALAYALAM_BEGIN                   0xd00
+#define AGSI_MALAYALAM_END                     0xdff
+#define AGSI_SINHALA_BEGIN                     0xd80
+#define AGSI_SINHALA_END                       0xdff
+#define AGSI_THAI_BEGIN                        0xe00
+#define AGSI_THAI_END                          0xe7f
+#define AGSI_LAO_BEGIN                         0xe80
+#define AGSI_LAO_END                           0xeff
+#define AGSI_TIBETAN_BEGIN                     0xf00
+#define AGSI_TIBETAN_END                       0xfff
+#define AGSI_MYANMAR_BEGIN                     0x1000
+#define AGSI_MYANMAR_END                       0x109f
+#define AGSI_GEORGIAN_BEGIN                    0x10a0
+#define AGSI_GEORGIAN_END                      0x10ff
+#define AGSI_HANGUL_JAMO_BEGIN                 0x1100
+#define AGSI_HANGUL_JAMO_END                   0x11ff
+#define AGSI_ETHIOPIC_BEGIN                    0x1200
+#define AGSI_ETHIOPIC_END                      0x137f
+#define AGSI_ETHIOPIC_SUPPL_BEGIN              0x1380  /* Ethiopic Supplement */
+#define AGSI_ETHIOPIC_SUPPL_END                0x139f
+#define AGSI_CHEROKEE_BEGIN                    0x13a0
+#define AGSI_CHEROKEE_END                      0x13ff
+#define AGSI_UNI_CA_ABORIG_SYLL_BEGIN          0x1400  /* Unified Canadian Aboriginal Syllabics */
+#define AGSI_UNI_CA_ABORIG_SYLL_END            0x167f
+#define AGSI_OGHAM_BEGIN                       0x1680
+#define AGSI_OGHAM_END                         0x169f
+#define AGSI_RUNIC_BEGIN                       0x16a0
+#define AGSI_RUNIC_END                         0x16ff
+#define AGSI_TAGALOG_BEGIN                     0x1700
+#define AGSI_TAGALOG_END                       0x171f
+#define AGSI_HANUNOO_BEGIN                     0x1720
+#define AGSI_HANUNOO_END                       0x173f
+#define AGSI_BUHID_BEGIN                       0x1740
+#define AGSI_BUHID_END                         0x175f
+#define AGSI_TAGBANWA_BEGIN                    0x1760
+#define AGSI_TAGBANWA_END                      0x177f
+#define AGSI_KHMER_BEGIN                       0x1780
+#define AGSI_KHMER_END                         0x17ff
+#define AGSI_MONGOLIAN_BEGIN                   0x1800
+#define AGSI_MONGOLIAN_END                     0x18af
+#define AGSI_UNI_CA_ABORIG_SYLL_EXT_BEGIN      0x18b0 /* Unified Canadian Aboriginal Syllabics Extended */
+#define AGSI_UNI_CA_ABORIG_SYLL_EXT_END        0x18ff
+#define AGSI_LIMBU_BEGIN                       0x1900
+#define AGSI_LIMBU_END                         0x194f
+#define AGSI_TAI_LE_BEGIN                      0x1950
+#define AGSI_TAI_LE_END                        0x197f
+#define AGSI_NEW_TAI_LUE_BEGIN                 0x1980
+#define AGSI_NEW_TAI_LUE_END                   0x19df
+#define AGSI_KHMER_SYM_BEGIN                   0x19e0  /* Khmer Symbols */
+#define AGSI_KHMER_SYM_END                     0x19ff
+#define AGSI_BUGINESE_BEGIN                    0x1a00
+#define AGSI_BUGINESE_END                      0x1a1f
+#define AGSI_TAI_THAM_BEGIN                    0x1a20
+#define AGSI_TAI_THAM_END                      0x1aaf
+#define AGSI_COMB_DIACRIT_MARKS_EXT_BEGIN      0x1ab0  /* Combining Diacritical Marks Extended */
+#define AGSI_COMB_DIACRIT_MARKS_EXT_END        0x1aff
+#define AGSI_BALINESE_BEGIN                    0x1b00
+#define AGSI_BALINESE_END                      0x1b7f
+#define AGSI_SUNDANESE_BEGIN                   0x1b80
+#define AGSI_SUNDANESE_END                     0x1bbf
+#define AGSI_BATAK_BEGIN                       0x1bc0
+#define AGSI_BATAK_END                         0x1bff
+#define AGSI_LEPCHA_BEGIN                      0x1c00
+#define AGSI_LEPCHA_END                        0x1c4f
+#define AGSI_OL_CHIKI_BEGIN                    0x1c50
+#define AGSI_OL_CHIKI_END                      0x1c7f
+#define AGSI_CYRILLIC_EXT_C_BEGIN              0x1c80  /* Cyrillic Extended C */
+#define AGSI_CYRILLIC_EXT_C_END                0x1c8f
+#define AGSI_GEORGIAN_EXT_BEGIN                0x1c90  /* Georgian Extended */
+#define AGSI_GEORGIAN_EXT_END                  0x1cbf
+#define AGSI_SUNDANESE_SUPPL_BEGIN             0x1cc0  /* Sundanese Supplement */
+#define AGSI_SUNDANESE_SUPPL_END               0x1ccf
+#define AGSI_VEDIC_EXTENSIONS_BEGIN            0x1cd0
+#define AGSI_VEDIC_EXTENSIONS_END              0x1cff
+#define AGSI_PHONETIC_EXTENSIONS_BEGIN         0x1d00  /* Phonetic Extensions (and Supplement) */
+#define AGSI_PHONETIC_EXTENSIONS_END           0x1dbf
+#define AGSI_COMB_DIACRIT_MARKS_SUPPL_BEGIN    0x1dc0  /* Combining Diacritical Marks Supplement */
+#define AGSI_COMB_DIACRIT_MARKS_SUPPL_END      0x1dff
+#define AGSI_LATIN_EXT_ADDITIONAL_BEGIN        0x1e00  /* Latin Extended Additional */
+#define AGSI_LATIN_EXT_ADDITIONAL_END          0x1eff
+#define AGSI_GREEK_EXT_BEGIN                   0x1f00  /* Greek Extended */
+#define AGSI_GREEK_EXT_END                     0x1fff
+#define AGSI_GENERAL_PUNCTUATION_BEGIN         0x2000
+#define AGSI_GENERAL_PUNCTUATION_END           0x206f
+#define AGSI_SUPERSCRIPTS_AND_SUBSCRIPTS_BEGIN 0x2070
+#define AGSI_SUPERSCRIPTS_AND_SUBSCRIPTS_END   0x209f
+#define AGSI_CURRENCY_SYM_BEGIN                0x20a0  /* Currency Symbols */
+#define AGSI_CURRENCY_SYM_END                  0x20cf
+#define AGSI_COMB_DIACRIT_MARKS_FOR_SYM_BEGIN  0x20d0  /* Combining Diacritical Marks for Symbols */
+#define AGSI_COMB_DIACRIT_MARKS_FOR_SYM_END    0x20ff
+#define AGSI_LETTERLIKE_SYM_BEGIN              0x2100  /* Letterlike Symbols */
+#define AGSI_LETTERLIKE_SYM_END                0x214f
+#define AGSI_NUMBER_FORMS_BEGIN                0x2150
+#define AGSI_NUMBER_FORMS_END                  0x218f
+#define AGSI_ARROWS_BEGIN                      0x2190
+#define AGSI_ARROWS_END                        0x21ff
+#define AGSI_MATH_OPERATORS_BEGIN              0x2200  /* Mathematical Operators */
+#define AGSI_MATH_OPERATORS_END                0x22ff
+#define AGSI_MISC_TECH_BEGIN                   0x2300  /* Miscellaneous Technical */
+#define AGSI_MISC_TECH_END                     0x23ff
+#define AGSI_CONTROL_PICTURES_BEGIN            0x2400
+#define AGSI_CONTROL_PICTURES_END              0x243f
+#define AGSI_OCR_BEGIN                         0x2440  /* Optical Character Recognition */
+#define AGSI_OCR_END                           0x245f
+#define AGSI_ENCLOSED_ALPHANUMERICS_BEGIN      0x2460
+#define AGSI_ENCLOSED_ALPHANUMERICS_END        0x24ff
+#define AGSI_BOX_DRAWING_BEGIN                 0x2500
+#define AGSI_BOX_DRAWING_END                   0x257f
+#define AGSI_BLOCK_ELEMENTS_BEGIN              0x2580
+#define AGSI_BLOCK_ELEMENTS_END                0x259f
+#define AGSI_GEOMETRIC_SHAPES_BEGIN            0x25a0
+#define AGSI_GEOMETRIC_SHAPES_END              0x25ff
+#define AGSI_MISC_SYM_BEGIN                    0x2600  /* Miscellaneous Symbols */
+#define AGSI_MISC_SYM_END                      0x26ff
+#define AGSI_DINGBATS_BEGIN                    0x2700
+#define AGSI_DINGBATS_END                      0x27bf
+#define AGSI_MISC_MATH_SYM_A_BEGIN             0x27c0  /* Miscellaneous Mathematical Symbols A */
+#define AGSI_MISC_MATH_SYM_A_END               0x27ef
+#define AGSI_SUPPL_ARROWS_A_BEGIN              0x27f0  /* Supplemental Arrows A */
+#define AGSI_SUPPL_ARROWS_A_END                0x27ff
+#define AGSI_BRAILLE_PATTERNS_BEGIN            0x2800
+#define AGSI_BRAILLE_PATTERNS_END              0x28ff
+#define AGSI_SUPPL_ARROWS_B_BEGIN              0x2900  /* Supplemental Arrows B */
+#define AGSI_SUPPL_ARROWS_B_END                0x297f
+#define AGSI_MISC_MATH_SYM_B_BEGIN             0x2980  /* Miscellaneous Mathematical Symbols B */
+#define AGSI_MISC_MATH_SYM_B_END               0x29ff
+#define AGSI_SUPPL_MATH_OPERATORS_BEGIN        0x2a00  /* Supplemental Mathematical Operators */
+#define AGSI_SUPPL_MATH_OPERATORS_END          0x2aff
+#define AGSI_MISC_SYM_AND_ARROWS_BEGIN         0x2b00  /* Miscellaneous Symbols and Arrows */
+#define AGSI_MISC_SYM_AND_ARROWS_END           0x2bff
+#define AGSI_GLAGOLITIC_BEGIN                  0x2c00
+#define AGSI_GLAGOLITIC_END                    0x2c5f
+#define AGSI_LATIN_EXT_C_BEGIN                 0x2c60  /* Latin Extended C */
+#define AGSI_LATIN_EXT_C_END                   0x2c7f
+#define AGSI_COPTIC_BEGIN                      0x2c80
+#define AGSI_COPTIC_END                        0x2cff
+#define AGSI_GEORGIAN_SUPPL_BEGIN              0x2d00  /* Georgian Supplement */
+#define AGSI_GEORGIAN_SUPPL_END                0x2d2f
+#define AGSI_TIFINAGH_BEGIN                    0x2d30
+#define AGSI_TIFINAGH_END                      0x2d7f
+#define AGSI_ETHIOPIC_EXT_BEGIN                0x2d80  /* Ethiopic Extended */
+#define AGSI_ETHIOPIC_EXT_END                  0x2ddf
+#define AGSI_CYRILLIC_EXT_A_BEGIN              0x2de0  /* Cyrillic Extended A */
+#define AGSI_CYRILLIC_EXT_A_END                0x2dff
+#define AGSI_SUPPL_PUNCTUATION_BEGIN           0x2e00  /* Supplemental Punctuation */
+#define AGSI_SUPPL_PUNCTUATION_END             0x2e7f
+#define AGSI_CJK_RADICALS_SUPPL_BEGIN          0x2e80  /* CJK RANGE #1 BEGIN */
+#define AGSI_CJK_RADICALS_SUPPL_END            0x2eff  /* CJK Radicals Supplement */
+#define AGSI_KANGXI_RADICALS_BEGIN             0x2f00
+#define AGSI_KANGXI_RADICALS_END               0x2fdf
+#define AGSI_IDEO_DESCR_CHARS_BEGIN            0x2ff0  /* Ideographic Description Characters */
+#define AGSI_IDEO_DESCR_CHARS_END              0x2fff
+#define AGSI_CJK_SYM_AND_PUNCT_BEGIN           0x3000  /* CJK Symbols and Punctuation */
+#define AGSI_CJK_SYM_AND_PUNCT_END             0x303f
+#define AGSI_HIRAGANA_BEGIN                    0x3040
+#define AGSI_HIRAGANA_END                      0x309f
+#define AGSI_KATAKANA_BEGIN                    0x30a0
+#define AGSI_KATAKANA_END                      0x30ff
+#define AGSI_BOPOMOFO_BEGIN                    0x3100
+#define AGSI_BOPOMOFO_END                      0x312f
+#define AGSI_HANGUL_COMPAT_JAMO_BEGIN          0x3130  /* Hangul Compatibility Jamo */
+#define AGSI_HANGUL_COMPAT_JAMO_END            0x318f
+#define AGSI_KANBUN_BEGIN                      0x3190
+#define AGSI_KANBUN_END                        0x319f
+#define AGSI_BOPOMOFO_EXT_BEGIN                0x31a0  /* Bopomofo Extended */
+#define AGSI_BOPOMOFO_EXT_END                  0x31bf
+#define AGSI_CJK_STROKES_BEGIN                 0x31c0
+#define AGSI_CJK_STROKES_END                   0x31ef
+#define AGSI_KATAKANA_PHONETIC_EXTS_BEGIN      0x31f0  /* Katakana Phonetic Extensions */
+#define AGSI_KATAKANA_PHONETIC_EXTS_END        0x31ff
+#define AGSI_ENCL_CJK_LETTERS_MONTHS_BEGIN     0x3200  /* Enclosed CJK Letters and Months */
+#define AGSI_ENCL_CJK_LETTERS_MONTHS_END       0x32ff
+#define AGSI_CJK_COMPAT_BEGIN                  0x3300  /* CJK Compatibility */
+#define AGSI_CJK_COMPAT_END                    0x33ff
+#define AGSI_CJK_UNI_IDEO_EXT_A_BEGIN          0x3400  /* CJK Unified Ideographs Extension A */
+#define AGSI_CJK_UNI_IDEO_EXT_A_END            0x4dbf
+#define AGSI_YIJING_HEXAGRAM_SYM_BEGIN         0x4dc0  /* Yijing Hexagram Symbols */
+#define AGSI_YIJING_HEXAGRAM_SYM_END           0x4dbf
+#define AGSI_CJK_UNI_IDEO_BEGIN                0x4e00  /* CJK Unified Ideographs */
+#define AGSI_CJK_UNI_IDEO_END                  0x9faf
+#define AGSI_YI_SYLLABLES_BEGIN                0xa000
+#define AGSI_YI_SYLLABLES_END                  0xa48f
+#define AGSI_YI_RADICALS_BEGIN                 0xa490
+#define AGSI_YI_RADICALS_END                   0xa4cf
+#define AGSI_LISU_BEGIN                        0xa4d0
+#define AGSI_LISU_END                          0xa4ff  /* CJK RANGE #1 END */
+#define AGSI_VAI_BEGIN                         0xa500
+#define AGSI_VAI_END                           0xa63f
+#define AGSI_CYRILLIC_EXT_B_BEGIN              0xa640  /* Cyrillic Extended B */
+#define AGSI_CYRILLIC_EXT_B_END                0xa69f
+#define AGSI_BAMUM_BEGIN                       0xa6a0
+#define AGSI_BAMUM_END                         0xa6ff
+#define AGSI_MODIFIER_TONE_LETTERS_BEGIN       0xa700
+#define AGSI_MODIFIER_TONE_LETTERS_END         0xa71f
+#define AGSI_LATIN_EXT_D_BEGIN                 0xa720  /* Latin Extended D */
+#define AGSI_LATIN_EXT_D_END                   0xa7ff
+#define AGSI_SYLOTI_NAGRI_BEGIN                0xa800
+#define AGSI_SYLOTI_NAGRI_END                  0xa82f
+#define AGSI_COMMON_INDIC_NUMBER_FORMS_BEGIN   0xa830
+#define AGSI_COMMON_INDIC_NUMBER_FORMS_END     0xa83f
+#define AGSI_PHAGS_PA_BEGIN                    0xa840
+#define AGSI_PHAGS_PA_END                      0xa87f
+#define AGSI_SAURASHTRA_BEGIN                  0xa880
+#define AGSI_SAURASHTRA_END                    0xa8df
+#define AGSI_DEVANAGARI_EXT_BEGIN              0xa8e0  /* Devanagari Extended */
+#define AGSI_DEVANAGARI_EXT_END                0xa8ff
+#define AGSI_KAYAH_LI_BEGIN                    0xa900
+#define AGSI_KAYAH_LI_END                      0xa92f
+#define AGSI_REJANG_BEGIN                      0xa930
+#define AGSI_REJANG_END                        0xa95f
+#define AGSI_HANGUL_JAMO_EXT_A_BEGIN           0xa960  /* Hangul Jamo Extended A */
+#define AGSI_HANGUL_JAMO_EXT_A_END             0xa97f
+#define AGSI_JAVANESE_BEGIN                    0xa980
+#define AGSI_JAVANESE_END                      0xa9df
+#define AGSI_MYANMAR_EXT_B_BEGIN               0xa9e0  /* Myanmar Extended B */
+#define AGSI_MYANMAR_EXT_B_END                 0xa9ff
+#define AGSI_CHAM_BEGIN                        0xaa00
+#define AGSI_CHAM_END                          0xaa5f
+#define AGSI_MYANMAR_EXT_A_BEGIN               0xaa60  /* Myanmar Extended A */
+#define AGSI_MYANMAR_EXT_A_END                 0xaa7f
+#define AGSI_TAI_VIET_BEGIN                    0xaa80
+#define AGSI_TAI_VIET_END                      0xaadf
+#define AGSI_MEETEI_MAYEK_EXTENSIONS_BEGIN     0xaae0
+#define AGSI_MEETEI_MAYEK_EXTENSIONS_END       0xaaff
+#define AGSI_ETHIOPIC_EXT_A_BEGIN              0xab00  /* Ethiopic Extended A */
+#define AGSI_ETHIOPIC_EXT_A_END                0xab2f
+#define AGSI_LATIN_EXT_E_BEGIN                 0xab30  /* Latin Extended E */
+#define AGSI_LATIN_EXT_E_END                   0xab6f
+#define AGSI_CHEROKEE_SUPPL_BEGIN              0xab70  /* Cherokee Supplement */
+#define AGSI_CHEROKEE_SUPPL_END                0xabbf
+#define AGSI_MEETEI_MAYEK_BEGIN                0xabc0
+#define AGSI_MEETEI_MAYEK_END                  0xabff
+#define AGSI_HANGUL_SYLLABLES_BEGIN            0xac00  /* CJK RANGE #2 START */
+#define AGSI_HANGUL_SYLLABLES_END              0xd7af
+#define AGSI_HANGUL_JAMO_EXT_B_BEGIN           0xd7b0  /* Hangul Jamo Extended B */
+#define AGSI_HANGUL_JAMO_EXT_B_END             0xd7ff  /* CJK RANGE #2 END */
+#define AGSI_HIGH_SURROGATE_AREA_BEGIN         0xd800
+#define AGSI_HIGH_SURROGATE_AREA_END           0xdbff
+#define AGSI_LOW_SURROGATE_AREA_BEGIN          0xdc00
+#define AGSI_LOW_SURROGATE_AREA_END            0xdfff
+#define AGSI_PRIVATE_USE_AREA_BEGIN            0xe000
+#define AGSI_PRIVATE_USE_AREA_END              0xf8ff
+#define AGSI_CJK_COMPAT_IDEO_BEGIN             0xf900  /* CJK RANGE #3 BEGIN */
+#define AGSI_CJK_COMPAT_IDEO_END               0xfaff  /* CJK RANGE #3 END */
+#define AGSI_ALPHA_PRES_FORMS_BEGIN            0xfb00  /* Alphabetic Presentation Forms */
+#define AGSI_ALPHA_PRES_FORMS_END              0xfb4f
+#define AGSI_ARABIC_PRES_FORMS_A_BEGIN         0xfb50  /* Arabic presentation Forms A */
+#define AGSI_ARABIC_PRES_FORMS_A_END           0xfdff
+#define AGSI_VARIATION_SELECTORS_BEGIN         0xfe00
+#define AGSI_VARIATION_SELECTORS_END           0xfe0f
+#define AGSI_VERTICAL_FORMS_BEGIN              0xfe10
+#define AGSI_VERTICAL_FORMS_END                0xfe1f
+#define AGSI_COMBINING_HALF_MARKS_BEGIN        0xfe20
+#define AGSI_COMBINING_HALF_MARKS_END          0xfe2f
+#define AGSI_CJK_COMPAT_FORMS_BEGIN            0xfe30  /* CJK RANGE #4 START */
+#define AGSI_CJK_COMPAT_FORMS_END              0xfe4f  /* CJK RANGE #4 END */
+#define AGSI_SMALL_FORM_VARIANTS_BEGIN         0xfe50
+#define AGSI_SMALL_FORM_VARIANTS_END           0xfe6f
+#define AGSI_ARABIC_PRES_FORMS_B_BEGIN         0xfe70
+#define AGSI_ARABIC_PRES_FORMS_B_END           0xfeff
+#define AGSI_HALFWIDTH_FULLWIDTH_FORMS_BEGIN   0xff00  /* Halfwidth and Fullwidth Forms */
+#define AGSI_HALFWIDTH_FULLWIDTH_FORMS_END     0xffef
+#define AGSI_SPECIALS_BEGIN                    0xfff0
+#define AGSI_SPECIALS_END                      0xffff
+#define AGSI_LINEAR_B_SYLLABARY_BEGIN          0x10000
+#define AGSI_LINEAR_B_SYLLABARY_END            0x1007f
+#define AGSI_LINEAR_B_IDEOGRAMS_BEGIN          0x10080
+#define AGSI_LINEAR_B_IDEOGRAMS_END            0x100ff
+#define AGSI_AEGEAN_NUMBERS_BEGIN              0x10100
+#define AGSI_AEGEAN_NUMBERS_END                0x1013f
+#define AGSI_ANCIENT_GREEK_NUMBERS_BEGIN       0x10140
+#define AGSI_ANCIENT_GREEK_NUMBERS_END         0x1018f
+#define AGSI_ANCIENT_SYM_BEGIN                 0x10190  /* Ancient Symbols */
+#define AGSI_ANCIENT_SYM_END                   0x101cf
+#define AGSI_PHAISTOS_DISC_BEGIN               0x101d0
+#define AGSI_PHAISTOS_DISC_END                 0x101ff
+#define AGSI_LYCIAN_BEGIN                      0x10280
+#define AGSI_LYCIAN_END                        0x1029f
+#define AGSI_CARIAN_BEGIN                      0x102a0
+#define AGSI_CARIAN_END                        0x102df
+#define AGSI_COPTIC_EPACT_NUMBERS_BEGIN        0x102e0
+#define AGSI_COPTIC_EPACT_NUMBERS_END          0x102ff
+#define AGSI_OLD_ITALIC_BEGIN                  0x10300
+#define AGSI_OLD_ITALIC_END                    0x1032f
+#define AGSI_GOTHIC_BEGIN                      0x10330
+#define AGSI_GOTHIC_END                        0x1034f
+#define AGSI_OLD_PERMIC_BEGIN                  0x10350
+#define AGSI_OLD_PERMIC_END                    0x1037f
+#define AGSI_UGARITIC_BEGIN                    0x10380
+#define AGSI_UGARITIC_END                      0x1039f
+#define AGSI_OLD_PERSIAN_BEGIN                 0x103a0
+#define AGSI_OLD_PERSIAN_END                   0x103df
+#define AGSI_DESERET_BEGIN                     0x10400
+#define AGSI_DESERET_END                       0x1044f
+#define AGSI_SHAVIAN_BEGIN                     0x10450
+#define AGSI_SHAVIAN_END                       0x1047f
+#define AGSI_OSMANYA_BEGIN                     0x10480
+#define AGSI_OSMANYA_END                       0x104af
+#define AGSI_OSAGE_BEGIN                       0x104b0
+#define AGSI_OSAGE_END                         0x104ff
+#define AGSI_ELBASAN_BEGIN                     0x10500
+#define AGSI_ELBASAN_END                       0x1052f
+#define AGSI_CAUCASIAN_ALBANIAN_BEGIN          0x10530
+#define AGSI_CAUCASIAN_ALBANIAN_END            0x1056f
+#define AGSI_VITHKUQI_BEGIN                    0x10570
+#define AGSI_VITHKUQI_END                      0x105bf
+#define AGSI_LINEAR_A_BEGIN                    0x10600
+#define AGSI_LINEAR_A_END                      0x1077f
+#define AGSI_LATIN_EXT_F_BEGIN                 0x10780  /* Latin Extended F */
+#define AGSI_LATIN_EXT_F_END                   0x107bf
+#define AGSI_CYPRIOT_SYLLABARY_BEGIN           0x10800
+#define AGSI_CYPRIOT_SYLLABARY_END             0x1083f
+#define AGSI_IMPERIAL_ARAMAIC_BEGIN            0x10840
+#define AGSI_IMPERIAL_ARAMAIC_END              0x1085f
+#define AGSI_PALMYRENE_BEGIN                   0x10860
+#define AGSI_PALMYRENE_END                     0x1087f
+#define AGSI_NABATAEAN_BEGIN                   0x10880
+#define AGSI_NABATAEAN_END                     0x108af
+#define AGSI_HATRAN_BEGIN                      0x108e0
+#define AGSI_HATRAN_END                        0x108ff
+#define AGSI_PHOENICIAN_BEGIN                  0x10900
+#define AGSI_PHOENICIAN_END                    0x1091f
+#define AGSI_LYDIAN_BEGIN                      0x10920
+#define AGSI_LYDIAN_END                        0x1093f
+#define AGSI_MEROITIC_HIEROGLYPHS_BEGIN        0x10980
+#define AGSI_MEROITIC_HIEROGLYPHS_END          0x1099f
+#define AGSI_MEROITIC_CURSIVE_BEGIN            0x109a0
+#define AGSI_MEROITIC_CURSIVE_END              0x109ff
+#define AGSI_KHAROSHTHI_BEGIN                  0x10a00
+#define AGSI_KHAROSHTHI_END                    0x10a5f
+#define AGSI_OLD_SOUTH_ARABIAN_BEGIN           0x10a60
+#define AGSI_OLD_SOUTH_ARABIAN_END             0x10a7f
+#define AGSI_OLD_NORTH_ARABIAN_BEGIN           0x10a80
+#define AGSI_OLD_NORTH_ARABIAN_END             0x10a9f
+#define AGSI_MANICHAEAN_BEGIN                  0x10ac0
+#define AGSI_MANICHAEAN_END                    0x10aff
+#define AGSI_AVESTAN_BEGIN                     0x10b00
+#define AGSI_AVESTAN_END                       0x10b3f
+#define AGSI_INSCRIPTIONAL_PARTHIAN_BEGIN      0x10b40
+#define AGSI_INSCRIPTIONAL_PARTHIAN_END        0x10b5f
+#define AGSI_INSCRIPTIONAL_PAHLAVI_BEGIN       0x10b60
+#define AGSI_INSCRIPTIONAL_PAHLAVI_END         0x10b7f
+#define AGSI_PSALTER_PAHLAVI_BEGIN             0x10b80
+#define AGSI_PSALTER_PAHLAVI_END               0x10baf
+#define AGSI_OLD_TURKIC_BEGIN                  0x10c00
+#define AGSI_OLD_TURKIC_END                    0x10c4f
+#define AGSI_OLD_HUNGARIAN_BEGIN               0x10c80
+#define AGSI_OLD_HUNGARIAN_END                 0x10cff
+#define AGSI_HANIFI_ROHINGYA_BEGIN             0x10d00
+#define AGSI_HANIFI_ROHINGYA_END               0x10d3f
+#define AGSI_RUMI_NUMERAL_SYM_BEGIN            0x10e60 /* Rumi Numeral Symbols */
+#define AGSI_RUMI_NUMERAL_SYM_END              0x10e7f
+#define AGSI_YEZIDI_BEGIN                      0x10e80
+#define AGSI_YEZIDI_END                        0x10ebf
+#define AGSI_OLD_SOGDIAN_BEGIN                 0x10f00
+#define AGSI_OLD_SOGDIAN_END                   0x10f2f
+#define AGSI_SOGDIAN_BEGIN                     0x10f30
+#define AGSI_SOGDIAN_END                       0x10f6f
+#define AGSI_OLD_UYGHUR_BEGIN                  0x10f70
+#define AGSI_OLD_UYGHUR_END                    0x10faf
+#define AGSI_CHORASMIAN_BEGIN                  0x10fb0
+#define AGSI_CHORASMIAN_END                    0x10fdf
+#define AGSI_ELMAIC_BEGIN                      0x10fe0
+#define AGSI_ELMAIC_END                        0x10fff
+#define AGSI_BRAHMI_BEGIN                      0x11000
+#define AGSI_BRAHMI_END                        0x1107f
+#define AGSI_KAITHI_BEGIN                      0x11080
+#define AGSI_KAITHI_END                        0x110cf
+#define AGSI_SORA_SOMPENG_BEGIN                0x110d0
+#define AGSI_SORA_SOMPENG_END                  0x110ff
+#define AGSI_CHAKMA_BEGIN                      0x11100
+#define AGSI_CHAKMA_END                        0x1114f
+#define AGSI_MAHAJANI_BEGIN                    0x11150
+#define AGSI_MAHAJANI_END                      0x1117f
+#define AGSI_SHARADA_BEGIN                     0x11180
+#define AGSI_SHARADA_END                       0x111df
+#define AGSI_SINHALA_ARCHAIC_NUMBERS_BEGIN     0x111e0
+#define AGSI_SINHALA_ARCHAIC_NUMBERS_END       0x111ff
+#define AGSI_KHOJKI_BEGIN                      0x11200
+#define AGSI_KHOJKI_END                        0x1124f
+#define AGSI_MULTANI_BEGIN                     0x11280
+#define AGSI_MULTANI_END                       0x112af
+#define AGSI_KHUDAWADI_BEGIN                   0x112b0
+#define AGSI_KHUDAWADI_END                     0x112ff
+#define AGSI_GRANTHA_BEGIN                     0x11300
+#define AGSI_GRANTHA_END                       0x1137f
+#define AGSI_NEWA_BEGIN                        0x11400
+#define AGSI_NEWA_END                          0x1147f
+#define AGSI_TIRHUTA_BEGIN                     0x11480
+#define AGSI_TIRHUTA_END                       0x114df
+#define AGSI_SIDDHAM_BEGIN                     0x11580
+#define AGSI_SIDDHAM_END                       0x115ff
+#define AGSI_MODI_BEGIN                        0x11600
+#define AGSI_MODI_END                          0x1165f
+#define AGSI_MONGOLIAN_SUPPL_BEGIN             0x11660  /* Mongolian Supplement */
+#define AGSI_MONGOLIAN_SUPPL_END               0x1167f
+#define AGSI_TAKRI_BEGIN                       0x11680
+#define AGSI_TAKRI_END                         0x116cf
+#define AGSI_AHOM_BEGIN                        0x11700
+#define AGSI_AHOM_END                          0x1174f
+#define AGSI_DOGRA_BEGIN                       0x11800
+#define AGSI_DOGRA_END                         0x1184f
+#define AGSI_WARANG_CITI_BEGIN                 0x118a0
+#define AGSI_WARANG_CITI_END                   0x118ff
+#define AGSI_DIVES_AKURU_BEGIN                 0x11900
+#define AGSI_DIVES_AKURU_END                   0x1195f
+#define AGSI_NANDINAGARI_BEGIN                 0x119a0
+#define AGSI_NANDINAGARI_END                   0x119ff
+#define AGSI_ZANABAZAR_SQUARE_BEGIN            0x11a00
+#define AGSI_ZANABAZAR_SQUARE_END              0x11a4f
+#define AGSI_SOYOMBO_BEGIN                     0x11a50
+#define AGSI_SOYOMBO_END                       0x11aaf
+#define AGSI_UNI_CA_ABORIG_SYLL_EXT_A_BEGIN    0x11ab0 /* Unified Canadian Aboriginal Syllabics Extended A */
+#define AGSI_UNI_CA_ABORIG_SYLL_EXT_A_END      0x11abf
+#define AGSI_PAU_CIN_HAU_BEGIN                 0x11ac0
+#define AGSI_PAU_CIN_HAU_END                   0x11aff
+#define AGSI_BHAIKSUKI_BEGIN                   0x11c00
+#define AGSI_BHAIKSUKI_END                     0x11c6f
+#define AGSI_MARCHEN_BEGIN                     0x11c70
+#define AGSI_MARCHEN_END                       0x11cbf
+#define AGSI_MASARAM_GONDI_BEGIN               0x11d00
+#define AGSI_MASARAM_GONDI_END                 0x11d5f
+#define AGSI_GUNJALA_GONDI_BEGIN               0x11d60
+#define AGSI_GUNJALA_GONDI_END                 0x11daf
+#define AGSI_MAKASAR_BEGIN                     0x11ee0
+#define AGSI_MAKASAR_END                       0x11eff
+#define AGSI_LISU_SUPPL_BEGIN                  0x11fb0  /* Lisu Supplement */
+#define AGSI_LISU_SUPPL_END                    0x11fbf
+#define AGSI_TAMIL_SUPPL_BEGIN                 0x11fc0  /* Tamil Supplement */
+#define AGSI_TAMIL_SUPPL_END                   0x11fff
+#define AGSI_CUNEIFORM_BEGIN                   0x12000
+#define AGSI_CUNEIFORM_END                     0x123ff
+#define AGSI_CUNEIFORM_NUMBERS_AND_PUNCT_BEGIN 0x12400  /* Cuneiform Numbers and Punctuation */
+#define AGSI_CUNEIFORM_NUMBERS_AND_PUNCT_END   0x1247f
+#define AGSI_EARLY_DYNASTIC_CUNEIFORM_BEGIN    0x12480
+#define AGSI_EARLY_DYNASTIC_CUNEIFORM_END      0x1254f
+#define AGSI_CYPRO_MINOAN_BEGIN                0x12f90
+#define AGSI_CYPRO_MINOAN_END                  0x12fff
+#define AGSI_EGYPTIAN_HIEROGLYPHS_BEGIN        0x13000
+#define AGSI_EGYPTIAN_HIEROGLYPHS_END          0x1342f
+#define AGSI_EGYPTIAN_HIEROGLYPHS_FMT_BEGIN    0x13430  /* Egyptian Hieroglyphs Format Controls */
+#define AGSI_EGYPTIAN_HIEROGLYPHS_FMT_END      0x1343f
+#define AGSI_ANATOLIAN_HIEROGLYPHS_BEGIN       0x14400
+#define AGSI_ANATOLIAN_HIEROGLYPHS_END         0x1467f
+#define AGSI_BAMUM_SUPPL_BEGIN                 0x16800  /* Bamum Supplement */
+#define AGSI_BAMUM_SUPPL_END                   0x16a3f
+#define AGSI_MRO_BEGIN                         0x16a40
+#define AGSI_MRO_END                           0x16a6f
+#define AGSI_TANGSA_BEGIN                      0x16a70
+#define AGSI_TANGSA_END                        0x16acf
+#define AGSI_BASSA_VAH_BEGIN                   0x16ad0
+#define AGSI_BASSA_VAH_END                     0x16aff
+#define AGSI_PAHAWH_HMONG_BEGIN                0x16b00
+#define AGSI_PAHAWH_HMONG_END                  0x16b8f
+#define AGSI_MEDEFAIDRIN_BEGIN                 0x16e40
+#define AGSI_MEDEFAIDRIN_END                   0x16e9f
+#define AGSI_MIAO_BEGIN                        0x16f00
+#define AGSI_MIAO_END                          0x16f9f
+#define AGSI_IDEO_SYM_AND_PUNCT_BEGIN          0x16fe0  /* Ideographic Symbols and Punctuation */
+#define AGSI_IDEO_SYM_AND_PUNCT_END            0x16fff
+#define AGSI_TANGUT_BEGIN                      0x17000
+#define AGSI_TANGUT_END                        0x187ff
+#define AGSI_TANGUT_COMPONENTS_BEGIN           0x18800
+#define AGSI_TANGUT_COMPONENTS_END             0x18aff
+#define AGSI_KHITAN_SMALL_SCRIPT_BEGIN         0x18b00
+#define AGSI_KHITAN_SMALL_SCRIPT_END           0x18cff
+#define AGSI_TANGUT_SUPPL_BEGIN                0x18d00  /* Tangut Supplement */
+#define AGSI_TANGUT_SUPPL_END                  0x18d7f
+#define AGSI_KANA_EXT_B_BEGIN                  0x1aff0  /* CJK RANGE #5 START */
+#define AGSI_KANA_EXT_B_END                    0x1afff
+#define AGSI_KANA_SUPPL_BEGIN                  0x1b000  /* Kana Supplement */
+#define AGSI_KANA_SUPPL_END                    0x1b0ff
+#define AGSI_KANA_EXT_A_BEGIN                  0x1b100  /* Kana Extended A */
+#define AGSI_KANA_EXT_A_END                    0x1b12f
+#define AGSI_SMALL_KANA_EXT_BEGIN              0x1b130  /* Small Kana Extension */
+#define AGSI_SMALL_KANA_EXT_END                0x1b16f
+#define AGSI_NUSHU_BEGIN                       0x1b170
+#define AGSI_NUSHU_END                         0x1b2ff  /* CJK RANGE #5 END */
+#define AGSI_DUPLOYAN_BEGIN                    0x1bc00
+#define AGSI_DUPLOYAN_END                      0x1bc9f
+#define AGSI_SHORTHAND_FORMAT_CONTROLS_BEGIN   0x1bca0
+#define AGSI_SHORTHAND_FORMAT_CONTROLS_END     0x1bcaf
+#define AGSI_ZNAMENNY_MUSICAL_NOT_BEGIN        0x1cf00  /* Znamenny Musical Notation */
+#define AGSI_ZNAMENNY_MUSICAL_NOT_END          0x1cfcf
+#define AGSI_BYZANTINE_MUSICAL_SYM_BEGIN       0x1d000  /* Byzantine Musical Symbols */
+#define AGSI_BYZANTINE_MUSICAL_SYM_END         0x1d0ff
+#define AGSI_MUSICAL_SYM_BEGIN                 0x1d100  /* Musical Symbols */
+#define AGSI_MUSICAL_SYM_END                   0x1d1ff
+#define AGSI_ANCIENT_GREEK_MUSICAL_NOT_BEGIN   0x1d200  /* Ancient Greek Musical Notation */
+#define AGSI_ANCIENT_GREEK_MUSICAL_NOT_END     0x1d24f
+#define AGSI_MAYAN_NUMERALS_BEGIN              0x1d2e0
+#define AGSI_MAYAN_NUMERALS_END                0x1d2ff
+#define AGSI_TAI_XUAN_JING_SYM_BEGIN           0x1d300  /* Tai Xuan Jing Symbols */
+#define AGSI_TAI_XUAN_JING_SYM_END             0x1d35f
+#define AGSI_COUNTING_ROD_NUMERALS_BEGIN       0x1d360
+#define AGSI_COUNTING_ROD_NUMERALS_END         0x1d37f
+#define AGSI_MATH_ALPHANUMERIC_SYM_BEGIN       0x1d400  /* Mathematical Alphanumeric Symbols */
+#define AGSI_MATH_ALPHANUMERIC_SYM_END         0x1d7ff
+#define AGSI_SUTTON_SIGNWRITING_BEGIN          0x1d800
+#define AGSI_SUTTON_SIGNWRITING_END            0x1daaf
+#define AGSI_LATIN_EXT_G_BEGIN                 0x1df00  /* Latin Extended G */
+#define AGSI_LATIN_EXT_G_END                   0x1dfff
+#define AGSI_GLAGOLITIC_SUPPL_BEGIN            0x1e000  /* Glagolitic Supplement */
+#define AGSI_GLAGOLITIC_SUPPL_END              0x1e02f
+#define AGSI_NYIAKENG_PUACHUE_HMONG_BEGIN      0x1e100
+#define AGSI_NYIAKENG_PUACHUE_HMONG_END        0x1e14f
+#define AGSI_TOTO_BEGIN                        0x1e290
+#define AGSI_TOTO_END                          0x1e2bf
+#define AGSI_WANCHO_BEGIN                      0x1e2c0
+#define AGSI_WANCHO_END                        0x1e2ff
+#define AGSI_ETHIOPIC_EXT_B_BEGIN              0x1e7e0  /* Ethiopic Extended B */
+#define AGSI_ETHIOPIC_EXT_B_END                0x1e7ff
+#define AGSI_MENDE_KIKAKUI_BEGIN               0x1e800
+#define AGSI_MENDE_KIKAKUI_END                 0x1e8df
+#define AGSI_ADLAM_BEGIN                       0x1e900
+#define AGSI_ADLAM_END                         0x1e95f
+#define AGSI_INDIC_SIYAQ_NUMBERS_BEGIN         0x1ec70
+#define AGSI_INDIC_SIYAQ_NUMBERS_END           0x1ecbf
+#define AGSI_OTTOMAN_SIYAQ_NUMBERS_BEGIN       0x1ed00
+#define AGSI_OTTOMAN_SIYAQ_NUMBERS_END         0x1ed4f
+#define AGSI_ARABIC_MATH_ALPHABETIC_SYM_BEGIN  0x1ee00  /* Arabic Mathematical Alphabetic Symbols */
+#define AGSI_ARABIC_MATH_ALPHABETIC_SYM_END    0x1eeff
+#define AGSI_MAHJONG_TILES_BEGIN               0x1f000
+#define AGSI_MAHJONG_TILES_END                 0x1f02f
+#define AGSI_DOMINO_TILES_BEGIN                0x1f030
+#define AGSI_DOMINO_TILES_END                  0x1f09f
+#define AGSI_PLAYING_CARDS_BEGIN               0x1f0a0
+#define AGSI_PLAYING_CARDS_END                 0x1f0ff
+#define AGSI_ENCL_ALPHANUMERIC_SUPPL_BEGIN     0x1f100  /* Enclosed Alphanumerics Supplement */
+#define AGSI_ENCL_ALPHANUMERIC_SUPPL_END       0x1f1ff
+#define AGSI_ENCL_IDEOGRAPHIC_SUPPL_BEGIN      0x1f200  /* Enclosed Ideographic Supplement */
+#define AGSI_ENCL_IDEOGRAPHIC_SUPPL_END        0x1f2ff
+#define AGSI_MISC_SYM_AND_PIC_BEGIN            0x1f300  /* Miscellaneous Symbols and Pictographs */
+#define AGSI_MISC_SYM_AND_PIC_END              0x1f5ff
+#define AGSI_EMOTICONS_BEGIN                   0x1f600
+#define AGSI_EMOTICONS_END                     0x1f64f
+#define AGSI_ORNAMENTAL_DINGBATS_BEGIN         0x1f650
+#define AGSI_ORNAMENTAL_DINGBATS_END           0x1f67f
+#define AGSI_TRANSPORT_AND_MAP_SYM_BEGIN       0x1f680  /* Transport and Map Symbols */
+#define AGSI_TRANSPORT_AND_MAP_SYM_END         0x1f6ff
+#define AGSI_ALCHEMICAL_SYM_BEGIN              0x1f700  /* Alchemical Symbols */
+#define AGSI_ALCHEMICAL_SYM_END                0x1f7ff
+#define AGSI_GEOMETRIC_SHAPES_EXT_BEGIN        0x1f780  /* Geometric Shapes Extended */
+#define AGSI_GEOMETRIC_SHAPES_EXT_END          0x1f7ff
+#define AGSI_SUPPL_ARROWS_C_BEGIN              0x1f800  /* Supplementary Arrows C */
+#define AGSI_SUPPL_ARROWS_C_END                0x1f8ff
+#define AGSI_SUPPL_SYM_AND_PIC_BEGIN           0x1f900  /* Supplementary Symbols and Pictographs */
+#define AGSI_SUPPL_SYM_AND_PIC_END             0x1f9ff
+#define AGSI_CHESS_SYM_BEGIN                   0x1fa00  /* Chess Symbols */
+#define AGSI_CHESS_SYM_END                     0x1fa6f
+#define AGSI_SYM_AND_PIC_EXT_A_BEGIN           0x1fa70  /* Symbols and Pictographs Extended A */
+#define AGSI_SYM_AND_PIC_EXT_A_END             0x1faff
+#define AGSI_SYM_FOR_LEGACY_COMPUTING_BEGIN    0x1fb00  /* Symbols for Legacy Computing */
+#define AGSI_SYM_FOR_LEGACY_COMPUTING_END      0x1fbff
+#define AGSI_CJK_UNI_IDEO_EXT_B_BEGIN          0x20000  /* CJK RANGE #6 START */
+#define AGSI_CJK_UNI_IDEO_EXT_B_END            0x2a6df
+#define AGSI_CJK_UNI_IDEO_EXT_C_BEGIN          0x2a700  /* CJK Unified Ideographs Extension C */
+#define AGSI_CJK_UNI_IDEO_EXT_C_END            0x2b73f
+#define AGSI_CJK_UNI_IDEO_EXT_D_BEGIN          0x2b740  /* CJK Unified Ideographs Extension D */
+#define AGSI_CJK_UNI_IDEO_EXT_D_END            0x2b81f
+#define AGSI_CJK_UNI_IDEO_EXT_E_BEGIN          0x2b820  /* CJK Unified Ideographs Extension E */
+#define AGSI_CJK_UNI_IDEO_EXT_E_END            0x2ceaf
+#define AGSI_CJK_UNI_IDEO_EXT_F_BEGIN          0x2ceb0  /* CJK Unified Ideographs Extension F */
+#define AGSI_CJK_UNI_IDEO_EXT_F_END            0x2ebef
+#define AGSI_CJK_COMPAT_IDEO_SUPPL_BEGIN       0x2f800  /* CJK Compatibility Ideographs Supplement */
+#define AGSI_CJK_COMPAT_IDEO_SUPPL_END         0x2fa1f
+#define AGSI_CJK_UNI_IDEO_EXT_G_BEGIN          0x30000  /* CJK Unified Ideographs Extension G */
+#define AGSI_CJK_UNI_IDEO_EXT_G_END            0x3134f  /* CJK RANGE #6 END */
+#define AGSI_TAGS_BEGIN                        0xe0000
+#define AGSI_TAGS_END                          0xe007f
+#define AGSI_VARIATION_SELECTORS_SUPPL_BEGIN   0xe0100  /* Variation Selectors Supplement */
+#define AGSI_VARIATION_SELECTORS_SUPPL_END     0xe01ef
+#define AGSI_SUPPL_PRIVATE_USE_AREA_A_BEGIN    0xf0000  /* Supplementary Private Use Area A */
+#define AGSI_SUPPL_PRIVATE_USE_AREA_A_END      0xfffff
+#define AGSI_SUPPL_PRIVATE_USE_AREA_B_BEGIN    0x100000 /* Supplementary Private Use Area B */
+#define AGSI_SUPPL_PRIVATE_USE_AREA_B_END      0x10ffff
+
+/*
  * Characters available in core fonts ("W" = "WITH", "WO" = "WITHOUT").
  */
 
 /*
  * General Punctuation ("SQ" = "SQUARE").
  */
-#define AGSI_GENPUNCT_BEGIN 0x2009
 #define AGSI_THIN_SPACE              "\xE2\x80\x89"	/* U+2009 */
 #define AGSI_HYPHEN                  "\xE2\x80\x90"	/* U+2010 */
 #define AGSI_NON_BREAKING_HYPHEN     "\xE2\x80\x91"	/* U+2011 */
@@ -288,7 +930,6 @@
 #define AGSI_INH_ARABIC_FORM_SHAPING "\xE2\x81\xAC"	/* U+206C Inhibit Arabic Form Shaping */
 #define AGSI_ACT_ARABIC_FORM_SHAPING "\xE2\x81\xAD"	/* U+206D Activate Arabic Form Shaping */
 #define AGSI_NATIONAL_DIGIT_SHAPES   "\xE2\x81\xAE"	/* U+206E */
-#define AGSI_GENPUNCT_END 0x206E
 /*
  * Superscripts and Subscripts.
  */
@@ -340,7 +981,6 @@
 /*
  * Number Forms.
  */
-#define AGSI_ROMANNUM_BEGIN 0x2160
 #define AGSI_ROMAN_NUMERAL_1            "\xE2\x85\xA0"      /* U+2160 */
 #define AGSI_ROMAN_NUMERAL_2            "\xE2\x85\xA1"      /* U+2161 */
 #define AGSI_ROMAN_NUMERAL_3            "\xE2\x85\xA2"      /* U+2162 */
@@ -379,11 +1019,9 @@
 #define AGSI_ROMAN_NUMERAL_REVERSED_100 "\xE2\x85\x83"      /* U+2183 */
 #define AGSI_LATIN_SMALL_REVERSED_C     "\xE2\x85\x84"      /* U+2184 Latin Small Letter Reversed C */
 #define AGSI_ROMAN_NUMERAL_6_LATE_FORM  "\xE2\x85\x85"      /* U+2185 */
-#define AGSI_ROMANNUM_END 0x2185
 /*
  * Arrows ("L" = "LEFT", "U" = "UP", "R" = "RIGHT", "D" = "DOWN").
  */
-#define AGSI_ARROWS_BEGIN 0x2190
 #define AGSI_L_ARROW                  "\xE2\x86\x90" /* U+2190 Leftwards Arrow */
 #define AGSI_UP_ARROW                 "\xE2\x86\x91" /* U+2191 Upwards Arrow */
 #define AGSI_R_ARROW                  "\xE2\x86\x92" /* U+2192 Rightwards Arrow */
@@ -496,13 +1134,11 @@
 #define AGSI_L_OPEN_HEADED_ARROW      "\xE2\x86\xFD" /* U+21FD Leftwards Open-Headed Arrow */
 #define AGSI_R_OPEN_HEADED_ARROW      "\xE2\x86\xFE" /* U+21FE Rightwards Open-Headed Arrow */
 #define AGSI_LR_OPEN_HEADED_ARROW     "\xE2\x86\xFF" /* U+21FF Left Right Open-Headed Arrow */
-#define AGSI_ARROWS_END 0x21FF
 
 /*
  * Mathematical Operators ("GT" = "GREATER_THAN", "LT" = "LESS_THAN",
  * "SM" = "SMALL", "APPROX" = "APPROXIMATELY", "HSTROKE" = "HORIZONTAL_STROKE").
  */
-#define AGSI_MATHOPS_BEGIN 0x2200
 #define AGSI_FOR_ALL                                "\xE2\x88\x80" /* U+2200 */
 #define AGSI_COMPLEMENT                             "\xE2\x88\x81" /* U+2201 */
 #define AGSI_PARTIAL_DIFFERENTIAL                   "\xE2\x88\x82" /* U+2202 */
@@ -760,11 +1396,9 @@
 #define AGSI_CONTAINS_W_OVERBAR                     "\xE2\x8B\xBD" /* U+22FD Contains With Overbar */
 #define AGSI_SM_CONTAINS_W_OVERBAR                  "\xE2\x8B\xBE" /* U+22FE Small Contains With Overbar */
 #define AGSI_Z_NOTATION_BAG_MEMBERSHIP              "\xE2\x8B\xBF" /* U+22FF */
-#define AGSI_MATHOPS_END 0x22FF
 /*
  * Miscellaneous Technical ("PAREN" = "PARENTHESIS", "SQ" = "SQUARE").
  */
-#define AGSI_MISCTECH_BEGIN 0x2300
 #define AGSI_DIAMETER_SIGN                  "\xE2\x8C\x80" /* U+2300 */
 #define AGSI_ELECTRIC_ARROW                 "\xE2\x8C\x81" /* U+2301 */
 #define AGSI_HOUSE                          "\xE2\x8C\x82" /* U+2302 */
@@ -831,18 +1465,14 @@
 #define AGSI_FLATNESS                       "\xE2\x8F\xA5" /* U+23E5 */
 #define AGSI_DECIMAL_EXPONENT_SYMBOL        "\xE2\x8F\xA8" /* U+23E8 */
 #define AGSI_STOPWATCH                      "\xE2\x8F\xB1" /* U+23F1 */
-#define AGSI_MISCTECH_END 0x23F1
 /*
  * Control Pictures.
  */
-#define AGSI_CTRLPICS_BEGIN 0x2422
 #define AGSI_BLANK_SYMBOL     "\xE2\x90\xA2"       /* U+2422 */
 #define AGSI_OPEN_BOX         "\xE2\x90\xA3"       /* U+2423 */
-#define AGSI_CTRLPICS_END 0x2423
 /*
  * Enclosed Alphanumerics.
  */
-#define AGSI_CIRCLED_DIGITS_BEGIN 0x2460
 #define AGSI_CIRCLED_DIGIT_1  "\xE2\x91\xA0"       /* U+2460 */
 #define AGSI_CIRCLED_DIGIT_2  "\xE2\x91\xA1"       /* U+2461 */
 #define AGSI_CIRCLED_DIGIT_3  "\xE2\x91\xA2"       /* U+2462 */
@@ -853,29 +1483,23 @@
 #define AGSI_CIRCLED_DIGIT_8  "\xE2\x91\xA7"       /* U+2467 */
 #define AGSI_CIRCLED_DIGIT_9  "\xE2\x91\xA8"       /* U+2468 */
 #define AGSI_CIRCLED_DIGIT_10 "\xE2\x91\xA9"       /* U+2469 */
-#define AGSI_CIRCLED_DIGITS_END 0x2469
 /*
  * Geometric Shapes.
  */
-#define AGSI_GEOSHAPES_BEGIN 0x25AD
 #define AGSI_WHITE_RECTANGLE            "\xE2\x96\xAD"       /* U+25AD */
 #define AGSI_WHITE_UP_POINTING_TRIANGLE "\xE2\x96\xB3"       /* U+25B3 */
 #define AGSI_DOTTED_CIRCLE              "\xE2\x97\x8C"       /* U+25CC */
-#define AGSI_GEOSHAPES_END 0x25CC
 /*
  * Miscellaneous Symbols.
  */
-#define AGSI_MISCSYM_BEGIN 0x2607
 #define AGSI_LIGHTNING         "\xE2\x98\x87"       /* U+2607 */
 #define AGSI_WHEEL_OF_DHARMA   "\xE2\x98\xB8"       /* U+2638 */
 #define AGSI_SCALES            "\xE2\x9A\x96"       /* U+2696 */
 #define AGSI_GEAR              "\xE2\x9A\x99"       /* U+2699 */
 #define AGSI_WHEELCHAIR_SYMBOL "\xE2\x99\xBF"       /* U+267F */
-#define AGSI_MISCSYM_END 0x267F
 /*
  * Dingbats.
  */
-#define AGSI_DINGBATS_BEGIN 0x270C
 #define AGSI_VICTORY_HAND            "\xE2\x9C\x8C" /* U+270C */
 #define AGSI_WRITING_HAND            "\xE2\x9C\x8D" /* U+270D */
 #define AGSI_LOWER_R_PENCIL          "\xE2\x9C\x8E" /* U+270E Lower Right Pencil */
@@ -893,11 +1517,9 @@
 #define AGSI_WHT_4_POINTED_STAR      "\xE2\x9C\xA7" /* U+2727 White Four Pointed Star */
 #define AGSI_CCW_CLOSED_CIRCLE_ARROW "\xE2\xA5\x80" /* U+2940 Anticlockwise Closed Circle Arrow */
 #define AGSI_CW_CLOSED_CIRCLE_ARROW  "\xE2\xA5\x81" /* U+2941 Clockwise Closed Circle Arrow */
-#define AGSI_DINGBATS_END 0x2941
 /*
  * Miscellaneous Symbols and Pictographs.
  */
-#define AGSI_MISCSYMPIC_BEGIN 0x1F311
 #define AGSI_NEW_MOON             "\xF0\x9F\x8C\x91" /* U+1F311 */
 #define AGSI_WAXING_CRESCENT_MOON "\xF0\x9F\x8C\x92" /* U+1F312 */
 #define AGSI_FIRST_QUARTER_MOON   "\xF0\x9F\x8C\x93" /* U+1F313 */
@@ -922,12 +1544,10 @@
 #define AGSI_JOYSTICK             "\xF0\x9F\x95\xB9" /* U+1F579 */
 #define AGSI_LOWER_L_PENCIL       "\xF0\x9F\x96\x89" /* U+1F589 Lower Left Pencil */
 #define AGSI_TWO_BUTTON_MOUSE     "\xF0\x9F\x96\xB0" /* U+1F5B0 */
-#define AGSI_MISCSYMPIC_END 0x1F5B0
 
 /*
  * Emoticons ("SML" = "SMILING", "OM" = "OPEN_MOUTH").
  */
-#define AGSI_EMOTICONS_BEGIN 0x1F600
 #define AGSI_GRINNING_FACE                    "\xF0\x9F\x98\x80" /* U+1F600 */
 #define AGSI_GRINNING_FACE_W_SML_EYES         "\xF0\x9F\x98\x81" /* U+1F601 Grinning Face With Smiling Eyes */
 #define AGSI_FACE_W_TEARS_OF_JOY              "\xF0\x9F\x98\x82" /* U+1F602 Face With Tears Of Joy */
@@ -995,7 +1615,6 @@
 #define AGSI_WEARY_CAT_FACE                   "\xF0\x9F\x99\x80" /* U+1F640 */
 #define AGSI_UPSIDE_DOWN_FACE                 "\xF0\x9F\x99\x83" /* U+1F643 */
 #define AGSI_CONSTRUCTION_SIGN                "\xF0\x9F\x9A\xA7" /* U+1F6A7 */
-#define AGSI_EMOTICONS_END 0x1F6A7
 /*
  * Agar Ideograms (Algue Private Use Area).
  */
@@ -1151,7 +1770,94 @@
 #define AGSI_IDENTITY_MATRIX       "\xEE\x82\x9D" /* U+E09D Identity Matrix */
 #define AGSI_TOOLBAR               "\xEE\x82\x9E" /* U+E09E Toolbar */
 #define AGSI_SHUFFLE               "\xEE\x82\x9F" /* U+E09F Shuffle */
+#define AGSI_AGARIDEO_END 0xE09F
 
+#define AGSI_IS_ARABIC(c) \
+    (((c) >= AGSI_ARABIC_BEGIN       && (c) <= AGSI_ARABIC_END) || \
+     ((c) >= AGSI_ARABIC_SUPPL_BEGIN && (c) <= AGSI_ARABIC_SUPPL_END) || \
+     ((c) >= AGSI_ARABIC_EXT_A_BEGIN && (c) <= AGSI_ARABIC_EXT_A_END) || \
+     ((c) >= AGSI_ARABIC_EXT_B_BEGIN && (c) <= AGSI_ARABIC_EXT_B_END))
 
-#define AGSI_AGARIDEO_END 0xE09B
+#define AGSI_IS_ARMENIAN(c) \
+    (((c) >= AGSI_ARMENIAN_BEGIN && (c) <= AGSI_ARMENIAN_END))
+
+#define AGSI_IS_BASIC_LATIN(c) \
+     ((c) >= AGSI_BASIC_LATIN_BEGIN && (c) <= AGSI_BASIC_LATIN_END)
+
+#define AGSI_IS_INDIC(c) \
+    (((c) >= AGSI_DEVANAGARI_BEGIN       && (c) <= AGSI_MYANMAR_END) || \
+    (((c) >= AGSI_VEDIC_EXTENSIONS_BEGIN && (c) <= AGSI_VEDIC_EXTENSIONS_END) || \
+    (((c) >= AGSI_SYLOTI_NAGRI_BEGIN     && (c) <= AGSI_KAYAH_LI_END) || \
+    (((c) >= AGSI_MYANMAR_EXT_B_BEGIN    && (c) <= AGSI_MYANMAR_EXT_B_END) || \
+    (((c) >= AGSI_MYANMAR_EXT_A_BEGIN    && (c) <= AGSI_MYANMAR_EXT_A_END) || \
+    (((c) >= AGSI_TAI_VIET_BEGIN         && (c) <= AGSI_MEETEI_MAYEK_EXTENSIONS_END) || \
+    (((c) >= AGSI_MEETEI_MAYEK_BEGIN     && (c) <= AGSI_MEETEI_MAYEK_END))
+
+#define AGSI_IS_CJK(c) \
+    (((c) >= AGSI_CJK_RADICALS_SUPPL_BEGIN   && (c) <= AGSI_LISU_END) || \
+     ((c) >= AGSI_HANGUL_SYLLABLES_BEGIN     && (c) <= AGSI_HANGUL_JAMO_EXT_B_END) || \
+     ((c) >= AGSI_CJK_COMPAT_IDEO_BEGIN      && (c) <= AGSI_CJK_COMPAT_IDEO_END) || \
+     ((c) >= AGSI_CJK_COMPAT_FORMS_BEGIN     && (c) <= AGSI_CJK_COMPAT_FORMS_END) || \
+     ((c) >= AGSI_KANA_EXT_B_BEGIN           && (c) <= AGSI_NUSHU_END) || \
+     ((c) >= AGSI_CJK_UNI_IDEO_EXT_B_BEGIN   && (c) <= AGSI_CJK_UNI_IDEO_EXT_G_END))
+
+#define AGSI_IS_COMB_DIACRIT_MARK(c) \
+    (((c) >= AGSI_COMB_DIACRIT_MARKS_BEGIN         && (c) <= AGSI_COMB_DIACRIT_MARKS_END) || \
+     ((c) >= AGSI_COMB_DIACRIT_MARKS_EXT_BEGIN     && (c) <= AGSI_COMB_DIACRIT_MARKS_EXT_END) || \
+     ((c) >= AGSI_COMB_DIACRIT_MARKS_SUPPL_BEGIN   && (c) <= AGSI_COMB_DIACRIT_MARKS_SUPPL_END) || \
+     ((c) >= AGSI_COMB_DIACRIT_MARKS_FOR_SYM_BEGIN && (c) <= AGSI_COMB_DIACRIT_MARKS_FOR_SYM_END))
+
+#define AGSI_IS_CYRILLIC(c) \
+    (((c) >= AGSI_CYRILLIC_BEGIN       && (c) <= AGSI_CYRILLIC_END) || \
+    (((c) >= AGSI_CYRILLIC_SUPPL_BEGIN && (c) <= AGSI_CYRILLIC_SUPPL_END) || \
+    (((c) >= AGSI_CYRILLIC_EXT_C_BEGIN && (c) <= AGSI_CYRILLIC_EXT_C_END) || \
+    (((c) >= AGSI_CYRILLIC_EXT_A_BEGIN && (c) <= AGSI_CYRILLIC_EXT_A_END) || \
+    (((c) >= AGSI_CYRILLIC_EXT_B_BEGIN && (c) <= AGSI_CYRILLIC_EXT_B_END))
+
+#define AGSI_IS_ETHIOPIC(c) \
+    (((c) >= AGSI_ETHIOPIC_BEGIN && (c) <= AGSI_ETHIOPIC_SUPPL_END) || \
+     ((c) >= AGSI_ETHIOPIC_EXT_BEGIN && (c) <= AGSI_ETHIOPIC_EXT_END) || \
+     ((c) >= AGSI_ETHIOPIC_EXT_A_BEGIN && (c) <= AGSI_ETHIOPIC_EXT_A_END) || \
+     ((c) >= AGSI_ETHIOPIC_EXT_B_BEGIN && (c) <= AGSI_ETHIOPIC_EXT_B_END))
+
+#define AGSI_IS_GEORGIAN(c) \
+    (((c) >= AGSI_GEORGIAN_BEGIN       && (c) <= AGSI_GEORGIAN_END) || \
+     ((c) >= AGSI_GEORGIAN_EXT_BEGIN   && (c) <= AGSI_GEORGIAN_EXT_END) || \
+     ((c) >= AGSI_GEORGIAN_SUPPL_BEGIN && (c) <= AGSI_GEORGIAN_SUPPL_END))
+
+#define AGSI_IS_GRAPHICAL(c) \
+    (((c) >= AGSI_AGARIDEO_BEGIN         && (c) <= AGSI_AGARIDEO_END) || \
+     ((c) >= AGSI_ARROWS_BEGIN           && (c) <= AGSI_ARROWS_END) || \
+     ((c) >= AGSI_MATH_OPERATORS_BEGIN   && (c) <= AGSI_MATH_OPERATORS_END) || \
+     ((c) >= AGSI_MISC_TECH_BEGIN        && (c) <= AGSI_MISC_TECH_END) || \
+     ((c) >= AGSI_CONTROL_PICTURES_BEGIN && (c) <= AGSI_CONTROL_PICTURES_END) || \
+     ((c) >= AGSI_GEOMETRIC_SHAPES_BEGIN && (c) <= AGSI_GEOMETRIC_SHAPES_END) || \
+     ((c) >= AGSI_MISC_SYM_BEGIN         && (c) <= AGSI_MISC_SYM_END) || \
+     ((c) >= AGSI_DINGBATS_BEGIN         && (c) <= AGSI_DINGBATS_END) || \
+     ((c) >= AGSI_MISC_SYM_AND_PIC_BEGIN && (c) <= AGSI_MISC_SYM_AND_PIC_END) || \
+     ((c) >= AGSI_EMOTICONS_BEGIN        && (c) <= AGSI_EMOTICONS_END))
+
+#define AGSI_IS_GREEK(c) \
+    (((c) >= AGSI_GREEK_AND_COPTIC_BEGIN && (c) <= AGSI_GREEK_AND_COPTIC_END) || \
+     ((c) >= AGSI_GREEK_EXT_BEGIN        && (c) <= AGSI_GREEK_EXT_END))
+
+#define AGSI_IS_LATIN1(c) \
+     ((c) >= AGSI_BASIC_LATIN_BEGIN && (c) <= AGSI_LATIN_EXT_B_END)
+
+#define AGSI_IS_LATIN(c) \
+     (AGSI_IS_LATIN1(c) || \
+      ((c) >= AGSI_LATIN_EXT_ADDITIONAL_BEGIN && (c) <= AGSI_LATIN_EXT_ADDITIONAL_END) || \
+      ((c) >= AGSI_LATIN_EXT_C_BEGIN && (c) <= AGSI_LATIN_EXT_C_END) || \
+      ((c) >= AGSI_LATIN_EXT_D_BEGIN && (c) <= AGSI_LATIN_EXT_D_END) || \
+      ((c) >= AGSI_LATIN_EXT_E_BEGIN && (c) <= AGSI_LATIN_EXT_E_END) || \
+      ((c) >= AGSI_LATIN_EXT_F_BEGIN && (c) <= AGSI_LATIN_EXT_F_END) || \
+      ((c) >= AGSI_LATIN_EXT_G_BEGIN && (c) <= AGSI_LATIN_EXT_G_END))
+
+#define AGSI_IS_SUNDANESE(c) \
+    (((c) >= AGSI_SUNDANESE_BEGIN       && (c) <= AGSI_SUNDANESE_END) || \
+     ((c) >= AGSI_SUNDANESE_SUPPL_BEGIN && (c) <= AGSI_SUNDANESE_SUPPL_END))
+
+#define AGSI_IS_SYRIAC(c) \
+    (((c) >= AGSI_SYRIAC_BEGIN       && (c) <= AGSI_SYRIAC_END) || \
+     ((c) >= AGSI_SYRIAC_SUPPL_BEGIN && (c) <= AGSI_SYRIAC_SUPPL_END))
 

@@ -3,7 +3,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agargui.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 March 16
+" Last Change:  2023 March 19
 
 " Agar-GUI (https://libagar.org/)
 if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
@@ -194,11 +194,17 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_FONTSELECTOR_HFILL AG_FONTSELECTOR_VFILL
   syn keyword cConstant AG_FONTSELECTOR_EXPAND AG_FONTSELECTOR_BASELINE
   syn keyword cConstant AG_FONTSELECTOR_BOUNDING_BOX AG_FONTSELECTOR_CORRECTIONS
+  syn keyword cConstant AG_FONTSELECTOR_MORE_METRICS AG_FONTSELECTOR_CENTER_LINE
   " gui/font.h
   syn keyword cType AG_FontSpec AG_FontAdjustment AG_FontAlias AG_FontStyleName
-  syn keyword cType AG_FontStyleSort
+  syn keyword cType AG_FontStyleSort AG_UnicodeRange
   syn keyword cType AG_Font AG_FontQ AG_StaticFont AG_FontClass
   syn keyword cType AG_Glyph AG_GlyphCache
+  syn keyword cConstant AG_FONT_VECTOR AG_FONT_BITMAP AG_FONT_DUMMY
+  syn keyword cConstant AG_FONT_FREETYPE AG_FONT_NAME_MAX AG_UNICODE_RANGE_NAME_MAX
+  syn keyword cConstant AG_FONT_TYPE_LAST AG_FONT_SOURCE_FILE
+  syn keyword cConstant AG_FONT_SOURCE_MEMORY AG_FONT_PTS_EPSILON
+  syn keyword cConstant AG_FONT_ADJ_PTS_EPSILON
   " gui/font_bf.h
   syn keyword cType AG_GlyphBf AG_FontBf
   syn keyword cConstant AG_FONT_BF_COLORIZE_NONE AG_FONT_BF_COLORIZE_GRAYS
@@ -563,10 +569,6 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_TEXT_LEFT AG_TEXT_CENTER AG_TEXT_RIGHT
   syn keyword cConstant AG_TEXT_TOP AG_TEXT_MIDDLE AG_TEXT_BOTTOM
   syn keyword cConstant AG_MSG_ERROR AG_MSG_WARNING AG_MSG_INFO
-  syn keyword cConstant AG_FONT_VECTOR AG_FONT_BITMAP AG_FONT_DUMMY
-  syn keyword cConstant AG_FONT_FREETYPE AG_FONT_NAME_MAX
-  syn keyword cConstant AG_FONT_TYPE_LAST AG_FONT_SOURCE_FILE
-  syn keyword cConstant AG_FONT_SOURCE_MEMORY AG_FONT_PTS_EPSILON
   syn keyword cConstant AG_ANSI_BLACK AG_ANSI_RED AG_ANSI_GREEN
   syn keyword cConstant AG_ANSI_YELLOW AG_ANSI_BLUE AG_ANSI_MAGENTA
   syn keyword cConstant AG_ANSI_CYAN AG_ANSI_WHITE AG_ANSI_BRIGHT_BLACK
