@@ -2136,15 +2136,16 @@ AG_TlistScrollToEnd(AG_Tlist *tl)
 void
 AG_TlistScrollToSelection(AG_Tlist *tl)
 {
-	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_TlistItem *it;
 	int m = 0;
 
+	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->selected) {
-			tl->rOffs = m - (tl->nVisible << 1);
+			tl->rOffs = m - (tl->nVisible >> 1);
+			if (tl->rOffs < 0) { tl->rOffs = 0; }
 			break;
 		}
 		m++;
@@ -2155,7 +2156,10 @@ AG_TlistScrollToSelection(AG_Tlist *tl)
 	AG_ObjectUnlock(tl);
 }
 
-/* Compare items by their text content (ignoring any ANSI SGR sequences). */
+/*
+ * Compare items by their text content. Ignore (skip over) any ANSI SGR
+ * sequences or graphical character.
+ */
 static int
 CompareText(const void *_Nonnull pA, const void *_Nonnull pB)
 {
@@ -2175,14 +2179,16 @@ CompareText(const void *_Nonnull pA, const void *_Nonnull pB)
 	}
 	sa = bufA;
 	sb = bufB;
-	while (*sa != '\0') {
-		if (sa[0] >= 0x40 && sa[1] <= 0x5f && sa[2] != '\0') {
+	while (*sa != '\0' && *sb != '\0') {
+		if (sa[0] >= 0x40 && sa[1] != '\0' && sa[1] <= 0x5f &&
+		    sa[2] != '\0') {
 			if (AG_TextParseANSI(ts, &ansi, &sa[1]) == 0) {
 				sa += ansi.len;
 				continue;
 			}
 		}
-		if (sb[0] >= 0x40 && sb[1] <= 0x5f && sb[2] != '\0') {
+		if (sb[0] >= 0x40 && sb[1] != '\0' && sb[1] <= 0x5f &&
+		    sb[2] != '\0') {
 			if (AG_TextParseANSI(ts, &ansi, &sb[1]) == 0) {
 				sb += ansi.len;
 				continue;
@@ -2192,32 +2198,8 @@ CompareText(const void *_Nonnull pA, const void *_Nonnull pB)
 			/*
 			 * TODO Unicode collation
 			 */
-
-			if ((*sa >= AGSI_AGARIDEO_BEGIN && *sa <= AGSI_AGARIDEO_END) ||
-			    (*sb >= AGSI_AGARIDEO_BEGIN && *sb <= AGSI_AGARIDEO_END) ||
-			    (*sa >= AGSI_MISCSYMPIC_BEGIN && *sa <= AGSI_MISCSYMPIC_END) ||
-			    (*sb >= AGSI_MISCSYMPIC_BEGIN && *sb <= AGSI_MISCSYMPIC_END) ||
-			    (*sa >= AGSI_GENPUNCT_BEGIN && *sa <= AGSI_GENPUNCT_END) ||
-			    (*sb >= AGSI_GENPUNCT_BEGIN && *sb <= AGSI_GENPUNCT_END) ||
-			    (*sa >= AGSI_ARROWS_BEGIN && *sa <= AGSI_ARROWS_END) ||
-			    (*sb >= AGSI_ARROWS_BEGIN && *sb <= AGSI_ARROWS_END) ||
-			    (*sa >= AGSI_MATHOPS_BEGIN && *sa <= AGSI_MATHOPS_END) ||
-			    (*sb >= AGSI_MATHOPS_BEGIN && *sb <= AGSI_MATHOPS_END) ||
-			    (*sa >= AGSI_MISCTECH_BEGIN && *sa <= AGSI_MISCTECH_END) ||
-			    (*sb >= AGSI_MISCTECH_BEGIN && *sb <= AGSI_MISCTECH_END) ||
-			    (*sa >= AGSI_CTRLPICS_BEGIN && *sa <= AGSI_CTRLPICS_END) ||
-			    (*sb >= AGSI_CTRLPICS_BEGIN && *sb <= AGSI_CTRLPICS_END) ||
-			    (*sa >= AGSI_GEOSHAPES_BEGIN && *sa <= AGSI_GEOSHAPES_END) ||
-			    (*sb >= AGSI_GEOSHAPES_BEGIN && *sb <= AGSI_GEOSHAPES_END) ||
-			    (*sa >= AGSI_MISCSYM_BEGIN && *sa <= AGSI_MISCSYM_END) ||
-			    (*sb >= AGSI_MISCSYM_BEGIN && *sb <= AGSI_MISCSYM_END) ||
-			    (*sa >= AGSI_DINGBATS_BEGIN && *sa <= AGSI_DINGBATS_END) ||
-			    (*sb >= AGSI_DINGBATS_BEGIN && *sb <= AGSI_DINGBATS_END) ||
-			    (*sa >= AGSI_MISCSYMPIC_BEGIN && *sa <= AGSI_MISCSYMPIC_END) ||
-			    (*sb >= AGSI_MISCSYMPIC_BEGIN && *sb <= AGSI_MISCSYMPIC_END) ||
-			    (*sa >= AGSI_EMOTICONS_BEGIN && *sa <= AGSI_EMOTICONS_END) ||
-			    (*sb >= AGSI_EMOTICONS_BEGIN && *sb <= AGSI_EMOTICONS_END))
-			{
+			if (AGSI_IS_GRAPHICAL(*sa) ||
+			    AGSI_IS_GRAPHICAL(*sb)) {
 				sa++;
 				sb++;
 				continue;
