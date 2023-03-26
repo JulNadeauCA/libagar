@@ -164,6 +164,31 @@ UpdateHSVFromPixel64(AG_HSVPal *_Nonnull pal, Uint64 px)
 #endif /* AG_LARGE */
 
 static void
+UpdateHSVFromColor(AG_HSVPal *_Nonnull pal)
+{
+	AG_Variable *bColor;
+	void *pColor;
+	const AG_Color *c;
+	float h, s, v;
+
+	if ((bColor = AG_GetVariable(pal, "agcolor", &pColor)) == NULL) {
+		return;
+	}
+	c = (const AG_Color *)pColor;
+	AG_RGB2HSV(c->r, c->g, c->b, &h,&s,&v);
+	AG_SetFloat(pal, "hue", h);
+	AG_SetFloat(pal, "saturation", s);
+	AG_SetFloat(pal, "value", v);
+	if ((pal->flags & AG_HSVPAL_NOALPHA) == 0) {
+		SetAlpha8(pal, c->a);
+	}
+	AG_UnlockVariable(bColor);
+
+	pal->flags |= AG_HSVPAL_DIRTY;
+	AG_Redraw(pal);
+}
+
+static void
 UpdateHSVFromRGBAv(AG_HSVPal *_Nonnull pal)
 {
 	AG_Variable *bRGBAv;
@@ -212,6 +237,7 @@ UpdateHSVFromRGBAv(AG_HSVPal *_Nonnull pal)
 	AG_SetFloat(pal, "saturation", s);
 	AG_SetFloat(pal, "value", v);
 	SetAlpha8(pal, a);
+
 	AG_UnlockVariable(bRGBAv);
 	pal->flags |= AG_HSVPAL_DIRTY;
 	AG_Redraw(pal);
@@ -260,6 +286,7 @@ UpdateHSVFromRGBv(AG_HSVPal *_Nonnull pal)
 	AG_SetFloat(pal, "hue", h);
 	AG_SetFloat(pal, "saturation", s);
 	AG_SetFloat(pal, "value", v);
+
 	AG_UnlockVariable(bRGBv);
 	pal->flags |= AG_HSVPAL_DIRTY;
 	AG_Redraw(pal);
@@ -847,18 +874,20 @@ Bound(AG_Event *_Nonnull event)
 		pal->flags |= AG_HSVPAL_PIXEL;
 		UpdateHSVFromPixel64(pal, *(Uint64 *)V->data.p);
 #endif
+	} else if (strcmp(V->name, "agcolor") == 0) {
+		UpdateHSVFromColor(pal);
 	} else if (strcmp(V->name, "RGBAv") == 0) {
 		UpdateHSVFromRGBAv(pal);
 	} else if (strcmp(V->name, "RGBv") == 0) {
 		UpdateHSVFromRGBv(pal);
-	} else if (strcmp(V->name, "pixel-format") == 0) {
-		if (!(pal->flags & AG_HSVPAL_FORCE_NOALPHA)) {
-			AG_PixelFormat **pFormat = (AG_PixelFormat **)V->data.p;
-			if ((*pFormat)->Amask != 0) {
-				pal->flags &= ~(AG_HSVPAL_NOALPHA);
-			} else {
-				pal->flags |= AG_HSVPAL_NOALPHA;
-			}
+	} else if (strcmp(V->name, "pixel-format") == 0 &&
+	           !(pal->flags & AG_HSVPAL_FORCE_NOALPHA)) {
+		AG_PixelFormat **pFormat = (AG_PixelFormat **)V->data.p;
+
+		if ((*pFormat)->Amask != 0) {
+			pal->flags &= ~(AG_HSVPAL_NOALPHA);
+		} else {
+			pal->flags |= AG_HSVPAL_NOALPHA;
 		}
 	}
 	AG_Redraw(pal);
@@ -1110,7 +1139,6 @@ Draw(void *_Nonnull obj)
 		pal->surface = AG_SurfaceStdRGBA(w,h);
 		RenderStatic(pal);
 		AG_WidgetReplaceSurface(pal, pal->surfaceId, pal->surface);
-		pal->flags |= AG_HSVPAL_DIRTY;
 	} else if (pal->flags & AG_HSVPAL_DIRTY) {
 		RenderStatic(pal);
 		AG_WidgetUpdateSurface(pal, pal->surfaceId);
