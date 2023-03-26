@@ -265,9 +265,9 @@ typedef struct ag_widget {
 	                                    /* (TODO use a Variable) */
 
 	enum ag_widget_state state;         /* Style-effecting state */
-	Uint8 marginTop, marginRight;       /* Margin (px outside of border) */
-	Uint8 marginBottom, marginLeft;
-	int paddingTop, paddingRight;      /* Padding (px around contents) */
+	int marginTop, marginRight;         /* Margin (px outside of border) */
+	int marginBottom, marginLeft;
+	int paddingTop, paddingRight;       /* Padding (px around contents) */
 	int paddingBottom, paddingLeft;
 	Uint spacingHoriz, spacingVert;     /* Spacing (px between items) */
 

@@ -1631,18 +1631,16 @@ package Agar.Widget is
     Driver_Ops       : Driver_Class_Access;  -- Parent driver class
     Stylesheet       : System.Address;       -- TODO Alternate stylesheet
     State            : Widget_State;         -- Style-effecting state
-    Margin_Top       : Unsigned_8;           -- Margin top (px)
-    Margin_Right     : Unsigned_8;           -- Margin right (px)
-    Margin_Bottom    : Unsigned_8;           -- Margin bottom (px)
-    Margin_Left      : Unsigned_8;           -- Margin left (px)
-    Padding_Top      : C.unsigned;           -- Padding top (px)
-    Padding_Right    : C.unsigned;           -- Padding right (px)
-    Padding_Bottom   : C.unsigned;           -- Padding bottom (px)
-    Padding_Left     : C.unsigned;           -- Padding left (px)
-    Spacing_Top      : C.unsigned;           -- Spacing top (px)
-    Spacing_Right    : C.unsigned;           -- Spacing right (px)
-    Spacing_Bottom   : C.unsigned;           -- Spacing bottom (px)
-    Spacing_Left     : C.unsigned;           -- Spacing left (px)
+    Margin_Top       : C.int;                -- Margin top (px)
+    Margin_Right     : C.int;                -- Margin right (px)
+    Margin_Bottom    : C.int;                -- Margin bottom (px)
+    Margin_Left      : C.int;                -- Margin left (px)
+    Padding_Top      : C.int;                -- Padding top (px)
+    Padding_Right    : C.int;                -- Padding right (px)
+    Padding_Bottom   : C.int;                -- Padding bottom (px)
+    Padding_Left     : C.int;                -- Padding left (px)
+    Spacing_Horiz    : C.int;                -- Spacing top (px)
+    Spacing_Vert     : C.int;                -- Spacing right (px)
     Font             : System.Address;       -- Active font (TODO)
     Palette          : Widget_Palette;       -- Color palette
 #if HAVE_OPENGL
