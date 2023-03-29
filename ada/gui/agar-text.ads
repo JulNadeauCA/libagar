@@ -176,7 +176,12 @@ package Agar.Text is
     Name               : aliased Font_Name;          -- Font family
     Spec               : aliased Font_Spec;          -- Font specification
     Flags              : C.unsigned;                 -- Style/Weight/Wd.Variant
-    Family_Style_Count : C.unsigned;                 -- No. of styles in font's family
+                                                     -- Unicode coverage (OS/2 Charsets)
+    Unicode_Ranges1    : Interfaces.Unsigned_32;     -- Bits 0-31
+    Unicode_Ranges2    : Interfaces.Unsigned_32;     -- Bits 32-63
+    Unicode_Ranges3    : Interfaces.Unsigned_32;     -- Bits 64-95
+    Unicode_Ranges4    : Interfaces.Unsigned_32;     -- Bits 96-127
+    Family_Style_Count : C.unsigned;                 -- No of styles in family
     Family_Styles      : Font_Family_Style_Access;   -- Styles in font's family
     State_Flags        : C.unsigned;                 -- State flags
     Height             : C.int;                      -- Height (px)
@@ -185,6 +190,11 @@ package Agar.Text is
     Line_Skip          : C.int;                      -- Multiline y-increment (px)
     Underline_Pos      : C.int;                      -- Underline position
     Underline_Thick    : C.int;                      -- Underline thickness
+    Typo_Ascender      : C.int;                      -- Ascent from OS/2 header
+    Typo_Descender     : C.int;                      -- Descent from OS/2 header
+    Typo_Line_Gap      : C.int;                      -- Line Gap from OS/2 header
+    Win_Ascent         : C.int;                      -- usWinAscent from OS/2 header
+    Win_Descent        : C.int;                      -- usWinDescent from OS/2 header
     Access_Time        : C.unsigned;                 -- Access time (debug mode only)
     Entry_in_Fonts     : Font_Entry;                 -- Entry in global fonts list
   end record

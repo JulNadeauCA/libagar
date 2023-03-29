@@ -108,7 +108,7 @@ const char *agStyleDefault_Data =
 	"padding: 8 10 8 10;\n"
 	"}\n"
 	"AG_Statusbar {\n"
-	"font-family: charter;\n"
+	"font-family: Exo 2,Cousine,charter;\n"
 	"padding: 2;\n"
 	"spacing: 1;\n"
 	"}\n"
@@ -124,7 +124,7 @@ const char *agStyleDefault_Data =
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	2228,
+	2242,
 	&agStyleDefault_Data,
 	NULL
 };

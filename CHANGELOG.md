@@ -25,8 +25,18 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): New function `AG_PixelFormatMaximum()` to return the maximum possible pixel value for a given format.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): New function `AG_SurfaceBlend8()` for blending 1/2/4/8-bpp surfaces against an `AG_Color` using the closest approximation available.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Embed 4 general-purpose 16-bit guides. Guides are useful for typography, graphics and other applications.
+- [**AG_Text**](https://libagar.org/man3/AG_Text): Expand the list of standard font sizes to 32 sizes. Add fractional sizes between 7.0 and 13.0.
+- [**AG_Text**](https://libagar.org/man3/AG_Text): Expanded font adjustments to include subpixel alignment corrections for all 32 standard sizes. The table now covers over 150 popular open-source fonts. Adjustments allow different fonts to align with pixel-perfect accuracy.
+- [**AG_Text**](https://libagar.org/man3/AG_Text): Add OS/2 metrics and Unicode range information to the `AG_Font` structure.
+- [**AG_Text**](https://libagar.org/man3/AG_Text): Utilize OS/2 metrics `typoAscender` and `typoDescender` where available.
+- [**AG_Text**](https://libagar.org/man3/AG_Text): New macros `AGSI_IS_*(c)` for testing whether a character lies within a given Unicode range.
+- [**AG_Text**](https://libagar.org/man3/AG_Text): New macros `AG_FONT_HAS_*()` for testing the Unicode coverage of a font.
+- [**AG_Text**](https://libagar.org/man3/AG_Text): New structure `AG_UnicodeRange` and full table of Unicode ranges `agUnicodeRanges[]`.
+- [**AG_Text**](https://libagar.org/man3/AG_Text): New table `agUnicodeRangeFromOS2[]` for mapping OS/2 Unicode coverage bits to indexes into `agUnicodeRanges[]`.
+- [**AG_Text**](https://libagar.org/man3/AG_Text): New functions `AG_FontGetStandardSize()` and `AG_FontGetStandardSizeIndex()` for finding the standard point size closest to a given point size.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): The surface returned by `AG_TextRender()` now includes Ascent information under `Guide 0`.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): New function `AG_TextRenderRTL()` for rendering text right-to-left.
+- [**AG_Text**](https://libagar.org/man3/AG_Text): New function `AG_FetchFontFromList()` for loading the first available font from a comma-separated list.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): New functions `AG_FontGetStyleName()` and `AG_FontGetStyleByName()`. Convert between the `Uint` and string representations of font styles (including styles, weights and width variants).
 - [**AG_Text**](https://libagar.org/man3/AG_Text): New function `AG_FontGetFamilyStyles()`. Return an array of `AG_Font` style flags describing every style, weight and width variant available in a given font's family.
 - [**AG_Textbox**](https://libagar.org/man3/AG_Textbox) and [**AG_Editable**](https://libagar.org/man3/AG_Editable): Implement Undo/Redo functionality.
@@ -55,8 +65,8 @@ All notable changes to Agar will be documented in this file. The format is based
 - Install a copy of the generated Makefile.config as ${DATADIR}/agar.mk.
 - Install a copy of the generated configure.lua as ${DATADIR}/agar.lua.
 - Added `DEBUG_MOUSE` build option (debug delivery of mouse events to widgets).
-- Added graphical characters in the Miscellaneous Technical and Private Use Area (e.g., `AGSI_BLACK_AGAR` -> `U+E000 Agar Logo Filled`). Core Font slot #1 is now mapped to Algue and slot #2 is mapped to Unialgue.
 - Added Vim syntax files (under the `syntax/` directory) complete with all types and constants.
+- New bitmap fonts: `Agar Minimal` and `Agar Ideograms`.
 
 ### Removed
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Removed the `fn` argument from the `AG_SurfaceBlend*()` family of functions. Use separate routines to implement different blending arithmetic.
@@ -68,6 +78,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - Build system updates so configure scripts are smaller and no longer emit unnecessary defines such as `foo_cflags.h` for dependent libraries. Those definitions are always available from `${DATADIR}/agar.mk`.
 - Don't install headers from disabled libraries.
 - [**AG_Color**](https://libagar.org/man3/AG_Color): Handle `rgb16()` format in [AG_ColorFromString()](https://libagar.org/man3/AG_ColorFromString).
+- [**AG_FontSelector**](https://libagar.org/man3/AG_FontSelector): Add Unicode range information and more metrics under the "Metrics" tab.
 - [**AG_FontSelector**](https://libagar.org/man3/AG_FontSelector): The preview function now includes text in different scripts. It is now possible to set a user-defined preview function.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Event argument accessor macros of the form `AG_CONST_FOO_PTR()` are now defined as `AG_cFOO_PTR()`.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): In `AG_ObjectGenName()`, convert the prefix (class name) to lowercase in its entirety.

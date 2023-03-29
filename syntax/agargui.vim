@@ -194,7 +194,7 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_FONTSELECTOR_HFILL AG_FONTSELECTOR_VFILL
   syn keyword cConstant AG_FONTSELECTOR_EXPAND AG_FONTSELECTOR_BASELINE
   syn keyword cConstant AG_FONTSELECTOR_BOUNDING_BOX AG_FONTSELECTOR_CORRECTIONS
-  syn keyword cConstant AG_FONTSELECTOR_MORE_METRICS AG_FONTSELECTOR_CENTER_LINE
+  syn keyword cConstant AG_FONTSELECTOR_MORE_METRICS AG_FONTSELECTOR_MIDLINE
   " gui/font.h
   syn keyword cType AG_FontSpec AG_FontAdjustment AG_FontAlias AG_FontStyleName
   syn keyword cType AG_FontStyleSort AG_UnicodeRange

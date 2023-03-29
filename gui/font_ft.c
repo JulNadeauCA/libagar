@@ -59,6 +59,9 @@
 #include <agar/gui/text.h>
 #include <agar/gui/font_ft.h>
 #include <agar/gui/font_bf.h>
+#include <agar/gui/gui_math.h>
+
+#include <freetype/tttables.h>
 
 /* Handy routines for converting from fixed point */
 #undef  FT_FLOOR
@@ -136,9 +139,12 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 	AG_FontFt *fontFt = obj;
 	AG_Font *font = AGFONT(fontFt);
 	const AG_FontSpec *spec = &font->spec;
+	TT_OS2 *ttOS2;
+	const AG_FontAdjustment *fa;
 	FT_Error rv;
 	FT_Face face;
 	FT_Fixed scale;
+	int sizeIdx;
 
 	if (agFtInited == 0) {
 		if (InitFreeType() != 0)
@@ -181,6 +187,14 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 
 	face = fontFt->face;
 
+	ttOS2 = (TT_OS2 *)FT_Get_Sfnt_Table(face, FT_SFNT_OS2);
+	if (ttOS2 != NULL) {
+		font->uniRanges[0] = ttOS2->ulUnicodeRange1;
+		font->uniRanges[1] = ttOS2->ulUnicodeRange2;
+		font->uniRanges[2] = ttOS2->ulUnicodeRange3;
+		font->uniRanges[3] = ttOS2->ulUnicodeRange4;
+	}
+
 	/* Apply the tranformation matrix (if not identity). */
 	if (spec->matrix.xx != 1.0 || spec->matrix.yy != 1.0 ||
 	    spec->matrix.xy != 0.0 || spec->matrix.yx != 0.0) {
@@ -196,10 +210,7 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 		FT_Set_Transform(face, &m, &vec);
 	}
 
-	if (FT_IS_SCALABLE(face)) {
-		const AG_FontAdjustment *fa;
-		int adjRange;
-
+	if (FT_IS_SCALABLE(face)) {                        /* Scalable Font */
 		if ((rv = FT_Set_Char_Size(face, 0, spec->size*64, 0, 0)) != 0) {
 			AG_SetError("FT_Set_Char_Size failed: %x", rv);
 			goto fail_face;
@@ -207,28 +218,23 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 
 		scale = face->size->metrics.y_scale;
 
-		font->ascent = FT_CEIL(FT_MulFix(face->bbox.yMax, scale));
-		font->descent = FT_CEIL(FT_MulFix(face->bbox.yMin, scale));
-		font->height  = font->ascent - font->descent + 1;
+		if (ttOS2) {
+			font->typoAscender  = FT_CEIL(FT_MulFix(ttOS2->sTypoAscender, scale));
+			font->typoDescender = FT_CEIL(FT_MulFix(ttOS2->sTypoDescender, scale));
+			font->typoLineGap   = FT_CEIL(FT_MulFix(ttOS2->sTypoLineGap, scale));
+			font->usWinAscent   = FT_CEIL(FT_MulFix(ttOS2->usWinAscent, scale));
+			font->usWinDescent  = FT_CEIL(FT_MulFix(ttOS2->usWinDescent, scale));
+			font->ascent = font->typoAscender - font->typoDescender;
+		} else {
+			font->ascent = FT_CEIL(FT_MulFix(face->bbox.yMax, scale));
+		}
+		font->descent  = FT_CEIL(FT_MulFix(face->bbox.yMin, scale));
+		font->height   = font->ascent - font->descent + 1;
 		font->lineskip = FT_CEIL(FT_MulFix(face->height, scale));
 
 		font->underlinePos = FT_FLOOR(FT_MulFix(face->underline_position, scale));
 		font->underlineThk = FT_FLOOR(FT_MulFix(face->underline_thickness, scale));
-
-		/* Apply size range specific ascent adjustment */
-		if      (spec->size <= 10.4f) { adjRange = 0; }
-		else if (spec->size <= 14.0f) { adjRange = 1; }
-		else if (spec->size <= 21.0f) { adjRange = 2; }
-		else if (spec->size <= 23.8f) { adjRange = 3; }
-		else if (spec->size <= 35.0f) { adjRange = 4; }
-		else                          { adjRange = 5; }
-		for (fa = &agFontAdjustments[0]; fa->face != NULL; fa++) {
-			if (strcmp(OBJECT(font)->name, fa->face) == 0) {
-				font->ascent += fa->ascent_offset[adjRange];
-				break;
-			}
-		}
-	} else {                                       /* Non-scalable font */
+	} else {                                       /* Non-scalable Font */
 		Uint fixedSize = (Uint)spec->size;
 
 		if (fixedSize >= face->num_fixed_sizes) {
@@ -257,6 +263,15 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 	}
 	if (font->underlineThk < 1) {
 		font->underlineThk = 1;
+	}
+	
+	sizeIdx = AG_FontGetStandardSizeIndex(spec->size);
+	for (fa = &agFontAdjustments[0]; fa->face != NULL; fa++) {
+		if (Strcasecmp(OBJECT(font)->name, fa->face) != 0) {
+			continue;
+		}
+		font->ascent += fa->ascent_offset[sizeIdx];
+		break;
 	}
 	return (0);
 fail_face:
@@ -650,6 +665,7 @@ Render(const AG_Char *_Nonnull ucs, AG_Surface *_Nonnull S,
 			ch += ansi.len;
 			continue;
 		}
+
 		if (fontCur->spec.type == AG_FONT_FREETYPE) {
 			AG_GlyphFt *G;
 			int yOffset;

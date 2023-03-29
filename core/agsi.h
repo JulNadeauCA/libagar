@@ -211,8 +211,8 @@
 #define AGSI_LATIN_EXT_B_END                   0x24f
 #define AGSI_IPA_EXTENSIONS_BEGIN              0x250
 #define AGSI_IPA_EXTENSIONS_END                0x2af
-#define AGSI_SPACING_MODIFIER_LETTERS_BEGIN    0x2b0
-#define AGSI_SPACING_MODIFIER_LETTERS_END      0x2ff
+#define AGSI_SP_MOD_LETTERS_BEGIN              0x2b0 /* Spacing Modifier Letters */
+#define AGSI_SP_MOD_LETTERS_END                0x2ff
 #define AGSI_COMB_DIACRIT_MARKS_BEGIN          0x300 /* Combining Diacritical Marks */
 #define AGSI_COMB_DIACRIT_MARKS_END            0x36f
 #define AGSI_GREEK_AND_COPTIC_BEGIN            0x370
@@ -453,8 +453,8 @@
 #define AGSI_CYRILLIC_EXT_B_END                0xa69f
 #define AGSI_BAMUM_BEGIN                       0xa6a0
 #define AGSI_BAMUM_END                         0xa6ff
-#define AGSI_MODIFIER_TONE_LETTERS_BEGIN       0xa700
-#define AGSI_MODIFIER_TONE_LETTERS_END         0xa71f
+#define AGSI_MOD_TONE_LETTERS_BEGIN            0xa700  /* Modifier Tone Letters */
+#define AGSI_MOD_TONE_LETTERS_END              0xa71f
 #define AGSI_LATIN_EXT_D_BEGIN                 0xa720  /* Latin Extended D */
 #define AGSI_LATIN_EXT_D_END                   0xa7ff
 #define AGSI_SYLOTI_NAGRI_BEGIN                0xa800
@@ -1772,26 +1772,23 @@
 #define AGSI_SHUFFLE               "\xEE\x82\x9F" /* U+E09F Shuffle */
 #define AGSI_AGARIDEO_END 0xE09F
 
+#define AGSI_IS_ALPHA_PRES_FORM(c) \
+    ((c) >= AGSI_ALPHA_PRES_FORMS_BEGIN && (c) <= AGSI_ALPHA_PRES_FORMS_END)
+
 #define AGSI_IS_ARABIC(c) \
     (((c) >= AGSI_ARABIC_BEGIN       && (c) <= AGSI_ARABIC_END) || \
      ((c) >= AGSI_ARABIC_SUPPL_BEGIN && (c) <= AGSI_ARABIC_SUPPL_END) || \
      ((c) >= AGSI_ARABIC_EXT_A_BEGIN && (c) <= AGSI_ARABIC_EXT_A_END) || \
-     ((c) >= AGSI_ARABIC_EXT_B_BEGIN && (c) <= AGSI_ARABIC_EXT_B_END))
+     ((c) >= AGSI_ARABIC_EXT_B_BEGIN && (c) <= AGSI_ARABIC_EXT_B_END) || \
+     ((c) >= AGSI_ARABIC_PRES_FORMS_A_BEGIN && (c) <= AGSI_ARABIC_PRES_FORMS_A_END) || \
+     ((c) >= AGSI_ARABIC_PRES_FORMS_B_BEGIN && (c) <= AGSI_ARABIC_PRES_FORMS_B_END) || \
+     ((c) >= AGSI_ARABIC_MATH_ALPHABETIC_SYM_BEGIN && (c) <= AGSI_ARABIC_MATH_ALPHABETIC_SYM_END))
 
 #define AGSI_IS_ARMENIAN(c) \
-    (((c) >= AGSI_ARMENIAN_BEGIN && (c) <= AGSI_ARMENIAN_END))
+     ((c) >= AGSI_ARMENIAN_BEGIN && (c) <= AGSI_ARMENIAN_END)
 
 #define AGSI_IS_BASIC_LATIN(c) \
      ((c) >= AGSI_BASIC_LATIN_BEGIN && (c) <= AGSI_BASIC_LATIN_END)
-
-#define AGSI_IS_INDIC(c) \
-    (((c) >= AGSI_DEVANAGARI_BEGIN       && (c) <= AGSI_MYANMAR_END) || \
-    (((c) >= AGSI_VEDIC_EXTENSIONS_BEGIN && (c) <= AGSI_VEDIC_EXTENSIONS_END) || \
-    (((c) >= AGSI_SYLOTI_NAGRI_BEGIN     && (c) <= AGSI_KAYAH_LI_END) || \
-    (((c) >= AGSI_MYANMAR_EXT_B_BEGIN    && (c) <= AGSI_MYANMAR_EXT_B_END) || \
-    (((c) >= AGSI_MYANMAR_EXT_A_BEGIN    && (c) <= AGSI_MYANMAR_EXT_A_END) || \
-    (((c) >= AGSI_TAI_VIET_BEGIN         && (c) <= AGSI_MEETEI_MAYEK_EXTENSIONS_END) || \
-    (((c) >= AGSI_MEETEI_MAYEK_BEGIN     && (c) <= AGSI_MEETEI_MAYEK_END))
 
 #define AGSI_IS_CJK(c) \
     (((c) >= AGSI_CJK_RADICALS_SUPPL_BEGIN   && (c) <= AGSI_LISU_END) || \
@@ -1809,10 +1806,14 @@
 
 #define AGSI_IS_CYRILLIC(c) \
     (((c) >= AGSI_CYRILLIC_BEGIN       && (c) <= AGSI_CYRILLIC_END) || \
-    (((c) >= AGSI_CYRILLIC_SUPPL_BEGIN && (c) <= AGSI_CYRILLIC_SUPPL_END) || \
-    (((c) >= AGSI_CYRILLIC_EXT_C_BEGIN && (c) <= AGSI_CYRILLIC_EXT_C_END) || \
-    (((c) >= AGSI_CYRILLIC_EXT_A_BEGIN && (c) <= AGSI_CYRILLIC_EXT_A_END) || \
-    (((c) >= AGSI_CYRILLIC_EXT_B_BEGIN && (c) <= AGSI_CYRILLIC_EXT_B_END))
+     ((c) >= AGSI_CYRILLIC_SUPPL_BEGIN && (c) <= AGSI_CYRILLIC_SUPPL_END) || \
+     ((c) >= AGSI_CYRILLIC_EXT_C_BEGIN && (c) <= AGSI_CYRILLIC_EXT_C_END) || \
+     ((c) >= AGSI_CYRILLIC_EXT_A_BEGIN && (c) <= AGSI_CYRILLIC_EXT_A_END) || \
+     ((c) >= AGSI_CYRILLIC_EXT_B_BEGIN && (c) <= AGSI_CYRILLIC_EXT_B_END))
+
+#define AGSI_IS_DEVANAGARI(c) \
+    (((c) >= AGSI_DEVANAGARI_BEGIN     && (c) <= AGSI_DEVANAGARI_END) || \
+     ((c) >= AGSI_DEVANAGARI_EXT_BEGIN && (c) <= AGSI_DEVANAGARI_EXT_END))
 
 #define AGSI_IS_ETHIOPIC(c) \
     (((c) >= AGSI_ETHIOPIC_BEGIN && (c) <= AGSI_ETHIOPIC_SUPPL_END) || \
@@ -1841,17 +1842,90 @@
     (((c) >= AGSI_GREEK_AND_COPTIC_BEGIN && (c) <= AGSI_GREEK_AND_COPTIC_END) || \
      ((c) >= AGSI_GREEK_EXT_BEGIN        && (c) <= AGSI_GREEK_EXT_END))
 
+#define AGSI_IS_GUJARATI(c) \
+     ((c) >= AGSI_GUJARATI_BEGIN && (c) <= AGSI_GUJARATI_END)
+
+#define AGSI_IS_GURMUKHI(c) \
+     ((c) >= AGSI_GURMUKHI_BEGIN && (c) <= AGSI_GURMUKHI_END)
+
+#define AGSI_IS_HEBREW(c) \
+     ((c) >= AGSI_HEBREW_BEGIN && (c) <= AGSI_HEBREW_END)
+
+#define AGSI_IS_INDIC(c) \
+    (((c) >= AGSI_DEVANAGARI_BEGIN       && (c) <= AGSI_MYANMAR_END) || \
+     ((c) >= AGSI_VEDIC_EXTENSIONS_BEGIN && (c) <= AGSI_VEDIC_EXTENSIONS_END) || \
+     ((c) >= AGSI_SYLOTI_NAGRI_BEGIN     && (c) <= AGSI_KAYAH_LI_END) || \
+     ((c) >= AGSI_MYANMAR_EXT_B_BEGIN    && (c) <= AGSI_MYANMAR_EXT_B_END) || \
+     ((c) >= AGSI_MYANMAR_EXT_A_BEGIN    && (c) <= AGSI_MYANMAR_EXT_A_END) || \
+     ((c) >= AGSI_TAI_VIET_BEGIN         && (c) <= AGSI_MEETEI_MAYEK_EXTENSIONS_END) || \
+     ((c) >= AGSI_MEETEI_MAYEK_BEGIN     && (c) <= AGSI_MEETEI_MAYEK_END))
+
+#define AGSI_IS_IPA_EXTENSION(c) \
+     ((c) >= AGSI_IPA_EXTENSIONS_BEGIN && (c) <= AGSI_IPA_EXTENSIONS_END)
+
+#define AGSI_IS_IPA_OR_PHONETIC_EXT(c) \
+     (AGSI_IS_IPA_EXTENSION(c) || AGSI_IS_PHONETIC_EXTENSION(c))
+
 #define AGSI_IS_LATIN1(c) \
      ((c) >= AGSI_BASIC_LATIN_BEGIN && (c) <= AGSI_LATIN_EXT_B_END)
 
+#define AGSI_IS_LATIN1_SUPPL(c) \
+     ((c) >= AGSI_LATIN1_SUPPL_BEGIN && (c) <= AGSI_LATIN1_SUPPL_END)
+
+#define AGSI_IS_LATIN_EXT_A(c) \
+     ((c) >= AGSI_LATIN_EXT_A_BEGIN && (c) <= AGSI_LATIN_EXT_A_END)
+
+#define AGSI_IS_LATIN_EXT_B(c) \
+     ((c) >= AGSI_LATIN_EXT_B_BEGIN && (c) <= AGSI_LATIN_EXT_B_END)
+
+#define AGSI_IS_LATIN_EXT_ADD_CD(c) \
+    (((c) >= AGSI_LATIN_EXT_ADDITIONAL_BEGIN && (c) <= AGSI_LATIN_EXT_ADDITIONAL_END) || \
+     ((c) >= AGSI_LATIN_EXT_C_BEGIN && (c) <= AGSI_LATIN_EXT_C_END) || \
+     ((c) >= AGSI_LATIN_EXT_D_BEGIN && (c) <= AGSI_LATIN_EXT_D_END))
+
+#define AGSI_IS_LATIN_EXT_ADD_CDEFG(c) \
+    (((c) >= AGSI_LATIN_EXT_ADDITIONAL_BEGIN && (c) <= AGSI_LATIN_EXT_ADDITIONAL_END) || \
+     ((c) >= AGSI_LATIN_EXT_C_BEGIN && (c) <= AGSI_LATIN_EXT_C_END) || \
+     ((c) >= AGSI_LATIN_EXT_D_BEGIN && (c) <= AGSI_LATIN_EXT_D_END) || \
+     ((c) >= AGSI_LATIN_EXT_E_BEGIN && (c) <= AGSI_LATIN_EXT_E_END) || \
+     ((c) >= AGSI_LATIN_EXT_F_BEGIN && (c) <= AGSI_LATIN_EXT_F_END) || \
+     ((c) >= AGSI_LATIN_EXT_G_BEGIN && (c) <= AGSI_LATIN_EXT_G_END))
+
 #define AGSI_IS_LATIN(c) \
-     (AGSI_IS_LATIN1(c) || \
-      ((c) >= AGSI_LATIN_EXT_ADDITIONAL_BEGIN && (c) <= AGSI_LATIN_EXT_ADDITIONAL_END) || \
-      ((c) >= AGSI_LATIN_EXT_C_BEGIN && (c) <= AGSI_LATIN_EXT_C_END) || \
-      ((c) >= AGSI_LATIN_EXT_D_BEGIN && (c) <= AGSI_LATIN_EXT_D_END) || \
-      ((c) >= AGSI_LATIN_EXT_E_BEGIN && (c) <= AGSI_LATIN_EXT_E_END) || \
-      ((c) >= AGSI_LATIN_EXT_F_BEGIN && (c) <= AGSI_LATIN_EXT_F_END) || \
-      ((c) >= AGSI_LATIN_EXT_G_BEGIN && (c) <= AGSI_LATIN_EXT_G_END))
+    (AGSI_IS_LATIN1(c) || AGSI_IS_LATIN_EXT_ADD_CDEFG(c))
+
+#define AGSI_IS_LAO(c) \
+     ((c) >= AGSI_LAO_BEGIN && (c) <= AGSI_LAO_END)
+
+#define AGSI_IS_LISU(c) \
+    (((c) >= AGSI_LISU_BEGIN && (c) <= AGSI_LISU_END) || \
+     ((c) >= AGSI_LISU_SUPPL_BEGIN && (c) <= AGSI_LISU_SUPPL_END))
+
+#define AGSI_IS_MOD_TONE_LETTER(c) \
+     ((c) >= AGSI_MOD_TONE_LETTERS_BEGIN && (c) <= AGSI_MOD_TONE_LETTERS_END)
+
+#define AGSI_IS_NKO(c) \
+     ((c) >= AGSI_NKO_BEGIN && (c) <= AGSI_NKO_END)
+
+#define AGSI_IS_OGHAM(c) \
+     ((c) >= AGSI_OGHAM_BEGIN && (c) <= AGSI_OGHAM_END)
+
+#define AGSI_IS_OLD_ITALIC(c) \
+     ((c) >= AGSI_OLD_ITALIC_BEGIN && (c) <= AGSI_OLD_ITALIC_END)
+
+#define AGSI_IS_PHONETIC_EXTENSION(c) \
+     ((c) >= AGSI_PHONETIC_EXTENSIONS_BEGIN && (c) <= AGSI_PHONETIC_EXTENSIONS_END)
+
+#define AGSI_IS_PRIVATE_USE(c) \
+    (((c) >= AGSI_PRIVATE_USE_AREA_BEGIN         && (c) <= AGSI_PRIVATE_USE_AREA_END) || \
+     ((c) >= AGSI_SUPPL_PRIVATE_USE_AREA_A_BEGIN && (c) <= AGSI_SUPPL_PRIVATE_USE_AREA_A_END) || \
+     ((c) >= AGSI_SUPPL_PRIVATE_USE_AREA_B_BEGIN && (c) <= AGSI_SUPPL_PRIVATE_USE_AREA_B_END))
+
+#define AGSI_IS_SP_MOD_LETTER(c) \
+     ((c) >= AGSI_SP_MOD_LETTERS_BEGIN && (c) <= AGSI_SP_MOD_LETTERS_END)
+
+#define AGSI_IS_SP_MOD_OR_MOD_TONE_LETTER(c) \
+     (AGSI_IS_SP_MOD_LETTER(c) || AGSI_IS_MOD_TONE_LETTER(c))
 
 #define AGSI_IS_SUNDANESE(c) \
     (((c) >= AGSI_SUNDANESE_BEGIN       && (c) <= AGSI_SUNDANESE_END) || \
@@ -1860,4 +1934,20 @@
 #define AGSI_IS_SYRIAC(c) \
     (((c) >= AGSI_SYRIAC_BEGIN       && (c) <= AGSI_SYRIAC_END) || \
      ((c) >= AGSI_SYRIAC_SUPPL_BEGIN && (c) <= AGSI_SYRIAC_SUPPL_END))
+
+#define AGSI_IS_TAMIL(c) \
+    (((c) >= AGSI_TAMIL_BEGIN       && (c) <= AGSI_TAMIL_END) || \
+     ((c) >= AGSI_TAMIL_SUPPL_BEGIN && (c) <= AGSI_TAMIL_SUPPL_END))
+
+#define AGSI_IS_THAI(c) \
+     ((c) >= AGSI_THAI_BEGIN && (c) <= AGSI_THAI_END)
+
+#define AGSI_IS_TIBETAN(c) \
+     ((c) >= AGSI_TIBETAN_BEGIN && (c) <= AGSI_TIBETAN_END)
+
+#define AGSI_IS_TIFINAGH(c) \
+     ((c) >= AGSI_TIFINAGH_BEGIN && (c) <= AGSI_TIFINAGH_END)
+
+#define AGSI_IS_UNI_CA_ABORIG_SYLL(c) \
+     ((c) >= AGSI_UNI_CA_ABORIG_SYLL_BEGIN && (c) <= AGSI_UNI_CA_ABORIG_SYLL_END)
 

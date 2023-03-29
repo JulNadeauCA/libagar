@@ -135,23 +135,23 @@ AG_Color agTextColorANSI[] = {
 
 /* Core fonts provided with Agar */
 const char *agCoreFonts[] = {
-	"algue",             /*  #1 Algue (default font; built-in) */
-	"unialgue",          /*  #2 Unialgue (default font w/ extended Unicode) */
-	"agar-minimal",      /*  #3 Agar Minimal (our bitmap font) */
-	"agar-ideograms",    /*  #4 Agar Ideograms (our graphical icons) */
-	"monoalgue",         /*  #5 Monoalgue (a monospace sans-serif) */
-	"charter",           /*  #6 Bitstream Charter (a transitional serif font) */
-	"Noto Serif CJK SC", /*  #7 Noto Serif CJK SC (a pan-CJK serif font) */
-	"Noto Sans CJK SC",  /*  #8 Noto Sans CJK SC (a pan-CJK sans font) */
-	"league-spartan",    /*  #9 League Spartan (a geometric sans-serif) */
-	"league-gothic",     /* #10 League Gothic (a condensable Gothic font) */
-	"fraktur",           /* #11 Unifraktur Maguntia (a Fraktur font) */
-	"algue",             /* #12 (unused) */
-	"algue",             /* #13 (unused) */
-	"algue",             /* #14 (unused) */
-	"algue",             /* #15 (unused) */
-	"algue",             /* #16 (unused) */
-	"algue",             /* #17 (unused) */
+	"algue",               /*  #1 Algue (default font; built-in) */
+	"unialgue",            /*  #2 Unialgue (default font w/ extended Unicode) */
+	"agar-minimal",        /*  #3 Agar Minimal (our bitmap font) */
+	"agar-ideograms",      /*  #4 Agar Ideograms (our graphical icons) */
+	"monoalgue",           /*  #5 Monoalgue (a monospace sans-serif) */
+	"charter",             /*  #6 Bitstream Charter (a transitional serif font) */
+	"Noto Serif CJK SC",   /*  #7 CJK font (serif) */
+	"Noto Sans CJK SC",    /*  #8 CJK font (sans-serif) */
+	"league-spartan",      /*  #9 League Spartan (a geometric sans-serif) */
+	"league-gothic",       /* #10 League Gothic (a condensable Gothic font) */
+	"fraktur",             /* #11 Unifraktur Maguntia (a Fraktur font) */
+	"algue",               /* #12 Arabic */
+	"algue",               /* #13 Armenian */
+	"algue",               /* #14 Ethiopic */
+	"algue",               /* #15 Georgian */
+	"algue",               /* #16 Syriac (and Arabic) */
+	"algue",               /* #17 (unused) */
 	NULL
 };
 

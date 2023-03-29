@@ -332,6 +332,9 @@ structure on demand only if a modification occurs).
 .Fn AG_FetchFont "const char *face" "float size" "Uint flags"
 .Pp
 .Ft "AG_Font *"
+.Fn AG_FetchFontFromList "const char *faceList" "float size" "Uint flags"
+.Pp
+.Ft "AG_Font *"
 .Fn AG_SetDefaultFont "AG_Font *font"
 .Pp
 .Ft void
@@ -415,8 +418,15 @@ uses the
 .Xr AG_Config 3
 defaults.
 .Fn AG_FetchFont
-returns a pointer to the font object and increments its reference count.
+returns a pointer to the loaded font object in cache.
 If the font cannot be loaded, it returns NULL.
+.Pp
+The
+.Fn AG_FetchFontFromList
+function is a variant of
+.Fn AG_FetchFont
+which accepts a comma-separated list of font faces and returns the first
+font from the list which can be found and loaded successfully.
 .Pp
 .Fn AG_SetDefaultFont
 sets the specified font object as the default font.

@@ -543,7 +543,7 @@ Init(void *_Nonnull obj)
 	                           sizeof(AG_DriverClass *) +     /* drvOps */
 	                           sizeof(AG_StyleSheet *) +      /* css */
 	                           sizeof(enum ag_widget_state) + /* state */
-	                           sizeof(Uint8)*4 +              /* margin */
+	                           sizeof(int)*4 +                /* margin */
 	                           sizeof(int)*4 +                /* padding */
 	                           sizeof(Uint)*2);               /* spacing */
 
@@ -2322,22 +2322,10 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 		AG_PostEvent(wid, "palette-changed", NULL);
 
 	if (wid->flags & AG_WIDGET_USE_TEXT) {    /* Load any fonts required */
-		char *pFace = fontFace, *tok;
-		AG_Font *fontNew = NULL;
+		AG_Font *fontNew;
 
-		while ((tok = AG_Strsep(&pFace, ",")) != NULL) {
-			if ((fontNew = AG_FetchFont(fontFace, fontSize,
-			                            fontFlags)) != NULL)
-				break;
-		}
-		if (fontNew == NULL) {
-			fontNew = AG_FetchFont(NULL, fontSize, fontFlags);
-			if (fontNew == NULL)
-				AG_Debug(wid, "FetchFont: %s\n", AG_GetError());
-		}
-		if (fontNew && wid->font != fontNew) {
-			AG_OBJECT_ISA(fontNew, "AG_Font:*");
-
+		fontNew = AG_FetchFontFromList(fontFace, fontSize, fontFlags);
+		if (wid->font != fontNew) {
 			wid->font = fontNew;
 
 			AG_PushTextState();
@@ -2361,10 +2349,11 @@ static void
 Apply_Font_Size(float *fontSize, float parentFontSize, const char *spec)
 {
 	char *ep;
-	double v;
+	float v, pts;
 
-	v = strtod(spec, &ep);
-	*fontSize = (float)((*ep == '%') ? parentFontSize*(v/100.0) : v);
+	v = (float)strtod(spec, &ep);
+	pts = ((*ep == '%') ? parentFontSize * (v / 100.0f) : v);
+	*fontSize = AG_FontGetStandardSize(pts);
 }
 
 static void

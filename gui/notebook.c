@@ -396,7 +396,7 @@ AG_NotebookAdd(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 	AG_ObjectLock(nb);
 
 	if (label && label[0] != '\0') {
-		tab->lbl = AG_LabelNew(nb, 0, " %s ", label);
+		tab->lbl = AG_LabelNew(nb, AG_LABEL_EXPAND, " %s ", label);
 		AG_SetPadding(tab->lbl, "5 10 5 10");             /* TODO E>F */
 	} else {
 		tab->lbl = NULL;

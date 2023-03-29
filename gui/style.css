@@ -107,7 +107,7 @@ AG_Separator {
 	padding: 8 10 8 10;
 }
 AG_Statusbar {
-	font-family: charter;
+	font-family: Exo 2,Cousine,charter;
 	padding: 2;
 	spacing: 1;
 }

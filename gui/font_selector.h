@@ -28,8 +28,10 @@ typedef struct ag_font_selector {
 #define AG_FONTSELECTOR_HFILL          0x0100
 #define AG_FONTSELECTOR_VFILL          0x0200
 #define AG_FONTSELECTOR_BOUNDING_BOX   0x0400  /* Show bounding box lines */
-#define AG_FONTSELECTOR_BASELINE       0x0800  /* Show effective baseline */
+                                    /* 0x0800 */
 #define AG_FONTSELECTOR_CORRECTIONS    0x1000  /* Show baseline corrections */
+#define AG_FONTSELECTOR_MORE_METRICS   0x2000  /* Show extra metrics */
+#define AG_FONTSELECTOR_MIDLINE        0x4000  /* Show reference middle line */
 #define AG_FONTSELECTOR_EXPAND        (AG_FONTSELECTOR_HFILL | AG_FONTSELECTOR_VFILL)
 
 	char curFace[AG_OBJECT_NAME_MAX];       /* Current font face */
@@ -37,10 +39,11 @@ typedef struct ag_font_selector {
 	int  sPreview;                          /* Preview surface */
 	float curSize;                          /* Current size (pts) */
 	Uint32 _pad1;
-	AG_Pane *_Nonnull  hPane;               /* Base container */
-	AG_Pane *_Nonnull  hPane2;              /* Right horizontal container */
+	AG_Pane *_Nonnull   paneFam;            /* Between families and styles */
+	AG_Pane *_Nonnull   paneSz;             /* Between styles and sizes */
 	AG_Tlist *_Nonnull tlFaces;             /* List of font faces */
 	AG_Tlist *_Nonnull tlStyles;            /* List of font styles */
+	AG_Tlist *_Nonnull tlRanges;            /* List of Unicode ranges */
 	AG_Tlist *_Nonnull tlSizes;             /* List of standard sizes */
 	AG_HSVPal *_Nonnull pal;                /* Preview color picker */
 	AG_Label *_Nonnull lblMetrics;          /* Metrics information label */

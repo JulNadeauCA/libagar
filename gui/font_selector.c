@@ -37,6 +37,7 @@
 #include <agar/gui/notebook.h>
 #include <agar/gui/checkbox.h>
 #include <agar/gui/separator.h>
+#include <agar/gui/gui_math.h>
 
 #include <string.h>
 
@@ -107,6 +108,7 @@ UpdateStyles(AG_FontSelector *_Nonnull fs, AG_Font *_Nonnull font)
 	int i, selectionFound = 0;
 
 	AG_TlistClear(tl);
+	tl->rOffs = 0;
 
 	/* Find the style combinations available under this font family. */
 	AG_FontGetFamilyStyles(font);
@@ -152,24 +154,57 @@ UpdateStyles(AG_FontSelector *_Nonnull fs, AG_Font *_Nonnull font)
 	}
 }
 
+/* Update the Unicode ranges. */
+static void
+UpdateRanges(AG_FontSelector *_Nonnull fs, AG_Font *_Nonnull font)
+{
+	AG_Tlist *tl = fs->tlRanges;
+	int j, i, k;
+
+	AG_TlistClear(tl);
+	tl->rOffs = 0;
+
+	for (j = 0; j < 4; j++) {
+		const Uint32 range = font->uniRanges[j];
+
+		for (i = 0; i < 32; i++) {
+			if ((range >> i) & 1) {
+				const int idx = (j << 5) + i;
+				int rangeIdx;
+
+				for (k = 0; ; k++) {
+					rangeIdx = agUnicodeRangeFromOS2[idx][k];
+					if (rangeIdx == -1) {
+						break;
+					}
+					AG_TlistAddS(tl, NULL,
+					    _(agUnicodeRanges[rangeIdx].name));
+				}
+			}
+		}
+	}
+
+}
+
 /* Update the list of standard sizes for a given font family. */
 static void
 UpdateSizes(AG_FontSelector *_Nonnull fs, AG_Font *_Nullable font)
 {
 	AG_Tlist *tl = fs->tlSizes;
-	const int stdSizes[] = { 4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
-	                         22,24,26,28,32,48,64 };
-	const int nStdSizes = sizeof(stdSizes) / sizeof(stdSizes[0]);
+	const int nStdSizes = sizeof(agFontStdSizes) / sizeof(int);
 	int i;
 
 	AG_TlistClear(tl);
+	tl->rOffs = 0;
 
-	/* XXX TODO */
 	for (i = 0; i < nStdSizes; i++) {
 		AG_TlistItem *ti;
 
-		ti = AG_TlistAdd(tl, NULL, "%d", stdSizes[i]);
-		if (font != NULL && stdSizes[i] == font->spec.size)
+		ti = AG_TlistAdd(tl, NULL,
+		    (i==4 || i==6 || i==8 || i==10 || i==12 || i==14) ?
+		    "%.1f" : "%.0f", agFontStdSizes[i]);
+		if (font != NULL &&
+		    Fabs(agFontStdSizes[i] - font->spec.size) < AG_FONT_PTS_EPSILON)
 			ti->selected++;
 	}
 }
@@ -182,7 +217,7 @@ UpdatePreview(AG_FontSelector *_Nonnull fs, AG_Font *_Nullable fontNew)
 	AG_Variable *Vfont;
 	AG_Font **pFont, *font;
 	float pts;
-	int adjRange;
+	int sizeIdx;
 
 	if (fs->sPreview != -1) {
 		AG_WidgetUnmapSurface(fs, fs->sPreview);
@@ -197,12 +232,7 @@ UpdatePreview(AG_FontSelector *_Nonnull fs, AG_Font *_Nullable fontNew)
 	}
 
 	pts = font->spec.size;
-	if      (pts <= 10.4f) { adjRange = 0; }
-	else if (pts <= 14.0f) { adjRange = 1; }
-	else if (pts <= 21.0f) { adjRange = 2; }
-	else if (pts <= 23.8f) { adjRange = 3; }
-	else if (pts <= 35.0f) { adjRange = 4; }
-	else                   { adjRange = 5; }
+	sizeIdx = AG_FontGetStandardSizeIndex(pts);
 
 	for (fa = &agFontAdjustments[0]; fa->face != NULL; fa++) {
 		if (Strcasecmp(OBJECT(font)->name, fa->face) == 0)
@@ -210,22 +240,34 @@ UpdatePreview(AG_FontSelector *_Nonnull fs, AG_Font *_Nullable fontNew)
 	}
 	if (fa->face != NULL) {
 		AG_LabelText(fs->lblMetrics,
-		    "Size: " AGSI_BOLD "%.01f" AGSI_RST " pts\n"
-		    "Ascent: " AGSI_BOLD "%d" AGSI_RST " px\n"
-		    "Descent: " AGSI_BOLD "%d" AGSI_RST " px\n"
-		    "Line Skip: " AGSI_BOLD "%d" AGSI_RST " px\n\n"
-		    "Adjustment: #%d\n"
-		    "Scaling Adj: " AGSI_BOLD "%.01f" AGSI_RST "\n"
-		    "Ascent Adj: " AGSI_BOLD "%+d" AGSI_RST "\n",
-		    pts, font->ascent, font->descent, font->lineskip, adjRange,
-		    fa->size_factor, fa->ascent_offset[adjRange]);
+		    _("Size: " AGSI_BOLD "%.01f" AGSI_RST " pts\n"
+		      "Ascent: " AGSI_BOLD "%d" AGSI_RST " px\n"
+		      "Descent: " AGSI_BOLD "%d" AGSI_RST " px\n"
+		      "Line Skip: " AGSI_BOLD "%d" AGSI_RST " px\n\n"
+		      "Adjustment: #%d\n"
+		      "Scaling Adj: " AGSI_BOLD "%.01f" AGSI_RST "\n"
+		      "Ascent Adj: " AGSI_BOLD "%+d" AGSI_RST "\n\n"),
+		    pts, font->ascent, font->descent, font->lineskip, sizeIdx,
+		    fa->size_factor, fa->ascent_offset[sizeIdx]);
 	} else {
 		AG_LabelText(fs->lblMetrics,
-		    "Size: " AGSI_BOLD "%.01f" AGSI_RST " pts\n"
-		    "Ascent: " AGSI_BOLD "%d" AGSI_RST " px\n"
-		    "Descent: " AGSI_BOLD "%d" AGSI_RST " px\n"
-		    "Line Skip: " AGSI_BOLD "%d" AGSI_RST " px\n",
+		    _("Size: " AGSI_BOLD "%.01f" AGSI_RST " pts\n"
+		      "Ascent: " AGSI_BOLD "%d" AGSI_RST " px\n"
+		      "Descent: " AGSI_BOLD "%d" AGSI_RST " px\n"
+		      "Line Skip: " AGSI_BOLD "%d" AGSI_RST " px\n\n"),
 		    pts, font->ascent, font->descent, font->lineskip);
+	}
+
+	if (fs->flags & AG_FONTSELECTOR_MORE_METRICS) {
+		AG_LabelAppend(fs->lblMetrics,
+		    _("OS/2 Metrics:\nTasc=" AGSI_BOLD "%d" AGSI_RST ", "
+		      "Tdsc=" AGSI_BOLD "%d" AGSI_RST "\n"
+		      "Wasc=" AGSI_BOLD "%d" AGSI_RST ", "
+		      "Wdsc=" AGSI_BOLD "%d" AGSI_RST "\n"
+		      "LineGap=" AGSI_BOLD "%d" AGSI_RST "\n"),
+		     font->typoAscender, font->typoDescender,
+		     font->usWinAscent, font->usWinDescent,
+		     font->typoLineGap);
 	}
 
 	if (fontNew == NULL)
@@ -406,7 +448,6 @@ OnShow(AG_Event *_Nonnull event)
 		} else {
 			AG_TlistSelectText(tlFaces, agDefaultFont->name);
 		}
-		AG_TlistScrollToSelection(tlFaces);
 	}
 
 	cmpFnOrig = AG_TlistSetCompareFn(tlFaces, AG_TlistCompareStrings);
@@ -417,6 +458,9 @@ OnShow(AG_Event *_Nonnull event)
 
 	UpdateSizes(fs, font);
 	UpdatePreview(fs, font);
+
+	AG_TlistScrollToSelection(tlFaces);
+	AG_TlistScrollToSelection(fs->tlSizes);
 
 	AG_UnlockVariable(Vfont);
 }
@@ -432,6 +476,7 @@ SelectedFace(AG_Event *_Nonnull event)
 
 	if ((font = LoadFont(fs)) != NULL) {
 		UpdateStyles(fs, font);
+		UpdateRanges(fs, font);
 		UpdatePreview(fs, font);
 	}
 }
@@ -503,6 +548,7 @@ EditBgFgColor(AG_Event *_Nonnull event)
 		return;
 	}
 	AG_BindPointer(fs->pal, "agcolor", c);
+	AG_Redraw(fs->pal);
 	AG_ButtonToggle(btnOther);
 }
 
@@ -555,6 +601,79 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 			    "\xD5\xA3" "\xD5\xA1" "\xD5\xAC" "\xD5\xB8"
 			    "\xD6\x82" "\xD5\xBD" "\xD5\xBF" AGSI_ALGUE " !");
 		}
+	} else if (AG_Strcasestr(font->name, "Bengali")) {
+		/*
+		 * Bangla (Bengali)
+		 */
+		S = AG_TextRender(
+		    "\xE0\xA6\xAC" "\xE0\xA6\xBE" "\xE0\xA6\x82"
+		    "\xE0\xA6\xB2" "\xE0\xA6\xBE");
+
+	} else if (AG_Strcasestr(font->name, "Gujarati")) {
+		/*
+		 * Gujarati
+		 */
+		S = AG_TextRender(
+		    "\xE0\xAA\x97" "\xE0\xAA\x81" "\xE0\xAA\x9C" 
+		    "\xE0\xAA\xB0" "\xE0\xAA\xBE" "\xE0\xAA\xA4"  
+		    "\xE0\xAB\x80");
+
+	} else if (AG_Strcasestr(font->name, "Hindi")) {
+		/*
+		 * Hindi
+		 */
+		S = AG_TextRender(
+		    "\xE0\xA4\xB9" "\xE0\xA4\xBF" "\xE0\xA4\xA8" "\xE0\xA5\x8D" 
+		    "\xE0\xA4\xA6" "\xE0\xA5\x80");
+
+	} else if (AG_Strcasestr(font->name, "Kannada")) {
+		/*
+		 * Kannada
+		 */
+		S = AG_TextRender(
+		    "\xE0\xB2\x95" "\xE0\xB2\xA8" "\xE0\xB3\x8D" "\xE0\xB2\xA8"
+		    "\xE0\xB2\xA1");
+
+	} else if (AG_Strcasestr(font->name, "Malayalam")) {
+		/*
+		 * Malayalam
+		 */
+		S = AG_TextRender(
+		    "\xE0\xB4\xAE" "\xE0\xB4\xB2" "\xE0\xB4\xAF" "\xE0\xB4\xBE" 
+		    "\xE0\xB4\xB3" "\xE0\xB4\x82");
+
+	} else if (AG_Strcasestr(font->name, "Oriya")) {
+		/*
+		 * Odia (Oriya)
+		 */
+		S = AG_TextRender(
+		    "\xE0\xAC\x93" "\xE0\xAC\xA1" "\xE0\xAC\xBC" "\xE0\xAC\xBF" 
+		    "\xE0\xAC\x86");
+
+	} else if (AG_Strcasestr(font->name, "Punjabi")) {
+		/*
+		 * Punjabi
+		 */
+		S = AG_TextRender(
+		    "\xE0\xA8\xAA" "\xE0\xA9\xB0" "\xE0\xA8\x9C"
+		    "\xE0\xA8\xBE" "\xE0\xA8\xAC" "\xE0\xA9\x80");
+
+	} else if (AG_Strcasestr(font->name, "Tamil")) {
+		/*
+		 * Tamil
+		 */
+		S = AG_TextRender(
+		    "\xE0\xAE\xA4" "\xE0\xAE\xAE" "\xE0\xAE\xBF"
+		    "\xE0\xAE\xB4" "\xE0\xAE\xB4" "\xE0\xAF\x8D");
+
+	} else if (AG_Strcasestr(font->name, "Telugu")) {
+		/*
+		 * Telugu
+		 */
+		S = AG_TextRender(
+		    "\xE0\xB0\xA4" "\xE0\xB1\x86" "\xE0\xB0\xB2"
+ 		    "\xE0\xB1\x81" "\xE0\xB0\x97" "\xE0\xB1\x81");
+
 	} else if (AG_Strcasestr(font->name, "CJK SC") ||
 	           AG_Strcasestr(font->name, "Sans SC") ||
 	           AG_Strcasestr(font->name, "Serif SC")) {
@@ -677,7 +796,9 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 			    "\xD7\xAA" "\xD7\x95" "\xD7\xAA" "\xD7\x99"
 			    "\xD7\x9D");
 		}
-	} else if (AG_Strcasestr(font->name, "Japanese")) {
+	} else if (AG_Strcasestr(font->name, "Japanese") ||
+	           AG_Strcasecmp(font->name, "HanaMinA") == 0 ||
+		   AG_Strcasecmp(font->name, "HanaMinB") == 0) {
 		if (altPhrase) {
 			/*
 			 * Nihongo (Japanese)
@@ -714,6 +835,16 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 		    "\xEF\xA3\x97" "\xEF\xA3\x98" "\xEF\xA3\x99" "\xEF\xA3\x9A"
 		    "\xEF\xA3\x9B");
 
+	} else if (Strcasecmp(font->name, "Alef") == 0) {
+		S = AG_TextRender(
+		    "The Quick Br\xC3\xB8wn Fox Jumps \xC3\x95ver The "
+		    "\xD7\x9F"
+		    "\xD7\x9C"
+		    "\xD7\xA6"
+		    "\xD7\xA2" " "
+		    "\xD7\x91"
+		    "\xD7\x9C"
+		    "\xD7\x9B" ".");
 	} else if (Strcasecmp(font->name, "Noto Sans Linear B") == 0) {
 
 		if (altPhrase) {
@@ -724,7 +855,6 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 			    "\xF0\x90\x83\xA7" "\xF0\x90\x83\xA8" "\xF0\x90\x83\xA9" 
 			    "\xF0\x90\x83\xAA" "\xF0\x90\x83\xAB" "\xF0\x90\x83\xAC" 
 			    "\xF0\x90\x83\xAD" "\xF0\x90\x83\xAE" "\xF0\x90\x83\xAF"
-			    "\n"
 			    "\xF0\x90\x83\xB0" "\xF0\x90\x83\xB1" "\xF0\x90\x83\xB2"
 			    "\xF0\x90\x83\xB3" "\xF0\x90\x83\xB4" "\xF0\x90\x83\xB5"
 			    "\xF0\x90\x83\xB6" "\xF0\x90\x83\xB7" "\xF0\x90\x83\xB8"
@@ -737,7 +867,7 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 			    "\xF0\x90\x80\x86" "\xF0\x90\x80\x87" "\xF0\x90\x80\x88"
 			    "\xF0\x90\x80\x8A" "\xF0\x90\x80\x8B" "\xF0\x90\x80\x8D"
 			    "\xF0\x90\x80\x8E" "\xF0\x90\x80\x8F" "\xF0\x90\x80\x90"
-			    "\xF0\x90\x80\x91" "\xF0\x90\x80\x92" "\n"
+			    "\xF0\x90\x80\x91" "\xF0\x90\x80\x92" 
 			    "\xF0\x90\x80\x93" "\xF0\x90\x80\x94" "\xF0\x90\x80\x95" 
 			    "\xF0\x90\x80\x96" "\xF0\x90\x80\x97" "\xF0\x90\x80\x98" 
 			    "\xF0\x90\x80\x9F" "\xF0\x90\x80\xA0" "\xF0\x90\x80\xA1"
@@ -834,11 +964,20 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 }
 
 static void
+ShowOS2MetricsChanged(AG_Event *_Nonnull event)
+{
+	AG_FontSelector *fs = AG_FONTSELECTOR_PTR(1);
+
+	UpdatePreview(fs, NULL);
+}
+
+static void
 Init(void *_Nonnull obj)
 {
 	AG_FontSelector *fs = obj;
 	AG_Notebook *nb;
 	AG_NotebookTab *nt;
+	AG_Pane *paneFam, *paneSz;
 	
 	fs->flags = AG_FONTSELECTOR_UPDATE;
 	fs->curFace[0] = '\0';
@@ -846,70 +985,79 @@ Init(void *_Nonnull obj)
 	fs->sPreview = -1;
 	fs->curSize = 0.0f;
 
-	fs->hPane = AG_PaneNewHoriz(fs, AG_PANE_EXPAND);
-	fs->tlFaces = AG_TlistNew(fs->hPane->div[0], AG_TLIST_EXPAND);
-	fs->hPane2 = AG_PaneNewHoriz(fs->hPane->div[1], AG_PANE_EXPAND);
-	fs->tlStyles = AG_TlistNew(fs->hPane2->div[0], AG_TLIST_EXPAND);
-	fs->tlSizes = AG_TlistNew(fs->hPane2->div[1], AG_TLIST_EXPAND);
+	fs->paneFam = paneFam = AG_PaneNewHoriz(fs, AG_PANE_EXPAND);
+	fs->tlFaces = AG_TlistNew(paneFam->div[0], AG_TLIST_EXPAND);
 
-	nb = AG_NotebookNew(fs->hPane2->div[1], AG_NOTEBOOK_HFILL);
+	fs->paneSz = paneSz = AG_PaneNewHoriz(paneFam->div[1], AG_PANE_EXPAND);
+	AG_BoxSetHomogenous(paneSz->div[0], 1);
+	AG_BoxSetHomogenous(paneSz->div[1], 1);
+	fs->tlStyles = AG_TlistNew(paneSz->div[0], AG_TLIST_HFILL);
+	fs->tlRanges = AG_TlistNew(paneSz->div[0], AG_TLIST_HFILL);
+	AG_SetFontSize(fs->tlRanges, "80%");
+
+	fs->tlSizes  = AG_TlistNew(paneSz->div[1], AG_TLIST_EXPAND);
+
+	nb = AG_NotebookNew(paneSz->div[1], AG_NOTEBOOK_HFILL);
 	AG_SetFontSize(nb, "80%");
 
 	nt = AG_NotebookAdd(nb, _("Color"), AG_BOX_VERT);
 	AG_SetPadding(nt, "2");
 	{
-		AG_Box *boxHoriz, *boxColor;
+		AG_Box *boxColor;
 		AG_HSVPal *pal;
 		AG_Button *btnBG, *btnFG;
 
-		boxHoriz = AG_BoxNewHoriz(nt, AG_BOX_EXPAND);
-
-		pal = fs->pal = AG_HSVPalNew(boxHoriz,
+		pal = fs->pal = AG_HSVPalNew(nt,
 		    AG_HSVPAL_NOPREVIEW | AG_HSVPAL_NOALPHA |
 		    AG_HSVPAL_HFILL);
+		AG_SetMargin(pal, "10 0 10 0");
 
-		AG_BindPointer(pal, "agcolor", (void *)&fs->cPreviewFG);
+		AG_BindPointer(pal, "agcolor", (void *)&fs->cPreviewBG);
 		AG_SetEvent(pal, "h-changed", PreviewColorChanged,"%p",fs);
 		AG_SetEvent(pal, "sv-changed", PreviewColorChanged,"%p",fs);
 
-		boxColor = AG_BoxNewVert(boxHoriz, AG_BOX_VFILL |
-		                                   AG_BOX_HOMOGENOUS);
-		AG_SetFontSize(boxColor, "80%");
+		boxColor = AG_BoxNewHoriz(nt, AG_BOX_HFILL | AG_BOX_HOMOGENOUS);
 		{
-			btnFG = AG_ButtonNewS(boxColor,
-			    AG_BUTTON_STICKY | AG_BUTTON_HFILL,
-			    AGSI_IDEOGRAM AGSI_TGT_FG_COLOR AGSI_RST "\n\n"
-			    "FG");
 			btnBG = AG_ButtonNewS(boxColor,
-			    AG_BUTTON_STICKY | AG_BUTTON_HFILL,
-			    AGSI_IDEOGRAM AGSI_TGT_BG_COLOR AGSI_RST "\n\n"
-			    "BG");
+			    AG_BUTTON_STICKY | AG_BUTTON_VFILL,
+			    _(AGSI_IDEOGRAM AGSI_TGT_BG_COLOR AGSI_RST "\n"
+			      "BG"));
+			btnFG = AG_ButtonNewS(boxColor,
+			    AG_BUTTON_STICKY | AG_BUTTON_VFILL,
+			    _(AGSI_IDEOGRAM AGSI_TGT_FG_COLOR AGSI_RST "\n"
+			      "FG"));
 
-			AG_ButtonSetState(btnFG, 1);
+			AG_ButtonSetState(btnBG, 1);
 
-			AG_SetPadding(btnFG, "4");
 			AG_SetPadding(btnBG, "4");
+			AG_SetPadding(btnFG, "4");
 
-			AG_SetEvent(btnFG, "button-pushed",
-			    EditBgFgColor,"%p,%p,%p", fs, &fs->cPreviewFG, btnBG);
 			AG_SetEvent(btnBG, "button-pushed",
 			    EditBgFgColor,"%p,%p,%p", fs, &fs->cPreviewBG, btnFG);
+			AG_SetEvent(btnFG, "button-pushed",
+			    EditBgFgColor,"%p,%p,%p", fs, &fs->cPreviewFG, btnBG);
 		}
 	}
 
 	nt = AG_NotebookAdd(nb, _("Metrics"), AG_BOX_VERT);
 	AG_SetPadding(nt, "5");
 	{
-		AG_CheckboxNewFlag(nt, 0, _("Adjusted Baseline"), &fs->flags,
-		    AG_FONTSELECTOR_BASELINE);
-		AG_CheckboxNewFlag(nt, 0, _("Original Baseline"), &fs->flags,
+		AG_Checkbox *cb;
+
+		AG_CheckboxNewFlag(nt, 0, _("Show Midline"), &fs->flags,
+		    AG_FONTSELECTOR_MIDLINE);
+		AG_CheckboxNewFlag(nt, 0, _("Show Corrections"), &fs->flags,
 		    AG_FONTSELECTOR_CORRECTIONS);
-		AG_CheckboxNewFlag(nt, 0, _("Bounding Box"), &fs->flags,
+		AG_CheckboxNewFlag(nt, 0, _("Show Bounding Box"), &fs->flags,
 		    AG_FONTSELECTOR_BOUNDING_BOX);
+		cb = AG_CheckboxNewFlag(nt, 0, _("Show OS/2 Metrics"), &fs->flags,
+		    AG_FONTSELECTOR_MORE_METRICS);
+		AG_SetEvent(cb, "checkbox-changed", ShowOS2MetricsChanged, "%p", fs);
 
-		AG_SeparatorNewHoriz(nt);
-
-		fs->lblMetrics = AG_LabelNewS(nt, AG_LABEL_EXPAND, _("No data."));
+		fs->lblMetrics = AG_LabelNewS(nt,
+		    AG_LABEL_FRAME | AG_LABEL_EXPAND,
+		    _("No data."));
+		AG_SetMargin(fs->lblMetrics, "10 0 10 0");
 	}
 	
 	fs->font = NULL;
@@ -923,7 +1071,8 @@ Init(void *_Nonnull obj)
 
 	AG_TlistSizeHint(fs->tlFaces, "<Adobe New Century Schoolbook>", 10);
 	AG_TlistSizeHint(fs->tlStyles, "<Condensed Bold Oblique>", 8);
-	AG_TlistSizeHint(fs->tlSizes, "<XXXXXXX>", 8);
+	AG_TlistSizeHint(fs->tlRanges, "<XXXXXXXXXXXXXXXXXXXXXX>", 4);
+	AG_TlistSizeHint(fs->tlSizes, "<XXXXXXX>", 14);
 	
 	/* Handle "font" binding programmatically */
 	AG_BindPointer(fs, "font", (void *)&fs->font);
@@ -968,6 +1117,9 @@ Draw(void *_Nonnull obj)
 
 	AG_WidgetBlitSurface(fs, fs->sPreview, x,y);
 
+	if (fs->flags & AG_FONTSELECTOR_MIDLINE) {
+		AG_DrawLineH(fs, 1, WIDTH(fs)-2, y + (S->h >> 1), cLine);
+	}
 	if (fs->flags & AG_FONTSELECTOR_BOUNDING_BOX) {
 		AG_DrawLineH(fs, 1, WIDTH(fs)-2, y, cLine);
 		AG_DrawLineH(fs, 1, WIDTH(fs)-2, y + S->h, cLine);
@@ -977,17 +1129,12 @@ Draw(void *_Nonnull obj)
 		AG_Variable *Vfont;
 		AG_Font **pFont;
 		float pts;
-		int adjRange;
+		int sizeIdx;
 	
 		Vfont = AG_GetVariable(fs, "font", (void *)&pFont);
 		pts = (*pFont)->spec.size;
 
-		if      (pts <= 10.4f) { adjRange = 0; }
-		else if (pts <= 14.0f) { adjRange = 1; }
-		else if (pts <= 21.0f) { adjRange = 2; }
-		else if (pts <= 23.8f) { adjRange = 3; }
-		else if (pts <= 35.0f) { adjRange = 4; }
-		else                   { adjRange = 5; }
+		sizeIdx = AG_FontGetStandardSizeIndex(pts);
 
 		for (fa = &agFontAdjustments[0]; fa->face != NULL; fa++) {
 			if (Strcasecmp(OBJECT(*pFont)->name, fa->face) == 0)
@@ -996,23 +1143,19 @@ Draw(void *_Nonnull obj)
 		if (fa->face != NULL) {
 			AG_Color cOrig, cCorrected;
 			const int yCorrected = y + S->h - S->guides[0];
-			const int adj = fa->ascent_offset[adjRange];
+			const int adj = fa->ascent_offset[sizeIdx];
 
 			AG_ColorRGB_8(&cOrig, 200,0,0);
 			AG_ColorRGB_8(&cCorrected, 0,150,0);
 			AG_DrawLineH(fs, 1, WIDTH(fs)-2, yCorrected - adj, &cOrig);
 			AG_DrawLineH(fs, 1, WIDTH(fs)-2, yCorrected, &cCorrected);
-		} else if (fs->flags & AG_FONTSELECTOR_BASELINE) {
-			AG_DrawLineH(fs, 1, WIDTH(fs)-2, y + S->h - S->guides[0], cLine);
 		}
 	
 		AG_UnlockVariable(Vfont);
-	} else if (fs->flags & AG_FONTSELECTOR_BASELINE) {
-		AG_DrawLineH(fs, 1, WIDTH(fs)-2, y + S->h - S->guides[0], cLine);
 	}
 
 	AG_PopClipRect(fs);
-	
+
 	AG_PopBlendingMode(fs);
 }
 
@@ -1022,7 +1165,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	AG_FontSelector *fs = obj;
 	AG_SizeReq rChld;
 
-	AG_WidgetSizeReq(fs->hPane, &rChld);
+	AG_WidgetSizeReq(fs->paneFam, &rChld);
 
 	r->w = WIDGET(fs)->paddingLeft + rChld.w +
 	       WIDGET(fs)->paddingRight;
@@ -1046,7 +1189,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	aChld.y = paddingTop;
 	aChld.w = a->w - paddingLeft - paddingRight;
 	aChld.h = a->h - fs->rPreview.h - paddingTop - paddingBottom;
-	AG_WidgetSizeAlloc(fs->hPane, &aChld);
+	AG_WidgetSizeAlloc(fs->paneFam, &aChld);
 
 	fs->rPreview.x = paddingLeft;
 	fs->rPreview.y = a->h - fs->rPreview.h - paddingBottom;

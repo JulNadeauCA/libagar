@@ -756,6 +756,7 @@ WrapAtChar(AG_Editable *_Nonnull ed, int x, AG_Char *_Nonnull s,
 	     t++) {
 		G = AG_TextRenderGlyph(drv, font, cBg, cFg, *t);
 		x2 += G->advance;
+
 		if (AG_CharIsSpace(*t) || *t == '\n') {
 			if (x2 > WIDTH(ed)) {
 				return (1);
@@ -779,6 +780,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	AG_Driver *drv = WIDGET(ed)->drv;
 	AG_Font *font = WFONT(ed);
+	const enum ag_font_type fontType = font->spec.type;
 	AG_TextANSI ansi;
 	int i, x, y, yMouse;
 	
@@ -790,7 +792,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 		goto out;
 	}
 	for (i=0, x=0, y=0; i < buf->len; i++) {
-		const AG_Char ch = buf->s[i];
+		const AG_Char c = buf->s[i];
 
 		if (mx <= 0 && ON_LINE(yMouse,y)) {
 			*pos = i;
@@ -804,7 +806,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 			y += ed->lineSkip;
 			x = 0;
 		}
-		if (ch == '\n') {
+		if (c == '\n') {
 			if (ON_LINE(yMouse,y) && mx > x) {
 				*pos = i;
 				goto out;
@@ -812,7 +814,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 			y += ed->lineSkip;
 			x = 0;
 			continue;
-		} else if (ch == '\t') {
+		} else if (c == '\t') {
 			if (ON_LINE(yMouse,y) &&
 			    mx >= x && mx <= x+agTextTabWidth) {
 				*pos = (mx < x + (agTextTabWidth >> 1)) ? i : i+1;
@@ -820,7 +822,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 			}
 			x += agTextTabWidth;
 			continue;
-		} else if (  ch == 0x1b &&
+		} else if (   c == 0x1b &&
 		    buf->s[i+1] >= 0x40 &&
 		    buf->s[i+1] <= 0x5f &&
 		    buf->s[i+2] != '\0') {
@@ -829,14 +831,14 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 				continue;
 			}
 		}
-		
-		switch (font->spec.type) {
+
+		switch (fontType) {
 #ifdef HAVE_FREETYPE
 		case AG_FONT_FREETYPE:
 			{
 				AG_GlyphFt *Gft;
 
-				Gft = AGFONT_OPS(font)->get_glyph(font, ch,
+				Gft = AGFONT_OPS(font)->get_glyph(font, c,
 				    AG_GLYPH_FT_METRICS);
 				if (Gft == NULL) {
 					/* TODO blank box advance */
@@ -865,7 +867,7 @@ AG_EditableMapPosition(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my,
 				AG_Glyph *G;
 			
 				G = AG_TextRenderGlyph(drv, font,
-				    &ts->colorBG, &ts->color, ch);
+				    &ts->colorBG, &ts->color, c);
 
 				if (ON_LINE(yMouse,y) &&
 				    mx >= x &&
@@ -1002,8 +1004,10 @@ Draw(void *_Nonnull obj)
 		return;
 	}
 	AG_EditableValidateSelection(ed, buf);
-	
+
+	/* TODO Opaque glyph optimizations */
 	AG_PushBlendingMode(ed, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+
 	AG_PushClipRect(ed, &ed->r);
 
 	if (buf->len == 0 && AG_Defined(ed, "placeholder")) {
@@ -1083,9 +1087,10 @@ Draw(void *_Nonnull obj)
 				r.h = lineSkip + 1;
 				AG_DrawRectFilled(ed, &r, cSel);
 			}
+			/* TODO */
 			x += agTextTabWidth;
 			continue;
-		} else if (c == 0x1b &&
+		} else if    (c == 0x1b &&
 		    buf->s[i+1] >= 0x40 &&
 		    buf->s[i+1] <= 0x5f &&
 		    buf->s[i+2] != '\0') {
