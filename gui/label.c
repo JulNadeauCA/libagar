@@ -329,10 +329,6 @@ StyleChanged(AG_Event *_Nonnull event)
 	if (lbl->tCache) {
 		AG_TextCacheClear(lbl->tCache);
 	}
-	if (lbl->surfaceCtd != -1) {
-		AG_WidgetUnmapSurface(lbl, lbl->surfaceCtd);
-		lbl->surfaceCtd = -1;
-	}
 	lbl->flags |= AG_LABEL_REGEN;
 }
 
@@ -347,7 +343,6 @@ Init(void *_Nonnull obj)
 	lbl->flags = 0;
 	lbl->text = NULL;
 	lbl->surface = -1;
-	lbl->surfaceCtd = -1;
 	lbl->wPre = -1;
 	lbl->hPre = 1;
 	lbl->justify = AG_TEXT_LEFT;
@@ -501,58 +496,31 @@ Draw(void *_Nonnull obj)
 		DrawPolled         /* POLLED */
 	};
 	AG_Label *lbl = obj;
-	AG_Surface *Sctd;
 	const AG_Color *cBg = &WCOLOR(lbl, BG_COLOR);
-	AG_Rect r;
-
-	if (lbl->flags & AG_LABEL_FRAME)
-		AG_DrawFrameSunk(lbl, &WIDGET(lbl)->r);
+	const int partial = (lbl->flags & AG_LABEL_PARTIAL);
 
 	if (cBg->a < AG_OPAQUE)
 		AG_PushBlendingMode(lbl, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 
-	if (lbl->flags & AG_LABEL_PARTIAL) {                   /* Truncated */
-		if (lbl->surfaceCtd == -1) {
-#ifdef AG_UNICODE
-			Sctd = AG_TextRender("\xE2\x80\xA6 "); /* U+2026 */
-#else
-			Sctd = AG_TextRender("... ");
-#endif
-			lbl->surfaceCtd = AG_WidgetMapSurface(lbl, Sctd);
-		} else {
-			Sctd = WSURFACE(lbl,lbl->surfaceCtd);
-		}
-		r.x = 0;
-		r.y = 0;
-		r.w = WIDTH(lbl) - Sctd->w;
-		r.h = HEIGHT(lbl);
-		AG_PushClipRect(lbl, &r);
-	} else {
-		Sctd = NULL;
-	}
+	if (partial)
+		AG_PushClipRectInner(lbl, &WIDGET(lbl)->r);
 	
 	AG_TextColor(&WCOLOR(lbl, TEXT_COLOR));
 	AG_TextBGColor(cBg);
-
 #ifdef AG_DEBUG
 	if (lbl->type >= AG_LABEL_TYPE_LAST)
 		AG_FatalError("type");
 #endif
 	pfDraw[lbl->type](lbl);
-	
-	if (Sctd != NULL) {
-		AG_PopClipRect(lbl);
 
-		if (WIDTH(lbl)  > Sctd->w &&
-		    HEIGHT(lbl) > Sctd->h) {
-			AG_WidgetBlitSurface(lbl, lbl->surfaceCtd,
-			    WIDTH(lbl) - Sctd->w,
-			    ValignOffset(lbl, HEIGHT(lbl), Sctd->h));
-		}
-	}
+	if (partial)
+		AG_PopClipRect(lbl);
 
 	if (cBg->a < AG_OPAQUE)
 		AG_PopBlendingMode(lbl);
+
+	if (lbl->flags & AG_LABEL_FRAME)
+		AG_DrawFrameSunk(lbl, &WIDGET(lbl)->r);
 }
 
 /* Render a static label. */

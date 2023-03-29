@@ -41,7 +41,7 @@ typedef struct ag_label {
 
 	char *_Nullable text;           /* Text buffer (for STATIC labels) */
 	int surface;                    /* Cached label surface */
-	int surfaceCtd;                 /* Cached ellipsis ("...") surface */
+	Uint32 _pad1;
 	int wPre, hPre;                 /* Explicit size requisition */
 	enum ag_text_justify justify;   /* Justification mode */
 	enum ag_text_valign valign;     /* Vertical alignment */
@@ -50,7 +50,7 @@ typedef struct ag_label {
 	AG_FmtString *_Nullable fmt;           /* Polled label data */
 	char *_Nullable pollBuf;               /* Polled label buffer */
 	AG_Size         pollBufSize;
-	AG_SIZE_PADDING(_pad);
+	AG_SIZE_PADDING(_pad2);
 } AG_Label;
 
 #define   AGLABEL(o)     ((AG_Label *)(o))
