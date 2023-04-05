@@ -184,13 +184,6 @@ and
 .It AG_EDITABLE_CATCH_TAB
 Cause tabs to be entered literally into the string (by default, the tab
 key moves focus to the next widget).
-.It AG_EDITABLE_NOSCROLL
-The view is normally scrolled automatically such that the cursor is always
-visible.
-This flag disables this behavior.
-.It AG_EDITABLE_NOSCROLL_ONCE
-Prevents automatic scrolling like
-.Dv AG_EDITABLE_NOSCROLL ,
 but only for the next rendering cycle.
 .It AG_EDITABLE_NO_KILL_YANK
 Disable Kill (ctrl-K) and Yank (ctrl-Y).
@@ -210,6 +203,11 @@ Expand vertically in parent container.
 .It AG_EDITABLE_EXPAND
 Shorthand for
 .Dv AG_EDITABLE_HFILL | AG_EDITABLE_VFILL .
+.It AG_EDITABLE_NO_CLIPPING
+Disable clipping in the draw function, allowing overflow of text beyond the
+widget's allocated space.
+Used by container widgets which implement their own clipping (such as
+.Xr AG_Textbox 3 ).
 .El
 .Pp
 The

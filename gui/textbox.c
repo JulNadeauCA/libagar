@@ -363,21 +363,6 @@ AG_TextboxDouble(AG_Textbox *tb)
 	return AG_EditableDbl(tb->ed);
 }
 
-static __inline__ void
-RenderLabel(AG_Textbox *_Nonnull tb)
-{
-	if (tb->surfaceLbl == -1) {
-		const AG_Font *font = WFONT(tb);
-
-		AG_TextFontLookup(OBJECT(font)->name,         /* TODO style */
-		    font->spec.size*0.95f,
-		    font->flags);
-
-		tb->surfaceLbl = AG_WidgetMapSurface(tb,
-		    AG_TextRender(tb->label));
-	}
-}
-
 static void
 Draw(void *_Nonnull p)
 {
@@ -391,27 +376,32 @@ Draw(void *_Nonnull p)
 			AG_DrawBoxSunk(tb, &tb->r, &WCOLOR(tb, BG_COLOR));
 		}
 	}
+
+	AG_PushClipRect(tb, &WIDGET(tb)->r);
+
 	if (tb->label != NULL &&
 	    tb->label[0] != '\0') {
-		if (isUndersize)
-			AG_PushClipRect(tb, &WIDGET(tb)->r);
+		const AG_Surface *Slbl;
 
-		RenderLabel(tb);
+		if (tb->surfaceLbl == -1) {
+			tb->surfaceLbl = AG_WidgetMapSurface(tb,
+			    AG_TextRender(tb->label));
+		}
+		Slbl = WSURFACE(tb, tb->surfaceLbl);
 
 		AG_PushBlendingMode(tb, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 
 		AG_WidgetBlitSurface(tb, tb->surfaceLbl,
 		    WIDGET(tb)->paddingLeft,
-		    WIDGET(tb)->paddingTop);
+		   (HEIGHT(tb) >> 1) - (Slbl->h >> 1));
 
 		AG_PopBlendingMode(tb);
-
-		if (isUndersize)
-			AG_PopClipRect(tb);
 	}
 
 	if (!isUndersize)
 		AG_WidgetDraw(tb->ed);
+
+	AG_PopClipRect(tb);
 
 	if (tb->btnRet) { AG_WidgetDraw(tb->btnRet); }
 	if (tb->hBar) { AG_WidgetDraw(tb->hBar); }
@@ -423,6 +413,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
 	AG_Textbox *tb = obj;
 	AG_SizeReq rEd;
+	int wLbl, hLbl;
 
 	r->w = WIDGET(tb)->paddingLeft + WIDGET(tb)->paddingRight;
 	r->h = WIDGET(tb)->paddingTop + WIDGET(tb)->paddingBottom;
@@ -432,11 +423,9 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	r->h += rEd.h;
 
 	if (tb->label != NULL && tb->label[0] != '\0') {
-		RenderLabel(tb);
-
-		r->w += WIDGET(tb)->spacingHoriz;
-		r->w += WSURFACE(tb,tb->surfaceLbl)->w;
-		r->h = MAX(r->h, WSURFACE(tb,tb->surfaceLbl)->h);
+		AG_TextSize(tb->label, &wLbl, &hLbl);
+		r->w += wLbl + WIDGET(tb)->spacingHoriz;
+		r->h = MAX(r->h, hLbl);
 	} else {
 		r->h = MAX(r->h, WFONT(tb)->lineskip);
 	}
@@ -447,17 +436,17 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Textbox *tb = obj;
 	AG_Editable *ed = tb->ed;
-	int wBar=0, hBar=0, wBarSz=0, hBarSz=0, wBtn, wLbl;
+	int wBar=0, hBar=0, wBarSz=0, hBarSz=0, wBtn;
 	AG_SizeAlloc aEd, aSb, aBtn;
 	AG_SizeReq r;
+	int wLbl;
 
 	if (a->w < WIDGET(tb)->paddingLeft + WIDGET(tb)->paddingRight ||
 	   (a->h < WIDGET(tb)->paddingTop  + WIDGET(tb)->paddingBottom))
 		return (-1);
 
-	if (tb->label) {
-		RenderLabel(tb);
-		wLbl = WSURFACE(tb,tb->surfaceLbl)->w;
+	if (tb->label != NULL && tb->label[0] != '\0') {
+		AG_TextSize(tb->label, &wLbl, NULL);
 	} else {
 		wLbl = 0;
 	}
@@ -706,7 +695,7 @@ Init(void *_Nonnull obj)
 	WIDGET(tb)->flags |= AG_WIDGET_USE_TEXT |
 			     AG_WIDGET_USE_MOUSEOVER;
 
-	tb->ed = AG_EditableNew(tb, 0);
+	tb->ed = AG_EditableNew(tb, AG_EDITABLE_NO_CLIPPING);
 	tb->flags = 0;
 	tb->surfaceLbl = -1;
 	tb->label = NULL;

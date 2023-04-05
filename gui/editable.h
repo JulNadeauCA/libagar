@@ -58,32 +58,33 @@ typedef struct ag_autocomplete {
 typedef struct ag_editable {
 	struct ag_widget wid;              /* AG_Widget -> AG_Editable */
 	Uint flags;
-#define AG_EDITABLE_HFILL         0x000001
-#define AG_EDITABLE_VFILL         0x000002
+#define AG_EDITABLE_HFILL         0x0000001
+#define AG_EDITABLE_VFILL         0x0000002
 #define AG_EDITABLE_EXPAND       (AG_EDITABLE_HFILL | AG_EDITABLE_VFILL)
-#define AG_EDITABLE_MULTILINE     0x000004   /* Multiline edition */
-#define AG_EDITABLE_BLINK_ON      0x000008   /* Cursor blink state (internal) */
-#define AG_EDITABLE_PASSWORD      0x000010   /* Password (hidden) input */
-#define AG_EDITABLE_ABANDON_FOCUS 0x000020   /* Abandon focus on return */
-#define AG_EDITABLE_INT_ONLY      0x000040   /* Accepts only int input */
-#define AG_EDITABLE_FLT_ONLY      0x000080   /* Accepts only float input */
-#define AG_EDITABLE_CATCH_TAB     0x000100   /* Process tab key input */
-#define AG_EDITABLE_CURSOR_MOVING 0x000200   /* Cursor is being moved */
-#define AG_EDITABLE_UPPERCASE     0x000400   /* Render as uppercase */
-#define AG_EDITABLE_KEEPVISCURSOR 0x000800   /* Try to keep cursor visible */
-#define AG_EDITABLE_LOWERCASE     0x001000   /* Render as lowercase */
-#define AG_EDITABLE_MARKPREF      0x002000   /* Mark current cursor position */
-#define AG_EDITABLE_EXCL          0x004000   /* Exclusive Buffer Access */
-#define AG_EDITABLE_NO_KILL_YANK  0x008000   /* Disable [K]ill and [Y]ank functions */
-#define AG_EDITABLE_RETURN_HELD   0x010000   /* KEY_RETURN or KP_ENTER is held */
-#define AG_EDITABLE_NO_ALT_LATIN1 0x020000   /* Disable alt-key LATIN-1 mappings */
-#define AG_EDITABLE_WORDWRAP      0x040000   /* Word wrapping */
-#define AG_EDITABLE_NOPOPUP	  0x080000   /* Disable popup menu */
-#define AG_EDITABLE_WORDSELECT	  0x100000   /* Select whole words */
-#define AG_EDITABLE_READONLY	  0x200000   /* Disable user input */
-#define AG_EDITABLE_MULTILINGUAL  0x400000   /* Multilingual edition */
-#define AG_EDITABLE_SHIFT_SELECT  0x800000   /* Keyboard (shift) selection mode */
+#define AG_EDITABLE_MULTILINE     0x0000004   /* Multiline edition */
+#define AG_EDITABLE_BLINK_ON      0x0000008   /* Cursor blink state (internal) */
+#define AG_EDITABLE_PASSWORD      0x0000010   /* Password (hidden) input */
+#define AG_EDITABLE_ABANDON_FOCUS 0x0000020   /* Abandon focus on return */
+#define AG_EDITABLE_INT_ONLY      0x0000040   /* Accepts only int input */
+#define AG_EDITABLE_FLT_ONLY      0x0000080   /* Accepts only float input */
+#define AG_EDITABLE_CATCH_TAB     0x0000100   /* Process tab key input */
+#define AG_EDITABLE_CURSOR_MOVING 0x0000200   /* Cursor is being moved */
+#define AG_EDITABLE_UPPERCASE     0x0000400   /* Render as uppercase */
+#define AG_EDITABLE_KEEPVISCURSOR 0x0000800   /* Try to keep cursor visible */
+#define AG_EDITABLE_LOWERCASE     0x0001000   /* Render as lowercase */
+#define AG_EDITABLE_MARKPREF      0x0002000   /* Mark current cursor position */
+#define AG_EDITABLE_EXCL          0x0004000   /* Exclusive Buffer Access */
+#define AG_EDITABLE_NO_KILL_YANK  0x0008000   /* Disable [K]ill and [Y]ank functions */
+#define AG_EDITABLE_RETURN_HELD   0x0010000   /* KEY_RETURN or KP_ENTER is held */
+#define AG_EDITABLE_NO_ALT_LATIN1 0x0020000   /* Disable alt-key LATIN-1 mappings */
+#define AG_EDITABLE_WORDWRAP      0x0040000   /* Word wrapping */
+#define AG_EDITABLE_NOPOPUP	  0x0080000   /* Disable popup menu */
+#define AG_EDITABLE_WORDSELECT	  0x0100000   /* Select whole words */
+#define AG_EDITABLE_READONLY	  0x0200000   /* Disable user input */
+#define AG_EDITABLE_MULTILINGUAL  0x0400000   /* Multilingual edition */
+#define AG_EDITABLE_SHIFT_SELECT  0x0800000   /* Keyboard (shift) selection mode */
 #define AG_EDITABLE_NUMERICAL     (AG_EDITABLE_INT_ONLY | AG_EDITABLE_FLT_ONLY)
+#define AG_EDITABLE_NO_CLIPPING   0x1000000   /* Allow overflow */
 
 	int lineScrollAmount;                /* Lines to scroll per event */
 	const char *_Nonnull encoding;       /* Character set (default "UTF-8") */

@@ -39,7 +39,9 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Text**](https://libagar.org/man3/AG_Text): New function `AG_FetchFontFromList()` for loading the first available font from a comma-separated list.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): New functions `AG_FontGetStyleName()` and `AG_FontGetStyleByName()`. Convert between the `Uint` and string representations of font styles (including styles, weights and width variants).
 - [**AG_Text**](https://libagar.org/man3/AG_Text): New function `AG_FontGetFamilyStyles()`. Return an array of `AG_Font` style flags describing every style, weight and width variant available in a given font's family.
-- [**AG_Textbox**](https://libagar.org/man3/AG_Textbox) and [**AG_Editable**](https://libagar.org/man3/AG_Editable): Implement Undo/Redo functionality.
+- [**AG_Textbox**](https://libagar.org/man3/AG_Textbox) / [**AG_Editable**](https://libagar.org/man3/AG_Editable): Implement Undo/Redo functionality.
+- [**AG_Textbox**](https://libagar.org/man3/AG_Textbox) / [**AG_Editable**](https://libagar.org/man3/AG_Editable): Let `AG_Textbox` (and other containers) manage clipping so that text can be allowed to overflow out of the `AG_Editable` and out over the padding of its container widget.
+- [**AG_Editable**](https://libagar.org/man3/AG_Editable): New option `NO_CLIPPING` to allow overflow beyond the widget's allocated area (for container widgets which implement their own clipping).
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Draw lines to express the relationship between tree items.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New function `AG_TlistScrollToSelection()`.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New option `AG_TLIST_EXPAND_NODES`. Display nodes (items with children) initially in expanded state.

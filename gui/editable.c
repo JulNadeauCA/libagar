@@ -1008,7 +1008,8 @@ Draw(void *_Nonnull obj)
 	/* TODO Opaque glyph optimizations */
 	AG_PushBlendingMode(ed, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 
-	AG_PushClipRect(ed, &ed->r);
+	if ((flags & AG_EDITABLE_NO_CLIPPING) == 0)
+		AG_PushClipRect(ed, &ed->r);
 
 	if (buf->len == 0 && AG_Defined(ed, "placeholder")) {
 		AG_Variable *Vph;
@@ -1204,7 +1205,9 @@ Draw(void *_Nonnull obj)
 		WIDGET(ed)->window->dirty = 1;
 	}
 
-	AG_PopClipRect(ed);
+	if ((flags & AG_EDITABLE_NO_CLIPPING) == 0)
+		AG_PopClipRect(ed);
+
 	AG_PopBlendingMode(ed);
 
 	ReleaseBuffer(ed, buf);
@@ -1272,8 +1275,8 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	ed->yVis = (a->h - paddingTop - paddingBottom) / ed->lineSkip;
 	ed->r.x = paddingLeft;
 	ed->r.y = paddingTop;
-	ed->r.w = a->w - paddingLeft - paddingRight - 1;
-	ed->r.h = a->h - paddingTop - paddingBottom - 1;
+	ed->r.w = a->w - paddingLeft - paddingRight;
+	ed->r.h = a->h - paddingTop - paddingBottom;
 
 	r.x = 0;
 	r.y = 0;
