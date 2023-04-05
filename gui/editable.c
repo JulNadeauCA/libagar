@@ -995,6 +995,7 @@ Draw(void *_Nonnull obj)
 	const int selStart = ed->selStart;
 	const int selEnd = ed->selEnd;
 	const int paddingLeft = WIDGET(ed)->paddingLeft;
+	const int paddingTop  = WIDGET(ed)->paddingTop;
 	int i, dx,dy, x,y, yCurs=0, selected=0;
 
 	if (cEditableBg->a > 0)
@@ -1026,11 +1027,12 @@ Draw(void *_Nonnull obj)
 			AG_UnlockVariable(Vph);
 			AG_PopTextState();
 		}
-		AG_WidgetBlitFrom(ed, ed->suPlaceholder, NULL, 0,0);
+		AG_WidgetBlitFrom(ed, ed->suPlaceholder, NULL,
+		    paddingLeft, paddingTop);
 	}
 
 	x = paddingLeft;
-	y = WIDGET(ed)->paddingTop - ed->y*lineSkip;
+	y = paddingTop - ed->y*lineSkip;
 	ed->xMax = 10;
 	ed->yMax = 1;
 	for (i = 0; i <= buf->len; i++) {

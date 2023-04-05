@@ -367,17 +367,27 @@ static void
 Draw(void *_Nonnull p)
 {
 	AG_Textbox *tb = p;
-	const int isUndersize = (tb->flags & AG_TEXTBOX_UNDERSIZE);
+	AG_Rect r;
+	Uint flags = tb->flags;
+	const int isUndersize = (flags & AG_TEXTBOX_UNDERSIZE);
 
-	if (!isUndersize && (tb->flags & AG_TEXTBOX_NO_SHADING) == 0) {
-		if ((tb->flags & AG_TEXTBOX_COMBO)) {
+	if (!isUndersize && (flags & AG_TEXTBOX_NO_SHADING) == 0) {
+		if ((flags & AG_TEXTBOX_COMBO)) {
 			AG_DrawBoxRaised(tb, &tb->r, &WCOLOR(tb, FG_COLOR));
 		} else {
-			AG_DrawBoxSunk(tb, &tb->r, &WCOLOR(tb, BG_COLOR));
+			if ((flags & AG_TEXTBOX_MULTILINE) == 0)
+				AG_DrawBoxSunk(tb, &tb->r, &WCOLOR(tb, BG_COLOR));
 		}
 	}
 
-	AG_PushClipRect(tb, &WIDGET(tb)->r);
+	r = WIDGET(tb)->r;
+	if (flags & AG_TEXTBOX_MULTILINE) {
+		if (tb->hBar) { r.h -= HEIGHT(tb->hBar); }
+		if (tb->vBar) { r.w -= WIDTH(tb->vBar); }
+		r.w -= WIDGET(tb)->paddingRight;
+		r.h -= WIDGET(tb)->paddingBottom;
+	}
+	AG_PushClipRect(tb, &r);
 
 	if (tb->label != NULL &&
 	    tb->label[0] != '\0') {
