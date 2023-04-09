@@ -1486,13 +1486,154 @@
 /*
  * Geometric Shapes.
  */
-#define AGSI_WHITE_RECTANGLE            "\xE2\x96\xAD"       /* U+25AD */
-#define AGSI_WHITE_UP_POINTING_TRIANGLE "\xE2\x96\xB3"       /* U+25B3 */
-#define AGSI_DOTTED_CIRCLE              "\xE2\x97\x8C"       /* U+25CC */
+#define AGSI_BLACK_SQUARE                            "\xE2\x96\xA0" /* U+25A0 */
+#define AGSI_WHITE_SQUARE                            "\xE2\x96\xA1" /* U+25A1 */
+#define AGSI_WHITE_SQUARE_W_ROUNDED_CORNERS          "\xE2\x96\xA2" /* U+25A2 White Square With Rounded Corners */
+#define AGSI_WHITE_SQUARE_CONT_BLACK_SM_SQUARE       "\xE2\x96\xA3" /* U+25A3 White Square Containing Black Small Square */
+#define AGSI_SQUARE_W_HORIZONTAL_FILL                "\xE2\x96\xA4" /* U+25A4 Square With Horizontal Fill */
+#define AGSI_SQUARE_W_VERTICAL_FILL                  "\xE2\x96\xA5" /* U+25A5 Square With Vertical Fill */
+#define AGSI_SQUARE_W_ORTHOGONAL_CROSSHATCH_FILL     "\xE2\x96\xA6" /* U+25A6 Square With Orthogonal Crosshatch Fill */
+#define AGSI_SQUARE_W_UPPER_L_TO_LOWER_R_FILL        "\xE2\x96\xA7" /* U+25A7 Square With Upper Left To Lower Right Fill */
+#define AGSI_SQUARE_W_UPPER_R_TO_LOWER_L_FILL        "\xE2\x96\xA8" /* U+25A8 Square With Upper Right To Lower Left Fill */
+#define AGSI_SQUARE_W_DIAGONAL_CROSSHATCH_FILL       "\xE2\x96\xA9" /* U+25A9 Square With Diagonal Crosshatch Fill */
+#define AGSI_BLACK_SM_SQUARE                         "\xE2\x96\xAA" /* U+25AA */
+#define AGSI_WHITE_SM_SQUARE                         "\xE2\x96\xAB" /* U+25AB */
+#define AGSI_BLACK_RECTANGLE                         "\xE2\x96\xAC" /* U+25AC */
+#define AGSI_WHITE_RECTANGLE                         "\xE2\x96\xAD" /* U+25AD */
+#define AGSI_BLACK_VERTICAL_RECTANGLE                "\xE2\x96\xAE" /* U+25AE */
+#define AGSI_WHITE_VERTICAL_RECTANGLE                "\xE2\x96\xAF" /* U+25AF */
+#define AGSI_BLACK_PARALLELOGRAM                     "\xE2\x96\xB0" /* U+25B0 */
+#define AGSI_WHITE_PARALLELOGRAM                     "\xE2\x96\xB1" /* U+25B1 */
+#define AGSI_BLACK_UP_POINTING_TRIANGLE              "\xE2\x96\xB2" /* U+25B2 */
+#define AGSI_WHITE_UP_POINTING_TRIANGLE              "\xE2\x96\xB3" /* U+25B3 */
+#define AGSI_BLACK_UP_POINTING_SM_TRIANGLE           "\xE2\x96\xB4" /* U+25B4 */
+#define AGSI_WHITE_UP_POINTING_SM_TRIANGLE           "\xE2\x96\xB5" /* U+25B5 */
+#define AGSI_BLACK_R_POINTING_TRIANGLE               "\xE2\x96\xB6" /* U+25B6 */
+#define AGSI_WHITE_R_POINTING_TRIANGLE               "\xE2\x96\xB7" /* U+25B7 */
+#define AGSI_BLACK_R_POINTING_SM_TRIANGLE            "\xE2\x96\xB8" /* U+25B8 */
+#define AGSI_WHITE_R_POINTING_SM_TRIANGLE            "\xE2\x96\xB9" /* U+25B9 */
+#define AGSI_BLACK_R_POINTING_POINTER                "\xE2\x96\xBA" /* U+25BA */
+#define AGSI_WHITE_R_POINTING_POINTER                "\xE2\x96\xBB" /* U+25BB */
+#define AGSI_BLACK_DN_POINTING_TRIANGLE              "\xE2\x96\xBC" /* U+25BC */
+#define AGSI_WHITE_DN_POINTING_TRIANGLE              "\xE2\x96\xBD" /* U+25BD */
+#define AGSI_BLACK_DN_POINTING_SM_TRIANGLE           "\xE2\x96\xBE" /* U+25BE */
+#define AGSI_WHITE_DN_POINTING_SM_TRIANGLE           "\xE2\x96\xBF" /* U+25BF */
+#define AGSI_BLACK_L_POINTING_TRIANGLE               "\xE2\x97\x80" /* U+25C0 */
+#define AGSI_WHITE_L_POINTING_TRIANGLE               "\xE2\x97\x81" /* U+25C1 */
+#define AGSI_BLACK_L_POINTING_SM_TRIANGLE            "\xE2\x97\x82" /* U+25C2 */
+#define AGSI_WHITE_L_POINTING_SM_TRIANGLE            "\xE2\x97\x83" /* U+25C3 */
+#define AGSI_BLACK_L_POINTING_POINTER                "\xE2\x97\x84" /* U+25C4 */
+#define AGSI_WHITE_L_POINTING_POINTER                "\xE2\x97\x85" /* U+25C5 */
+#define AGSI_BLACK_DIAMOND                           "\xE2\x97\x86" /* U+25C6 */
+#define AGSI_WHITE_DIAMOND                           "\xE2\x97\x87" /* U+25C7 */
+#define AGSI_WHITE_DIAMOND_CONT_BLACK_SM_DIAMOND     "\xE2\x97\x88" /* U+25C8 White Diamond Containing Black Small Diamond */
+#define AGSI_FISHEYE                                 "\xE2\x97\x89" /* U+25C9 */
+#define AGSI_LOZENGE                                 "\xE2\x97\x8A" /* U+25CA */
+#define AGSI_WHITE_CIRCLE                            "\xE2\x97\x8B" /* U+25CB */
+#define AGSI_DOTTED_CIRCLE                           "\xE2\x97\x8C" /* U+25CC */
+#define AGSI_CIRCLE_W_VERTICAL_FILL                  "\xE2\x97\x8D" /* U+25CD */
+#define AGSI_BULLSEYE                                "\xE2\x97\x8E" /* U+25CE */
+#define AGSI_BLACK_CIRCLE                            "\xE2\x97\x8F" /* U+25CF */
+#define AGSI_CIRCLE_W_L_HALF_BLACK                   "\xE2\x97\x90" /* U+25D0 */
+#define AGSI_CIRCLE_W_R_HALF_BLACK                   "\xE2\x97\x91" /* U+25D1 */
+#define AGSI_CIRCLE_W_LOWER_HALF_BLACK               "\xE2\x97\x92" /* U+25D2 */
+#define AGSI_CIRCLE_W_UPPER_HALF_BLACK               "\xE2\x97\x93" /* U+25D3 */
+#define AGSI_CIRCLE_W_UPPER_R_QUADRANT_BLACK         "\xE2\x97\x94" /* U+25D4 */
+#define AGSI_CIRCLE_W_ALL_BUT_UPPER_L_QUADRANT_BLACK "\xE2\x97\x95" /* U+25D5 */
+#define AGSI_L_HALF_BLACK_CIRCLE                     "\xE2\x97\x96" /* U+25D6 */
+#define AGSI_R_HALF_BLACK_CIRCLE                     "\xE2\x97\x97" /* U+25D7 */
+#define AGSI_INVERSE_BULLET                          "\xE2\x97\x98" /* U+25D8 */
+#define AGSI_INVERSE_WHITE_CIRCLE                    "\xE2\x97\x99" /* U+25D9 */
+#define AGSI_UPPER_HALF_INVERSE_WHITE_CIRCLE         "\xE2\x97\x9A" /* U+25DA */
+#define AGSI_LOWER_HALF_INVERSE_WHITE_CIRCLE         "\xE2\x97\x9B" /* U+25DB */
+#define AGSI_UPPER_L_QUADRANT_CIRCULAR_ARC           "\xE2\x97\x9C" /* U+25DC */
+#define AGSI_UPPER_R_QUADRANT_CIRCULAR_ARC           "\xE2\x97\x9D" /* U+25DD */
+#define AGSI_LOWER_R_QUADRANT_CIRCULAR_ARC           "\xE2\x97\x9E" /* U+25DE */
+#define AGSI_LOWER_L_QUADRANT_CIRCULAR_ARC           "\xE2\x97\x9F" /* U+25DF */
+#define AGSI_UPPER_HALF_CIRCLE                       "\xE2\x97\xA0" /* U+25E0 */
+#define AGSI_LOWER_HALF_CIRCLE                       "\xE2\x97\xA1" /* U+25E1 */
+#define AGSI_BLACK_LOWER_R_TRIANGLE                  "\xE2\x97\xA2" /* U+25E2 */
+#define AGSI_BLACK_LOWER_L_TRIANGLE                  "\xE2\x97\xA3" /* U+25E3 */
+#define AGSI_BLACK_UPPER_L_TRIANGLE                  "\xE2\x97\xA4" /* U+25E4 */
+#define AGSI_BLACK_UPPER_R_TRIANGLE                  "\xE2\x97\xA5" /* U+25E5 */
+#define AGSI_WHITE_BULLET                            "\xE2\x97\xA6" /* U+25E6 */
+#define AGSI_SQUARE_W_L_HALF_BLACK                   "\xE2\x97\xA7" /* U+25E7 */
+#define AGSI_SQUARE_W_R_HALF_BLACK                   "\xE2\x97\xA8" /* U+25E8 */
+#define AGSI_SQUARE_W_UPPER_L_DIAGONAL_HALF_BLACK    "\xE2\x97\xA9" /* U+25E9 */
+#define AGSI_SQUARE_W_LOWER_R_DIAGONAL_HALF_BLACK    "\xE2\x97\xAA" /* U+25EA */
+#define AGSI_SQUARE_W_VERTICAL_BISECTING_LINE        "\xE2\x97\xAB" /* U+25EB */
+#define AGSI_WHITE_UP_POINTING_TRIANGLE_W_DOT        "\xE2\x97\xAC" /* U+25EC */
+#define AGSI_UP_POINTING_TRIANGLE_W_L_HALF_BLACK     "\xE2\x97\xAD" /* U+25ED */
+#define AGSI_UP_POINTING_TRIANGLE_W_R_HALF_BLACK     "\xE2\x97\xAE" /* U+25EE */
+#define AGSI_LARGE_CIRCLE                            "\xE2\x97\xAF" /* U+25EF */
+#define AGSI_WHITE_SQUARE_W_UPPER_L_QUADRANT         "\xE2\x97\xB0" /* U+25F0 */
+#define AGSI_WHITE_SQUARE_W_LOWER_L_QUADRANT         "\xE2\x97\xB1" /* U+25F1 */
+#define AGSI_WHITE_SQUARE_W_LOWER_R_QUADRANT         "\xE2\x97\xB2" /* U+25F2 */
+#define AGSI_WHITE_SQUARE_W_UPPER_R_QUADRANT         "\xE2\x97\xB3" /* U+25F3 */
+#define AGSI_WHITE_CIRCLE_W_UPPER_L_QUADRANT         "\xE2\x97\xB4" /* U+25F4 */
+#define AGSI_WHITE_CIRCLE_W_LOWER_L_QUADRANT         "\xE2\x97\xB5" /* U+25F5 */
+#define AGSI_WHITE_CIRCLE_W_LOWER_R_QUADRANT         "\xE2\x97\xB6" /* U+25F6 */
+#define AGSI_WHITE_CIRCLE_W_UPPER_R_QUADRANT         "\xE2\x97\xB7" /* U+25F7 */
+#define AGSI_UPPER_L_TRIANGLE                        "\xE2\x97\xB8" /* U+25F8 */
+#define AGSI_UPPER_R_TRIANGLE                        "\xE2\x97\xB9" /* U+25F9 */
+#define AGSI_LOWER_L_TRIANGLE                        "\xE2\x97\xBA" /* U+25FA */
+#define AGSI_WHITE_MEDIUM_SQUARE                     "\xE2\x97\xBB" /* U+25FB */
+#define AGSI_BLACK_MEDIUM_SQUARE                     "\xE2\x97\xBC" /* U+25FC */
+#define AGSI_WHITE_MEDIUM_SM_SQUARE                  "\xE2\x97\xBD" /* U+25FD */
+#define AGSI_BLACK_MEDIUM_SM_SQUARE                  "\xE2\x97\xBE" /* U+25FE */
+#define AGSI_LOWER_R_TRIANGLE                        "\xE2\x97\xBF" /* U+25FF */
+#define AGSI_BLACK_SUN_W_RAYS                        "\xE2\x98\x80" /* U+2600 */
+#define AGSI_CLOUD                                   "\xE2\x98\x81" /* U+2601 */
+#define AGSI_UMBRELLA                                "\xE2\x98\x82" /* U+2602 */
+#define AGSI_SNOWMAN                                 "\xE2\x98\x83" /* U+2603 */
+#define AGSI_COMET                                   "\xE2\x98\x84" /* U+2604 */
+#define AGSI_BLACK_STAR                              "\xE2\x98\x85" /* U+2605 */
+#define AGSI_WHITE_STAR                              "\xE2\x98\x86" /* U+2606 */
+#define AGSI_LIGHTNING                               "\xE2\x98\x87" /* U+2607 */
+#define AGSI_THUNDERSTORM                            "\xE2\x98\x88" /* U+2608 */
+#define AGSI_SUN                                     "\xE2\x98\x89" /* U+2609 */
+#define AGSI_ASCENDING_NODE                          "\xE2\x98\x8A" /* U+260A */
+#define AGSI_DESCENDING_NODE                         "\xE2\x98\x8B" /* U+260B */
+#define AGSI_CONJUNCTION                             "\xE2\x98\x8C" /* U+260C */
+#define AGSI_OPPOSITION                              "\xE2\x98\x8D" /* U+260D */
+#define AGSI_BLACK_TELEPHONE                         "\xE2\x98\x8E" /* U+260E */
+#define AGSI_WHITE_TELEPHONE                         "\xE2\x98\x8F" /* U+260F */
+#define AGSI_BALLOT_BOX                              "\xE2\x98\x90" /* U+2610 */
+#define AGSI_BALLOT_BOX_W_CHECK                      "\xE2\x98\x91" /* U+2611 */
+#define AGSI_BALLOT_BOX_W_X                          "\xE2\x98\x92" /* U+2612 */
+#define AGSI_SALTIRE                                 "\xE2\x98\x93" /* U+2613 */
+#define AGSI_UMBRELLA_W_RAIN_DROPS                   "\xE2\x98\x94" /* U+2614 */
+#define AGSI_HOT_BEVERAGE                            "\xE2\x98\x95" /* U+2615 */
+#define AGSI_WHITE_SHOGI_PIECE                       "\xE2\x98\x96" /* U+2616 */
+#define AGSI_BLACK_SHOGI_PIECE                       "\xE2\x98\x97" /* U+2617 */
+#define AGSI_SHAMROCK                                "\xE2\x98\x98" /* U+2618 */
+#define AGSI_REVERSED_ROTATED_FLORAL_HEART_BULLET    "\xE2\x98\x99" /* U+2619 */
+#define AGSI_BLACK_L_POINTING_INDEX                  "\xE2\x98\x9A" /* U+261A */
+#define AGSI_BLACK_R_POINTING_INDEX                  "\xE2\x98\x9B" /* U+261B */
+#define AGSI_WHITE_L_POINTING_INDEX                  "\xE2\x98\x9C" /* U+261C */
+#define AGSI_WHITE_UP_POINTING_INDEX                 "\xE2\x98\x9D" /* U+261D */
+#define AGSI_WHITE_R_POINTING_INDEX                  "\xE2\x98\x9E" /* U+261E */
+#define AGSI_WHITE_DN_POINTING_INDEX                 "\xE2\x98\x9F" /* U+261F */
+#define AGSI_SKULL_AND_CROSSBONES                    "\xE2\x98\xA0" /* U+2620 */
+#define AGSI_CAUTION_SIGN                            "\xE2\x98\xA1" /* U+2621 */
+#define AGSI_RADIOACTIVE_SIGN                        "\xE2\x98\xA2" /* U+2622 */
+#define AGSI_BIOHAZARD_SIGN                          "\xE2\x98\xA3" /* U+2623 */
+#define AGSI_CADUCEUS                                "\xE2\x98\xA4" /* U+2624 */
+#define AGSI_ANKH                                    "\xE2\x98\xA5" /* U+2625 */
+#define AGSI_ORTHODOX_CROSS                          "\xE2\x98\xA6" /* U+2626 */
+#define AGSI_CHI_RHO                                 "\xE2\x98\xA7" /* U+2627 */
+#define AGSI_CROSS_OF_LORRAINE                       "\xE2\x98\xA8" /* U+2628 */
+#define AGSI_CROSS_OF_JERUSALEM                      "\xE2\x98\xA9" /* U+2629 */
+#define AGSI_STAR_AND_CRESCENT                       "\xE2\x98\xAA" /* U+262A */
+#define AGSI_FARSI_SYMBOL                            "\xE2\x98\xAB" /* U+262B */
+#define AGSI_ADI_SHAKTI                              "\xE2\x98\xAC" /* U+262C */
+#define AGSI_HAMMER_AND_SICKLE                       "\xE2\x98\xAD" /* U+262D */
+#define AGSI_PEACE_SYMBOL                            "\xE2\x98\xAE" /* U+262E */
+#define AGSI_YIN_YANG                                "\xE2\x98\xAF" /* U+262F */
+
 /*
  * Miscellaneous Symbols.
  */
-#define AGSI_LIGHTNING         "\xE2\x98\x87"       /* U+2607 */
 #define AGSI_WHEEL_OF_DHARMA   "\xE2\x98\xB8"       /* U+2638 */
 #define AGSI_SCALES            "\xE2\x9A\x96"       /* U+2696 */
 #define AGSI_GEAR              "\xE2\x9A\x99"       /* U+2699 */
