@@ -906,6 +906,9 @@ AG_EditableMoveCursor(AG_Editable *ed, AG_EditableBuffer *buf, int mx, int my)
 	AG_OBJECT_ISA(ed, "AG_Widget:AG_Editable:*");
 	AG_ObjectLock(ed);
 
+	mx -= WIDGET(ed)->paddingLeft;
+	my -= WIDGET(ed)->paddingTop;
+
 	if (AG_EditableMapPosition(ed, buf, mx, my, &ed->pos) == 0) {
 		ed->selStart = 0;
 		ed->selEnd = 0;
@@ -986,6 +989,9 @@ Draw(void *_Nonnull obj)
 	AG_Color cBg = ts->colorBG;
 	AG_Font *font = ts->font;
 	const int flags = ed->flags;
+	const int isTransformed = (flags & (AG_EDITABLE_PASSWORD |
+	                                    AG_EDITABLE_UPPERCASE |
+	                                    AG_EDITABLE_LOWERCASE));
 	const int pos = ed->pos;
 	const int lineSkip = ed->lineSkip;
 	const int clipX1 = WIDGET(ed)->rView.x1 - (ed->fontMaxHeight << 1);
@@ -1126,9 +1132,12 @@ Draw(void *_Nonnull obj)
 			}
 		}
 
-		if      (flags & AG_EDITABLE_PASSWORD)  { c = '*'; }
-		else if (flags & AG_EDITABLE_UPPERCASE) { c = toupper(c); }
-		else if (flags & AG_EDITABLE_LOWERCASE) { c = tolower(c); }
+		/* TODO separate loops for transformed cases */
+		if (isTransformed) {
+			if      (flags & AG_EDITABLE_PASSWORD)  { c = '*'; }
+			else if (flags & AG_EDITABLE_UPPERCASE) { c = toupper(c); }
+			else if (flags & AG_EDITABLE_LOWERCASE) { c = tolower(c); }
+		}
 
 		G = AG_TextRenderGlyph(drv, font, &cBg, &cFg, c);
 		dx = WIDGET(ed)->rView.x1 + x - ed->x;
@@ -1143,10 +1152,16 @@ Draw(void *_Nonnull obj)
 			r.x = x - ed->x;
 			r.y = y + 1;
 			r.w = G->su->w + 1;
-			r.h = G->su->h - 1;
+			r.h = lineSkip + 1;
+			/* TODO queue and combine rectangles */
 			AG_DrawRectFilled(ed, &r, cSel);
 		}
 
+		/*
+		 * Render the character to the display using the drawGlyph()
+		 * driver call. This allows driver-specific filters or
+		 * optimizations to be applied.
+		 */
 		drvOps->drawGlyph(drv, G, dx,dy);
 
 		x += G->advance;
@@ -1157,7 +1172,6 @@ Draw(void *_Nonnull obj)
 	/*
 	 * Draw the cursor.
 	 * TODO different styles.
-	 * TODO an option to hide the cursor behind any overlapping selection.
 	 */
 	if ((flags & AG_EDITABLE_BLINK_ON) && AG_WidgetIsFocused(ed) &&
 	    (ed->y >= 0 && ed->y <= ed->yMax-1)) {
@@ -1170,7 +1184,7 @@ Draw(void *_Nonnull obj)
 	if (flags & AG_EDITABLE_KEEPVISCURSOR) {        /* Maintain visible */
 		KeepVisibleCursor(ed, buf);
 	}
-	if (ed->xScrollTo != NULL) {                    /* X scroll request */
+	if (ed->xScrollTo != NULL) {            /* X scroll request (chars) */
 		const int xScrollTo = *ed->xScrollTo;
 
 		if ((xScrollTo - ed->x) < 0) {
@@ -1183,7 +1197,7 @@ Draw(void *_Nonnull obj)
 		ed->xScrollTo = NULL;
 		WIDGET(ed)->window->dirty = 1;
 	}
-	if (ed->yScrollTo != NULL) {                    /* Y scroll request */
+	if (ed->yScrollTo != NULL) {            /* Y scroll request (chars) */
 		const int yScrollTo = *ed->yScrollTo;
 
 		if ((yScrollTo - ed->y) < 0) {
@@ -1198,7 +1212,7 @@ Draw(void *_Nonnull obj)
 		ed->yScrollTo = NULL;
 		WIDGET(ed)->window->dirty = 1;
 	}
-	if (ed->xScrollPx != 0) {             /* X scroll request in pixels */
+	if (ed->xScrollPx != 0) {                  /* X scroll request (px) */
 		if (ed->xCurs < ed->x - ed->xScrollPx ||
 		    ed->xCurs > ed->x + WIDTH(ed) - ed->xScrollPx) {
 			ed->x += ed->xScrollPx;
@@ -2794,6 +2808,9 @@ MouseButtonDown(void *obj, AG_MouseButton button, int x, int y)
 
 	if (!AG_WidgetIsFocused(ed))
 		AG_WidgetFocus(ed);
+
+	x -= WIDGET(ed)->paddingLeft;
+	y -= WIDGET(ed)->paddingTop;
 
 	switch (button) {
 	case AG_MOUSE_LEFT:

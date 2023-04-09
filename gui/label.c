@@ -264,7 +264,8 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	AG_Label *lbl = obj;
 	int wLbl, hLbl, sCached;
 	
-	if (a->w < 1 || a->h < 1)
+	if (a->w < WIDGET(lbl)->paddingLeft + 1 + WIDGET(lbl)->paddingRight ||
+	    a->h < WIDGET(lbl)->paddingTop + 1 + WIDGET(lbl)->paddingBottom)
 		return (-1);
 
 	switch (lbl->type) {
