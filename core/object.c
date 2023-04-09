@@ -397,7 +397,7 @@ AG_ObjectAttach(void *parentp, void *pChld)
 	}
 
 	/* Name the object if it has the name-on-attach flag set. */
-	if (chld->flags & AG_OBJECT_NAME_ONATTACH) {
+	if (chld->name[0] == '\0' && (chld->flags & AG_OBJECT_NAME_ONATTACH)) {
 		AG_ObjectGenName(parent, chld->cls, chld->name,
 		    sizeof(chld->name));
 	}

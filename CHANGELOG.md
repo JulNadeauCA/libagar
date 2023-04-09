@@ -84,6 +84,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_FontSelector**](https://libagar.org/man3/AG_FontSelector): The preview function now includes text in different scripts. It is now possible to set a user-defined preview function.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Event argument accessor macros of the form `AG_CONST_FOO_PTR()` are now defined as `AG_cFOO_PTR()`.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): In `AG_ObjectGenName()`, convert the prefix (class name) to lowercase in its entirety.
+- [**AG_Object**](https://libagar.org/man3/AG_Object): With the `AG_OBJECT_NAME_ONATTACH` option, do not generate a name if the object has a non-empty name set.
 - [**AG_Printf**](https://libagar.org/man3/AG_Printf): When formatting floating-point, handle positive and negative infinity.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Replaced the `PixelsPerByte` field by `PixelsPerByteShift` to allow for more efficient arithmetic when handling < 8-bpp surfaces.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): In `AG_SurfaceCopy()`, handle 8-bpp copies to same-format surfaces using block copy.
