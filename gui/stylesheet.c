@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2020 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2012-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,6 @@
 #include <agar/gui/style_data.h>
 
 #include <ctype.h>
-
-/* #define DEBUG_CSS */
 
 AG_StyleSheet agDefaultCSS;
 
@@ -85,7 +83,7 @@ AG_LoadStyleSheet(void *obj, const char *path)
 	AG_DataSource *ds;
 	AG_Size fileSize;
 	char *buf, *s, *line;
-	AG_StyleBlock *cssBlk = NULL;
+	AG_StyleBlock *blk = NULL;
 	int i, inComment=0;
 
 	if (tgt != NULL) {
@@ -100,14 +98,15 @@ AG_LoadStyleSheet(void *obj, const char *path)
 	}
 	AG_InitStyleSheet(css);
 
-	if (path[0] == '_') {			/* Statically compiled */
+	if (path[0] == '_') {                           /* Read from memory */
 		AG_StaticCSS *builtin;
+
 		for (i = 0; i < agBuiltinStylesCount; i++) {
 			if (strcmp(agBuiltinStyles[i]->name, &path[1]) == 0)
 				break;
 		}
 		if (i == agBuiltinStylesCount) {
-			AG_SetError(_("No such stylesheet: %s"), path);
+			AG_SetErrorS(_("No such stylesheet"));
 			goto fail;
 		}
 		builtin = agBuiltinStyles[i];
@@ -116,7 +115,7 @@ AG_LoadStyleSheet(void *obj, const char *path)
 		}
 		builtin->css = css;
 		fileSize = builtin->size;
-	} else {
+	} else {                                               /* Load file */
 		if ((ds = AG_OpenFile(path, "rb")) == NULL) {
 			goto fail;
 		}
@@ -124,73 +123,123 @@ AG_LoadStyleSheet(void *obj, const char *path)
 		fileSize = AG_Tell(ds);
 		if (AG_Seek(ds, 0, AG_SEEK_SET) == -1) { goto fail_close; }
 	}
-	if ((buf = TryMalloc(fileSize+1)) == NULL) { goto fail_close; }
-	if (AG_Read(ds, buf, fileSize) != 0) { goto fail_close; }
+
+	if ((buf = TryMalloc(fileSize + 1)) == NULL) {
+		goto fail_close;
+	}
+	if (AG_Read(ds, buf, fileSize) != 0) {
+		goto fail_close;
+	}
 	AG_CloseDataSource(ds);
 	buf[fileSize] = '\0';
+
 	s = buf;
 	while ((line = Strsep(&s, "\n")) != NULL) {
-		char *c = &line[0], *cKey, *cVal, *t, *cComment, *cEp;
+		char *c = &line[0], *cKey, *cVal, *t, *cCo, *cEp;
 		AG_StyleEntry *cssEnt;
 		int len;
 	
 		while (isspace((int)*c)) {
 			c++;
 		}
-		if (*c == '\0' || *c == '#') {
+		if (*c == '\0') {  /* || *c == '#') { */
 			continue; 
 		}
-		if ((cComment = strstr(c, "/*")) != NULL) {
-			char *cCommentEnd;
+		if ((cCo = strstr(c, "/*")) != NULL) {   /* C-style comment */
+			char *cCoEnd;
 
-			if ((cCommentEnd = strstr(&cComment[2], "*/"))) {
-				memmove(cComment, &cCommentEnd[2],
-				    &cCommentEnd[2]-cComment);
+			if ((cCoEnd = strstr(&cCo[2], "*/"))) {
+				memmove(cCo, &cCoEnd[2], &cCoEnd[2] - cCo);
 			} else {
 				inComment++;
 				continue;
 			}
-		} else if ((cComment = strstr(c, "*/")) != NULL) {
+		} else if ((cCo = strstr(c, "*/")) != NULL) {
 			if (--inComment < 0) {
-				AG_SetError(_("Unmatched comment terminator `*/'."));
+				AG_SetErrorS(_("Unmatched comment terminator"));
 				goto fail_parse;
 			}
-			c = &cComment[2];
+			c = &cCo[2];
 		} else if (inComment) {
 			continue;
 		}
 
-		if ((t = strchr(c, '{')) != NULL) {
-			if (cssBlk != NULL) {
-				AG_SetErrorS(_("A {} block cannot be nested."));
+		if ((t = strchr(c, '{')) != NULL) {     /* Stylesheet block */
+			char *f;
+
+			if (blk != NULL) {
+				AG_SetErrorS(_("Blocks cannot be nested"));
 				goto fail_parse;
 			}
 			while (isspace((int)t[-1])) {
 				t--;
 			}
 			*t = '\0';
-			if ((cssBlk = TryMalloc(sizeof(AG_StyleBlock))) == NULL) {
+
+			if ((blk = TryMalloc(sizeof(AG_StyleBlock))) == NULL)
 				goto fail_parse;
+
+			Strlcpy(blk->e, c, sizeof(blk->e));
+
+			f = strchr(blk->e, '>');                   /* E > F */
+			if (f != NULL && f[1] != '\0') {
+				char *fPrev = &f[-1];
+
+				while (isspace(*fPrev)) {
+					--fPrev;
+				}
+				fPrev++;
+				*fPrev = '\0';
+				f++;
+				while (isspace(*f)) {
+					f++;
+				}
+				if (*f == '"' && f[1] != '\0') {
+					char *cEnd;
+
+					f++;
+					if ((cEnd = strchr(f, '"')) == NULL) {
+						AG_SetErrorS(
+						    _("Unterminated quote"));
+						goto fail_parse;
+					}
+					*cEnd = '\0';
+
+					blk->selector = AG_SELECTOR_CHILD_NAMED;
+					Strlcpy(blk->f, f, sizeof(blk->f));
+				} else {
+					blk->selector = AG_SELECTOR_CHILD_OF_CLASS;
+					Strlcpy(blk->f, f, sizeof(blk->f));
+				}
+			} else {
+				if (strchr(blk->e, '*') != NULL) {
+					blk->selector = AG_SELECTOR_CLASS_PATTERN;
+				} else {
+					blk->selector = AG_SELECTOR_CLASS_NAME;
+				}
 			}
-			Strlcpy(cssBlk->match, c, sizeof(cssBlk->match));
-			TAILQ_INIT(&cssBlk->ents);
+
+			TAILQ_INIT(&blk->ents);
 			continue;
 		} else if (strchr(c, '}') != NULL) {
-			if (cssBlk == NULL) {
-				AG_SetError(_("Unmatched block terminator `}'"));
+			if (blk == NULL) {
+				AG_SetErrorS(_("Unmatched block terminator `}'"));
 				goto fail_parse;
 			}
-			TAILQ_INSERT_TAIL(&css->blks, cssBlk, blks);
-			cssBlk = NULL;
+			TAILQ_INSERT_TAIL(&css->blks, blk, blks);
+			blk = NULL;
 			continue;
 		}
+
 		cKey = Strsep(&c, ":=");
 		cVal = Strsep(&c, ":=");
+
 		if (cKey == NULL || cVal == NULL) {
 			continue;
 		}
 		while (isspace((int)*cKey)) { cKey++; }
 		while (isspace((int)*cVal)) { cVal++; }
+
 		len = (int)strlen(cKey)-1;
 		for (;;) {
 			if (!isspace((int)cKey[len])) { break; }
@@ -211,20 +260,17 @@ AG_LoadStyleSheet(void *obj, const char *path)
 		}
 		Strlcpy(cssEnt->key, cKey, sizeof(cssEnt->key));
 		Strlcpy(cssEnt->value, cVal, sizeof(cssEnt->value));
+
 		if ((cEp = strchr(cssEnt->value, ';')) != NULL) {
 			*cEp = '\0';
 		}
-		if (cssBlk == NULL) {
-			AG_SetError(_("Entry is not inside {}: \"%s\""),
+		if (blk == NULL) {
+			AG_SetError(_("Statement outside of block: \"%s\""),
 			    cssEnt->key);
 			free(cssEnt);
 			goto fail_parse;
 		}
-#ifdef DEBUG_CSS
-		Debug(NULL, "CSS(%s): %s -> %s\n", cssBlk->match,
-		    cssEnt->key, cssEnt->value);
-#endif
-		TAILQ_INSERT_TAIL(&cssBlk->ents, cssEnt, ents);
+		TAILQ_INSERT_TAIL(&blk->ents, cssEnt, ents);
 	}
 
 	free(buf);
@@ -242,7 +288,9 @@ fail_parse:
 	return (NULL);
 }
 
-/* Lookup a style sheet entry. */
+/*
+ * Lookup a style sheet entry.
+ */
 int
 AG_LookupStyleSheet(AG_StyleSheet *_Nonnull css, void *_Nonnull obj,
     const char *_Nonnull key, char *_Nonnull *_Nonnull rv)
@@ -250,34 +298,53 @@ AG_LookupStyleSheet(AG_StyleSheet *_Nonnull css, void *_Nonnull obj,
 	AG_ObjectClass **hier;
 	AG_StyleBlock *blk;
 	AG_StyleEntry *ent;
+	const char *clName;
+	const AG_Object *parent = OBJECT(obj)->parent;
 	int nHier;
 
-	if (AG_ObjectGetInheritHier(obj, &hier, &nHier) != 0)
+	if (AG_ObjectGetInheritHier(obj, &hier, &nHier) != 0) {
 		return (0);
+	}
+	clName = hier[nHier - 1]->name;
 
-	/* Match an exact class ID */
-	TAILQ_FOREACH(blk, &css->blks, blks) {
-		if (Strcasecmp(blk->match, AGOBJECT_CLASS(obj)->hier) == 0)
-			break;
-	}
-	if (blk == NULL) {
-		/* Match a general class hierarchy pattern */
-		TAILQ_FOREACH(blk, &css->blks, blks) {
-			if (AG_OfClass(obj, blk->match))
-				break;
-		}
-		if (blk == NULL) {
-			/* Match a short class name */
-			TAILQ_FOREACH(blk, &css->blks, blks) {
-				if (Strcasecmp(hier[nHier-1]->name, blk->match) == 0)
-					break;
+	TAILQ_FOREACH(blk, &css->blks, blks) {   /* E>F (higher precedence) */
+		if (blk->selector == AG_SELECTOR_CHILD_NAMED) {
+			if (parent == NULL) {
+				continue;
 			}
- 			if (blk == NULL)
-				goto fail;
+			if (strcmp(blk->f, OBJECT(obj)->name) == 0 &&
+			    strcmp(blk->e, AGOBJECT_CLASS(parent)->name) == 0) {
+				break;
+			}
+		} else if (blk->selector == AG_SELECTOR_CHILD_OF_CLASS) {
+			if (parent == NULL) {
+				continue;
+			}
+			if (strcmp(blk->f, AGOBJECT_CLASS(obj)->name) == 0 &&
+			    strcmp(blk->e, AGOBJECT_CLASS(parent)->name) == 0) {
+				break;
+			}
 		}
 	}
+
+	if (blk == NULL) {                     /* Just E (lower precedence) */
+		TAILQ_FOREACH(blk, &css->blks, blks) {
+			if (blk->selector == AG_SELECTOR_CLASS_NAME) {
+				if (strcmp(blk->e, clName) == 0) {
+					break;
+				}
+			} else if (blk->selector == AG_SELECTOR_CLASS_PATTERN) {
+				if (AG_OfClass(obj, blk->e)) {
+					break;
+				}
+			}
+		}
+	 	if (blk == NULL)
+			goto fail;
+	}
+
 	TAILQ_FOREACH(ent, &blk->ents, ents) {
-		if (Strcasecmp(ent->key, key) == 0) {
+		if (strcmp(ent->key, key) == 0) {
 			*rv = ent->value;
 			break;
 		}

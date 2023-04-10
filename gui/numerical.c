@@ -599,6 +599,7 @@ Init(void *_Nonnull obj)
 	AG_Numerical *num = obj;
 	AG_Textbox *tb;
 	AG_Button *btn;
+	AG_Editable *ed;
 
 	WIDGET(num)->flags |= AG_WIDGET_FOCUSABLE;
 
@@ -613,31 +614,30 @@ Init(void *_Nonnull obj)
 
 	/* Input textbox */
 	tb = num->input = AG_TextboxNewS(num, AG_TEXTBOX_EXCL, NULL);
+	AG_ObjectSetNameS(tb, "input");
 	AG_TextboxBindUTF8(tb, num->inTxt, sizeof(num->inTxt));
 	AG_TextboxSizeHint(tb, "8888.88");
-/*	AG_SetPadding(tb, "inherit"); */
 
 	AG_SetEvent(tb, "textbox-return",  UpdateFromText,"%p,%i",num,1);
 	AG_SetEvent(tb, "textbox-changed", UpdateFromText,"%p,%i",num,0);
-	AG_AddEvent(tb->ed, "widget-lostfocus", LostFocus,"%p",num);
-	AG_SetEvent(tb->ed, "editable-increment", Increment,"%p",num);
-	AG_SetEvent(tb->ed, "editable-decrement", Decrement,"%p",num);
-	AG_SetEvent(tb->ed, "editable-stop", Stop,"%p",num);
+	ed = tb->ed;
+	AG_AddEvent(ed, "widget-lostfocus", LostFocus,"%p",num);
+	AG_SetEvent(ed, "editable-increment", Increment,"%p",num);
+	AG_SetEvent(ed, "editable-decrement", Decrement,"%p",num);
+	AG_SetEvent(ed, "editable-stop", Stop,"%p",num);
 
 	/* Increment button */
 	btn = num->incbu = AG_ButtonNewS(num,
-	    AG_BUTTON_REPEAT | AG_BUTTON_NO_FOCUS,
-	    _("+"));
-	AG_SetPadding(btn, "0");
-	AG_SetFontSize(btn, "80%");
+	    AG_BUTTON_REPEAT | AG_BUTTON_NO_FOCUS | AG_BUTTON_CROP,
+	    AGSI_ALGUE AGSI_BLACK_UP_POINTING_TRIANGLE);
+	AG_ObjectSetNameS(btn, "increm");
 	AG_SetEvent(btn, "button-pushed", ButtonIncrement, "%p,%i", num, 0);
 
 	/* Decrement button */
 	btn = num->decbu = AG_ButtonNewS(num,
-	    AG_BUTTON_REPEAT | AG_BUTTON_NO_FOCUS,
-	    _("-"));
-	AG_SetPadding(btn, "0");
-	AG_SetFontSize(btn, "80%");
+	    AG_BUTTON_REPEAT | AG_BUTTON_NO_FOCUS | AG_BUTTON_CROP,
+	    AGSI_ALGUE AGSI_BLACK_DN_POINTING_TRIANGLE);
+	AG_ObjectSetNameS(btn, "decrem");
 	AG_SetEvent(btn, "button-pushed", ButtonIncrement, "%p,%i", num, 1);
 
 	AG_InitTimer(&num->toUpdate, "update", 0);

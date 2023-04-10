@@ -164,6 +164,14 @@ ExpandArchExts(AG_Event *_Nonnull event)
 	AG_TlistSizeHintLargest(tl, 10);
 }
 
+static void
+SelectedArchExt(AG_Event *_Nonnull event)
+{
+	AG_UCombo *com = AG_UCOMBO_SELF();
+
+	AG_ButtonText(com->button, _("Extensions..."));
+}
+
 /*
  * Configuration dialog for general Agar settings.
  */
@@ -251,6 +259,7 @@ AG_DEV_ConfigWindow(AG_Config *_Nullable cfg)
 
 			com = AG_UComboNew(boxCPU, 0);
 			AG_SetEvent(com, "ucombo-expanded", ExpandArchExts, NULL);
+			AG_SetEvent(com, "ucombo-selected", SelectedArchExt, NULL);
 			AG_ButtonTextS(com->button, _("Extensions..."));
 		}
 

@@ -244,7 +244,7 @@ Negative values are allowed, and may be used to condense content.
 Margin is handled generically by container widgts.
 Padding and inner spacings are implemented in a widget-specific way.
 Different widget classes will handle padding and spacing differently.
-.Sh INITIALIZATION
+.Sh C INTERFACE
 .nr nS 1
 .Ft "void"
 .Fn AG_InitStyleSheet "AG_StyleSheet *ss"
@@ -296,8 +296,8 @@ Agar's default stylesheet is compiled from
 .Pa gui/style.css .
 It is a good starting point for writing new stylesheets.
 .Pp
-The stylesheet fragment selects a condensed font, tweaks the color scheme
-and sets padding values for the
+The following stylesheet fragment selects a condensed font, tweaks the
+color scheme and sets padding values for the
 .Xr AG_Button 3
 class:
 .Bd -literal
@@ -317,6 +317,31 @@ AG_Button {
 	low-color#hover: darkred;
 
 	padding: 5 4 5 4;      /* TRBL */
+}
+.Ed
+.Pp
+The following example uses an E > F (children of class) selector to set the
+color of all buttons embedded in the
+.Xr AG_Numerical 3
+widget:
+.Bd -literal
+.\" SYNTAX(agarcss)
+AG_Numerical > AG_Button {
+	color: blue;
+}
+.Ed
+.Pp
+The following example uses an E > "F" (children named) selector to set the
+color of specific button instances embedded in the
+.Xr AG_Numerical 3
+widget:
+.Bd -literal
+.\" SYNTAX(agarcss)
+AG_Numerical > "increm" {
+	color: red;
+}
+AG_Numerical > "decrem" {
+	color: green;
 }
 .Ed
 .Pp
@@ -341,3 +366,7 @@ A very basic
 language first appeared in Agar 1.5.0.
 Agar 1.6.0 improved parsing and validation, introduced a new color scheme,
 added typography features as well as "padding" and "spacing".
+Agar 1.7.0 added "margin" and extended "font-weight" and "font-stretch" to
+include all standard weights and width variants.
+The selectors E > F (children of class) and E > "F" (children named)
+appeared in Agar 1.7.0.

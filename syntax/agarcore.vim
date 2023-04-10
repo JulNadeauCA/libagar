@@ -3,7 +3,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agarcore.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 March 20
+" Last Change:  2023 April 8
 
 source $VIMRUNTIME/syntax/c.vim
 
@@ -603,8 +603,104 @@ if !exists("c_no_agsi") || exists("c_agsi_typedefs")
 
   " core/agsi.h (geometric shapes)
   syn keyword cConstant AGSI_GEOMETRIC_SHAPES_BEGIN
-  syn keyword cConstant AGSI_WHITE_RECTANGLE AGSI_WHITE_UP_POINTING_TRIANGLE
-  syn keyword cConstant AGSI_DOTTED_CIRCLE
+  syn keyword cConstant AGSI_BLACK_SQUARE AGSI_WHITE_SQUARE
+  syn keyword cConstant AGSI_WHITE_SQUARE_W_ROUNDED_CORNERS
+  syn keyword cConstant AGSI_WHITE_SQUARE_CONT_BLACK_SM_SQUARE
+  syn keyword cConstant AGSI_SQUARE_W_HORIZONTAL_FILL
+  syn keyword cConstant AGSI_SQUARE_W_VERTICAL_FILL
+  syn keyword cConstant AGSI_SQUARE_W_ORTHOGONAL_CROSSHATCH_FILL
+  syn keyword cConstant AGSI_SQUARE_W_UPPER_L_TO_LOWER_R_FILL
+  syn keyword cConstant AGSI_SQUARE_W_UPPER_R_TO_LOWER_L_FILL
+  syn keyword cConstant AGSI_SQUARE_W_DIAGONAL_CROSSHATCH_FILL
+  syn keyword cConstant AGSI_BLACK_SM_SQUARE AGSI_WHITE_SM_SQUARE
+  syn keyword cConstant AGSI_BLACK_RECTANGLE AGSI_WHITE_RECTANGLE
+  syn keyword cConstant AGSI_BLACK_VERTICAL_RECTANGLE
+  syn keyword cConstant AGSI_WHITE_VERTICAL_RECTANGLE
+  syn keyword cConstant AGSI_BLACK_PARALLELOGRAM AGSI_WHITE_PARALLELOGRAM
+  syn keyword cConstant AGSI_BLACK_UP_POINTING_TRIANGLE
+  syn keyword cConstant AGSI_WHITE_UP_POINTING_TRIANGLE
+  syn keyword cConstant AGSI_BLACK_UP_POINTING_SM_TRIANGLE
+  syn keyword cConstant AGSI_WHITE_UP_POINTING_SM_TRIANGLE
+  syn keyword cConstant AGSI_BLACK_R_POINTING_TRIANGLE
+  syn keyword cConstant AGSI_WHITE_R_POINTING_TRIANGLE
+  syn keyword cConstant AGSI_BLACK_R_POINTING_SM_TRIANGLE
+  syn keyword cConstant AGSI_WHITE_R_POINTING_SM_TRIANGLE
+  syn keyword cConstant AGSI_BLACK_R_POINTING_POINTER
+  syn keyword cConstant AGSI_WHITE_R_POINTING_POINTER
+  syn keyword cConstant AGSI_BLACK_DN_POINTING_TRIANGLE
+  syn keyword cConstant AGSI_WHITE_DN_POINTING_TRIANGLE
+  syn keyword cConstant AGSI_BLACK_DN_POINTING_SM_TRIANGLE
+  syn keyword cConstant AGSI_WHITE_DN_POINTING_SM_TRIANGLE
+  syn keyword cConstant AGSI_BLACK_L_POINTING_TRIANGLE
+  syn keyword cConstant AGSI_WHITE_L_POINTING_TRIANGLE
+  syn keyword cConstant AGSI_BLACK_L_POINTING_SM_TRIANGLE
+  syn keyword cConstant AGSI_WHITE_L_POINTING_SM_TRIANGLE
+  syn keyword cConstant AGSI_BLACK_L_POINTING_POINTER
+  syn keyword cConstant AGSI_WHITE_L_POINTING_POINTER
+  syn keyword cConstant AGSI_BLACK_DIAMOND AGSI_WHITE_DIAMOND
+  syn keyword cConstant AGSI_WHITE_DIAMOND_CONT_BLACK_SM_DIAMOND
+  syn keyword cConstant AGSI_FISHEYE AGSI_LOZENGE AGSI_WHITE_CIRCLE
+  syn keyword cConstant AGSI_DOTTED_CIRCLE AGSI_CIRCLE_W_VERTICAL_FILL
+  syn keyword cConstant AGSI_BULLSEYE AGSI_BLACK_CIRCLE
+  syn keyword cConstant AGSI_CIRCLE_W_L_HALF_BLACK AGSI_CIRCLE_W_R_HALF_BLACK
+  syn keyword cConstant AGSI_CIRCLE_W_LOWER_HALF_BLACK
+  syn keyword cConstant AGSI_CIRCLE_W_UPPER_HALF_BLACK
+  syn keyword cConstant AGSI_CIRCLE_W_UPPER_R_QUADRANT_BLACK
+  syn keyword cConstant AGSI_CIRCLE_W_ALL_BUT_UPPER_L_QUADRANT_BLACK
+  syn keyword cConstant AGSI_L_HALF_BLACK_CIRCLE AGSI_R_HALF_BLACK_CIRCLE
+  syn keyword cConstant AGSI_INVERSE_BULLET AGSI_INVERSE_WHITE_CIRCLE
+  syn keyword cConstant AGSI_UPPER_HALF_INVERSE_WHITE_CIRCLE
+  syn keyword cConstant AGSI_LOWER_HALF_INVERSE_WHITE_CIRCLE
+  syn keyword cConstant AGSI_UPPER_L_QUADRANT_CIRCULAR_ARC
+  syn keyword cConstant AGSI_UPPER_R_QUADRANT_CIRCULAR_ARC
+  syn keyword cConstant AGSI_LOWER_R_QUADRANT_CIRCULAR_ARC
+  syn keyword cConstant AGSI_LOWER_L_QUADRANT_CIRCULAR_ARC
+  syn keyword cConstant AGSI_UPPER_HALF_CIRCLE AGSI_LOWER_HALF_CIRCLE
+  syn keyword cConstant AGSI_BLACK_LOWER_R_TRIANGLE AGSI_BLACK_LOWER_L_TRIANGLE
+  syn keyword cConstant AGSI_BLACK_UPPER_L_TRIANGLE AGSI_BLACK_UPPER_R_TRIANGLE
+  syn keyword cConstant AGSI_WHITE_BULLET
+  syn keyword cConstant AGSI_SQUARE_W_L_HALF_BLACK AGSI_SQUARE_W_R_HALF_BLACK
+  syn keyword cConstant AGSI_SQUARE_W_UPPER_L_DIAGONAL_HALF_BLACK
+  syn keyword cConstant AGSI_SQUARE_W_LOWER_R_DIAGONAL_HALF_BLACK
+  syn keyword cConstant AGSI_SQUARE_W_VERTICAL_BISECTING_LINE
+  syn keyword cConstant AGSI_WHITE_UP_POINTING_TRIANGLE_W_DOT
+  syn keyword cConstant AGSI_UP_POINTING_TRIANGLE_W_L_HALF_BLACK
+  syn keyword cConstant AGSI_UP_POINTING_TRIANGLE_W_R_HALF_BLACK
+  syn keyword cConstant AGSI_LARGE_CIRCLE
+  syn keyword cConstant AGSI_WHITE_SQUARE_W_UPPER_L_QUADRANT
+  syn keyword cConstant AGSI_WHITE_SQUARE_W_LOWER_L_QUADRANT
+  syn keyword cConstant AGSI_WHITE_SQUARE_W_LOWER_R_QUADRANT
+  syn keyword cConstant AGSI_WHITE_SQUARE_W_UPPER_R_QUADRANT
+  syn keyword cConstant AGSI_WHITE_CIRCLE_W_UPPER_L_QUADRANT
+  syn keyword cConstant AGSI_WHITE_CIRCLE_W_LOWER_L_QUADRANT
+  syn keyword cConstant AGSI_WHITE_CIRCLE_W_LOWER_R_QUADRANT
+  syn keyword cConstant AGSI_WHITE_CIRCLE_W_UPPER_R_QUADRANT
+  syn keyword cConstant AGSI_UPPER_L_TRIANGLE AGSI_UPPER_R_TRIANGLE
+  syn keyword cConstant AGSI_LOWER_L_TRIANGLE
+  syn keyword cConstant AGSI_WHITE_MEDIUM_SQUARE AGSI_BLACK_MEDIUM_SQUARE
+  syn keyword cConstant AGSI_WHITE_MEDIUM_SM_SQUARE AGSI_BLACK_MEDIUM_SM_SQUARE
+  syn keyword cConstant AGSI_LOWER_R_TRIANGLE AGSI_BLACK_SUN_W_RAYS AGSI_CLOUD
+  syn keyword cConstant AGSI_UMBRELLA AGSI_SNOWMAN AGSI_COMET AGSI_BLACK_STAR
+  syn keyword cConstant AGSI_WHITE_STAR AGSI_LIGHTNING AGSI_THUNDERSTORM
+  syn keyword cConstant AGSI_SUN AGSI_ASCENDING_NODE AGSI_DESCENDING_NODE
+  syn keyword cConstant AGSI_CONJUNCTION AGSI_OPPOSITION AGSI_BLACK_TELEPHONE
+  syn keyword cConstant AGSI_WHITE_TELEPHONE AGSI_BALLOT_BOX
+  syn keyword cConstant AGSI_BALLOT_BOX_W_CHECK AGSI_BALLOT_BOX_W_X AGSI_SALTIRE
+  syn keyword cConstant AGSI_UMBRELLA_W_RAIN_DROPS AGSI_HOT_BEVERAGE
+  syn keyword cConstant AGSI_WHITE_SHOGI_PIECE AGSI_BLACK_SHOGI_PIECE
+  syn keyword cConstant AGSI_SHAMROCK
+  syn keyword cConstant AGSI_REVERSED_ROTATED_FLORAL_HEART_BULLET
+  syn keyword cConstant AGSI_BLACK_L_POINTING_INDEX AGSI_BLACK_R_POINTING_INDEX
+  syn keyword cConstant AGSI_WHITE_L_POINTING_INDEX AGSI_WHITE_UP_POINTING_INDEX
+  syn keyword cConstant AGSI_WHITE_R_POINTING_INDEX AGSI_WHITE_DN_POINTING_INDEX
+  syn keyword cConstant AGSI_SKULL_AND_CROSSBONES AGSI_CAUTION_SIGN
+  syn keyword cConstant AGSI_RADIOACTIVE_SIGN AGSI_BIOHAZARD_SIGN AGSI_CADUCEUS
+  syn keyword cConstant AGSI_ANKH AGSI_ORTHODOX_CROSS AGSI_CHI_RHO
+  syn keyword cConstant AGSI_CROSS_OF_LORRAINE AGSI_CROSS_OF_JERUSALEM
+  syn keyword cConstant AGSI_STAR_AND_CRESCENT AGSI_FARSI_SYMBOL
+  syn keyword cConstant AGSI_ADI_SHAKTI AGSI_HAMMER_AND_SICKLE
+  syn keyword cConstant AGSI_PEACE_SYMBOL AGSI_YIN_YANG
+
   syn keyword cConstant AGSI_GEOMETRIC_SHAPES_END
 
   " core/agsi.h (miscellaneous symbols)

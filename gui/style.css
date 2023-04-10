@@ -2,9 +2,16 @@
  * Default Agar Stylesheet.
  * ex:syn=agarcss
  *
- * Colors and font attributes of parents are inherited by default (unless
- * overridden by an instance Variable or matching stylesheet definition).
- * Padding and spacing attributes are not inherited by default.
+ * Selector type                 Example
+ * -------------                --------
+ * Widgets of class (exact)     AG_Box
+ * Widgets of class (pattern)   AG_Widget:AG_Box:*
+ * Child widgets of class       AG_FontSelector > AG_Tlist
+ * The child widget named       AG_Combo > "trigger"
+ *
+ * Widgets inherit colors and fonts from their parents by default.
+ * Margins, paddings and spacings are not inherited. Style attributes
+ * can be overridden with per-widget instance variables.
  *
  * See: AG_StyleSheet(3) and "STYLE ATTRIBUTES" section of AG_Widget(3).
  */
@@ -16,7 +23,7 @@ AG_Box {
 AG_Button {
 	padding: 5 10 5 10;
 	color#focused: #808081;
-	color#hover: #818180;
+	color#hover: #868580;
 	selection-color#focused: #646496;
 	selection-color#hover: #969664;
 }
@@ -24,14 +31,13 @@ AG_Checkbox {
 	spacing: 5;
 	background-color#hover: rgb(80,80,120);
 }
-/*
- * AG_Combo > #trigger {
- * 	padding: 1;
- * }
- * AG_Combo > #list {
- * 	background-color: #474747;
- * }
- */
+AG_Combo > "input" {
+	padding: 0 0 2 0;
+	font-size: 95%;
+}
+AG_Combo > "trigger" {
+	padding: 2;
+}
 AG_Console {
 	font-family: monoalgue;
 	padding: 4;
@@ -43,7 +49,7 @@ AG_Console {
 	text-color: rgb(240,240,240);
 }
 AG_Editable {
-	padding: 1;
+	padding: 1 3 1 3;
 	background-color: #0000;
 }
 AG_FileDlg {
@@ -73,6 +79,18 @@ AG_MenuView {
 	color#disabled: rgb(40,40,110);
 	text-color#disabled: rgb(170,170,170);
 }
+AG_Notebook {
+	margin: 2;
+}
+AG_Numerical > AG_UCombo {
+	font-size: 80%;
+}
+AG_Numerical > AG_Button {
+	padding: 0;
+	font-size: 55%;
+	text-color: #ccc;
+	color#hover: #969590;
+}
 AG_Pane {
 	line-color#hover: rgb(200,200,180);
 }
@@ -86,6 +104,7 @@ AG_Radio {
 	background-color#hover: rgb(80,80,120);
 }
 AG_Textbox {
+	padding: 3;
 	spacing: 5;
 }
 AG_Titlebar {
@@ -107,13 +126,15 @@ AG_Separator {
 	padding: 8 10 8 10;
 }
 AG_Statusbar {
-	font-family: Exo 2,Cousine,charter;
 	padding: 2;
 	spacing: 1;
 }
 AG_Tlist {
 	padding: 1 0 2 0;
 	spacing: 4 0;
+}
+AG_UCombo > "trigger" {
+	padding: 3;
 }
 AG_Window {
 	padding: 0 3 4 3;

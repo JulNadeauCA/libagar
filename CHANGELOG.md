@@ -7,6 +7,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**sdl2gl**](https://libagar.org/man3/AG_DriverSDL2GL): New driver for SDL 2.0 (single-window; OpenGL mode).
 - [**sdl2mw**](https://libagar.org/man3/AG_DriverSDL2MW): New driver for SDL 2.0 (multi-window; OpenGL mode).
 - [**glx**](https://libagar.org/man3/AG_DriverGLX): Add support for X Input Methods. Thanks sr20det!
+- [**AG_Button**](https://libagar.org/man3/AG_Button): New option `AG_BUTTON_CROP` (crop label surface to fit contents). Useful for condensing or removing typographical spacings so that individual glyphs (for example "Geometrical Shapes") can be made to align precisely.
 - [**AG_Color**](https://libagar.org/man3/AG_Color): Add compression / decompression macros for 4/12/24/48-bit values.
 - [**AG_Driver**](https://libagar.org/man3/AG_Driver): New operation: `setMouseAutoCapture` (enable, disable or reset mouse auto-capture on button-down).
 - [**AG_DriverSw**](https://libagar.org/man3/AG_DriverSw): New option `clampOnResize` (clamp active Agar windows against new display size).
@@ -19,12 +20,14 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Improve the object validity test by using a pseudo-random signature generated on initialization. Make validity and class-membership testing possible outside of Debug builds.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): New function `AG_ObjectFreeChildrenOfType()`.
 - [**AG_Radio**](https://libagar.org/man3/AG_Radio): New `HOMOGENOUS` option to divide space equally between items. Thanks Stephen!
+- [**AG_StyleSheet**](https://libagar.org/man3/AG_StyleSheet): New `E > F` selector. Allows child widgets to be addressed by either instance name or class name.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Add standard palettes for 1/2/4/8-bit modes. New Indexed surfaces are now initialized with a standard palette by default.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Add support for 40- and 48-bpp surfaces.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Introduce optimized blitter tables.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): New function `AG_PixelFormatMaximum()` to return the maximum possible pixel value for a given format.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): New function `AG_SurfaceBlend8()` for blending 1/2/4/8-bpp surfaces against an `AG_Color` using the closest approximation available.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Embed 4 general-purpose 16-bit guides. Guides are useful for typography, graphics and other applications.
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Make the `AG_SURFACE_TRACE` flag useful for tracing surface operations such as blits, copies / conversions and mapping to widgets (needs `--enable-debug-surfaces`).
 - [**AG_Text**](https://libagar.org/man3/AG_Text): Expand the list of standard font sizes to 32 sizes. Add fractional sizes between 7.0 and 13.0.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): Expanded font adjustments to include subpixel alignment corrections for all 32 standard sizes. The table now covers over 150 popular open-source fonts. Adjustments allow different fonts to align with pixel-perfect accuracy.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): Add OS/2 metrics and Unicode range information to the `AG_Font` structure.
@@ -39,6 +42,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Text**](https://libagar.org/man3/AG_Text): New function `AG_FetchFontFromList()` for loading the first available font from a comma-separated list.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): New functions `AG_FontGetStyleName()` and `AG_FontGetStyleByName()`. Convert between the `Uint` and string representations of font styles (including styles, weights and width variants).
 - [**AG_Text**](https://libagar.org/man3/AG_Text): New function `AG_FontGetFamilyStyles()`. Return an array of `AG_Font` style flags describing every style, weight and width variant available in a given font's family.
+- [**AG_Text**](https://libagar.org/man3/AG_Text): New function `AG_TextRenderCropped()`. Crops the returned surface to fit the rendered text contents. This fast crop operation leaves the cropped (all-transparent) pixels in memory. It can be used for condensing or removing typographical spacings so that individual glyphs (for example "Geometrical Shapes") can be aligned precisely inside widget controls.
 - [**AG_Textbox**](https://libagar.org/man3/AG_Textbox) / [**AG_Editable**](https://libagar.org/man3/AG_Editable): Implement Undo/Redo functionality.
 - [**AG_Textbox**](https://libagar.org/man3/AG_Textbox) / [**AG_Editable**](https://libagar.org/man3/AG_Editable): Let `AG_Textbox` (and other containers) manage clipping so that text can be allowed to overflow out of the `AG_Editable` and out over the padding of its container widget.
 - [**AG_Editable**](https://libagar.org/man3/AG_Editable): New option `NO_CLIPPING` to allow overflow beyond the widget's allocated area (for container widgets which implement their own clipping).
@@ -80,6 +84,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - Build system updates so configure scripts are smaller and no longer emit unnecessary defines such as `foo_cflags.h` for dependent libraries. Those definitions are always available from `${DATADIR}/agar.mk`.
 - Don't install headers from disabled libraries.
 - [**AG_Color**](https://libagar.org/man3/AG_Color): Handle `rgb16()` format in [AG_ColorFromString()](https://libagar.org/man3/AG_ColorFromString).
+- [**AG_Combo**](https://libagar.org/man3/AG_Combo): Make sub-elements style-addressable as `input` and `trigger`.
 - [**AG_FontSelector**](https://libagar.org/man3/AG_FontSelector): Add Unicode range information and more metrics under the "Metrics" tab.
 - [**AG_FontSelector**](https://libagar.org/man3/AG_FontSelector): The preview function now includes text in different scripts. It is now possible to set a user-defined preview function.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Event argument accessor macros of the form `AG_CONST_FOO_PTR()` are now defined as `AG_cFOO_PTR()`.
@@ -95,6 +100,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Now applies the "padding" attribute on a per-item basis.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): `AG_TlistSetCompareFn()` now returns a pointer to the previous compare function.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Make the comparison function of `AG_TlistSort()` ANSI-aware. Ignore SGR sequences as well as ideogram-range Unicodes.
+- [**AG_UCombo**](https://libagar.org/man3/AG_UCombo): Make the button style-addressable as `trigger`.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): In `AG_WidgetSensitive()`, use the `window` pointer to avoid an unnecessary traversal of parent objects.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Prevent delivery of redundant "widget-shown" or "widget-hidden" events if `AG_WidgetShow()` and `AG_WidgetHide()` are called multiple times.
 - [**MAP**](https://libagar.org/man3/MAP): Performance improvements in threaded mode. Decoupled the memory allocation of nodes from the `MAP` thread in `MAP_AllocNodes()`. Removed redundant lock operations. Removed lock in `MAP_NodeCopy()`.
@@ -112,6 +118,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Console**](https://libagar.org/man3/AG_Console): Garbage-collect generated textures more efficiently.
 - [**AG_HSVPal**](https://libagar.org/man3/AG_HSVPal): Fixed color not updating on `agcolor` binding change.
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): Fixed styling errors. Honor the `#disabled` state.
+- [**AG_Numerical**](https://libagar.org/man3/AG_Numerical): Fixed styling errors. Use `AG_BUTTON_CROP` to align the arrows. Make the buttons style-addressable. Thanks Kristof!
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Fixed loading of PNG files in 16bpc format (the surface was not being initialized with the correct 64-bit masks). Fix transparency to colorkey translation when loading a PNG in an Indexed format.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Fixed conversion between Indexed/Grayscale and other modes.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Fixed conversion between 64-bpp and other modes.

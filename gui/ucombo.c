@@ -244,6 +244,7 @@ Init(void *_Nonnull obj)
 
 	com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY |
 	                                 AG_BUTTON_NO_FOCUS, _("..."));
+	AG_ObjectSetNameS(com->button, "trigger");
 	AG_SetPadding(com->button, "1");
 	AG_WidgetForwardFocus(com, com->button);
 	AG_SetEvent(com->button, "button-pushed", ExpandButtonPushed, "%p", com);

@@ -136,8 +136,6 @@ DebugStuff(AG_NotebookTab *nt, AG_Textbox *tb)
 	CB_DEBUG_FLAG("Force integer input",        AG_EDITABLE_INT_ONLY);
 	CB_DEBUG_FLAG("Force float input",          AG_EDITABLE_FLT_ONLY);
 	CB_DEBUG_FLAG("Keep cursor in view",        AG_EDITABLE_KEEPVISCURSOR);
-	CB_DEBUG_FLAG("No Kill and Yank functions", AG_EDITABLE_NO_KILL_YANK);
-	CB_DEBUG_FLAG("No alt-key Latin1 mappings", AG_EDITABLE_NO_ALT_LATIN1);
 
 	AG_SeparatorNewHoriz(nt);
 
@@ -177,18 +175,14 @@ TestGUI(void *obj, AG_Window *win)
 		tb = AG_TextboxNew(nt, AG_TEXTBOX_HFILL, "Buffer: ");
 		tbBindFn(tb, bufferShd, sizeof(bufferShd));
 		AG_SetFontSize(tb, "120%");
-		AG_SetPadding(tb, "5");
-
-		AG_SpacerNewHoriz(nt);
+		AG_SetMargin(tb, "0 0 10 0");
 
 		tb2 = AG_TextboxNew(nt, AG_TEXTBOX_HFILL, "Buffer (again): ");
 		tbBindFn(tb2, bufferShd, sizeof(bufferShd));
 		AG_SetFontFamily(tb2, "monoalgue");
 		AG_SetFontSize(tb2, "120%");
 		AG_SetTextColor(tb2, "AntiqueWhite");
-		AG_SetPadding(tb2, "0");
 
-//		AG_TextboxSetCursorPos(tb, -1);		/* To end of string */
 		AG_WidgetFocus(tb);
 		DebugStuff(nt, tb);
 	}

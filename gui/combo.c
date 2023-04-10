@@ -347,12 +347,13 @@ Init(void *_Nonnull obj)
 	com->hPreList = -1;
 	
 	tb = com->tbox = AG_TextboxNewS(com, AG_TEXTBOX_COMBO | AG_TEXTBOX_EXCL, NULL);
+	AG_ObjectSetNameS(tb, "input");
 	AG_SetEvent(tb, "textbox-return", Return, "%p", com);
 	AG_WidgetForwardFocus(com, tb);
 
 	btn = com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY |
 	                                       AG_BUTTON_NO_FOCUS, _(" ... "));
-	AG_SetPadding(btn, "2");
+	AG_ObjectSetNameS(btn, "trigger");
 	AG_SetEvent(btn, "button-pushed", ExpandButtonPushed,"%p",com);
 
 	com->list = NULL;

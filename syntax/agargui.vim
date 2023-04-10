@@ -3,7 +3,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agargui.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 March 19
+" Last Change:  2023 April 8
 
 " Agar-GUI (https://libagar.org/)
 if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
@@ -25,6 +25,7 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_BUTTON_REPEAT AG_BUTTON_HFILL AG_BUTTON_VFILL
   syn keyword cConstant AG_BUTTON_INVERTED AG_BUTTON_KEYDOWN AG_BUTTON_EXCL
   syn keyword cConstant AG_BUTTON_NOEXCL AG_BUTTON_SET AG_BUTTON_EXPAND
+  syn keyword cConstant AG_BUTTON_CROP
   syn keyword cConstant AG_BUTTON_ALIGN_CENTER AG_BUTTON_ALIGN_LEFT
   syn keyword cConstant AG_BUTTON_ALIGN_RIGHT AG_BUTTON_VALIGN_TOP
   syn keyword cConstant AG_BUTTON_VALIGN_MIDDLE AG_BUTTON_VALIGN_BOTTOM
@@ -161,7 +162,7 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_EDITABLE_WORDWRAP AG_EDITABLE_NOPOPUP
   syn keyword cConstant AG_EDITABLE_WORDSELECT AG_EDITABLE_READONLY
   syn keyword cConstant AG_EDITABLE_MULTILINGUAL AG_EDITABLE_SHIFT_SELECT
-  syn keyword cConstant AG_EDITABLE_NUMERICAL
+  syn keyword cConstant AG_EDITABLE_NUMERICAL AG_EDITABLE_NO_CLIPPING
   " gui/file_dlg.h
   syn keyword cType AG_FileDlg AG_FileType AG_FileOption
   syn keyword cConstant AG_FILEDLG_BOOL AG_FILEDLG_INT AG_FILEDLG_FLOAT
@@ -504,7 +505,9 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_STATUSBAR_VFILL AG_STATUSBAR_EXPAND
   " gui/stylesheet.h
   syn keyword cType AG_StyleSheet AG_StyleEntry AG_StyleBlock AG_StaticCSS 
-  syn keyword cConstant AG_STYLE_VALUE_MAX
+  syn keyword cConstant AG_STYLE_VALUE_MAX AG_SELECTOR_CLASS_NAME
+  syn keyword cConstant AG_SELECTOR_CLASS_PATTERN AG_SELECTOR_CHILD_NAMED
+  syn keyword cConstant AG_SELECTOR_CHILD_OF_CLASS AG_SELECTOR_LAST
   " gui/surface.h
   syn keyword cType AG_SurfaceMode AG_GrayscaleMode AG_Palette AG_PixelFormat 
   syn keyword cType AG_AnimDispose AG_AnimFrameType AG_AnimFrame AG_SurfaceGuide
