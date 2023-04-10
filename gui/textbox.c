@@ -381,13 +381,18 @@ Draw(void *_Nonnull p)
 	}
 
 	r = WIDGET(tb)->r;
+
 	if (flags & AG_TEXTBOX_MULTILINE) {
-		if (tb->hBar) { r.h -= HEIGHT(tb->hBar); }
-		if (tb->vBar) { r.w -= WIDTH(tb->vBar); }
+		if (tb->vBar)
+			r.w -= WIDTH(tb->vBar);
+		if (tb->hBar)
+			r.h -= HEIGHT(tb->hBar);
+
 		r.w -= WIDGET(tb)->paddingRight;
 		r.h -= WIDGET(tb)->paddingBottom;
+	} else {
+		r.w -= (WIDGET(tb)->paddingLeft + WIDGET(tb)->paddingRight);
 	}
-	AG_PushClipRect(tb, &r);
 
 	if (tb->label != NULL &&
 	    tb->label[0] != '\0') {
@@ -399,6 +404,7 @@ Draw(void *_Nonnull p)
 		}
 		Slbl = WSURFACE(tb, tb->surfaceLbl);
 
+		/* TODO: Opaque label optimizations */
 		AG_PushBlendingMode(tb, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 
 		AG_WidgetBlitSurface(tb, tb->surfaceLbl,
@@ -406,7 +412,17 @@ Draw(void *_Nonnull p)
 		   (HEIGHT(tb) >> 1) - (Slbl->h >> 1));
 
 		AG_PopBlendingMode(tb);
+
+		if (!isUndersize) {
+			const int wLbl = WIDGET(tb)->paddingLeft + Slbl->w +
+					 WIDGET(tb)->spacingHoriz;
+
+			r.x += wLbl;
+			r.w -= wLbl;
+		}
 	}
+
+	AG_PushClipRect(tb, &r);
 
 	if (!isUndersize)
 		AG_WidgetDraw(tb->ed);
@@ -701,11 +717,12 @@ static void
 Init(void *_Nonnull obj)
 {
 	AG_Textbox *tb = obj;
+	AG_Editable *ed;
 	
 	WIDGET(tb)->flags |= AG_WIDGET_USE_TEXT |
 			     AG_WIDGET_USE_MOUSEOVER;
 
-	tb->ed = AG_EditableNew(tb, AG_EDITABLE_NO_CLIPPING);
+	tb->ed = ed = AG_EditableNew(tb, AG_EDITABLE_NO_CLIPPING);
 	tb->flags = 0;
 	tb->surfaceLbl = -1;
 	tb->label = NULL;
@@ -715,18 +732,18 @@ Init(void *_Nonnull obj)
 	tb->r.y = 0;
 	tb->r.w = 0;
 	tb->r.h = 0;
-	tb->text = tb->ed->text;
+	tb->text = ed->text;
 	tb->btnRet = NULL;
 
 	AG_SetEvent(tb, "widget-disabled", Disabled, NULL);
 	AG_SetEvent(tb, "widget-enabled", Enabled, NULL);
 	AG_AddEvent(tb, "font-changed", FontChanged, NULL);
 
-	AG_SetEvent(tb->ed, "editable-prechg", EditablePreChg,"%p",tb);
-	AG_SetEvent(tb->ed, "editable-postchg", EditablePostChg,"%p",tb);
-	AG_SetEvent(tb->ed, "editable-return", EditableReturn,"%p",tb);
+	AG_SetEvent(ed, "editable-prechg", EditablePreChg,"%p",tb);
+	AG_SetEvent(ed, "editable-postchg", EditablePostChg,"%p",tb);
+	AG_SetEvent(ed, "editable-return", EditableReturn,"%p",tb);
 	
-	AG_WidgetForwardFocus(tb, tb->ed);
+	AG_WidgetForwardFocus(tb, ed);
 }
 
 static void
