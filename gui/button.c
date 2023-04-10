@@ -458,32 +458,31 @@ Destroy(void *_Nonnull obj)
 	Free(bu->repeat);
 }
 
-static __inline__ void
-RenderLabel(AG_Button *_Nonnull bu)
-{
-	AG_TextColor(&WCOLOR(bu, TEXT_COLOR));
-/*	AG_TextBGColor(&WCOLOR(bu, FG_COLOR)); */
-
-	bu->surfaceLbl = AG_WidgetMapSurface(bu, AG_TextRender(bu->label));
-}
-
 static void
-SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
+SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 {
-	AG_Button *bu = p;
+	AG_Button *bu = obj;
+	const AG_Surface *S;
 	
 	r->w = WIDGET(bu)->paddingLeft + WIDGET(bu)->paddingRight;
 	r->h = WIDGET(bu)->paddingTop + WIDGET(bu)->paddingBottom;
 
 	if (bu->label && bu->label[0] != '\0') {
-		if (bu->surfaceLbl == -1) {
-			RenderLabel(bu);
+		if (bu->surfaceLbl != -1) {
+			S = WSURFACE(bu, bu->surfaceLbl);
+			r->w += S->w;
+			r->h += S->h;
+		} else {
+			int wLbl, hLbl;
+
+			AG_TextSize(bu->label, &wLbl, &hLbl);
+			r->w += wLbl;
+			r->h += hLbl;
 		}
-		r->w += WSURFACE(bu,bu->surfaceLbl)->w;
-		r->h += WSURFACE(bu,bu->surfaceLbl)->h;
 	} else if (bu->surfaceSrc != -1) {
-		r->w += WSURFACE(bu,bu->surfaceSrc)->w;
-		r->h += WSURFACE(bu,bu->surfaceSrc)->h;
+		S = WSURFACE(bu, bu->surfaceSrc);
+		r->w += S->w;
+		r->h += S->h;
 	}
 
 	bu->wReq = r->w;
@@ -491,9 +490,10 @@ SizeRequest(void *_Nonnull p, AG_SizeReq *_Nonnull r)
 }
 
 static int
-SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
+SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
-	if (a->w < 2 || a->h < 2) {
+	if ((a->w < WIDGET(obj)->paddingLeft + 2 + WIDGET(obj)->paddingRight) ||
+	    (a->h < WIDGET(obj)->paddingTop + 2 + WIDGET(obj)->paddingBottom)) {
 		return (-1);
 	}
 	return (0);
@@ -544,10 +544,16 @@ Draw(void *_Nonnull p)
 		surface = bu->surfaceSrc;
 	} else {                           
 		if (bu->surfaceLbl == -1) {
-			if (bu->label == NULL) {                /* No label */
+			if (bu->label == NULL || bu->label[0] == '\0') {
+				/* Nothing to draw */
 				return;
 			}
-			RenderLabel(bu);
+			AG_TextColor(&WCOLOR(bu, TEXT_COLOR));
+		/*	AG_TextBGColor(&WCOLOR(bu, FG_COLOR)); */
+			bu->surfaceLbl = AG_WidgetMapSurface(bu,
+			    (bu->flags & AG_BUTTON_CROP) ?
+			    AG_TextRenderCropped(bu->label) :
+			    AG_TextRender(bu->label));
 		}
 		surface = bu->surfaceLbl;
 	}
@@ -556,15 +562,16 @@ Draw(void *_Nonnull p)
 
 	switch (bu->justify) {
 	case AG_TEXT_LEFT:
-		x = WIDGET(bu)->paddingLeft;    
+		x = WIDGET(bu)->paddingLeft;
 		break;
 	case AG_TEXT_CENTER:
-		x = (WIDTH(bu) >> 1) - (S->w >> 1);
+		x = (WIDTH(bu) >> 1) - (S->w >> 1) - 1;
 		break;
 	case AG_TEXT_RIGHT:
-		x = WIDTH(bu) - S->w - WIDGET(bu)->paddingRight;
+		x = WIDTH(bu) - S->w - WIDGET(bu)->paddingRight - 1;
 		break;
 	}
+
 	switch (bu->valign) {
 	case AG_TEXT_TOP:
 		y = WIDGET(bu)->paddingTop;
@@ -573,16 +580,16 @@ Draw(void *_Nonnull p)
 		y = (HEIGHT(bu) >> 1) - (S->h >> 1);
 		break;
 	case AG_TEXT_BOTTOM:
-		y = HEIGHT(bu) - S->h - WIDGET(bu)->paddingBottom;
+		y = HEIGHT(bu) - S->h - WIDGET(bu)->paddingBottom - 1;
 		break;
 	}
-	if (y < 0) { y = 0; }
 
 	if (pressed) {
 		x++;
 		y++;
 	}
 
+	/* TODO Opaque label optimizations */
 	AG_PushBlendingMode(bu, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 
 	if (AG_WidgetIsFocused(bu)) {
@@ -595,7 +602,7 @@ Draw(void *_Nonnull p)
 		             &WCOLOR(bu, SELECTION_COLOR));
 	}
 
-	if (WIDTH(bu) < bu->wReq || HEIGHT(bu) < bu->hReq) {
+	if (WIDTH(bu) < bu->wReq || HEIGHT(bu) < bu->hReq) {   /* Undersize */
 		AG_PushClipRectInner(bu, &WIDGET(bu)->r);
 		AG_WidgetBlitSurface(bu, surface, x,y);
 		AG_PopClipRect(bu);

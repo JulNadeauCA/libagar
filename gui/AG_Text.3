@@ -56,6 +56,9 @@ handles Agar bitmap font (.agbf) files.
 .Fn AG_TextRenderRTL "const char *text"
 .Pp
 .Ft "AG_Surface *"
+.Fn AG_TextRenderCropped "const char *text"
+.Pp
+.Ft "AG_Surface *"
 .Fn AG_TextRenderInternal "const AG_Char *text" "const AG_Font *font" "const AG_Color *cBg" "const AG_Color *cFg"
 .Pp
 .Ft "AG_Glyph *"
@@ -93,7 +96,21 @@ information.
 .Pp
 The
 .Fn AG_TextRenderRTL
-variant renders text reversed (right to left).
+variant of
+.Fn AG_TextRender
+renders text reversed (right to left).
+.Pp
+The
+.Fn AG_TextRenderCropped
+variant of
+.Fn AG_TextRender
+crops the returned surface to the precise boundaries of the rendered
+text contents.
+This fast crop operation leaves the cropped (all-transparent) pixels in memory.
+.Fn AG_TextRenderCropped
+can be used for condensing or removing typographical spacings so that
+individual glyphs (for example "Geometrical Shapes") can be aligned precisely
+inside widget controls.
 .Pp
 .Fn AG_TextRenderInternal
 renders onto a newly-allocated surface text in native

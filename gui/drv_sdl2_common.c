@@ -189,8 +189,11 @@ AG_SDL2_BlitSurface(const AG_Surface *S, const AG_Rect *srcRect,
 
 #ifdef AG_DEBUG
 	if (S->flags & AG_SURFACE_TRACE)
-		Debug(NULL, "Surface <%p>: Blit to SDL_Surface <%p> @ %d,%d\n",
-		    S, D, xDst, yDst);
+		Debug(NULL,
+		    "SURFACE(%dx%dx%d): " AGSI_BR_BLU "Blit" AGSI_RST
+		    " to SDL_Surface (%p) @ %d,%d\n",
+		    S->w, S->h, S->format.BitsPerPixel,
+		    D, xDst, yDst);
 #endif
 	if (srcRect != NULL) {
 		sr = *srcRect;

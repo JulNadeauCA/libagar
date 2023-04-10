@@ -736,6 +736,13 @@ AG_SurfaceCopy(AG_Surface *D, const AG_Surface *S)
 	int x, y;
 
 	if (AG_PixelFormatCompare(&S->format, &D->format) == 0) {
+#ifdef DEBUG_SURFACE
+		if (S->flags & AG_SURFACE_TRACE) {
+			Debug(NULL, "SURFACE(%dx%dx%d): Block Copy to (%dx%d).\n",
+			    S->w, S->h, S->format.BitsPerPixel,
+			    D->w, D->h);
+		}
+#endif
 		if (D->format.BitsPerPixel < 8) {         /* <8bpp block copy */
 			const Uint8 *pSrc = S->pixels;
 			Uint8 *pDst = D->pixels;
@@ -772,9 +779,19 @@ AG_SurfaceCopy(AG_Surface *D, const AG_Surface *S)
 		return;
 	}
 
+#ifdef DEBUG_SURFACE
+	if (S->flags & AG_SURFACE_TRACE) {
+		Debug(NULL,
+		    "SURFACE(%dx%dx%d): Conversion to (%s, %dx%dx%d)\n",
+		    S->w, S->h, S->format.BitsPerPixel,
+		    agSurfaceModeNames[D->format.mode],
+		    D->w, D->h, D->format.BitsPerPixel);
+	}
+#endif
 	if (S->format.mode == AG_SURFACE_PACKED) {    /* Packed RGB(A) source */
 		const Uint8 *pSrc = S->pixels;
 		Uint8 *pDst = D->pixels;
+
 
 		for (y = 0; y < h; y++) {
 			for (x = 0; x < w; x++) {
@@ -849,12 +866,14 @@ AG_SurfaceCopy(AG_Surface *D, const AG_Surface *S)
 					c.a = AG_8toH((*(Uint32 *)pSrc &
 					              0xf0000000) >> 24);
 					break;
+#if AG_MODEL == AG_LARGE
 				case 64:
 					val = (*(Uint64 *)pSrc & 0xffffffffffff);
 					c.b = c.g = c.r = AG_48toH(val);
 					c.a = AG_16toH((*(Uint64 *)pSrc &
 					               0xffff000000000000) >> 48);
 					break;
+#endif
 				}
 				AG_SurfacePut_At(D, pDst,
 				    AG_MapPixel(&D->format, &c));
@@ -1097,8 +1116,6 @@ next_pixel:
 			pSrc += S->format.BytesPerPixel;
 			pDst += D->format.BytesPerPixel;
 		}
-		pSrc += S->padding;
-		pDst += D->padding;
 	}
 }
 
@@ -1212,6 +1229,21 @@ AG_SurfaceBlit(const AG_Surface *S, const AG_Rect *rSrc, AG_Surface *D,
 	AG_LowerBlit *lowerBlits;
 	Uint want;
 	int nLowerBlits, i;
+
+#ifdef DEBUG_SURFACE
+	if (S->flags & AG_SURFACE_TRACE) {
+		Debug(NULL, "SURFACE(%dx%dx%d): " AGSI_BR_BLU "Blit" AGSI_RST " to (%dx%dx%d):[%d,%d]\n",
+		    S->w, S->h, S->format.BitsPerPixel,
+		    D->w, D->h, D->format.BitsPerPixel,
+		    xDst, yDst);
+	}
+	if (D->flags & AG_SURFACE_TRACE) {
+		Debug(NULL, "SURFACE(%dx%dx%d): " AGSI_BR_BLU "Blit" AGSI_RST " from (%dx%dx%d) at [%d,%d]\n",
+		    D->w, D->h, D->format.BitsPerPixel,
+		    S->w, S->h, S->format.BitsPerPixel,
+		    xDst, yDst);
+	}
+#endif
 
 	/*
 	 * Upper Blit.
@@ -1335,6 +1367,11 @@ AG_SurfaceFree(AG_Surface *S)
 #ifdef AG_DEBUG
 	if (S->flags & AG_SURFACE_MAPPED)
 		AG_FatalError("Surface is in use");
+#endif
+#ifdef DEBUG_SURFACE
+	if (S->flags & AG_SURFACE_TRACE)
+		Debug(NULL, "SURFACE(%dx%dx%d): Freed.\n",
+		    S->w, S->h, S->format.BitsPerPixel);
 #endif
 	AG_PixelFormatFree(&S->format);
 

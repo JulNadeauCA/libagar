@@ -418,18 +418,28 @@ AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *S, AG_TexCoord *tc)
 	if ((S->flags & AG_SURFACE_GL_TEXTURE) &&
 	    (w == S->w) && (h == S->h)) {               /* POT & compatible */
 #else
-	if ((S->flags & AG_SURFACE_GL_TEXTURE)) {             /* Compatible */
+	if ((S->flags & AG_SURFACE_GL_TEXTURE) &&
+	    S->padding == 0) {                                /* Compatible */
 #endif
 		GS = S;
-#ifdef DEBUG_GL
-		Debug(obj, "GL upload (%dx%d) surface %p -> #%u (%dx%d)\n",
-		    S->w, S->h, S, texture, w,h);
+#ifdef DEBUG_SURFACE
+		if (S->flags & AG_SURFACE_TRACE)
+			Debug(NULL,
+			    "SURFACE(%dx%dx%d): "
+			    AGSI_BR_GRN "Direct" AGSI_RST " upload to %s texture #"
+			    AGSI_BOLD "%u" AGSI_RST " (%dx%d).\n",
+			    S->w, S->h, S->format.BitsPerPixel,
+			    OBJECT(obj)->name, texture, w,h);
 #endif
-	} else {                         /* Need POT adjustment or conversion */
-#ifdef DEBUG_GL
-		Debug(obj, "GL upload " AGSI_BOLD "converted" AGSI_RST
-		    " (%dx%d) surface %p -> #%u (%dx%d)\n",
-		    S->w, S->h, S, texture, w,h);
+	} else {                      /* Needs POT adjustment or conversion */
+#ifdef DEBUG_SURFACE
+		if (S->flags & AG_SURFACE_TRACE)
+			Debug(NULL,
+			    "SURFACE(%dx%dx%d): "
+			    AGSI_YEL "Converted" AGSI_RST " upload to %s texture #"
+			    AGSI_BOLD "%u" AGSI_RST " (%dx%d).\n",
+			    S->w, S->h, S->format.BitsPerPixel,
+			    OBJECT(obj)->name, texture, w,h);
 #endif
 		GS = AG_SurfaceStdRGBA(w,h);
 		AG_SurfaceCopy(GS, S);

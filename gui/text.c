@@ -858,6 +858,118 @@ AG_TextRenderRTL(const char *text)
 }
 
 /*
+ * Render text (UTF-8 encoded) onto a newly-allocated surface and crop the
+ * surface to the rendered contents.
+ *
+ * As opposed to the standard AG_TextRender() which returns a padded surface
+ * suitable for typographical alignment, AG_TextRenderCropped() returns the
+ * smallest possible surface that will contain the rendered text.
+ *
+ * Inherit font, FG and BG colors from current text state.
+ */
+AG_Surface *
+AG_TextRenderCropped(const char *text)
+{
+	AG_TextState *ts = AG_TEXT_STATE_CUR();
+	AG_Surface *S;
+#ifdef AG_UNICODE
+	AG_Char *us;
+#endif
+	const Uint8 *p;
+	AG_Color cNone;
+	AG_Pixel pxNone;
+	int x, y, yStart, yEnd, xEnd, xRight, yBottom;
+
+#ifdef AG_UNICODE
+	if ((us = AG_ImportUnicode("UTF-8", text, NULL, NULL)) == NULL) {
+		AG_FatalError(NULL);
+	}
+	S = AG_TextRenderInternal(us, ts->font, &ts->colorBG, &ts->color);
+	free(us);
+#else
+	S = AG_TextRenderInternal((const Uint8 *)text, ts->font,
+	                          &ts->colorBG, &ts->color);
+#endif
+	S->flags |= AG_SURFACE_TRACE;
+
+	AG_ColorNone(&cNone);
+	pxNone = AG_MapPixel(&S->format, &cNone);
+
+	/* Scan left-to-right from the top to the bottom. */
+	p = S->pixels;
+	for (y=0, yStart=0; y < S->h; y++) {
+		for (x = 0; x < S->w; x++) {
+			if (AG_SurfaceGet_At(S,p) != pxNone) {
+				break;
+			}
+			p += S->format.BytesPerPixel;
+		}
+		if (x == S->w) {
+			yStart++;
+		} else {
+			break;
+		}
+		p += S->padding;
+	}
+
+	/* Scan right-to-left from the bottom to the top. */
+	xRight = (S->w - 1);
+	yBottom = (S->h - 1);
+	p = S->pixels + (yBottom * S->pitch) -
+	                 xRight * S->format.BytesPerPixel;
+	for (y = yBottom, yEnd = y;
+	     y >= 0;
+	     y--) {
+		for (x = xRight; x >= 0; x--) {
+			if (AG_SurfaceGet_At(S,p) != pxNone) {
+				break;
+			}
+			p -= S->format.BytesPerPixel;
+		}
+		if (x == S->w) {
+			yEnd--;
+		} else {
+			break;
+		}
+		p -= S->padding;
+	}
+
+	if (yStart > 0) {                            /* Crop top and bottom */
+		memmove(S->pixels,
+		    S->pixels + (yStart * S->pitch),
+		    (yEnd - yStart + 1) * S->pitch);
+		S->h -= yStart + (S->h - yEnd);
+		S->clipRect.h = S->h;
+	} else if (yEnd < yBottom) {                    /* Crop bottom only */
+		S->h -= yStart + (S->h - yEnd) + 1;
+		S->clipRect.h = S->h;
+	}
+
+	/* Scan from the right to the left. */
+	for (x = xRight, xEnd = x; x >= 0; x--) {
+		p = S->pixels + x*S->format.BytesPerPixel;
+		for (y = 0; y < S->h; y++) {
+			if (AG_SurfaceGet_At(S,p) != pxNone) {
+				break;
+			}
+			p += S->pitch;
+		}
+		if (y == S->h) {
+			xEnd--;
+		} else {
+			break;
+		}
+	}
+	if (xEnd < xRight) {                                  /* Crop right */
+		S->w = xEnd + 1;
+		S->clipRect.w = S->w;
+		S->padding += (xRight - xEnd) * S->format.BytesPerPixel;
+	}
+
+	return (S);
+}
+
+/*
  * Render text in native internal (AG_Char; UCS-4) format onto a newly
  * allocated surface.
  */
@@ -872,18 +984,12 @@ AG_TextRenderInternal(const AG_Char *text, AG_Font *font, const AG_Color *cBg,
 
 	AGFONT_OPS(font)->size(font, text, &Tm, 1);
 
-	/* TODO AG_SURFACE_GL_TEXTURE? */
 	S = AG_SurfaceNew(agSurfaceFmt, Tm.w, Tm.h, 0);
 	AG_FillRect(S, NULL, cBg);
 
 	if (cBg->a == AG_OPAQUE)
 		S->format.Amask = 0;                  /* No blending needed */
-#if 0
-	else if (cBg->a == AG_TRANSPARENT)
-		AG_SurfaceSetColorKey(S,           /* Colorkey transparency */
-		    AG_SURFACE_COLORKEY,                       /* (useful?) */
-		    AG_MapPixel(&S->format, cBg));
-#endif
+
 	if (Tm.w > 0 && Tm.h > 0)
 		AGFONT_OPS(font)->render(text, S, &Tm, font, cBg,cFg);
 

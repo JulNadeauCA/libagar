@@ -28,6 +28,7 @@ register("--with-float",		"Floating-point support [auto]")
 register("--enable-shared",		"Build shared libraries [check]")
 register("--enable-type-safety",	"Run-time type safety checks [no]")
 register("--enable-debug",		"Debug build (implies type-safety) [no]")
+register("--enable-debug-surfaces",	"Trace AG_Surface operations [no]")
 register("--enable-legacy",		"Deprecated interfaces [yes]")
 register("--enable-threads",		"Thread safety [check]")
 register("--enable-warnings",		"Suggested compiler warnings [no]")
@@ -352,6 +353,10 @@ else
 	hundef(AG_DEBUG)
 	hdefine_if("${enable_type_safety}" = 'yes', AG_TYPE_SAFETY)
 fi
+if [ "${enable_debug_surfaces}" = 'yes' ]; then
+	mdefine(CFLAGS, "${CFLAGS} -DDEBUG_SURFACES")
+fi
+
 hdefine_if("${enable_ansi_color}" != 'no',    AG_ANSI_COLOR)
 hdefine_if("${enable_dso}" != 'no',           AG_ENABLE_DSO)
 hdefine_if("${enable_event_loop}" != 'no',    AG_EVENT_LOOP)

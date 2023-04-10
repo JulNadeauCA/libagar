@@ -308,6 +308,7 @@ void AG_TextAlign(int *_Nonnull, int *_Nonnull, int,int, int,int,
 AG_Surface *_Nonnull AG_TextRenderF(const char *_Nonnull, ...) _Warn_Unused_Result;
 AG_Surface *_Nonnull AG_TextRender(const char *_Nonnull) _Warn_Unused_Result;
 AG_Surface *_Nonnull AG_TextRenderRTL(const char *_Nonnull) _Warn_Unused_Result;
+AG_Surface *_Nonnull AG_TextRenderCropped(const char *_Nonnull) _Warn_Unused_Result;
 AG_Surface *_Nonnull AG_TextRenderInternal(const AG_Char *_Nonnull, AG_Font *_Nonnull,
 					   const AG_Color *_Nonnull,
 					   const AG_Color *_Nonnull)

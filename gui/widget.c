@@ -41,42 +41,44 @@
 #include <string.h>
 #include <ctype.h>
 
-/* #define DEBUG_FOCUS */
-
-/* Style Properties */
+/*
+ * Agar style attributes.
+ */
 const char *agStyleAttributes[] = {
 	/*
 	 * Color Scheme
 	 */
-	"color",            /* Foreground primary */
-	"background-color", /* Background primary */
-	"text-color",       /* Text and vector icons */
-	"line-color",       /* Lines and filled shapes */
-	"high-color",       /* Left and top borders */
-	"low-color",        /* Right and bottom borders */
-	"selection-color",  /* Selection primary */
+	"color",                     /* Foreground primary */
+	"background-color",          /* Background primary */
+	"text-color",                /* Text and vector icons */
+	"line-color",                /* Lines and filled shapes */
+	"high-color",                /* Left and top borders */
+	"low-color",                 /* Right and bottom borders */
+	"selection-color",           /* Selection primary */
 	"unused-color",
 	/*
 	 * Typography
 	 */
-	"font-family",  /* Font face or filename */
-	"font-size",    /* Font size (in pt, px or %) */
-	"font-weight",  /* Boldness (thin | extralight | light | normal |
-	                             semibold | bold | extrabold | black |
-	                             !parent) */
-	"font-style",   /* Style (normal | oblique | italic | !parent) */
-	"font-stretch", /* Width variant (normal | ultracondensed | condensed |
-	                                  semicondensed semiexpanded expanded |
-	                                  ultraexpanded !parent) */
+	"font-family",               /* Font face (or filename) */
+	"font-size",                 /* Font size (in pt, px or %) */
+	"font-weight",               /* Boldness (thin | extralight | light |
+	                                normal | semibold | bold | extrabold |
+					black | !parent) */
+	"font-style",                /* Style (normal | oblique | italic | !parent) */
+	"font-stretch",              /* Width variant (normal | ultracondensed |
+	                                condensed | semicondensed | semiexpanded |
+	                                expanded | ultraexpanded | !parent) */
 	/*
 	 * Box Model
 	 */
-	"margin",        /* Margin (space between border & outer bounding box) */
-	"padding",       /* Padding (space between content & border) */
+	"margin",                    /* Margin (space between border & outer bounding box) */
+	"padding",                   /* Padding (space between content & border) */
+
 	/*
-	 * Containers
+	 * Element Spacing
 	 */
-	"spacing",       /* Spacing between elements (px) */
+	"spacing",                   /* Spacing between elements (px) */
+
 	NULL
 };
 
@@ -187,18 +189,6 @@ AG_Widget *_Nullable agStyleEditorTgt = NULL;
 /* Import inlinables */
 #undef AG_INLINE_HEADER
 #include "inline_widget.h"
-
-#ifdef DEBUG_FOCUS
-# define Debug_Focus AG_Debug
-#else
-# if defined(__GNUC__)
-#  define Debug_Focus(obj, arg...) ((void)0)
-# elif defined(__CC65__)
-#  define Debug_Focus
-# else
-#  define Debug_Focus AG_Debug
-# endif
-#endif /* DEBUG_FOCUS */
 
 static void FocusWidget(AG_Widget *_Nonnull);
 static void UnfocusWidget(AG_Widget *_Nonnull);
@@ -1094,7 +1084,6 @@ AG_WidgetSetFocusable(void *obj, int enable)
 
 	prev = (wid->flags & AG_WIDGET_FOCUSABLE);
 	AG_SETFLAGS(wid->flags, AG_WIDGET_FOCUSABLE, enable);
-	Debug_Focus(wid, "SetFocusable: %d => %d\n", prev, enable);
 
 	AG_ObjectUnlock(wid);
 	return (prev);
@@ -1177,11 +1166,9 @@ AG_WidgetForwardFocus(void *obj, void *objFwd)
 		AG_OBJECT_ISA(objFwd, "AG_Widget:*");
 		wid->flags |= AG_WIDGET_FOCUSABLE;
 		wid->focusFwd = WIDGET(objFwd);
-		Debug_Focus(wid, "ForwardFocus(%s)\n", OBJECT(objFwd)->name);
 	} else {
 		wid->flags &= ~(AG_WIDGET_FOCUSABLE);
 		wid->focusFwd = NULL;
-		Debug_Focus(wid, "ForwardFocus(NULL)\n");
 	}
 
 	AG_ObjectUnlock(wid);
@@ -1370,7 +1357,6 @@ AG_WidgetFocus(void *obj)
 	AG_ObjectLock(wid);
 	
 	if (AG_WidgetIsFocused(wid)) {
-		Debug_Focus(wid, "Already focused\n");
 		goto out;
 	}
 	if (!(wid->flags & AG_WIDGET_FOCUSABLE)) {
@@ -1379,16 +1365,13 @@ AG_WidgetFocus(void *obj)
 			AG_OBJECT_ISA(focusFwd, "AG_Widget:*");
 			AG_ObjectLock(focusFwd);
 
-			Debug_Focus(wid, "Forward focus to %s\n", OBJECT(focusFwd)->name);
 			FocusWidget(focusFwd);
 
 			AG_ObjectUnlock(focusFwd);
 			goto out;
 		}
-		Debug_Focus(wid, "Reject focus\n");
 		goto fail;
 	}
-	Debug_Focus(wid, "Focusing\n");
 
 	/* Remove any existing focus. XXX inefficient */
 	if (win && win->nFocused > 0)
@@ -1400,7 +1383,6 @@ AG_WidgetFocus(void *obj)
 	 */
 	do {
 		if (AG_WINDOW_ISA(wParent)) {
-			Debug_Focus(wid, "Imply window %s focus\n", OBJECT(wParent)->name);
 			AG_WindowFocus(AGWINDOW(wParent));
 			break;
 		}
@@ -1408,11 +1390,8 @@ AG_WidgetFocus(void *obj)
 		if ((wParent->flags & AG_WIDGET_FOCUSED) == 0) {
 			if ((focusFwd = wParent->focusFwd) &&
 			    !(focusFwd->flags & AG_WIDGET_FOCUSED)) {
-				Debug_Focus(wid, "Imply %s focus: fwd to %s\n",
-				    OBJECT(wParent)->name, OBJECT(focusFwd)->name);
 				FocusWidget(focusFwd);
 			}
-			Debug_Focus(wid, "Imply %s focus\n", OBJECT(wParent)->name);
 			FocusWidget(wParent);
 		}
 		AG_ObjectUnlock(wParent);
@@ -1442,8 +1421,6 @@ FocusWidget(AG_Widget *_Nonnull wid)
 		AG_PostEvent(wid, "widget-gainfocus", NULL);
 		win->nFocused++;
 		win->dirty = 1;
-	} else {
-		Debug_Focus(wid, "Gained focus, but no parent window\n");
 	}
 }
 
@@ -2069,6 +2046,17 @@ AG_WidgetMapSurface(void *obj, AG_Surface *S)
 		S->flags |= AG_SURFACE_MAPPED;
 #endif
 	AG_ObjectUnlock(wid);
+
+#ifdef DEBUG_SURFACE
+	if (S->flags & AG_SURFACE_TRACE) {
+		Debug(NULL, "SURFACE(%dx%dx%d): Mapped to %s widget "
+		    AGSI_BOLD "%s" AGSI_RST "'s surface #"
+		    AGSI_BOLD "%d" AGSI_RST ".\n",
+		    S->w, S->h, S->format.BitsPerPixel,
+		    wid->drv ? OBJECT(wid->drv)->name : "unattached",
+		    OBJECT(wid)->name, id);
+	}
+#endif
 	return (id);
 }
 
@@ -2135,16 +2123,38 @@ AG_WidgetReplaceSurface(void *obj, int id, AG_Surface *S)
 	if (id < 0 || id >= wid->nSurfaces)
 		AG_FatalError("No such surface");
 #endif
-	if ((Sprev = wid->surfaces[id]) &&
+	if ((Sprev = wid->surfaces[id]) &&             /* Existing surface? */
 	    !(wid->surfaceFlags[id] & AG_WIDGET_SURFACE_NODUP)) {
 #ifdef AG_DEBUG
+# ifdef DEBUG_SURFACE
+		if (Sprev->flags & AG_SURFACE_TRACE) {
+			Debug(NULL, "SURFACE(%dx%dx%d): Unmapped from %s widget "
+			       AGSI_BOLD "%s" AGSI_RST "'s surface #"
+			       AGSI_BOLD "%d" AGSI_RST ".\n",
+			    Sprev->w, Sprev->h, Sprev->format.BitsPerPixel,
+			    wid->drv ? OBJECT(wid->drv)->name : "unattached",
+			    OBJECT(wid)->name, id);
+		}
+# endif
 		Sprev->flags &= ~(AG_SURFACE_MAPPED);
 #endif
 		AG_SurfaceFree(Sprev);
 	}
+
 #ifdef AG_DEBUG
-	if (S != NULL)
+	if (S != NULL) {
+# ifdef DEBUG_SURFACE
+		if (S->flags & AG_SURFACE_TRACE) {
+			Debug(NULL, "SURFACE(%dx%dx%d): Mapped to %s widget "
+			    AGSI_BOLD "%s" AGSI_RST "'s surface #"
+			    AGSI_BOLD "%d" AGSI_RST ".\n",
+			    S->w, S->h, S->format.BitsPerPixel,
+			    wid->drv ? OBJECT(wid->drv)->name : "unattached",
+			    OBJECT(wid)->name, id);
+		}
+# endif
 		S->flags |= AG_SURFACE_MAPPED;
+	}
 #endif
 	wid->surfaces[id] = S;
 	wid->surfaceFlags[id] &= ~(AG_WIDGET_SURFACE_NODUP);
@@ -2164,13 +2174,6 @@ AG_WidgetReplaceSurface(void *obj, int id, AG_Surface *S)
 	AG_ObjectUnlock(wid);
 }
 
-/*
- * Compile style attributes of a widget and its children. Generate color
- * palette and load any required fonts in the process.
- *
- * Per-instance (AG_SetStyle()-set) attributes have precedence over those
- * of the AG_StyleSheet(3). By default, attributes are inherited from parent.
- */
 static void
 CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
     float parentFontSize, Uint parentFontFlags, const AG_WidgetPalette *parentPalette)
@@ -2186,6 +2189,7 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	
 	AG_OBJECT_ISA(wid, "AG_Widget:*");
 
+	/* TODO make alt stylesheet a per-window attribute */
 	for (po = OBJECT(wid);
 	     po->parent != NULL && AG_WIDGET_ISA(po->parent);
 	     po = po->parent) {
@@ -2196,8 +2200,7 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	}
 
 	/*
-	 * Font face (fontconfig name, base of filename in `font-path', or
-	 * underscore prefix for memory builts-in such as "_agFontAlgue").
+	 * Font face (fontconfig name or specific filename under font-path).
 	 */
 	if ((V = AG_AccessVariable(wid, "font-family")) != NULL) {
 		fontFace = Strdup(V->data.s);
@@ -2209,7 +2212,7 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	}
 
 	/*
-	 * Font size (in points, pixels, or % relative to parent).
+	 * Font size (points, pixels, or % relative to parent).
 	 * Fractional point sizes (e.g., "10.5" are allowed).
 	 */
 	if ((V = AG_AccessVariable(wid, "font-size")) != NULL) {
@@ -2222,7 +2225,8 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	}
 
 	/*
-	 * Font weight (normal, bold or !parent)
+	 * Font weight (thin, extralight, light, semibold, bold, extrabold,
+	 * black or !parent).
 	 */
 	if ((V = AG_AccessVariable(wid, "font-weight")) != NULL) {
 		Apply_Font_Weight(&fontFlags, parentFontFlags, V->data.s);
@@ -2248,7 +2252,8 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	}
 
 	/*
-	 * Width variant (normal, semi-condensed, condensed or !parent).
+	 * Width variant (normal, ultracondensed, condensed, semicondensed,
+	 * semiexpanded, expanded, ultraexpanded or !parent).
 	 */
 	if ((V = AG_AccessVariable(wid, "font-stretch")) != NULL) {
 		Apply_Font_Stretch(&fontFlags, parentFontFlags, V->data.s);
@@ -2263,8 +2268,8 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	/*
 	 * Padding and margin (in pixels) for box model.
 	 *
-	 * The margin is enforced by the size_allocate() of a container widget.
-	 * The padding is implemented by the widget itself.
+	 * The margin is applied by the size_allocate() routine of container
+	 * widgets. The padding is widget-specific in its implementation.
 	 */
 	if ((V = AG_AccessVariable(wid, "padding")) != NULL) {
 		Apply_Padding(wid, V->data.s);
@@ -2278,6 +2283,10 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 	} else if (AG_LookupStyleSheet(css, wid, "margin", &cssData)) {
 		Apply_Margin(wid, cssData);
 	}
+
+	/*
+	 * Spacing between widget-specific elements (in pixels).
+	 */
 	if ((V = AG_AccessVariable(wid, "spacing")) != NULL) {
 		Apply_Spacing(wid, V->data.s);
 		AG_UnlockVariable(V);
@@ -2285,7 +2294,9 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 		Apply_Spacing(wid, cssData);
 	}
 	
-	/* Color palette */
+	/*
+	 * Color palette.
+	 */
 	for (i = 0; i < AG_WIDGET_NSTATES; i++) {
 		for (j = 0; j < AG_WIDGET_NCOLORS; j++) {
 			char nameFull[AG_VARIABLE_NAME_MAX];
@@ -2297,8 +2308,6 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
 			if (i != 0)
 				Strlcat(nameFull, agWidgetStateNames[i],
 				    sizeof(nameFull));
-
-/*			Debug(wid, "Color Access: \"%s\" or \"%s\"\n", nameFull, name); */
 
 			if (((V = AG_AccessVariable(wid, nameFull)) != NULL ||
 			     (V = AG_AccessVariable(wid, name)) != NULL) &&
@@ -2419,30 +2428,45 @@ Apply_Padding(AG_Widget *wid, const char *spec)
 	if ((sRight = Strsep(&s, " ")) == NULL) {           /* "padding: X" */
 		const int val = atoi(sTop);
 
-		if (wid->paddingTop != val)    { wid->paddingTop = val;    nChanges++; }
-		if (wid->paddingRight != val)  { wid->paddingRight = val;  nChanges++; }
-		if (wid->paddingBottom != val) { wid->paddingBottom = val; nChanges++; }
-		if (wid->paddingLeft != val)   { wid->paddingLeft = val;   nChanges++; }
-
-	} else {                                     /* "padding: T R [B L]" */
+		if (wid->paddingTop != val) {
+			wid->paddingTop = val;
+			nChanges++;
+		}
+		if (wid->paddingRight != val) {
+			wid->paddingRight = val;
+			nChanges++;
+		}
+		if (wid->paddingBottom != val) {
+			wid->paddingBottom = val;
+			nChanges++;
+		}
+		if (wid->paddingLeft != val) {
+			wid->paddingLeft = val;
+			nChanges++;
+		}
+	} else {                                      /* "padding: T R B L" */
 		const char *sBottom = Strsep(&s, " ");
 		const char *sLeft   = Strsep(&s, " ");
-		int padTop = atoi(sTop);
-		int padRight = atoi(sRight);
-		int padBottom = (sBottom) ? atoi(sBottom) : 0;
-		int padLeft = (sLeft) ? atoi(sLeft)   : 0;
+		const int padTop    = atoi(sTop);
+		const int padRight  = atoi(sRight);
+		const int padBottom = (sBottom) ? atoi(sBottom) : 0;
+		const int padLeft   = (sLeft)   ? atoi(sLeft)   : 0;
 
 		if (wid->paddingTop != padTop) {
-			wid->paddingTop = padTop;       nChanges++;
+			wid->paddingTop = padTop;
+			nChanges++;
 		}
 		if (wid->paddingRight != padRight) {
-			wid->paddingRight = padRight;   nChanges++;
+			wid->paddingRight = padRight;
+			nChanges++;
 		}
 		if (wid->paddingBottom != padBottom) {
-			wid->paddingBottom = padBottom; nChanges++;
+			wid->paddingBottom = padBottom;
+			nChanges++;
 		}
 		if (wid->paddingLeft != padLeft) {
-			wid->paddingLeft = padLeft;     nChanges++;
+			wid->paddingLeft = padLeft;
+			nChanges++;
 		}
 	}
 	if (nChanges > 0)
@@ -2527,6 +2551,12 @@ Apply_Spacing(AG_Widget *wid, const char *spec)
 	}
 }
 
+/*
+ * Update run-time style information for a widget (and its children). Use
+ * both stylesheet definitions and per-widget attributes to update the color
+ * palette, fonts, margin, padding and spacing data. This data can then be
+ * used efficiently by draw(), size_allocate() or other widget methods.
+ */
 void
 AG_WidgetCompileStyle(void *obj)
 {

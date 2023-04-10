@@ -211,6 +211,11 @@ The following
 .Va flags
 are provided:
 .Bl -tag -width "AG_BUTTON_VALIGN_BOTTOM "
+.It AG_BUTTON_CROP
+Crop the label surface to fit rendered text contents.
+Useful for condensing or removing typographical spacings so that
+individual glyphs (for example "Geometrical Shapes") can be aligned
+precisely inside widget controls.
 .It AG_BUTTON_STICKY
 Prevent the button from springing back to its previous state following
 a click.

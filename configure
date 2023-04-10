@@ -462,6 +462,7 @@ echo '    --with-float                Floating-point support [auto]'
 echo '    --enable-shared             Build shared libraries [check]'
 echo '    --enable-type-safety        Run-time type safety checks [no]'
 echo '    --enable-debug              Debug build (implies type-safety) [no]'
+echo '    --enable-debug-surfaces     Trace AG_Surface operations [no]'
 echo '    --enable-legacy             Deprecated interfaces [yes]'
 echo '    --enable-threads            Thread safety [check]'
 echo '    --enable-warnings           Suggested compiler warnings [no]'
@@ -8736,6 +8737,10 @@ else
 echo '#undef AG_TYPE_SAFETY' >$bb_incdir/ag_type_safety.h
 echo 'hdefs["AG_TYPE_SAFETY"] = nil' >>configure.lua
 fi
+fi
+if [ "${enable_debug_surfaces}" = 'yes' ]
+ then
+CFLAGS="${CFLAGS} -DDEBUG_SURFACES"
 fi
 if [ "${enable_ansi_color}" != 'no' ]; then
 AG_ANSI_COLOR="yes"

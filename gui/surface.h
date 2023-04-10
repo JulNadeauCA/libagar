@@ -38,27 +38,32 @@
  *   GRAYSCALE |             MD    MD       LG |
  *              --------------------------------
  */
+
+/* Type of surface */
 typedef enum ag_surface_mode {
-        AG_SURFACE_PACKED,
-        AG_SURFACE_INDEXED,
-        AG_SURFACE_GRAYSCALE,
+        AG_SURFACE_PACKED,              /* Packed RGB / RGBA */
+        AG_SURFACE_INDEXED,             /* Palletized */
+        AG_SURFACE_GRAYSCALE,           /* Grayscale + Alpha */
         AG_SURFACE_MODE_LAST
 } AG_SurfaceMode;
 
 #define AG_SURFACE_ANY AG_SURFACE_MODE_LAST
 
+/* Grayscale to RGB conversion method */
 typedef enum ag_grayscale_mode {
-	AG_GRAYSCALE_BT709,    /* ITU-R Recommendation BT.709 */
-	AG_GRAYSCALE_RMY,      /* R-Y algorithm */
-	AG_GRAYSCALE_Y         /* Y-Grayscale (YIQ / NTSC) */
+	AG_GRAYSCALE_BT709,             /* ITU-R Recommendation BT.709 */
+	AG_GRAYSCALE_RMY,               /* R-Y algorithm */
+	AG_GRAYSCALE_Y                  /* Y-Grayscale (YIQ / NTSC) */
 } AG_GrayscaleMode;
 
+/* Color palette for indexed surfaces */
 typedef struct ag_palette {
 	AG_Color *_Nonnull colors;      /* Color values */
 	Uint              nColors;      /* Number of entries */
 	Uint32 _pad;
 } AG_Palette;
 
+/* Surface format information header */
 typedef struct ag_pixel_format {
 	AG_SurfaceMode mode;       /* Surface type */
 	int BitsPerPixel;          /* Depth (bits/pixel) */
@@ -88,74 +93,79 @@ typedef struct ag_pixel_format {
 
 /* Animation frame disposal method */
 typedef enum ag_anim_dispose {
-	AG_DISPOSE_UNSPECIFIED,	/* No disposal specified */
-	AG_DISPOSE_DO_NOT,	/* Keep previous frame's pixels */
-	AG_DISPOSE_BACKGROUND,	/* Blend transparent pixels against BG
-	                           (as opposed to pixels of previous frame) */
-	AG_DISPOSE_PREVIOUS,	/* Restore to previous content */
+	AG_DISPOSE_UNSPECIFIED,  /* No disposal specified */
+	AG_DISPOSE_DO_NOT,       /* Keep previous frame's pixels */
+	AG_DISPOSE_BACKGROUND,   /* Blend transparent pixels against BG (as
+	                            opposed to the previous frame's pixels) */
+	AG_DISPOSE_PREVIOUS,     /* Restore to previous content */
 } AG_AnimDispose;
 
+/* Type of animation instruction */
 typedef enum ag_anim_frame_type {
-	AG_ANIM_FRAME_NONE,   /* No-op */
-	AG_ANIM_FRAME_PIXELS, /* Combine rectangle of pixels (or entire graphic) */
-	AG_ANIM_FRAME_COLORS, /* Replace n contiguous palette entries */
-	AG_ANIM_FRAME_BLEND,  /* Blend entire graphic uniformly with a color */
-	AG_ANIM_FRAME_MOVE,   /* Move a sub-rectangle of pixels by offset */
-	AG_ANIM_FRAME_DATA,   /* Data block (audio, subtitles, annotations, etc) */
+	AG_ANIM_FRAME_NONE,      /* No-op */
+	AG_ANIM_FRAME_PIXELS,    /* Combine image (or sub-rectangle) of pixels */
+	AG_ANIM_FRAME_COLORS,    /* Replace N contiguous palette entries */
+	AG_ANIM_FRAME_BLEND,     /* Blend image uniformly with a color */
+	AG_ANIM_FRAME_MOVE,      /* Move a sub-rectangle of pixels by offset */
+	AG_ANIM_FRAME_DATA,      /* Data block (audio, subtitles, comments, etc) */
 	AG_ANIM_FRAME_LAST
 } AG_AnimFrameType;
 
 /* Animation frame */
 typedef struct ag_anim_frame {
-	AG_AnimFrameType type;		/* Type of instruction */
+	AG_AnimFrameType type;          /* Type of instruction */
 	Uint flags;
-#define AG_ANIM_FRAME_USER_INPUT 0x01	/* User input required for dispose? */
-	AG_AnimDispose dispose;		/* Previous frame/rect disposal mode */
-	Uint delay;			/* Delay in milliseconds */
+#define AG_ANIM_FRAME_USER_INPUT 0x01   /* User input required for dispose? */
+	AG_AnimDispose dispose;         /* Previous frame/rect disposal mode */
+	Uint delay;                     /* Delay in milliseconds */
 	union {
 		struct {
-			Uint8 *_Nonnull p;	/* New pixels to combine */
-			Uint16 x,y,w,h;		/* Destination rectangle */
+			Uint8 *_Nonnull p;        /* New pixels to combine */
+			Uint16 x,y,w,h;           /* Destination rectangle */
 		} pixels;
 		struct {
-			AG_Color *_Nonnull c;	/* Update colors in palette */
-			Uint count;		/* Colors in array */
-			Uint index;		/* Index of first entry */
+			AG_Color *_Nonnull c;     /* Update colors in palette */
+			Uint count;               /* Colors in array */
+			Uint index;               /* Index of first entry */
 		} colors;
 		struct {
-			AG_Color c1,c2;	/* Colors for uniform blend */
+			AG_Color c1,c2;           /* Colors for uniform blend */
 		} blend;
 		struct {
-			Uint16 x,y,w,h;	/* Rectangle to move */
-			int xo,yo;	/* Move offsets */
+			Uint16 x,y,w,h;           /* Rectangle to move */
+			int xo,yo;                /* Move offsets */
 		} move;
 		struct {
-			char *_Nullable header;	/* Header (type, size) */
-			void *_Nonnull p;	/* Data block */
+			char *_Nullable header;   /* Header (type, size) */
+			void *_Nonnull p;         /* Data block */
 		} data;
 	};
 } AG_AnimFrame;
 
+/* Reference guide lines. */
 typedef enum ag_surface_guide {
-	AG_SURFACE_GUIDE_TOP,      /* Top horizontal guide */
-	AG_SURFACE_GUIDE_RIGHT,    /* Right vertical guide */
-	AG_SURFACE_GUIDE_BOTTOM,   /* Bottom horizontal guide */
-	AG_SURFACE_GUIDE_LEFT,     /* Left vertical guide */
+	AG_SURFACE_GUIDE_TOP,           /* Top horizontal guide */
+	AG_SURFACE_GUIDE_RIGHT,         /* Right vertical guide */
+	AG_SURFACE_GUIDE_BOTTOM,        /* Bottom horizontal guide */
+	AG_SURFACE_GUIDE_LEFT,          /* Left vertical guide */
 	AG_SURFACE_NGUIDES
 } AG_SurfaceGuide;
 
-/* Graphics surface (or animation) */
+/* Graphics surface */
 typedef struct ag_surface {
-	AG_PixelFormat format;          /* Pixel format */
+	AG_PixelFormat format;             /* Format information header */
 	Uint flags;
-#define AG_SURFACE_COLORKEY    0x01     /* Enable color key for blit as src */
-#define AG_SURFACE_ALPHA       0x02     /* Deprecated flag (ignored) */
-#define AG_SURFACE_GL_TEXTURE  0x04     /* Use directly as OpenGL texture */
-#define AG_SURFACE_MAPPED      0x08     /* Disallow AG_SurfaceFree() (DEBUG) */
-#define AG_SURFACE_STATIC      0x10     /* Don't free() in AG_SurfaceFree() */
-#define AG_SURFACE_EXT_PIXELS  0x20     /* Pixels are allocated externally */
-#define AG_SURFACE_ANIMATED    0x40     /* Is an animation */
-#define AG_SURFACE_TRACE       0x80     /* Enable debugging */
+#define AG_SURFACE_COLORKEY    0x01        /* Enable colorkey for blit as src */
+#define AG_SURFACE_ALPHA       0x02        /* Deprecated flag (ignored) */
+#define AG_SURFACE_GL_TEXTURE  0x04        /* Use directly as OpenGL texture */
+#define AG_SURFACE_MAPPED      0x08        /* Surface is mapped by a widget or
+                                              other managing entity. Cannot be
+					      freed with AG_SurfaceFree(). */
+#define AG_SURFACE_STATIC      0x10        /* Do not free() in AG_SurfaceFree() */
+#define AG_SURFACE_EXT_PIXELS  0x20        /* Pixels are allocated externally */
+#define AG_SURFACE_ANIMATED    0x40        /* This is an animated surface */
+#define AG_SURFACE_TRACE       0x80        /* Debug flag (Agar must be compiled
+                                              with --enable-debug-surfaces) */
 #define AG_SAVED_SURFACE_FLAGS (AG_SURFACE_COLORKEY | AG_SURFACE_ANIMATED)
 	Uint w, h;                         /* Dimensions in pixels */
 	Uint pitch;                        /* Scanline byte length */
@@ -163,7 +173,8 @@ typedef struct ag_surface {
 	AG_Rect clipRect;                  /* Clipping rectangle */
 	AG_AnimFrame *_Nullable frames;    /* Animation frames */
 	Uint n;                            /* Animation frame count */
-	Uint padding;                      /* Scanline end padding */
+	Uint padding;                      /* Scanline end padding (can be used
+	                                      to fast crop right-to-left) */
 	Uint16 guides[AG_SURFACE_NGUIDES]; /* Guide lines */
 	AG_Pixel colorkey;                 /* Color key pixel */
 	AG_Component alpha;                /* Per-surface alpha */
@@ -246,9 +257,8 @@ extern AG_Color  agStdPalette2[4];                  /* 2-bit palette */
 extern AG_Color  agStdPalette4[16];                 /* 4-bit palette (rgbi) */
 extern AG_Color  agStdPalette8[256];                /* 8-bit palette (xterm256) */
 extern AG_Color *agStdPalette[8];                   /* Standard palette table */
-
 extern AG_GrayscaleMode agGrayscaleMode;            /* Default grayscale mode */
-extern const char *_Nonnull agSurfaceModeNames[];   /* AG_Surface modes */
+extern const char *_Nonnull agSurfaceModeNames[];   /* AG_Surface mode names */
 extern AG_PixelFormat *_Nullable agSurfaceFmt;      /* Default surface format */
 
 /* Blitter tables */
