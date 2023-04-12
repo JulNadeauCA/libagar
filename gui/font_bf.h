@@ -42,6 +42,7 @@ typedef struct ag_font_bf {
 	int wdRef;                              /* Reference bbox width (px) */
 	AG_Rect *_Nullable rects;               /* Source image rectangles */
 	Uint              nRects;
+	float sizeMin, sizeMax;                 /* Range of point sizes covered */
 	int advance;                            /* Global advance */
 } AG_FontBf;
 

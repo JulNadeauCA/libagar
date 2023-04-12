@@ -476,7 +476,7 @@ const char *agFontFileExts[] = {
 	NULL
 };
 
-/* Standard point sizes suitable for common GUI presentation. */
+/* Standard point sizes for GUI presentation. Matched by agZoomValues[]. */
 const float agFontStdSizes[32] = {
 	 4.0f,  5.0f,  6.0f,  7.0f,    7.5f,  8.0f,  8.5f,  9.0f,
 	 9.5f, 10.0f, 10.5f, 11.0f,   11.5f, 12.0f, 12.5f, 13.0f,
@@ -544,7 +544,7 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 	char nameBase[AG_FONT_NAME_MAX];
 	AG_FontSpec spec;
 	AG_Font *font;
-	const AG_FontAdjustment *fa;
+	const AG_FontAdjustment *fontAdj;
 	const AG_FontAlias *fontAlias;
 	int isInFontPath, foundByFontconfig = 0;
 
@@ -578,10 +578,9 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 	if (fontSize < AG_FONT_PTS_EPSILON) {               /* Default size */
 		fontSize = agConfig->fontSize;
 	}
-	for (fa = &agFontAdjustments[0]; fa->face != NULL; fa++) {
-		/* TODO cache lowercase name so we can case-sensitive compare */
-		if (Strcasecmp(name, fa->face) == 0) {
-			fontSize *= fa->size_factor; /* Scaling correction */
+	for (fontAdj = &agFontAdjustments[0]; fontAdj->face != NULL; fontAdj++) {
+		if (strcmp(name, fontAdj->face) == 0) {
+			fontSize *= fontAdj->size_factor;        /* Rescale */
 			break;
 		}
 	}
@@ -596,11 +595,18 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 	AG_MutexLock(&agTextLock);
 
 	TAILQ_FOREACH(font, &agFontCache, fonts) {
-		/* TODO cache lowercase name so we can case-sensitive compare */
-		if (Strcasecmp(font->name, name) == 0 &&
-		    (font->flags == flags) &&
-		    Fabs(font->spec.size - fontSize) < AG_FONT_PTS_EPSILON)
-			break;
+		if (font->spec.type == AG_FONT_BITMAP) {
+			if (strcmp(font->name, name) == 0 &&
+			    font->flags == flags &&
+			    fontSize >= AGFONTBF(font)->sizeMin &&
+			    fontSize <= AGFONTBF(font)->sizeMax)
+				break;
+		} else {
+			if (strcmp(font->name, name) == 0 &&
+			    font->flags == flags &&
+			    Fabs(font->spec.size - fontSize) < AG_FONT_PTS_EPSILON)
+				break;
+		}
 	}
 	if (font != NULL)                                       /* In cache */
 		goto out;
@@ -649,7 +655,7 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 	    fontPath, sizeof(fontPath)) == 0) {
 		const char *pExt = strrchr(fontPath, '.');
 		
-		if (pExt && Strcasecmp(pExt, ".agbf") == 0) {
+		if (pExt && strcmp(pExt, ".agbf") == 0) {
 			/*
 			 * Agar bitmap fonts are always specified by filename
 			 * to prevent confusion with other types of fonts.
@@ -901,6 +907,12 @@ open_font:
 		                               fontPath, flags);
 		if (font == NULL) {
 			goto fail;
+		}
+		if (fontAdj->face != NULL) {            /* Apply adjustment */
+			int sizeIdx;
+
+			sizeIdx = AG_FontGetStandardSizeIndex(spec.size);
+			font->ascent += fontAdj->ascent_offset[sizeIdx];
 		}
 		break;
 #endif /* HAVE_FREETYPE */

@@ -14,7 +14,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Error**](https://libagar.org/man3/AG_Error): New function `AG_Debug2()` (output debug message when debug level is >= 2).
 - [**AG_FontBf**](https://libagar.org/man3/AG_FontBf): New bitmap font engine for the `.agbf` font format.
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): Implemented keyboard shortcuts. Added `AG_MENU_NO_BOOL_MSG` and `AG_MENU_FAST_BOOL_MSG` options.
-- [**AG_Menu**](https://libagar.org/man3/AG_Menu): Improved the performance of the `AG_MenuView` renderer by caching state-dependent opaque labels (embedding any icons), so blending is no longer required. Improved appearance of `AG_MenuView`.
+- [**AG_Menu**](https://libagar.org/man3/AG_Menu): Improved the performance of the `AG_MenuView` renderer by caching state-dependent opaque labels (embedding any icons), so blending is no longer required by `draw()`. Improved appearance of `AG_MenuView`.
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): When an `AG_MenuView` is detached, immediately invalidate the `view` pointers of its `AG_MenuItem`.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Introduce numerical class IDs and `*_ISA()` macros.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Improve the object validity test by using a pseudo-random signature generated on initialization. Make validity and class-membership testing possible outside of Debug builds.
@@ -75,14 +75,14 @@ All notable changes to Agar will be documented in this file. The format is based
 - New bitmap fonts: `Agar Minimal` and `Agar Ideograms`.
 
 ### Removed
-- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Removed the `fn` argument from the `AG_SurfaceBlend*()` family of functions. Use separate routines to implement different blending arithmetic.
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Removed the `fn` argument from the `AG_SurfaceBlend*()` family of functions. Different blending arithmetic can be implemented using separate functions.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Removed `AG_ObjectPage{In,Out}()` and unused flags `AG_OBJECT_FLOATING_VARS`, `AG_OBJECT_NON_PERSISTENT`, `AG_OBJECT_RESIDENT`, `AG_OBJECT_REOPEN_ONLOAD`, `AG_OBJECT_REMAIN_DATA` and `AG_OBJECT_CHLD_AUTOSAVE`.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): Removed `AG_UnusedFont()` and the reference counter in `AG_Font`.
 
 ### Changed
 - Ctrl + Mouse Wheel may now be used to change the zoom level on a window.
-- Build system updates so configure scripts are smaller and no longer emit unnecessary defines such as `foo_cflags.h` for dependent libraries. Those definitions are always available from `${DATADIR}/agar.mk`.
-- Don't install headers from disabled libraries.
+- Updated the build system. BSDBuild configure scripts are smaller and no longer emit unnecessary defines such as `foo_cflags.h` for dependent libraries. Such definitions are always available from `${DATADIR}/agar.mk`.
+- Don't install headers from libraries disabled from the build (by `--disable-foo`).
 - [**AG_Color**](https://libagar.org/man3/AG_Color): Handle `rgb16()` format in [AG_ColorFromString()](https://libagar.org/man3/AG_ColorFromString).
 - [**AG_Combo**](https://libagar.org/man3/AG_Combo): Make sub-elements style-addressable as `input` and `trigger`.
 - [**AG_FontSelector**](https://libagar.org/man3/AG_FontSelector): Add Unicode range information and more metrics under the "Metrics" tab.
@@ -95,8 +95,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): In `AG_SurfaceCopy()`, handle 8-bpp copies to same-format surfaces using block copy.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): In `AG_SurfaceCopy()`, add an optimized case for sources surfaces in <= 8-bpp.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): In `AG_SurfaceCopy()`, add an optimized case for grayscale source surfaces.
-- [**AG_Text**](https://libagar.org/man3/AG_Text): The `agFontAdjustments[]` table has been updated and expanded to include common system fonts.
-- [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Improved appearance and typography fixes. Improved performance of the renderer using state-dependent opaque labels to avoid the need for blending.
+- [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Improved appearance and typography fixes. Improved performance of the renderer using state-dependent opaque labels to avoid the need for blending in `draw()`.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Now applies the "padding" attribute on a per-item basis.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): `AG_TlistSetCompareFn()` now returns a pointer to the previous compare function.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Make the comparison function of `AG_TlistSort()` ANSI-aware. Ignore SGR sequences as well as ideogram-range Unicodes.

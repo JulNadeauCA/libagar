@@ -674,6 +674,35 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 		    "\xE0\xB0\xA4" "\xE0\xB1\x86" "\xE0\xB0\xB2"
  		    "\xE0\xB1\x81" "\xE0\xB0\x97" "\xE0\xB1\x81");
 
+	} else if (AG_Strcasestr(font->name, "CJK HK") ||
+	           AG_Strcasestr(font->name, "Sans HK") ||
+	           AG_Strcasestr(font->name, "Serif HK")) {
+
+		if (altPhrase) {
+			S = AG_TextRender(
+			    "\xe5\xbb\xa3" "\xe6\x9d\xb1" "\xe8\xa9\xb1");
+		} else {
+			S = AG_TextRender(
+			    "\xe9\xa6\x99" "\xe6\xb8\xaf" "\xe7\x89\xb9"
+			    "\xe5\x88\xa5" "\xe8\xa1\x8c" "\xe6\x94\xbf"
+			    "\xe5\x8d\x80");
+		}
+
+	} else if (AG_Strcasestr(font->name, "CJK KR") ||
+	           AG_Strcasestr(font->name, "Sans KR") ||
+	           AG_Strcasestr(font->name, "Serif KR")) {
+
+		if (altPhrase) {
+			S = AG_TextRender(
+			    "\xed\x95\x9c" "\xea\xb5\xad" "\xec\x96\xb4" ", "
+			    "\xec\xa1\xb0" "\xec\x84\xa0" "\xeb\xa7\x90");
+		} else {
+			S = AG_TextRender(
+			    "\xea\xb3\xb5" "\xeb\x93\xa0" " " "\xed\x83\x91"
+			    "\xec\x9d\xb4" " " "\xeb\xac\xb4" "\xeb\x84\x88"
+			    "\xec\xa7\x80" "\xeb\x9e\xb4");
+		}
+
 	} else if (AG_Strcasestr(font->name, "CJK SC") ||
 	           AG_Strcasestr(font->name, "Sans SC") ||
 	           AG_Strcasestr(font->name, "Serif SC")) {
@@ -694,6 +723,30 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 			    "\xE6\x97\xA0" "\xE6\x83\x85" "\xE9\xA3\x9F"
 			    "\xE9\xA5\xAD" "\xE9\xA5\xA5" "\xE3\x80\x82");
 		}
+
+	} else if (AG_Strcasestr(font->name, "CJK TC") ||
+	           AG_Strcasestr(font->name, "Sans TC") ||
+	           AG_Strcasestr(font->name, "Serif TC")) {
+
+		if (altPhrase) {
+			/*
+			 * Hanyu.
+			 */
+			S = AG_TextRender("\xe6\xbc\xa2" "\xe8\xaa\x9e");
+		} else {
+
+			/*
+			 * Ren jiesheng er ziyou; zai zunyan ji quanli shang jun
+			 * ge pingdeng.
+			 */
+			S = AG_TextRender(
+			    "\xe4\xba\xba" "\xe7\x9a\x86" "\xe7\x94\x9f" "\xe8\x80\x8c"
+			    "\xe8\x87\xaa" "\xe7\x94\xb1" "\xef\xbc\x9b" "\xe5\x9c\xa8"
+			    "\xe5\xb0\x8a" "\xe5\x9a\xb4" "\xe5\x8f\x8a" "\xe6\xac\x8a"
+			    "\xe5\x88\xa9" "\xe4\xb8\x8a" "\xe5\x9d\x87" "\xe5\x90\x84"
+			    "\xe5\xb9\xb3" "\xe7\xad\x89");
+		}
+
 	} else if (AG_Strcasestr(font->name, "Estrangelo") ||
 	           AG_Strcasestr(font->name, "East Syriac")) {
 		if (altPhrase) {
@@ -798,7 +851,11 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 		}
 	} else if (AG_Strcasestr(font->name, "Japanese") ||
 	           AG_Strcasecmp(font->name, "HanaMinA") == 0 ||
-		   AG_Strcasecmp(font->name, "HanaMinB") == 0) {
+		   AG_Strcasecmp(font->name, "HanaMinB") == 0 ||
+	           AG_Strcasestr(font->name, "CJK JP") ||
+	           AG_Strcasestr(font->name, "Sans JP") ||
+	           AG_Strcasestr(font->name, "Serif JP")) {
+
 		if (altPhrase) {
 			/*
 			 * Nihongo (Japanese)

@@ -421,15 +421,15 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 			}
 		} else if (strncmp(line,"size ",5) == 0 && line[5] != '\0') {
 			char *ep;
-			float sizeMin, sizeMax;
 
-			sizeMin = (float)strtod(&line[5],&ep);
+			fontBf->sizeMin = (float)strtod(&line[5],&ep);
 			if (ep == NULL || *ep != '-') {
 				goto syntax_error;
 			}
-			sizeMax = (float)strtod(&ep[1],NULL);
-			if (spec->size >= sizeMin &&
-			    spec->size <= sizeMax) {
+			fontBf->sizeMax = (float)strtod(&ep[1],NULL);
+
+			if (spec->size >= fontBf->sizeMin &&
+			    spec->size <= fontBf->sizeMax) {
 				inMatchingSize = 1;
 			} else {
 				inMatchingSize = 0;
@@ -896,7 +896,8 @@ Init(void *_Nonnull obj)
 	    sizeof(int) +                            /* wdRef */
 	    sizeof(AG_Rect *) +                      /* rects */
 	    sizeof(Uint) +                           /* nRects */
-	    sizeof(int));                            /* advance */
+	    sizeof(float) +                          /* sizeMin */
+	    sizeof(float));                          /* sizeMax */
 
 	fontBf->advance = 1;
 }

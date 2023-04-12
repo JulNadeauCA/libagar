@@ -140,11 +140,9 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 	AG_Font *font = AGFONT(fontFt);
 	const AG_FontSpec *spec = &font->spec;
 	TT_OS2 *ttOS2;
-	const AG_FontAdjustment *fa;
 	FT_Error rv;
 	FT_Face face;
 	FT_Fixed scale;
-	int sizeIdx;
 
 	if (agFtInited == 0) {
 		if (InitFreeType() != 0)
@@ -263,15 +261,6 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 	}
 	if (font->underlineThk < 1) {
 		font->underlineThk = 1;
-	}
-	
-	sizeIdx = AG_FontGetStandardSizeIndex(spec->size);
-	for (fa = &agFontAdjustments[0]; fa->face != NULL; fa++) {
-		if (Strcasecmp(OBJECT(font)->name, fa->face) != 0) {
-			continue;
-		}
-		font->ascent += fa->ascent_offset[sizeIdx];
-		break;
 	}
 	return (0);
 fail_face:

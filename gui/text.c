@@ -890,7 +890,6 @@ AG_TextRenderCropped(const char *text)
 	S = AG_TextRenderInternal((const Uint8 *)text, ts->font,
 	                          &ts->colorBG, &ts->color);
 #endif
-	S->flags |= AG_SURFACE_TRACE;
 
 	AG_ColorNone(&cNone);
 	pxNone = AG_MapPixel(&S->format, &cNone);
