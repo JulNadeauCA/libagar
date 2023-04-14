@@ -167,18 +167,17 @@ typedef struct ag_surface {
 #define AG_SURFACE_TRACE       0x80        /* Debug flag (Agar must be compiled
                                               with --enable-debug-surfaces) */
 #define AG_SAVED_SURFACE_FLAGS (AG_SURFACE_COLORKEY | AG_SURFACE_ANIMATED)
-	Uint w, h;                         /* Dimensions in pixels */
-	Uint pitch;                        /* Scanline byte length */
-	Uint8 *_Nullable pixels;           /* Raw pixel data */
+	Uint w, h;                         /* Dimensions (pixels) */
+	Uint pitch;                        /* Scanline length (bytes) */
+	Uint8 *_Nullable pixelsBase;       /* Raw pixel data (base) */
+	Uint8 *_Nullable pixels;           /* Raw pixel data (current) */
 	AG_Rect clipRect;                  /* Clipping rectangle */
 	AG_AnimFrame *_Nullable frames;    /* Animation frames */
 	Uint n;                            /* Animation frame count */
-	Uint padding;                      /* Scanline end padding (can be used
-	                                      to fast crop right-to-left) */
+	Uint padding, Lpadding;            /* Scanline end/start padding (bytes) */
+	Uint alpha;                        /* Per-surface alpha */
 	Uint16 guides[AG_SURFACE_NGUIDES]; /* Guide lines */
 	AG_Pixel colorkey;                 /* Color key pixel */
-	AG_Component alpha;                /* Per-surface alpha */
-	AG_COMPONENT_PADDING(_pad);
 } AG_Surface;
 
 struct ag_lower_blit;

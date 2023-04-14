@@ -181,10 +181,10 @@ package Agar.Surface is
   type Pixel_Format
     (Which_Mode : Surface_Mode := PACKED)
   is limited record
-    Mode            : Surface_Mode;                    -- Image type
-    Bits_per_Pixel  : C.int;                           -- Depth (bits/pixel)
-    Bytes_per_Pixel : C.int;                           -- Depth (bytes/pixel)
-    Pixels_per_Byte : C.int;                           -- Pixels per byte
+    Mode                  : Surface_Mode;   -- Image type
+    Bits_per_Pixel        : C.int;          -- Depth (bits/pixel)
+    Bytes_per_Pixel       : C.int;          -- Depth (bytes/pixel)
+    Pixels_per_Byte_Shift : C.int;          -- Shift to divide by pixels/byte
 
     case Which_Mode is
     when INDEXED =>
@@ -290,19 +290,20 @@ package Agar.Surface is
     Format         : aliased Pixel_Format; -- Pixel format description
     Flags          : C.unsigned;           -- Surface Flags (below)
     W,H            : C.unsigned;           -- Size in pixels
-    Pitch          : C.unsigned;           -- Scanline byte length
-    Pixels         : Pixel_Access;         -- Raw pixel data
+    Pitch          : C.unsigned;           -- Scanline length (bytes)
+    Pixels_Base    : Pixel_Access;         -- Pixel data (base address)
+    Pixels         : Pixel_Access;         -- Pixel data (current address)
     Clip_Rect      : AG_Rect;              -- Destination clipping rectangle
     Frames         : Anim_Frame_Access;    -- Animation frames
     Frame_Count    : C.unsigned;           -- Animation frame count
-    Padding        : C.unsigned;           -- Scanline end padding
-    Guide_1        : Unsigned_16;          -- General-purpose guides
-    Guide_2        : Unsigned_16;          -- General-purpose guides
-    Guide_3        : Unsigned_16;          -- General-purpose guides
-    Guide_4        : Unsigned_16;          -- General-purpose guides
+    R_Padding      : C.unsigned;           -- Scanline end padding (bytes)
+    L_Padding      : C.unsigned;           -- Scanline start padding (bytes)
+    Alpha          : C.unsigned;           -- Per-surface alpha (component val)
+    Guide_1        : Unsigned_16;          -- General purpose guide #1
+    Guide_2        : Unsigned_16;          -- General purpose guide #2
+    Guide_3        : Unsigned_16;          -- General purpose guide #3
+    Guide_4        : Unsigned_16;          -- General purpose guide #4
     Colorkey       : AG_Pixel;             -- Color key pixel
-    Alpha          : AG_Component;         -- Per-surface alpha
-    C_Pad1         : Surface_Pad1;
   end record
     with Convention => C;
   

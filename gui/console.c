@@ -802,7 +802,7 @@ SizeAllocate(void *_Nonnull p, const AG_SizeAlloc *_Nonnull a)
 	aBar.x = a->w - rBar.w;
 	aBar.y = 0;
 	aBar.w = rBar.w;
-	aBar.h = a->h;
+	aBar.h = a->h - rBar.w;
 	AG_WidgetSizeAlloc(cons->vBar, &aBar);
 
 	cons->r.x = 0;

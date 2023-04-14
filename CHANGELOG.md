@@ -21,6 +21,8 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Object**](https://libagar.org/man3/AG_Object): New function `AG_ObjectFreeChildrenOfType()`.
 - [**AG_Radio**](https://libagar.org/man3/AG_Radio): New `HOMOGENOUS` option to divide space equally between items. Thanks Stephen!
 - [**AG_StyleSheet**](https://libagar.org/man3/AG_StyleSheet): New `E > F` selector. Allows child widgets to be addressed by either instance name or class name.
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): New field `Lpadding` (scaline start padding). Allows fast cropping of lines from the left.
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Make it possible to increment the `pixels` pointer to fast crop lines from the top. Added `pixelsBase` pointer.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Add standard palettes for 1/2/4/8-bit modes. New Indexed surfaces are now initialized with a standard palette by default.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Add support for 40- and 48-bpp surfaces.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Introduce optimized blitter tables.
@@ -126,6 +128,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Table**](https://libagar.org/man3/AG_Table): Fixed an off-by-one which caused a missing cursor-change area for column resize.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): `AG_SetDefaultFont()` now takes effect immediately.
 - [**AG_Textbox**](https://libagar.org/man3/AG_Textbox), [**AG_Editable**](https://libagar.org/man3/AG_Editable) and [**AG_Console**](https://libagar.org/man3/AG_Console): Fix horizontal scrolling (Shift + Mouse Wheel) behavior.
+- [**AG_Titlebar**](https://libagar.org/man3/AG_Titlebar): Use `AG_BUTTON_CROP` to align the window button labels precisely.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Fixed non-delivery of `mouse-button-down` events to hidden and subsequently re-shown widgets (e.g., widgets under a Notebook). Thanks [Walter](https://github.com/WallyZambotti)!
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Deliver `widget-hidden` when detaching a widget from a visible window.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): In `AG_WidgetSizeAlloc()`, set the `UNDERSIZE` flag correctly on return in the case where `size_allocate()` is inherited from a parent class.

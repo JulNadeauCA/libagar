@@ -24,9 +24,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-const char *primitiveNames[] = { "Cube", "Sphere", NULL };
-const char *shadingNames[] = { "Flat Shading", "Smooth Shading", NULL };
-
 typedef struct {
 	AG_TestInstance _inherit;
 	enum { CUBE, SPHERE } primitive;
@@ -36,9 +33,12 @@ typedef struct {
 	GLfloat ambient[4];
 	GLfloat diffuse[4];
 	GLfloat specular[4];
+	GLfloat L1pos[4];
+	GLfloat L2pos[4];
 	int wireframe;
 	int subdiv;
 	int overlay;
+	int moveLight;
 } MyTestInstance;
 
 static GLdouble isoVtx[12][3] = {    
@@ -113,8 +113,19 @@ MyDrawFunction(AG_Event *event)
 {
 	MyTestInstance *ti = AG_PTR(1);
 	const int subdiv = ti->subdiv;
-	GLfloat pos[4];
 	int i;
+
+	if (ti->moveLight) {
+		if (ti->L2pos[2] == 1.1f) {
+			ti->L2pos[0] -= 1.0f;
+			if (ti->L2pos[0] <= -100.0f)
+				ti->L2pos[2] = 1.0f;
+		} else {
+			ti->L2pos[0] += 1.0f;
+			if (ti->L2pos[0] > 100.0f)
+				ti->L2pos[2] = 1.1f;
+		}
+	}
 
 	glLoadIdentity();
 	glPushAttrib(GL_POLYGON_BIT | GL_LIGHTING_BIT | GL_DEPTH_BUFFER_BIT);
@@ -130,16 +141,10 @@ MyDrawFunction(AG_Event *event)
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, ti->specular);
 	glShadeModel(ti->shading == FLATSHADING ? GL_FLAT : GL_SMOOTH);
 
-	pos[0] = 10.0f;
-	pos[1] = 10.0f;
-	pos[2] = 0.0f;
-	pos[3] = 1.0f;
+	glLightfv(GL_LIGHT1, GL_POSITION, ti->L1pos);
 	glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 10.0f);
-	glLightfv(GL_LIGHT1, GL_POSITION, pos);
-	
-	pos[1] = -10.0f;
-	pos[2] = 10.0f;
-	glLightfv(GL_LIGHT0, GL_POSITION, pos);
+
+	glLightfv(GL_LIGHT0, GL_POSITION, ti->L2pos);
 	glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 10.0f);
 
 	glLightfv(GL_LIGHT1, GL_AMBIENT, ti->ambient);
@@ -289,7 +294,19 @@ Init(void *obj)
 	}
 	ti->wireframe = 0;
 	ti->overlay = 1;
+	ti->moveLight = 1;
 	ti->subdiv = 4;
+
+	ti->L1pos[0] = 10.0f;
+	ti->L1pos[1] = 10.0f;
+	ti->L1pos[2] = 0.0f;
+	ti->L1pos[3] = 1.0f;
+
+	ti->L2pos[0] = -100.0f;
+	ti->L2pos[1] = 10.0f;
+	ti->L2pos[2] = 10.0f;
+	ti->L2pos[3] = 1.0f;
+
 	return (0);
 }
 
@@ -376,13 +393,15 @@ TestGUI(void *obj, AG_Window *win)
 	}
 	hb = AG_BoxNewHoriz(win, AG_BOX_HFILL);
 	{
+		const char *primitiveNames[] = { "Cube", "Sphere", NULL };
+		const char *shadingNames[] = { "Flat Shading", "Smooth Shading", NULL };
 		AG_Box *vb;
 		AG_Numerical *num;
 		AG_Editable *edNum;
+		AG_Radio *rad;
 
-		AG_RadioNewInt(hb, 0, primitiveNames, (void *)&ti->primitive);
-
-		AG_SeparatorNewVert(hb);
+		rad = AG_RadioNewInt(hb, 0, primitiveNames, (void *)&ti->primitive);
+		AG_SetFontSize(rad, "120%");
 
 		num = AG_NumericalNewIntR(hb, 0, NULL, "Sphere\nsubdiv: ",
 		    &ti->subdiv, 0,8);
@@ -390,13 +409,19 @@ TestGUI(void *obj, AG_Window *win)
 		AG_SetFontFamily(edNum, "charter");
 		AG_SetFontSize(edNum, "160%");
 		AG_SetFontWeight(edNum, "bold");
+		AG_SetMargin(num, "0 10 0 10");
 
-		AG_RadioNewInt(hb, 0, shadingNames, (void *)&ti->shading);
-		AG_SeparatorNewVert(hb);
+		rad = AG_RadioNewInt(hb, 0, shadingNames, (void *)&ti->shading);
+		AG_SetFontSize(rad, "80%");
+
 		vb = AG_BoxNewVert(hb, AG_BOX_EXPAND);
+		AG_SetFontSize(vb, "80%");
+		AG_SetSpacing(vb, "0");
+		AG_SetMargin(vb, "0 0 0 5");
 		{
-			AG_CheckboxNewInt(vb, 0, "Wireframe", &ti->wireframe);
+			AG_CheckboxNewInt(vb, 0, "Moving Light", &ti->moveLight);
 			AG_CheckboxNewInt(vb, 0, "Text Overlay", &ti->overlay);
+			AG_CheckboxNewInt(vb, 0, "Wireframe", &ti->wireframe);
 		}
 	}
 	return (0);

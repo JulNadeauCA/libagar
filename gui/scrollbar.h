@@ -19,24 +19,22 @@ enum ag_scrollbar_button {
 };
 
 typedef struct ag_scrollbar {
-	struct ag_widget wid;		/* AG_Widget -> AG_Scrollbar */
+	struct ag_widget wid;          /* AG_Widget -> AG_Scrollbar */
 	Uint flags;
-#define AG_SCROLLBAR_HFILL	0x01
-#define AG_SCROLLBAR_VFILL	0x02
-#define AG_SCROLLBAR_SMOOTH	0x04	/* Animate scrolling to the target
-                                           (default: jump to it) */
-#define AG_SCROLLBAR_TEXT	0x08	/* Display values and offsets in text */
-#define AG_SCROLLBAR_EXCL	0x40	/* Has exclusive access to bindings */
-#define AG_SCROLLBAR_EXPAND	(AG_SCROLLBAR_HFILL | AG_SCROLLBAR_VFILL)
+#define AG_SCROLLBAR_HFILL  0x01
+#define AG_SCROLLBAR_VFILL  0x02
+#define AG_SCROLLBAR_SMOOTH 0x04       /* Animated seek (default = jump) */
+#define AG_SCROLLBAR_TEXT   0x08       /* Deprecated (unused) flag */
+#define AG_SCROLLBAR_EXCL   0x40       /* Has exclusive access to bindings */
+#define AG_SCROLLBAR_EXPAND (AG_SCROLLBAR_HFILL | AG_SCROLLBAR_VFILL)
 
-	enum ag_scrollbar_type type;	/* Horizontal or vertical */
+	enum ag_scrollbar_type type;   /* Horizontal or vertical */
 
-	enum ag_scrollbar_button curBtn;	/* Active button */
-	enum ag_scrollbar_button mouseOverBtn;	/* Mouseover button */
+	enum ag_scrollbar_button curBtn;        /* Active button */
+	enum ag_scrollbar_button mouseOverBtn;  /* Mouseover button */
 
-	int length;			/* Length of scrolling control area */
-	Uint32 _pad;
-	int hArrow;			/* Arrow height */
+	int length;                     /* Length of scrolling control area */
+	int lbl1, lbl2;                 /* Arrow labels */
 	int value;			/* Default `value' binding */
 	AG_Event *_Nullable buttonIncFn; /* Alt. handler for increment btns */
 	AG_Event *_Nullable buttonDecFn; /* Alt. handler for decrement btns */

@@ -3,7 +3,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agargui.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 April 8
+" Last Change:  2023 April 11
 
 " Agar-GUI (https://libagar.org/)
 if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
@@ -467,7 +467,7 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_RADIO_HOMOGENOUS AG_RADIO_EXPAND
   " gui/scrollbar.h
   syn keyword cType AG_Scrollbar
-  syn keyword cConstant AG_SCROLLBAR_HORIZ AG_SCROLLBAR_VERT
+  syn keyword cConstant AG_SCROLLBAR_HORIZ AG_SCROLLBAR_VERT AG_SCROLLBAR_HOT
   syn keyword cConstant AG_SCROLLBAR_BUTTON_NONE AG_SCROLLBAR_BUTTON_DEC
   syn keyword cConstant AG_SCROLLBAR_BUTTON_INC AG_SCROLLBAR_BUTTON_SCROLL
   syn keyword cConstant AG_SCROLLBAR_HFILL AG_SCROLLBAR_VFILL AG_SCROLLBAR_SMOOTH

@@ -223,14 +223,14 @@ SelectedSurface(AG_Event *_Nonnull event)
 		    _("Surface Mode: Packed.\n"
 		      "Surface Flags: "  AGSI_CODE "0x%04x"  AGSI_RST ".\n"
 		      "Surface Size: %u x %u.\n"
-		      "Pitch: %u, Padding: %u.\n"
+		      "Pitch: %u, Paddings: %u,%u.\n"
 		      "Guides: %u %u %u %u.\n"
 		      "Bits Per Pixel: %d.\n"
 		      "RGBA Masks: " AGSI_CODE AGSI_RED "0x%08lx" AGSI_RST ","
 		                     AGSI_CODE AGSI_GRN "0x%08lx" AGSI_RST ","
 		                     AGSI_CODE AGSI_BLU "0x%08lx" AGSI_RST ","
 		                              AGSI_CODE "0x%08lx" AGSI_RST "\n"),
-		    S->flags, S->w, S->h, S->pitch, S->padding,
+		    S->flags, S->w, S->h, S->pitch, S->Lpadding, S->padding,
 		    S->guides[0], S->guides[1], S->guides[2], S->guides[3],
 		    S->format.BitsPerPixel,
 		    (Ulong)S->format.Rmask,
@@ -243,10 +243,10 @@ SelectedSurface(AG_Event *_Nonnull event)
 		    _("Surface Mode: Indexed.\n"
 		      "Surface Flags: " AGSI_CODE "0x%x" AGSI_RST ".\n"
 		      "Surface Size: %d x %d.\n"
-		      "Pitch: %u, Padding: %u.\n"
+		      "Pitch: %u, Paddings: %u,%u.\n"
 		      "Bits Per Pixel: %d.\n"
 		      "Palette Entries: " AGSI_BOLD "%d" AGSI_RST ".\n"),
-		    S->flags, S->w, S->h, S->pitch, S->padding,
+		    S->flags, S->w, S->h, S->pitch, S->Lpadding, S->padding,
 		    S->format.BitsPerPixel,
 		    S->format.palette->nColors);
 		break;
@@ -255,10 +255,10 @@ SelectedSurface(AG_Event *_Nonnull event)
 		    _("Surface Mode: Grayscale.\n"
 		      "Surface Flags: " AGSI_CODE "0x%x" AGSI_RST ".\n"
 		      "Surface Size: %d x %d.\n"
-		      "Pitch: %u, Padding: %u.\n"
+		      "Pitch: %u, Paddings: %u,%u.\n"
 		      "Bits Per Pixel: %d.\n"
 		      "Grayscale Mode: " AGSI_BOLD "%s" AGSI_RST ".\n"),
-		    S->flags, S->w, S->h, S->pitch, S->padding,
+		    S->flags, S->w, S->h, S->pitch, S->Lpadding, S->padding,
 		    S->format.BitsPerPixel,
 		    grayscaleModeNames[S->format.graymode]);
 		break;
@@ -338,16 +338,14 @@ PollSurfaces(AG_Event *_Nonnull event)
 			it->cat = "null-surface";
 		} else {
 			if (wid->textures[i] != -1) {
-				it = AG_TlistAdd(tl, S,
-				    AGSI_ALGUE AGSI_L_ARROW AGSI_RST
-				    " Surface#%u (%ux%u, %ubpp, texture #%d%s%s)",
+				it = AG_TlistAdd(tl, NULL,
+				    "Surface#%u (%ux%u, %ubpp, texture #%d%s%s)",
 				    i, S->w, S->h, S->format.BitsPerPixel, wid->textures[i],
 				    (wid->surfaceFlags[i] & AG_WIDGET_SURFACE_NODUP) ? ", <NODUP>" : "",
 				    (wid->surfaceFlags[i] & AG_WIDGET_SURFACE_REGEN) ? ", <REGEN>" : "");
 			} else {
-				it = AG_TlistAdd(tl, S,
-				    AGSI_ALGUE AGSI_L_ARROW AGSI_RST
-				    " Surface#%u (%ux%u, %ubpp%s%s)",
+				it = AG_TlistAdd(tl, NULL,
+				    "Surface#%u (%ux%u, %ubpp%s%s)",
 				    i, S->w, S->h, S->format.BitsPerPixel,
 				    (wid->surfaceFlags[i] & AG_WIDGET_SURFACE_NODUP) ? ", <NODUP>" : "",
 				    (wid->surfaceFlags[i] & AG_WIDGET_SURFACE_REGEN) ? ", <REGEN>" : "");

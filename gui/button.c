@@ -565,7 +565,7 @@ Draw(void *_Nonnull p)
 		x = WIDGET(bu)->paddingLeft;
 		break;
 	case AG_TEXT_CENTER:
-		x = (WIDTH(bu) >> 1) - (S->w >> 1) - 1;
+		x = (WIDTH(bu) >> 1) - (S->w >> 1);
 		break;
 	case AG_TEXT_RIGHT:
 		x = WIDTH(bu) - S->w - WIDGET(bu)->paddingRight - 1;

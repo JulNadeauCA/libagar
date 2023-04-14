@@ -355,14 +355,16 @@ AG_SurfaceAllocPixels(AG_Surface *_Nonnull S)
 	if (Get_Aligned_Pitch_Padding(S, S->w, &S->pitch, &S->padding) == -1)
 		AG_FatalError(NULL);
 
-	if (S->pixels != NULL && !(S->flags & AG_SURFACE_EXT_PIXELS)) {
-		free(S->pixels);
+	if (S->pixelsBase != NULL && !(S->flags & AG_SURFACE_EXT_PIXELS)) {
+		free(S->pixelsBase);
 	}
-	if ((size = S->h*S->pitch) > 0 && !(S->flags & AG_SURFACE_EXT_PIXELS)) {
-		S->pixels = Malloc(size);
+	size = S->h * S->pitch;
+	if (size > 0 && !(S->flags & AG_SURFACE_EXT_PIXELS)) {
+		S->pixelsBase = Malloc(size);
 	} else {
-		S->pixels = NULL;
+		S->pixelsBase = NULL;
 	}
+	S->pixels = S->pixelsBase;
 }
 
 static __inline__ void
@@ -423,13 +425,16 @@ AG_SurfaceInit(AG_Surface *S, const AG_PixelFormat *pf, Uint w, Uint h,
 			AG_FatalError("Bad PixelFormat mode");
 		}
 	}
-	memset(&S->pixels, 0, sizeof(Uint8 *) +                   /* pixels */
-	                      sizeof(AG_Rect) +                   /* clipRect */
-			      sizeof(AG_AnimFrame *) +            /* frames */
-			      sizeof(Uint) +                      /* n */
-			      sizeof(Uint) +                      /* padding */
-			      sizeof(Uint16)*AG_SURFACE_NGUIDES + /* guides */
-			      sizeof(AG_Pixel));
+	memset(&S->pixelsBase, 0, sizeof(Uint8 *) +                   /* pixelsBase */
+	                          sizeof(Uint8 *) +                   /* pixels */
+	                          sizeof(AG_Rect) +                   /* clipRect */
+			          sizeof(AG_AnimFrame *) +            /* frames */
+			          sizeof(Uint) +                      /* n */
+			          sizeof(Uint) +                      /* padding */
+			          sizeof(Uint) +                      /* Lpadding */
+			          sizeof(Uint) +                      /* alpha */
+			          sizeof(Uint16)*AG_SURFACE_NGUIDES + /* guides */
+			          sizeof(AG_Pixel));                  /* colorkey */
 	S->alpha = AG_OPAQUE;
 	S->clipRect.w = w;
 	S->clipRect.h = h;
@@ -557,7 +562,7 @@ AG_SurfaceFromPixelsRGB(const void *pixels, Uint w, Uint h,
 
 	AG_PixelFormatRGB(&pf, BitsPerPixel, Rmask, Gmask, Bmask);
 	S = AG_SurfaceNew(&pf, w,h, 0);
-	memcpy(S->pixels, pixels, h*(S->pitch + S->padding));
+	memcpy(S->pixels, pixels, h * S->pitch);
 	AG_PixelFormatFree(&pf);
 	return (S);
 }
@@ -575,7 +580,7 @@ AG_SurfaceFromPixelsRGBA(const void *pixels, Uint w, Uint h, Uint BitsPerPixel,
 
 	AG_PixelFormatRGBA(&pf, BitsPerPixel, Rmask, Gmask, Bmask, Amask);
 	S = AG_SurfaceNew(&pf, w,h, 0);
-	memcpy(S->pixels, pixels, h*(S->pitch + S->padding));
+	memcpy(S->pixels, pixels, h * S->pitch);
 	AG_PixelFormatFree(&pf);
 	return (S);
 }
@@ -627,20 +632,29 @@ AG_SurfaceExportFile(const AG_Surface *S, const char *path)
 	return (0);
 }
 
-/* Set pixel data to an external address (or NULL = revert to auto-allocated) */
+/*
+ * Set pixel data to an externally-allocated address pixelsBase.
+ * If pixelsBase=NULL, revert to auto-allocated storage (removing any paddings).
+ * Resets the surface's pixels pointer to pixelsBase.
+ */
 void
-AG_SurfaceSetAddress(AG_Surface *S, Uint8 *pixels)
+AG_SurfaceSetAddress(AG_Surface *S, Uint8 *pixelsBase)
 {
-	if (S->pixels != NULL && !(S->flags & AG_SURFACE_EXT_PIXELS)) {
-		free(S->pixels);
+	if (S->pixelsBase != NULL && !(S->flags & AG_SURFACE_EXT_PIXELS)) {
+		free(S->pixelsBase);
 	}
-	if (pixels != NULL) {
-		S->pixels = pixels;
+	if (pixelsBase != NULL) {                   /* Externally allocated */
+		S->pixelsBase = pixelsBase;
 		S->flags |= AG_SURFACE_EXT_PIXELS;
-	} else {
-		S->pixels = (S->h*S->pitch > 0) ? Malloc(S->h*S->pitch) : NULL;
+	} else {                                          /* Revert to auto */
+		const AG_Size size = (S->h * S->pitch);
+
+		S->pixelsBase = (size > 0) ? Malloc(size) : NULL;
+		S->Lpadding = 0;
+		S->padding = 0;
 		S->flags &= ~(AG_SURFACE_EXT_PIXELS);
 	}
+	S->pixels = S->pixelsBase;
 }
 
 /*
@@ -690,7 +704,10 @@ AG_SurfaceSetPalette(AG_Surface *S, const AG_Palette *a)
 	S->format.palette = b;
 }
 
-/* Return a newly-allocated duplicate of a surface (in the same format). */
+/*
+ * Return a newly-allocated duplicate of a surface in the same format.
+ * The duplicate will not include paddings present in the orignal surface.
+ */
 AG_Surface *
 AG_SurfaceDup(const AG_Surface *a)
 {
@@ -746,34 +763,42 @@ AG_SurfaceCopy(AG_Surface *D, const AG_Surface *S)
 		if (D->format.BitsPerPixel < 8) {         /* <8bpp block copy */
 			const Uint8 *pSrc = S->pixels;
 			Uint8 *pDst = D->pixels;
-			Uint Spad = S->padding, Dpad = D->padding;
+			Uint Spadding = S->padding, Dpadding = D->padding;
 			const Uint pitch = (w >> D->format.PixelsPerByteShift);
 
 			if (D->w > S->w) {
-				Dpad += (D->w - S->w) >> D->format.PixelsPerByteShift;
+				Dpadding += (D->w - S->w) >> D->format.PixelsPerByteShift;
 			} else if (D->w < S->w) {
-				Spad += (S->w - D->w) >> S->format.PixelsPerByteShift;
+				Spadding += (S->w - D->w) >> S->format.PixelsPerByteShift;
 			}
 			for (y = 0; y < h; y++) {
+				pSrc += S->Lpadding;
+				pDst += D->Lpadding;
+
 				memcpy(pDst, pSrc, pitch);
-				pSrc += pitch + Spad;
-				pDst += pitch + Dpad;
+
+				pSrc += pitch + Spadding;
+				pDst += pitch + Dpadding;
 			}
 		} else {                                 /* >=8bpp block copy */
 			const Uint8 *pSrc = S->pixels;
 			Uint8 *pDst = D->pixels;
-			Uint Spad = S->padding, Dpad = D->padding;
+			Uint Spadding = S->padding, Dpadding = D->padding;
 			const Uint pitch = (w * D->format.BytesPerPixel);
 
 			if (D->w > S->w) {
-				Dpad += (D->w - S->w) * D->format.BytesPerPixel;
+				Dpadding += (D->w - S->w) * D->format.BytesPerPixel;
 			} else if (D->w < S->w) {
-				Spad += (S->w - D->w) * S->format.BytesPerPixel;
+				Spadding += (S->w - D->w) * S->format.BytesPerPixel;
 			}
 			for (y = 0; y < h; y++) {
+				pSrc += S->Lpadding;
+				pDst += D->Lpadding;
+
 				memcpy(pDst, pSrc, pitch);
-				pSrc += pitch + Spad;
-				pDst += pitch + Dpad;
+
+				pSrc += pitch + Spadding;
+				pDst += pitch + Dpadding;
 			}
 		}
 		return;
@@ -792,8 +817,9 @@ AG_SurfaceCopy(AG_Surface *D, const AG_Surface *S)
 		const Uint8 *pSrc = S->pixels;
 		Uint8 *pDst = D->pixels;
 
-
 		for (y = 0; y < h; y++) {
+			pSrc += S->Lpadding;
+			pDst += D->Lpadding;
 			for (x = 0; x < w; x++) {
 				AG_Pixel px;
 				AG_Color c;
@@ -814,6 +840,7 @@ AG_SurfaceCopy(AG_Surface *D, const AG_Surface *S)
 		const AG_Palette *pal = S->format.palette;
 
 		for (y = 0; y < h; y++) {
+			pSrc += S->Lpadding;
 			for (x = 0; x < w; x++) {
 				AG_Color c;
 			
@@ -849,6 +876,8 @@ AG_SurfaceCopy(AG_Surface *D, const AG_Surface *S)
 		Uint8 *pDst = D->pixels;
 
 		for (y = 0; y < h; y++) {
+			pSrc += S->Lpadding;
+			pDst += D->Lpadding;
 			for (x = 0; x < w; x++) {
 				AG_Pixel val;
 				AG_Color c;
@@ -940,10 +969,11 @@ AG_LowerBlit_Packed_to_8(AG_Surface *D, const AG_Rect *rd,
 #endif
 	for (y = 0; y < h; y++) {
 		const Uint8 *pSrc = S->pixels +
-		    ((ys + y) * S->pitch) +
+		    ((ys + y) * S->pitch) + S->Lpadding +
 		     (xs * S->format.BytesPerPixel);
 		Uint8 *pDst = D->pixels +
-		    ((yd + y) * D->pitch) + xd;
+		    ((yd + y) * D->pitch) + D->Lpadding +
+		      xd;
 
 		for (x = 0; x < w; x++) {
 			AG_Pixel px;
@@ -983,7 +1013,7 @@ AG_LowerBlit_Packed_to_Sub8(AG_Surface *D, const AG_Rect *rd,
 #endif
 	for (y = 0; y < h; y++) {
 		const Uint8 *pSrc = S->pixels +
-		    ((ys + y) * S->pitch) +
+		    ((ys + y) * S->pitch) + S->Lpadding +
 		     (xs * S->format.BytesPerPixel);
 
 		for (x = 0; x < w; x++) {
@@ -1020,10 +1050,10 @@ AG_LowerBlit_Packed_to_Grayscale(AG_Surface *D, const AG_Rect *rd,
 #endif
 	for (y = 0; y < h; y++) {
 		const Uint8 *pSrc = S->pixels +
-		    ((ys + y) * S->pitch) +
+		    ((ys + y) * S->pitch) + S->Lpadding +
 		     (xs * S->format.BytesPerPixel);
 		Uint8 *pDst = D->pixels +
-		    ((yd + y) * D->pitch) +
+		    ((yd + y) * D->pitch) + D->Lpadding +
 		     (xd * D->format.BytesPerPixel);
 
 		for (x = 0; x < w; x++) {
@@ -1059,9 +1089,9 @@ AG_LowerBlit_Any_to_Any(AG_Surface *D, const AG_Rect *rd, const AG_Surface *S,
 	int x, y;
 
 	for (y = 0; y < h; y++) {
-		pSrc = S->pixels + ((ys + y) * S->pitch) +
+		pSrc = S->pixels + ((ys + y) * S->pitch) + S->Lpadding +
 		                    (xs * S->format.BytesPerPixel);
-		pDst = D->pixels + ((yd + y) * D->pitch) +
+		pDst = D->pixels + ((yd + y) * D->pitch) + D->Lpadding +
        		                    (xd * D->format.BytesPerPixel);
 		for (x = 0; x < w; x++) {
 			AG_Pixel px;
@@ -1094,9 +1124,9 @@ AG_LowerBlit_AlCo(AG_Surface *D, const AG_Rect *rd, const AG_Surface *S,
 	int x,y;
 
 	for (y = 0; y < h; y++) {
-		pSrc = S->pixels + ((rs->y + y) * S->pitch) +
+		pSrc = S->pixels + ((rs->y + y) * S->pitch) + S->Lpadding +
 		                    (rs->x * S->format.BytesPerPixel);
-		pDst = D->pixels + ((rd->y + y) * D->pitch) +
+		pDst = D->pixels + ((rd->y + y) * D->pitch) + D->Lpadding +
        		                    (rd->x * D->format.BytesPerPixel);
 		for (x = 0; x < w; x++) {
 			AG_Pixel px;
@@ -1132,9 +1162,9 @@ AG_LowerBlit_Al(AG_Surface *D, const AG_Rect *rd, const AG_Surface *S,
 	int x, y;
 
 	for (y = 0; y < rd->h; y++) {
-		pSrc = S->pixels + ((rs->y + y) * S->pitch) +
+		pSrc = S->pixels + ((rs->y + y) * S->pitch) + S->Lpadding +
 		                    (rs->x * S->format.BytesPerPixel);
-		pDst = D->pixels + ((rd->y + y) * D->pitch) +
+		pDst = D->pixels + ((rd->y + y) * D->pitch) + D->Lpadding +
        		                    (rd->x * D->format.BytesPerPixel);
 		for (x = 0; x < rd->w; x++) {
 			AG_Pixel px;
@@ -1171,9 +1201,9 @@ AG_LowerBlit_Co(AG_Surface *D, const AG_Rect *rd, const AG_Surface *S,
 	int x, y;
 
 	for (y = 0; y < h; y++) {
-		pSrc = S->pixels + ((rs->y + y) * S->pitch) +
+		pSrc = S->pixels + ((rs->y + y) * S->pitch) + S->Lpadding +
 		                    (rs->x * S->format.BytesPerPixel);
-		pDst = D->pixels + ((rd->y + y) * D->pitch) +
+		pDst = D->pixels + ((rd->y + y) * D->pitch) + D->Lpadding +
        		                    (rd->x * D->format.BytesPerPixel);
 		for (x = 0; x < w; x++) {
 			AG_Pixel px;
@@ -1323,10 +1353,11 @@ AG_SurfaceBlit(const AG_Surface *S, const AG_Rect *rSrc, AG_Surface *D,
 /*
  * Resize a surface to specified dimensions in pixels.
  *
- * When growing the surface, new pixels are left uninitialized.
  * If parameters are incorrect or insufficient memory, fail and return -1.
- * If EXT_PIXELS flag is set, disable it and discard the address.
- * The clipping rectangle is reset to cover whole surface.
+ * When growing the surface, new pixels are left uninitialized.
+ * If EXT_PIXELS is set, discard address and revert to auto-allocated storage.
+ * Paddings are reset. The clipping rectangle is reset to cover whole surface.
+ * The pixels pointer of the surface is reset to pixelsBase.
  */
 int
 AG_SurfaceResize(AG_Surface *S, Uint w, Uint h)
@@ -1338,19 +1369,21 @@ AG_SurfaceResize(AG_Surface *S, Uint w, Uint h)
 		AG_FatalError(NULL);
 
 	if ((S->flags & AG_SURFACE_EXT_PIXELS) == 0) {
-		if ((pixelsNew = TryRealloc(S->pixels, h*newPitch)) == NULL) {
+		if ((pixelsNew = TryRealloc(S->pixelsBase, h * newPitch)) == NULL) {
 			return (-1);
 		}
-		S->pixels = pixelsNew;
+		S->pixelsBase = pixelsNew;
 	} else {
 		S->flags &= ~(AG_SURFACE_EXT_PIXELS);
-		if ((S->pixels = TryMalloc(h*newPitch)) == NULL)
+		if ((S->pixelsBase = TryMalloc(h * newPitch)) == NULL)
 			return (-1);
 	}
+	S->pixels = S->pixelsBase;
 	S->w = w;
 	S->h = h;
 	S->pitch = newPitch;
 	S->padding = newPadding;
+	S->Lpadding = 0;
 	S->clipRect.x = 0;
 	S->clipRect.y = 0;
 	S->clipRect.w = w;
@@ -1362,20 +1395,20 @@ AG_SurfaceResize(AG_Surface *S, Uint w, Uint h)
 void
 AG_SurfaceFree(AG_Surface *S)
 {
-	Uint i;
-
 #ifdef AG_DEBUG
 	if (S->flags & AG_SURFACE_MAPPED)
 		AG_FatalError("Surface is in use");
-#endif
-#ifdef DEBUG_SURFACE
+# ifdef DEBUG_SURFACE
 	if (S->flags & AG_SURFACE_TRACE)
 		Debug(NULL, "SURFACE(%dx%dx%d): Freed.\n",
 		    S->w, S->h, S->format.BitsPerPixel);
+# endif
 #endif
 	AG_PixelFormatFree(&S->format);
 
 	if (S->flags & AG_SURFACE_ANIMATED) {
+		Uint i;
+
 		for (i = 0; i < S->n; i++) {
 			AG_AnimFrame *af = &S->frames[i];
 
@@ -1397,7 +1430,7 @@ AG_SurfaceFree(AG_Surface *S)
 		Free(S->frames);
 	}
 	if ((S->flags & AG_SURFACE_EXT_PIXELS) == 0) {
-		Free(S->pixels);
+		Free(S->pixelsBase);
 	}
 	if ((S->flags & AG_SURFACE_STATIC) == 0)
 		free(S);
@@ -1475,7 +1508,7 @@ AG_FillRect(AG_Surface *S, const AG_Rect *rd, const AG_Color *c)
 Uint8
 AG_SurfaceGet8(const AG_Surface *S, int x, int y)
 {
-	const Uint8 *p = S->pixels + (y * S->pitch) +
+	const Uint8 *p = S->pixels + (y * S->pitch) + S->Lpadding +
 	                             (x >> S->format.PixelsPerByteShift);
 
 #ifdef DEBUG_SURFACE_GET
@@ -1519,7 +1552,7 @@ AG_SurfaceGet8(const AG_Surface *S, int x, int y)
 void
 AG_SurfacePut8(AG_Surface *_Nonnull S, int x, int y, Uint8 px)
 {
-	Uint8 *p = S->pixels + (y * S->pitch) +
+	Uint8 *p = S->pixels + (y * S->pitch) + S->Lpadding +
 	                       (x >> S->format.PixelsPerByteShift);
 #ifdef DEBUG_SURFACE_PUT
 	if (x < 0 || x >= S->w ||
@@ -1572,7 +1605,7 @@ AG_SurfacePut8(AG_Surface *_Nonnull S, int x, int y, Uint8 px)
 void
 AG_SurfaceBlend8(AG_Surface *S, int x, int y, const AG_Color *c)
 {
-	Uint8 *p = S->pixels + (y * S->pitch) +
+	Uint8 *p = S->pixels + (y * S->pitch) + S->Lpadding +
 	                       (x >> S->format.PixelsPerByteShift);
 	AG_Color pc;
 	AG_Component a;
@@ -2181,7 +2214,7 @@ AG_SurfaceBlendRGB8(AG_Surface *S, int x, int y, Uint8 r, Uint8 g, Uint8 b,
 	c.a = AG_8toH(a);
 
 	AG_SurfaceBlend_At(S, S->pixels +
-	    y*S->pitch +
+	    y*S->pitch + S->Lpadding +
 	    x*S->format.BytesPerPixel,
 	    &c);
 }

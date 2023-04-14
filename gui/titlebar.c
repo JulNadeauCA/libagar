@@ -95,26 +95,23 @@ AG_TitlebarNew(void *parent, Uint flags)
 	WIDGET(tbar)->drvOps = AGDRIVER_CLASS(WIDGET(tbar)->drv);
 	
 	if ((flags & AG_TITLEBAR_NO_MINIMIZE) == 0) {
-		btn = AG_ButtonNewS(tbar, btnFlags, " _ ");
-		AG_SetFontSize(btn, "80%");
+		btn = AG_ButtonNewS(tbar, btnFlags, "_");
 		AG_ObjectSetNameS(btn, "minimize");
 		AG_SetEvent(btn, "button-pushed", MinimizeWindow, "%Cp", tbar);
 	}
 	if ((flags & AG_TITLEBAR_NO_MAXIMIZE) == 0) {
-		btn = AG_ButtonNewS(tbar, btnFlags, "\xE2\x96\xA2"); /* U+25A2 */
-		AG_SetFontSize(btn, "80%");
+		btn = AG_ButtonNewS(tbar, btnFlags | AG_BUTTON_CROP,
+		    AGSI_ALGUE AGSI_WHITE_SQUARE_W_ROUNDED_CORNERS);
+
 		AG_ObjectSetNameS(btn, "maximize");
 		AG_SetEvent(btn, "button-pushed", MaximizeWindow, "%Cp", tbar);
 	}
 	if ((flags & AG_TITLEBAR_NO_CLOSE) == 0) {
-		btn = AG_ButtonNewS(tbar, btnFlags, "\xE2\x9C\x95"); /* U+2715 */
-		AG_SetFontSize(btn, "80%");
+		btn = AG_ButtonNewS(tbar, btnFlags | AG_BUTTON_CROP,
+		    AGSI_ALGUE AGSI_MULTIPLICATION_X);
 		AG_ObjectSetNameS(btn, "close");
 		AG_SetEvent(btn, "button-pushed", CloseWindow, "%Cp", tbar);
 	}
-
-	if ((flags & AG_TITLEBAR_NO_BUTTONS) == 0)
-		AG_SetPadding(tbar->label, "2 0 0 2");
 
 	AG_ObjectUnlock(tbar);
 	return (tbar);

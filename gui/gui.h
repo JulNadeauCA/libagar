@@ -6,11 +6,11 @@
 #include <agar/config/have_sdl.h>
 #include <agar/gui/begin.h>
 
-#define AG_ZOOM_MIN 0
-#define AG_ZOOM_MAX 20
-#define AG_ZOOM_1_1 8		/* 12.5% to 100% (in 8 increments) */
-#ifndef AG_ZOOM_DEFAULT
-#define AG_ZOOM_DEFAULT AG_ZOOM_1_1
+#define AG_ZOOM_MIN 0                   /* Index of first zoom level */
+#define AG_ZOOM_MAX 32                  /* Maximum number of zoom levels */
+#define AG_ZOOM_1_1 16                  /* Index of 100% zoom level */
+#ifndef AG_ZOOM_DEFAULT 
+#define AG_ZOOM_DEFAULT AG_ZOOM_1_1     /* Default zoom level */
 #endif
 
 /* Flags for AG_InitVideoSDL() */

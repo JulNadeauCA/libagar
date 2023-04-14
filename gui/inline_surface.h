@@ -349,7 +349,7 @@ ag_surface_get32(const AG_Surface *S, int x, int y)
 		return (Uint32)AG_SurfaceGet8(S, x,y);
 	} else {
 		return AG_SurfaceGet32_At(S, S->pixels +
-		    y*S->pitch +
+		    y*S->pitch + S->Lpadding +
 		    x*S->format.BytesPerPixel);
 	}
 }
@@ -462,7 +462,7 @@ ag_surface_get64(const AG_Surface *S, int x, int y)
 		return (Uint64)AG_SurfaceGet8(S, x,y);
 	} else {
 		return AG_SurfaceGet64_At(S, S->pixels +
-		    y*S->pitch +
+		    y*S->pitch + S->Lpadding +
 		    x*S->format.BytesPerPixel);
 	}
 }
@@ -548,7 +548,7 @@ ag_surface_put32(AG_Surface *S, int x, int y, Uint32 px)
 		AG_SurfacePut8(S, x,y, (Uint8)px);
 	} else {
 		AG_SurfacePut32_At(S, S->pixels +
-		    y*S->pitch +
+		    y*S->pitch + S->Lpadding +
 		    x*S->format.BytesPerPixel, px);
 	}
 }
@@ -662,7 +662,7 @@ ag_surface_put64(AG_Surface *S, int x, int y, Uint64 px)
 		AG_SurfacePut8(S, x,y, (Uint8)px);
 	} else {
 		AG_SurfacePut64_At(S, S->pixels +
-		    y*S->pitch +
+		    y*S->pitch + S->Lpadding +
 		    x*S->format.BytesPerPixel, px);
 	}
 }
@@ -755,7 +755,7 @@ ag_surface_blend_rgb16(AG_Surface *S, int x, int y,
 	AG_Color c = { r,g,b,a };
 
 	AG_SurfaceBlend_At(S, S->pixels +
-	    y * S->pitch +
+	    y * S->pitch + S->Lpadding +
 	    x * S->format.BytesPerPixel,
 	    &c);
 }
@@ -793,7 +793,7 @@ ag_surface_blend(AG_Surface *S, int x, int y, const AG_Color *c)
 #endif
 {
 	AG_SurfaceBlend_At(S, S->pixels +
-	    y * S->pitch +
+	    y * S->pitch + S->Lpadding +
 	    x * S->format.BytesPerPixel,
 	    c);
 }

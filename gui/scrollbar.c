@@ -47,10 +47,11 @@
 #define AG_SCROLLBAR_HOT 10  /* Increase control bar contrast below threshold */
 #endif
 
-static const int zoomSizes[] = {
-     8,  9, 10, 11, 12, 13, 14, 15,  /* 12.5% - 90% */
-    16, 18, 19, 20, 21, 24,          /* 100% - 170% */
-    26, 28, 32, 34, 36, 38           /* 200% - 650% */
+static const int agScrollbarZoomSizes[AG_ZOOM_MAX] = {
+	 8,  8,  8,  8,  10, 10, 10, 10,
+	12, 12, 14, 14,  16, 16, 18, 18,
+	18, 18, 20, 20,  20, 20, 22, 22,
+	22, 22, 24, 24,  26, 28, 32, 34
 };
 
 #define SBPOS(sb,x,y) (((sb)->type == AG_SCROLLBAR_HORIZ) ? (x) : (y))
@@ -708,6 +709,21 @@ OnFocusLoss(AG_Event *_Nonnull event)
 	AG_DelTimer(sb, &sb->moveTo);
 }
 
+static void
+OnFontChange(AG_Event *_Nonnull event)
+{
+	AG_Scrollbar *sb = AG_SCROLLBAR_SELF();
+
+	if (sb->lbl1 != -1) {
+		AG_WidgetUnmapSurface(sb, sb->lbl1);
+		sb->lbl1 = -1;
+	}
+	if (sb->lbl2 != -1) {
+		AG_WidgetUnmapSurface(sb, sb->lbl2);
+		sb->lbl2 = -1;
+	}
+}
+
 #define SET_DEF(fn,dmin,dmax,dinc) { 					\
 	if (!AG_Defined(sb, "min")) { fn(sb, "min", dmin); }		\
 	if (!AG_Defined(sb, "max")) { fn(sb, "max", dmax); }		\
@@ -782,22 +798,25 @@ Init(void *_Nonnull obj)
 	WIDGET(sb)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP |
 	                     AG_WIDGET_UNFOCUSED_MOTION |
 			     AG_WIDGET_FOCUSABLE |
-			     AG_WIDGET_USE_MOUSEOVER;
+			     AG_WIDGET_USE_MOUSEOVER |
+			     AG_WIDGET_USE_TEXT;
 
 	sb->type = AG_SCROLLBAR_HORIZ;
 	sb->curBtn = AG_SCROLLBAR_BUTTON_NONE;
 	sb->mouseOverBtn = AG_SCROLLBAR_BUTTON_NONE;
 	sb->flags = 0;
+	sb->lbl1 = -1;
+	sb->lbl2 = -1;
 	sb->value = 0;
 	sb->buttonIncFn = NULL;
 	sb->buttonDecFn = NULL;
 	sb->xOffs = 0;
 	sb->xSeek = -1;
-	sb->hArrow = 0;
 	
 	AG_AddEvent(sb, "widget-shown", OnShow, NULL);
 	AG_AddEvent(sb, "widget-hidden", OnHide, NULL);
 	AG_SetEvent(sb, "widget-lostfocus", OnFocusLoss, NULL);
+	AG_AddEvent(sb, "font-changed", OnFontChange, NULL);
 
 	AG_InitTimer(&sb->moveTo, "move", 0);
 }
@@ -809,18 +828,18 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 	const int zoomLvl = WIDGET(sb)->window->zoom;
 
 #ifdef AG_DEBUG
-	if (zoomLvl < 0 || zoomLvl >= sizeof(zoomSizes)/sizeof(int))
+	if (zoomLvl < 0 || zoomLvl >= sizeof(agScrollbarZoomSizes) / sizeof(int))
 		AG_FatalError("zoomLvl");
 #endif
 	switch (sb->type) {
 	case AG_SCROLLBAR_HORIZ:
-		r->h = WIDGET(sb)->paddingTop + zoomSizes[zoomLvl] +
+		r->h = WIDGET(sb)->paddingTop + agScrollbarZoomSizes[zoomLvl] +
 		       WIDGET(sb)->paddingBottom;
 		r->w = WIDGET(sb)->paddingLeft + (r->h << 2) +
 		       WIDGET(sb)->paddingRight;
 		break;
 	case AG_SCROLLBAR_VERT:
-		r->w = WIDGET(sb)->paddingLeft + zoomSizes[zoomLvl] +
+		r->w = WIDGET(sb)->paddingLeft + agScrollbarZoomSizes[zoomLvl] +
 		       WIDGET(sb)->paddingRight;
 		r->h = WIDGET(sb)->paddingTop + (r->w << 2) +
 		       WIDGET(sb)->paddingBottom;
@@ -832,52 +851,12 @@ static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
 	AG_Scrollbar *sb = obj;
-	const int zoomLvl = WIDGET(sb)->window->zoom;
 
-#ifdef AG_DEBUG
-	if (zoomLvl < 0 || zoomLvl >= sizeof(zoomSizes)/sizeof(int))
-		AG_FatalError("zoomLvl");
-#endif
-	sb->hArrow = zoomSizes[zoomLvl] >> 1;
-	return (0);
-}
-
-static void
-DrawText(AG_Scrollbar *_Nonnull sb)
-{
-	char label[32];
-	AG_Driver *drv = WIDGET(sb)->drv;
-	AG_Surface *txt;
-	AG_Rect r;
-
-	AG_PushTextState();
-	AG_TextColor(&WCOLOR(sb, TEXT_COLOR));
-	AG_TextBGColor(&WCOLOR(sb, BG_COLOR));
-
-	Snprintf(label, sizeof(label),
-	    (sb->type == AG_SCROLLBAR_HORIZ) ?
-	    "%d|%d|%d|%d" : "%d\n:%d\n%d\nv%d\n",
-	    AG_GetInt(sb,"min"),
-	    AG_GetInt(sb,"value"),
-	    AG_GetInt(sb,"max"),
-	    AG_GetInt(sb,"visible"));
-
-	txt = AG_TextRender(label);		/* XXX inefficient */
-
-	r.x = (WIDTH(sb)  >> 1) - (txt->w >> 1);
-	r.y = (HEIGHT(sb) >> 1) - (txt->h >> 1);
-	r.w = txt->w;
-	r.h = txt->h;
-	AG_WidgetBlit(sb, txt, r.x, r.y);
-	AG_SurfaceFree(txt);
-
-	if (AGDRIVER_CLASS(drv)->updateRegion != NULL) {
-		AG_RectTranslate(&r,
-		    WIDGET(sb)->rView.x1,
-		    WIDGET(sb)->rView.y1);
-		AGDRIVER_CLASS(drv)->updateRegion(drv, &r);
+	if (a->w < WIDGET(sb)->paddingLeft + WIDGET(sb)->paddingRight ||
+	    a->h < WIDGET(sb)->paddingTop + WIDGET(sb)->paddingBottom) {
+		return (-1);
 	}
-	AG_PopTextState();
+	return (0);
 }
 
 static void
@@ -900,9 +879,6 @@ Draw(void *_Nonnull obj)
 		AG_FatalError("sb->type");
 #endif
 	pf[sb->type](sb, x, len);
-
-	if (sb->flags & AG_SCROLLBAR_TEXT)
-		DrawText(sb);
 }
 
 static void
@@ -911,19 +887,34 @@ DrawVert(AG_Scrollbar *_Nonnull sb, int y, int len)
 	AG_Rect r;
 	AG_Color cTinted;
 	const AG_Color *cFg = &WCOLOR(sb, FG_COLOR);
-	const AG_Color *cLine = &WCOLOR(sb, LINE_COLOR);
 	const AG_Color *c;
 	const int w = WIDTH(sb);
 	const int h = HEIGHT(sb);
-	const int mid = (w >> 1);
 	const int sbThick = SBTHICK(sb);
-	const int hArrow = MIN(w >> 1, h >> 1);
 	const int x = (sbThick >> 1);
 	const int btn = sb->curBtn;
+	const AG_Surface *S;
+	int lblX1, lblY1, lblX2, lblY2;
 
 	if (h < (sbThick << 1)) {
 		DrawVertUndersize(sb);
 		return;
+	}
+
+	if (sb->lbl1 == -1) {
+		AG_Color cNone;
+
+		AG_ColorNone(&cNone);
+		AG_TextBGColor(&cNone);
+		AG_TextColor(&WCOLOR(sb, TEXT_COLOR));
+
+		sb->lbl1 = AG_WidgetMapSurface(sb,
+		    AG_TextRenderCropped(AGSI_ALGUE
+			                 AGSI_BLACK_UP_POINTING_TRIANGLE));
+
+		sb->lbl2 = AG_WidgetMapSurface(sb,
+		    AG_TextRenderCropped(AGSI_ALGUE
+			                 AGSI_BLACK_DN_POINTING_TRIANGLE));
 	}
 
 	r.x = 1;
@@ -931,14 +922,17 @@ DrawVert(AG_Scrollbar *_Nonnull sb, int y, int len)
 	r.w = w - 1;
 	r.h = h;
 	AG_DrawFrameSunk(sb, &r);
-	
+
 	r.h = sbThick;                                  /* Decrement button */
+	S = WSURFACE(sb, sb->lbl1);
 	if (btn == AG_SCROLLBAR_BUTTON_DEC) {
 		AG_DrawBoxSunk(sb, &r, cFg);
-		AG_DrawArrowUp(sb, mid+1, x+1, hArrow, cLine);
+		lblX1 = r.x + ((r.w >> 1) - (S->w >> 1)) + 1;
+		lblY1 = r.y + ((r.h >> 1) - (S->h >> 1) + 1) + 1;
 	} else {
 		AG_DrawBoxRaised(sb, &r, cFg);
-		AG_DrawArrowUp(sb, mid, x, hArrow, cLine);
+		lblX1 = r.x + ((r.w >> 1) - (S->w >> 1));
+		lblY1 = r.y + ((r.h >> 1) - (S->h >> 1) + 1);
 	}
 
 	r.y = sbThick + y;                                   /* Control bar */
@@ -956,20 +950,28 @@ DrawVert(AG_Scrollbar *_Nonnull sb, int y, int len)
 	}
 	if (btn == AG_SCROLLBAR_BUTTON_SCROLL) {
 		AG_DrawBoxSunk(sb, &r, cFg);
-/*		AG_PutPixel(sb, mid+1, r.y + (r.h >> 1) + 1, cLine); */
 	} else {
 		AG_DrawBoxRaised(sb, &r, cFg);
-/*		AG_PutPixel(sb, mid,   r.y + (r.h >> 1),     cLine); */
 	}
 	
 	r.y = h - sbThick;                              /* Increment button */
 	r.h = sbThick;
+	S = WSURFACE(sb, sb->lbl2);
 	if (btn == AG_SCROLLBAR_BUTTON_INC) {
 		AG_DrawBoxSunk(sb, &r, cFg);
-		AG_DrawArrowDown(sb, mid+1, x+r.y+1, hArrow, cLine);
+		lblX2 = r.x + ((r.w >> 1) - (S->w >> 1)) + 1;
+		lblY2 = r.y + ((r.h >> 1) - (S->h >> 1) + 1) + 1;
 	} else {
 		AG_DrawBoxRaised(sb, &r, cFg);
-		AG_DrawArrowDown(sb, mid, x+r.y, hArrow, cLine);
+		lblX2 = r.x + ((r.w >> 1) - (S->w >> 1));
+		lblY2 = r.y + ((r.h >> 1) - (S->h >> 1) + 1);
+	}
+
+	if (S->w < w && S->h < h) {
+		AG_PushBlendingMode(sb, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+		AG_WidgetBlitSurface(sb, sb->lbl1, lblX1, lblY1);
+		AG_WidgetBlitSurface(sb, sb->lbl2, lblX2, lblY2);
+		AG_PopBlendingMode(sb);
 	}
 }
 
@@ -979,19 +981,34 @@ DrawHoriz(AG_Scrollbar *_Nonnull sb, int x, int len)
 	AG_Rect r;
 	AG_Color cTinted;
 	const AG_Color *cFg = &WCOLOR(sb, FG_COLOR);
-	const AG_Color *cLine = &WCOLOR(sb, LINE_COLOR);
 	const AG_Color *c;
 	const int w = WIDTH(sb);
 	const int h = HEIGHT(sb);
-	const int mid = h >> 1;
 	const int sbThick = SBTHICK(sb);
-	const int hArrow = MIN(w >> 1, h >> 1);
 	const int y = (sbThick >> 1);
 	const int btn = sb->curBtn;
+	const AG_Surface *S;
+	int lblX1, lblY1, lblX2, lblY2;
 	
 	if (w < (sbThick << 1)) {
 		DrawHorizUndersize(sb);
 		return;
+	}
+
+	if (sb->lbl1 == -1) {
+		AG_Color cNone;
+
+		AG_ColorNone(&cNone);
+		AG_TextColor(&WCOLOR(sb, TEXT_COLOR));
+		AG_TextBGColor(&cNone);
+
+		sb->lbl1 = AG_WidgetMapSurface(sb,
+		    AG_TextRenderCropped(AGSI_ALGUE
+			                 AGSI_BLACK_L_POINTING_TRIANGLE));
+
+		sb->lbl2 = AG_WidgetMapSurface(sb,
+		    AG_TextRenderCropped(AGSI_ALGUE
+			                 AGSI_BLACK_R_POINTING_TRIANGLE));
 	}
 
 	r.x = 0;
@@ -1001,32 +1018,25 @@ DrawHoriz(AG_Scrollbar *_Nonnull sb, int x, int len)
 	AG_DrawFrameSunk(sb, &r);
 
 	r.w = sbThick;                                  /* Decrement button */
-	r.h = h;
+	S = WSURFACE(sb, sb->lbl1);
 	if (btn == AG_SCROLLBAR_BUTTON_DEC) {
 		AG_DrawBoxSunk(sb, &r, cFg);
-		AG_DrawArrowLeft(sb, y+1, mid+1, hArrow, cLine);
+		lblX1 = r.x + ((r.w >> 1) - (S->w >> 1) - 1) + 1;
+		lblY1 = r.y + ((r.h >> 1) - (S->h >> 1)) + 1;
 	} else {
 		AG_DrawBoxRaised(sb, &r, cFg);
-		AG_DrawArrowLeft(sb, y, mid, hArrow, cLine);
-	}
-
-	r.x = w - sbThick;                              /* Increment button */
-	if (btn == AG_SCROLLBAR_BUTTON_INC) {
-		AG_DrawBoxSunk(sb, &r, cFg);
-		AG_DrawArrowRight(sb, r.x+y+1, mid+1, hArrow, cLine);
-	} else {
-		AG_DrawBoxRaised(sb, &r, cFg);
-		AG_DrawArrowRight(sb, r.x+y, mid, hArrow, cLine);
+		lblX1 = r.x + ((r.w >> 1) - (S->w >> 1) - 1);
+		lblY1 = r.y + ((r.h >> 1) - (S->h >> 1));
 	}
 
 	r.x = sbThick + x;                                   /* Control bar */
-	r.w = MIN(len, w - (sbThick<<1));
+	r.w = MIN(len, w - y);
 	if (r.w < 4) {
 		r.w = 4;
 		r.x -= (r.w >> 1);
 	}
-	c = (sb->mouseOverBtn == AG_SCROLLBAR_BUTTON_SCROLL) ?
-	    &WCOLOR_HOVER(sb, FG_COLOR) : cFg;
+	c = (btn == AG_SCROLLBAR_BUTTON_SCROLL) ? &WCOLOR_HOVER(sb, FG_COLOR) :
+	                                          cFg;
 	if (r.w < AG_SCROLLBAR_HOT) {
 		cTinted = *c;
 		AG_ColorLighten(&cTinted, AG_SCROLLBAR_HOT-r.w);
@@ -1034,10 +1044,28 @@ DrawHoriz(AG_Scrollbar *_Nonnull sb, int x, int len)
 	}
 	if (btn == AG_SCROLLBAR_BUTTON_SCROLL) {
 		AG_DrawBoxSunk(sb, &r, c);
-/*		AG_PutPixel(sb, r.x + (r.w >> 1) + 1, mid, cLine); */
 	} else {
 		AG_DrawBoxRaised(sb, &r, c);
-/*		AG_PutPixel(sb, r.x + (r.w >> 1),     mid, cLine); */
+	}
+
+	r.x = w - sbThick;                              /* Increment button */
+	r.w = sbThick;
+	S = WSURFACE(sb, sb->lbl2);
+	if (btn == AG_SCROLLBAR_BUTTON_INC) {
+		AG_DrawBoxSunk(sb, &r, cFg);
+		lblX2 = r.x + ((r.w >> 1) - (S->w >> 1) - 1) + 1;
+		lblY2 = r.y + ((r.h >> 1) - (S->h >> 1)) + 1;
+	} else {
+		AG_DrawBoxRaised(sb, &r, cFg);
+		lblX2 = r.x + ((r.w >> 1) - (S->w >> 1) - 1);
+		lblY2 = r.y + ((r.h >> 1) - (S->h >> 1));
+	}
+
+	if (S->w < w && S->h < h) {
+		AG_PushBlendingMode(sb, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
+		AG_WidgetBlitSurface(sb, sb->lbl1, lblX1, lblY1);
+		AG_WidgetBlitSurface(sb, sb->lbl2, lblX2, lblY2);
+		AG_PopBlendingMode(sb);
 	}
 }
 
@@ -1106,7 +1134,6 @@ Edit(void *_Nonnull obj)
 {
 	static const AG_FlagDescr flagDescr[] = {
 		{ AG_SCROLLBAR_SMOOTH,   N_("Smooth scrolling behavior"), 1 },
-		{ AG_SCROLLBAR_TEXT,     N_("Show values as text"),       1 },
 		{ AG_SCROLLBAR_EXCL,     N_("Exclusive access"),          0 },
 		{ 0,                     NULL,                            0 },
 	};
@@ -1129,7 +1156,6 @@ Edit(void *_Nonnull obj)
 	    &sb->curBtn, &sb->mouseOverBtn);
 	AG_LabelNewPolled(box, AG_LABEL_HFILL, "xOffs: %d, xSeek: %d",
 	    &sb->xOffs, &sb->xSeek);
-	AG_LabelNewPolled(box, AG_LABEL_HFILL, "hArrow: %d", &sb->hArrow);
 
 	return (box);
 }

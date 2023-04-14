@@ -863,7 +863,7 @@ AG_TextRenderRTL(const char *text)
  *
  * As opposed to the standard AG_TextRender() which returns a padded surface
  * suitable for typographical alignment, AG_TextRenderCropped() returns the
- * smallest possible surface that will contain the rendered text.
+ * smallest possible surface that will contain the rendered glyph(s).
  *
  * Inherit font, FG and BG colors from current text state.
  */
@@ -876,9 +876,8 @@ AG_TextRenderCropped(const char *text)
 	AG_Char *us;
 #endif
 	const Uint8 *p;
-	AG_Color cNone;
-	AG_Pixel pxNone;
-	int x, y, yStart, yEnd, xEnd, xRight, yBottom;
+	const int threshold = 50;
+	int x, y, xStart, yStart, xEnd, yEnd, xRight, yBottom;
 
 #ifdef AG_UNICODE
 	if ((us = AG_ImportUnicode("UTF-8", text, NULL, NULL)) == NULL) {
@@ -890,18 +889,25 @@ AG_TextRenderCropped(const char *text)
 	S = AG_TextRenderInternal((const Uint8 *)text, ts->font,
 	                          &ts->colorBG, &ts->color);
 #endif
+	/*
+	 * The rendered surface is guaranteed to be Packed 32-bit RGBA
+	 * with standard (agSurfaceFmt) masks.
+	 */
 
-	AG_ColorNone(&cNone);
-	pxNone = AG_MapPixel(&S->format, &cNone);
-
-	/* Scan left-to-right from the top to the bottom. */
+	/* Scan top to bottom */
 	p = S->pixels;
-	for (y=0, yStart=0; y < S->h; y++) {
+	for (y = yStart = 0; y < S->h; y++) {
 		for (x = 0; x < S->w; x++) {
-			if (AG_SurfaceGet_At(S,p) != pxNone) {
+			const AG_Pixel px = AG_SurfaceGet_At(S,p);
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+			const Uint8 a = (px & 0x000000ff);
+#else
+			const Uint8 a = (px & 0xff000000) >> 24;
+#endif
+			if (a > threshold) {
 				break;
 			}
-			p += S->format.BytesPerPixel;
+			p += 4;
 		}
 		if (x == S->w) {
 			yStart++;
@@ -911,44 +917,72 @@ AG_TextRenderCropped(const char *text)
 		p += S->padding;
 	}
 
-	/* Scan right-to-left from the bottom to the top. */
-	xRight = (S->w - 1);
+	/* Scan bottom to top */
 	yBottom = (S->h - 1);
-	p = S->pixels + (yBottom * S->pitch) -
-	                 xRight * S->format.BytesPerPixel;
-	for (y = yBottom, yEnd = y;
-	     y >= 0;
-	     y--) {
-		for (x = xRight; x >= 0; x--) {
-			if (AG_SurfaceGet_At(S,p) != pxNone) {
+	for (y = yEnd = yBottom; y >= 0; y--) {
+		p = S->pixels + (y * S->pitch);
+		for (x = 0; x < S->w; x++) {
+			const AG_Pixel px = AG_SurfaceGet_At(S,p);
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+			const Uint8 a = (px & 0x000000ff);
+#else
+			const Uint8 a = (px & 0xff000000) >> 24;
+#endif
+			if (a > threshold) {
 				break;
 			}
-			p -= S->format.BytesPerPixel;
+			p += 4;
 		}
 		if (x == S->w) {
 			yEnd--;
 		} else {
 			break;
 		}
-		p -= S->padding;
 	}
 
-	if (yStart > 0) {                            /* Crop top and bottom */
-		memmove(S->pixels,
-		    S->pixels + (yStart * S->pitch),
-		    (yEnd - yStart + 1) * S->pitch);
-		S->h -= yStart + (S->h - yEnd);
+	if (yStart > 0) {                   /* Crop top and possibly bottom */
+		S->h -= yStart + (yBottom - yEnd);
 		S->clipRect.h = S->h;
+		S->pixels += (yStart * S->pitch);
 	} else if (yEnd < yBottom) {                    /* Crop bottom only */
-		S->h -= yStart + (S->h - yEnd) + 1;
+		S->h = yEnd + 1;
 		S->clipRect.h = S->h;
 	}
 
-	/* Scan from the right to the left. */
-	for (x = xRight, xEnd = x; x >= 0; x--) {
-		p = S->pixels + x*S->format.BytesPerPixel;
+	/* Scan left to right */
+	for (x = xStart = 0; x < S->w; x++) {
+		p = S->pixels + (x << 2);
 		for (y = 0; y < S->h; y++) {
-			if (AG_SurfaceGet_At(S,p) != pxNone) {
+			const AG_Pixel px = AG_SurfaceGet_At(S,p);
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+			const Uint8 a = (px & 0x000000ff);
+#else
+			const Uint8 a = (px & 0xff000000) >> 24;
+#endif
+			if (a > threshold) {
+				break;
+			}
+			p += S->pitch;
+		}
+		if (y == S->h) {
+			xStart++;
+		} else {
+			break;
+		}
+	}
+
+	/* Scan right to left */
+	xRight = (S->w - 1);
+	for (x = xRight, xEnd = x; x >= 0; x--) {
+		p = S->pixels + (x << 2);
+		for (y = 0; y < S->h; y++) {
+			const AG_Pixel px = AG_SurfaceGet_At(S,p);
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+			const Uint8 a = (px & 0x000000ff);
+#else
+			const Uint8 a = (px & 0xff000000) >> 24;
+#endif
+			if (a > threshold) {
 				break;
 			}
 			p += S->pitch;
@@ -959,10 +993,20 @@ AG_TextRenderCropped(const char *text)
 			break;
 		}
 	}
-	if (xEnd < xRight) {                                  /* Crop right */
-		S->w = xEnd + 1;
+
+	if (xStart > 0) {                   /* Crop left and possibly right */
+		const int Rcrop = (xRight - xEnd);
+
+		S->w -= (xStart + Rcrop);
 		S->clipRect.w = S->w;
-		S->padding += (xRight - xEnd) * S->format.BytesPerPixel;
+		S->Lpadding = (xStart << 2);
+		S->padding = (Rcrop << 2);
+	} else {
+		if (xEnd < xRight) {                     /* Crop right only */
+			S->w = xEnd + 1;
+			S->clipRect.w = S->w;
+			S->padding += (xRight - xEnd) << 2;
+		}
 	}
 
 	return (S);
@@ -980,17 +1024,15 @@ AG_TextRenderInternal(const AG_Char *text, AG_Font *font, const AG_Color *cBg,
 	AG_Surface *S;
 
 	InitMetrics(&Tm);
-
 	AGFONT_OPS(font)->size(font, text, &Tm, 1);
 
-	S = AG_SurfaceNew(agSurfaceFmt, Tm.w, Tm.h, 0);
-	AG_FillRect(S, NULL, cBg);
+	S = AG_SurfaceNew(agSurfaceFmt, Tm.w, Tm.h, AG_SURFACE_GL_TEXTURE);
 
+	AG_FillRect(S, NULL, cBg);
 	if (cBg->a == AG_OPAQUE)
 		S->format.Amask = 0;                  /* No blending needed */
 
-	if (Tm.w > 0 && Tm.h > 0)
-		AGFONT_OPS(font)->render(text, S, &Tm, font, cBg,cFg);
+	AGFONT_OPS(font)->render(text, S, &Tm, font, cBg,cFg);
 
 	FreeMetrics(&Tm);
 	return (S);

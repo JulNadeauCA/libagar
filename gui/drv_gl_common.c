@@ -419,7 +419,7 @@ AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *S, AG_TexCoord *tc)
 	    (w == S->w) && (h == S->h)) {               /* POT & compatible */
 #else
 	if ((S->flags & AG_SURFACE_GL_TEXTURE) &&
-	    S->padding == 0) {                                /* Compatible */
+	    (S->padding == 0) && (S->Lpadding == 0)) {        /* Compatible */
 #endif
 		GS = S;
 #ifdef DEBUG_SURFACE

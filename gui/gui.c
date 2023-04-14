@@ -207,10 +207,12 @@ int agGLdebugOutput = 0;		/* Enable GL_DEBUG_OUTPUT */
 int agGLuseNPOT = 1;			/* Use non-power-of-two textures */
 int agCtrlMouseWheelAction = 1;		/* Ctrl + Mouse Wheel action (1=zoom) */
 
+/* GUI zoom levels */
 double agZoomValues[AG_ZOOM_MAX] = {
-	50.0, 60.0, 65.00, 70.00, 75.00, 80.00, 83.00, 85.00,
-	90.00, 95.00, 100.00, 110.00, 120.00, 133.00, 150.00,
-	170.00, 200.00, 240.00, 260.00, 300.00
+	 25.0,  37.5,  44.0,  50.0,  53.2,  56.5,  60.0,  65.6,
+	 68.1,  70.0,  75.0,  78.1,  81.3,  87.5,  90.6,  93.8,
+	 100.0, 106.3, 112.5, 125.0, 131.3, 137.5, 150.0, 162.5,
+	 168.8, 187.5, 200.0, 212.5, 237.5, 262.5, 312.5, 400.0
 };
 
 /*

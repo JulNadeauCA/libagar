@@ -36,6 +36,13 @@
 #include <agar/gui/primitive.h>
 #include <agar/gui/cursors.h>
 
+static const int agPaneZoomSizes[AG_ZOOM_MAX] = {
+	 6,  6,  6,  6,   6,  6,  6,  6,
+	 8,  8,  8,  8,   8,  8,  8,  8,
+	 8,  8,  8,  8,   8,  8,  8,  8,
+	10, 10, 10, 10,  10, 10, 10, 10
+};
+
 AG_Pane *
 AG_PaneNew(void *parent, enum ag_pane_type type, Uint flags)
 {
@@ -472,18 +479,14 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
-	static const int zoomSizes[] = {
-	     6,  6,  7,  7,  7,  7,  7,  8,  /* 12.5% - 90% */
-	     8,  8,  8,  9,  9,  9,          /* 100% - 170% */
-	    10, 10, 10, 10, 11, 11           /* 200% - 650% */
-	};
 	AG_Pane *pa = obj;
 	AG_SizeReq r1, r2;
 	AG_SizeAlloc a1, a2;
 	AG_Rect r;
 	const int zoomLvl = WIDGET(pa)->window->zoom;
+
 #ifdef AG_DEBUG
-	if (zoomLvl < 0 || zoomLvl >= sizeof(zoomSizes)/sizeof(int))
+	if (zoomLvl < 0 || zoomLvl >= sizeof(agPaneZoomSizes) / sizeof(int))
 		AG_FatalError("zoomLvl");
 #endif
 	a1.x = 0;
@@ -492,7 +495,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	AG_WidgetSizeReq(pa->div[0], &r1);
 	AG_WidgetSizeReq(pa->div[1], &r2);
 
-	pa->wDiv = zoomSizes[zoomLvl];
+	pa->wDiv = agPaneZoomSizes[zoomLvl];
 
 	switch (pa->type) {
 	case AG_PANE_HORIZ:

@@ -250,8 +250,9 @@ AG_SDL2_SoftBlit_Colorkey(const AG_Surface *_Nonnull S, AG_Rect sr,
     SDL_Surface *_Nonnull ds, AG_Rect dr)
 {
 	const int dsBytesPerPixel = ds->format->BytesPerPixel;
-	Uint8 *pDst = (Uint8 *)ds->pixels + dr.y*ds->pitch + dr.x*dsBytesPerPixel;
-	const int dsPadding = ds->pitch - dr.w*dsBytesPerPixel;
+	Uint8 *pDst = (Uint8 *)ds->pixels + dr.y * ds->pitch +
+	                                    dr.x * dsBytesPerPixel;
+	const int dsPadding = ds->pitch - dr.w * dsBytesPerPixel;
 	int x, y;
 
 	for (y = 0; y < sr.h; y++) {
@@ -286,8 +287,9 @@ AG_SDL2_SoftBlit_NoColorkey(const AG_Surface *_Nonnull S, AG_Rect sr,
     SDL_Surface *_Nonnull ds, AG_Rect dr)
 {
 	const int dsBytesPerPixel = ds->format->BytesPerPixel;
-	Uint8 *pDst = (Uint8 *)ds->pixels + dr.y*ds->pitch + dr.x*dsBytesPerPixel;
-	const int dsPadding = ds->pitch - dr.w*dsBytesPerPixel;
+	Uint8 *pDst = (Uint8 *)ds->pixels + dr.y * ds->pitch +
+	                                    dr.x * dsBytesPerPixel;
+	const int dsPadding = ds->pitch - dr.w * dsBytesPerPixel;
 	int x, y;
 
 	for (y = 0; y < dr.h; y++) {
