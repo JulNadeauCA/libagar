@@ -9,22 +9,32 @@
 #endif
 
 typedef struct ag_style_entry {
-	char key[AG_VARIABLE_NAME_MAX];			/* Target parameter */
-	char value[AG_STYLE_VALUE_MAX];			/* Set value */
+	char key[AG_VARIABLE_NAME_MAX];  /* Target parameter */
+	char value[AG_STYLE_VALUE_MAX];  /* Set value */
 	AG_TAILQ_ENTRY(ag_style_entry) ents;
 } AG_StyleEntry;
 
 enum ag_style_selector_type {
-	AG_SELECTOR_CLASS_NAME,         /* Widgets of class E (exact) */
-	AG_SELECTOR_CLASS_PATTERN,      /* Widgets of class E (pattern) */
+	AG_SELECTOR_CLASS_NAME,         /* Widgets of class E (exact match) */
+	AG_SELECTOR_CLASS_PATTERN,      /* Widgets of class E (pattern match) */
 	AG_SELECTOR_CHILD_NAMED,        /* Widget under E named F */
 	AG_SELECTOR_CHILD_OF_CLASS,     /* Widget under E of class F */
 	AG_SELECTOR_LAST
 };
 
+enum ag_style_condition_type {
+	AG_SELECTOR_COND_NONE,         /* No condition */
+	AG_SELECTOR_COND_WIDTH,        /* width x-y */
+	AG_SELECTOR_COND_HEIGHT,       /* height x-y */
+	AG_SELECTOR_COND_ZOOM,         /* zoom x-y */
+	AG_SELECTOR_COND_LAST
+};
+
+/* Stylesheet element. */
 typedef struct ag_style_block {
 	enum ag_style_selector_type selector;   /* Type of selector */
-	Uint32 _pad;
+	enum ag_style_condition_type cond;      /* Conditional */
+	int x, y;                               /* Conditional constants */
 	char e[64];                             /* Class name or pattern (E) */
 	char f[32];                             /* Child name or class (F) */
 	AG_TAILQ_HEAD_(ag_style_entry) ents;    /* Entries in block */
@@ -32,7 +42,8 @@ typedef struct ag_style_block {
 } AG_StyleBlock;
 
 typedef struct ag_style_sheet {
-	AG_TAILQ_HEAD_(ag_style_block) blks;    /* By widget class */
+	AG_TAILQ_HEAD_(ag_style_block) blks;     /* Blocks with no condition */
+	AG_TAILQ_HEAD_(ag_style_block) blksCond; /* Blocks with condition */
 } AG_StyleSheet;
 
 /* Built-in Agar stylesheet */

@@ -3,7 +3,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agargui.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 April 11
+" Last Change:  2023 April 17
 
 " Agar-GUI (https://libagar.org/)
 if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
@@ -508,6 +508,9 @@ if !exists("c_no_agar_gui") || exists("c_agar_gui_typedefs")
   syn keyword cConstant AG_STYLE_VALUE_MAX AG_SELECTOR_CLASS_NAME
   syn keyword cConstant AG_SELECTOR_CLASS_PATTERN AG_SELECTOR_CHILD_NAMED
   syn keyword cConstant AG_SELECTOR_CHILD_OF_CLASS AG_SELECTOR_LAST
+  syn keyword cConstant AG_SELECTOR_COND_NONE AG_SELECTOR_COND_WIDTH
+  syn keyword cConstant AG_SELECTOR_COND_HEIGHT AG_SELECTOR_COND_ZOOM
+  syn keyword cConstant AG_SELECTOR_COND_LAST
   " gui/surface.h
   syn keyword cType AG_SurfaceMode AG_GrayscaleMode AG_Palette AG_PixelFormat 
   syn keyword cType AG_AnimDispose AG_AnimFrameType AG_AnimFrame AG_SurfaceGuide

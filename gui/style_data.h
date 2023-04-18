@@ -76,6 +76,15 @@ const char *agStyleDefault_Data =
 	"selection-color: rgb(40,40,110);\n"
 	"text-color#disabled: rgb(170,170,170);\n"
 	"}\n"
+	"AG_Menu (zoom = 0-9) {\n"
+	"font-family: league-spartan;\n"
+	"font-size: 140%;\n"
+	"padding: 1 2 1 2;\n"
+	"}\n"
+	"AG_Menu (zoom > 24) {\n"
+	"font-family: league-spartan-light;\n"
+	"padding: 2 5 10 5;\n"
+	"}\n"
 	"AG_MenuView {\n"
 	"padding: 4 8 4 8;\n"
 	"spacing: 8 0;\n"
@@ -95,6 +104,18 @@ const char *agStyleDefault_Data =
 	"font-size: 55%;\n"
 	"text-color: #ccc;\n"
 	"color#hover: #969590;\n"
+	"}\n"
+	"AG_HSVPal {\n"
+	"font-family: league-gothic;\n"
+	"font-size: 140%;\n"
+	"}\n"
+	"AG_HSVPal (width < 50) {\n"
+	"font-family: league-gothic-condensed;\n"
+	"font-size: 90%;\n"
+	"}\n"
+	"AG_HSVPal (width < 90) {\n"
+	"font-family: league-gothic-condensed;\n"
+	"font-size: 120%;\n"
 	"}\n"
 	"AG_Pane {\n"
 	"color: #666;\n"
@@ -164,7 +185,7 @@ const char *agStyleDefault_Data =
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	2877,
+	3266,
 	&agStyleDefault_Data,
 	NULL
 };

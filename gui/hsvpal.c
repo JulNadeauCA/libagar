@@ -24,9 +24,14 @@
  */
 
 /*
- * Color Picker widget. It can connect to an AG_Color(3), a packed pixel,
- * RGB component values, or floating-point HSV (Hue/Saturation/Value) and
- * alpha.  It uses floating-point HSV representation internally.
+ * HSV (Hue/Saturation/Value) Style Color Picker Widget.
+ *
+ * It can be used to edit colors in any of the following representations:
+ *  - A native AG_Color(3).
+ *  - A packed pixel in a given AG_PixelFormat(3).
+ *  - RGB Components as 8- or 16-bit integers.
+ *  - RGB Components as single or double precision floats.
+ *  - HSV Components as single or double precision floats.
  */
 
 #include <agar/core/core.h>
@@ -1220,14 +1225,6 @@ Draw(void *_Nonnull obj)
 		/* XXX TODO cache rendered text */
 		AG_TextBGColor(&c);
 
-		if (w < 80) {
-			AG_TextFontLookup("league-gothic-condensed",
-			                  WFONT(pal)->spec.size+3.0f, 0);
-		} else {
-			AG_TextFontLookup("league-gothic",
-			                  WFONT(pal)->spec.size+3.0f, 0);
-		}
-	
 		if (sat > 0.66f) {
 			if (val < 0.66f || ((hueDeg > 25.0f && hueDeg < 200.0f))) {
 				AG_TextColor(&cBlack);

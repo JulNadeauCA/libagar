@@ -21,6 +21,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Object**](https://libagar.org/man3/AG_Object): New function `AG_ObjectFreeChildrenOfType()`.
 - [**AG_Radio**](https://libagar.org/man3/AG_Radio): New `HOMOGENOUS` option to divide space equally between items. Thanks Stephen!
 - [**AG_StyleSheet**](https://libagar.org/man3/AG_StyleSheet): New `E > F` selector. Allows child widgets to be addressed by either instance name or class name.
+- [**AG_StyleSheet**](https://libagar.org/man3/AG_StyleSheet): New selector conditionals `width`, `height` and `zoom`. Allows widgets to be styled based on their current geometry or the zoom level of their parent window.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): New field `Lpadding` (scaline start padding). Allows fast cropping of lines from the left.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Make it possible to increment the `pixels` pointer to fast crop lines from the top. Added `pixelsBase` pointer.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Add standard palettes for 1/2/4/8-bit modes. New Indexed surfaces are now initialized with a standard palette by default.

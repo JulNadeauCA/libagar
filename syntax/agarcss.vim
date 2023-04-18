@@ -8,7 +8,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agarcss.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 February 25
+" Last Change:  2023 April 15
 
 " quit when a syntax file was already loaded
 if !exists("main_syntax")
@@ -48,9 +48,9 @@ syn keyword cssTagName SK_View VG_View
 "syn keyword cssTagName MY_Widget
 
 " selectors
-syn match cssSelectorOp "[,>+~]"
-syn match cssSelectorOp2 "[~|^$*]\?=" contained
-syn region cssAttributeSelector matchgroup=cssSelectorOp start="\[" end="]" contains=cssUnicodeEscape,cssSelectorOp2,cssStringQ,cssStringQQ
+syn match cssSelectorOp "[,>+~()]"
+syn match cssSelectorCond "\(width\|height\|zoom\)\+\s*[<>=]=\{0,1\}\s*[1234567890-]\+%\{0,1\}" contained
+syn region cssAttributeSelector matchgroup=cssSelectorOp start="(" end=")" contains=cssUnicodeEscape,cssSelectorCond,cssStringQ,cssStringQQ
 
 "try
 "syn match cssIdentifier "#[A-Za-zÀ-ÿ_@][A-Za-zÀ-ÿ0-9_@-]*"
@@ -170,7 +170,7 @@ endif
 hi def link cssComment Comment
 hi def link cssTagName Statement
 "hi def link cssSelectorOp Special
-"hi def link cssSelectorOp2 Special
+hi def link cssSelectorCond Statement
 hi def link cssAttrComma Special
 
 hi def link cssBorderProp cssProp

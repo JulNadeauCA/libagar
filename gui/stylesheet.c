@@ -30,9 +30,12 @@
 #include <agar/core/core.h>
 #include <agar/core/config.h>
 #include <agar/gui/widget.h>
+#include <agar/gui/window.h>
 #include <agar/gui/style_data.h>
 
 #include <ctype.h>
+
+/* #define DEBUG_CSS */
 
 AG_StyleSheet agDefaultCSS;
 
@@ -45,27 +48,103 @@ void
 AG_InitStyleSheet(AG_StyleSheet *css)
 {
 	TAILQ_INIT(&css->blks);
+	TAILQ_INIT(&css->blksCond);
+}
+
+static __inline__ void
+FreeStyleSheetBlock(AG_StyleBlock *blk)
+{
+	AG_StyleEntry *ent, *entNext;
+
+	for (ent = TAILQ_FIRST(&blk->ents);
+	     ent != TAILQ_END(&blk->ents);
+	     ent = entNext) {
+		entNext = TAILQ_NEXT(ent, ents);
+		free(ent);
+	}
+	free(blk);
 }
 
 void
 AG_DestroyStyleSheet(AG_StyleSheet *css)
 {
 	AG_StyleBlock *blk, *blkNext;
-	AG_StyleEntry *ent, *entNext;
 
+	for (blk = TAILQ_FIRST(&css->blksCond);
+	     blk != TAILQ_END(&css->blksCond);
+	     blk = blkNext) {
+		blkNext = TAILQ_NEXT(blk, blks);
+		FreeStyleSheetBlock(blk);
+	}
 	for (blk = TAILQ_FIRST(&css->blks);
 	     blk != TAILQ_END(&css->blks);
 	     blk = blkNext) {
 		blkNext = TAILQ_NEXT(blk, blks);
-		for (ent = TAILQ_FIRST(&blk->ents);
-		     ent != TAILQ_END(&blk->ents);
-		     ent = entNext) {
-			entNext = TAILQ_NEXT(ent, ents);
-			free(ent);
-		}
-		free(blk);
+		FreeStyleSheetBlock(blk);
 	}
-	TAILQ_INIT(&css->blks);
+}
+
+/* Variant of strchr() which ignores any occurences between '(' and ')'. */
+static __inline__ char *
+Strchr_NotInParens(const char *p, char ch)
+{
+	int inParens = 0;
+
+	for (; ; ++p) {
+		if (*p == '(') {
+			++inParens;
+		} else if (*p == ')') {
+			--inParens;
+		}
+		if (inParens > 0) {
+			continue;
+		}
+		if (*p == ch) {
+			return (char *)(p);
+		} else if (*p == '\0') {
+			return (NULL);
+		}
+	}
+	/* NOTREACHED */
+}
+
+static void
+ParseCond(AG_StyleBlock *blk, char *cond, enum ag_style_condition_type condType)
+{
+	while (isspace(*cond))
+		++cond;
+
+	blk->cond = condType;
+
+	if (cond[0] == '<') {
+		blk->x = 0;
+		if (cond[1] == '=') {
+			blk->y = (int)strtol(&cond[2], NULL, 10);
+		} else {
+			blk->y = (int)strtol(&cond[1], NULL, 10) - 1;
+		}
+	} else if (cond[0] == '>') {
+		if (cond[1] == '=') {
+			blk->x = (int)strtol(&cond[2], NULL, 10);
+		} else {
+			blk->x = (int)strtol(&cond[1], NULL, 10) + 1;
+		}
+		blk->y = (AG_INT_MAX - 1);
+	} else if (cond[0] == '=') {
+		char *ep;
+
+		blk->x = (int)strtol(&cond[1], &ep, 10);
+		if (ep != NULL && ep[0] == '-' && ep[1] != '\0') {
+			blk->y = (int)strtol(&ep[1], NULL, 10);
+		} else {
+			blk->y = blk->x;
+		}
+	} else {
+#ifdef DEBUG_CSS
+		Debug(NULL, "CSS Syntax Error (near condition \"%s\")\n", cond);
+#endif
+		blk->cond = AG_SELECTOR_COND_NONE;
+	}
 }
 
 /*
@@ -165,7 +244,7 @@ AG_LoadStyleSheet(void *obj, const char *path)
 		}
 
 		if ((t = strchr(c, '{')) != NULL) {     /* Stylesheet block */
-			char *f;
+			char *f, *cond;
 
 			if (blk != NULL) {
 				AG_SetErrorS(_("Blocks cannot be nested"));
@@ -179,11 +258,35 @@ AG_LoadStyleSheet(void *obj, const char *path)
 			if ((blk = TryMalloc(sizeof(AG_StyleBlock))) == NULL)
 				goto fail_parse;
 
+			if ((cond = strchr(c, '(')) != NULL) {
+				++cond;
+				if (strncmp(cond, "width",5) == 0) {
+					ParseCond(blk, &cond[5],
+					    AG_SELECTOR_COND_WIDTH);
+				} else if (strncmp(cond, "height",6) == 0) {
+					ParseCond(blk, &cond[6],
+					    AG_SELECTOR_COND_HEIGHT);
+				} else if (strncmp(cond, "zoom",4) == 0) {
+					ParseCond(blk, &cond[4],
+					    AG_SELECTOR_COND_ZOOM);
+				} else {
+					AG_SetErrorS(_("Bad conditional"));
+					goto fail_parse;
+				}
+			} else {
+				blk->cond = AG_SELECTOR_COND_NONE;
+			}
+			
 			Strlcpy(blk->e, c, sizeof(blk->e));
 
-			f = strchr(blk->e, '>');                   /* E > F */
+			if (blk->cond != AG_SELECTOR_COND_NONE &&
+			    ((cond = strstr(blk->e, " (")) != NULL ||
+			     (cond = strchr(blk->e, '(')) != NULL))
+				*cond = '\0';
+
+			f = Strchr_NotInParens(blk->e, '>');       /* E > F */
 			if (f != NULL && f[1] != '\0') {
-				char *fPrev = &f[-1];
+				char *fPrev = (char *)&f[-1];
 
 				while (isspace(*fPrev)) {
 					--fPrev;
@@ -226,7 +329,11 @@ AG_LoadStyleSheet(void *obj, const char *path)
 				AG_SetErrorS(_("Unmatched block terminator `}'"));
 				goto fail_parse;
 			}
-			TAILQ_INSERT_TAIL(&css->blks, blk, blks);
+			if (blk->cond != AG_SELECTOR_COND_NONE) {
+				TAILQ_INSERT_TAIL(&css->blksCond, blk, blks);
+			} else {
+				TAILQ_INSERT_TAIL(&css->blks, blk, blks);
+			}
 			blk = NULL;
 			continue;
 		}
@@ -288,8 +395,33 @@ fail_parse:
 	return (NULL);
 }
 
+/* Test the condition of a stylesheet block against widget obj. */
+static __inline__ int
+TestSelectorCondition(AG_StyleBlock *blk, void *obj)
+{
+	switch (blk->cond) {
+	case AG_SELECTOR_COND_ZOOM:
+		return (WIDGET(obj)->window->zoom >= blk->x &&
+		        WIDGET(obj)->window->zoom <= blk->y);
+	case AG_SELECTOR_COND_WIDTH:
+		return (WIDTH(obj) >= blk->x &&
+		        WIDTH(obj) <= blk->y);
+	case AG_SELECTOR_COND_HEIGHT:
+		return (HEIGHT(obj) >= blk->x &&
+		        HEIGHT(obj) <= blk->y);
+	default:
+		break;
+	}
+	return (0);
+}
+
 /*
- * Lookup a style sheet entry.
+ * Search a style sheet for an attribute "key" applicable to widget obj
+ * (given its current geometry and the zoom level of its parent window).
+ *
+ * Returns a pointer to a read-only (internally-managed) string into rv.
+ * Return 1 on success or 0 if the attribute was not found. A pointer may
+ * be written to rv even in the case of an unsuccessful lookup.
  */
 int
 AG_LookupStyleSheet(AG_StyleSheet *_Nonnull css, void *_Nonnull obj,
@@ -307,13 +439,15 @@ AG_LookupStyleSheet(AG_StyleSheet *_Nonnull css, void *_Nonnull obj,
 	}
 	clName = hier[nHier - 1]->name;
 
-	TAILQ_FOREACH(blk, &css->blks, blks) {   /* E>F (higher precedence) */
+	/* Conditional Selector `E > F' */
+	TAILQ_FOREACH(blk, &css->blksCond, blks) {
 		if (blk->selector == AG_SELECTOR_CHILD_NAMED) {
 			if (parent == NULL) {
 				continue;
 			}
 			if (strcmp(blk->f, OBJECT(obj)->name) == 0 &&
-			    strcmp(blk->e, AGOBJECT_CLASS(parent)->name) == 0) {
+			    strcmp(blk->e, AGOBJECT_CLASS(parent)->name) == 0 &&
+			    TestSelectorCondition(blk, obj)) {
 				break;
 			}
 		} else if (blk->selector == AG_SELECTOR_CHILD_OF_CLASS) {
@@ -321,37 +455,115 @@ AG_LookupStyleSheet(AG_StyleSheet *_Nonnull css, void *_Nonnull obj,
 				continue;
 			}
 			if (strcmp(blk->f, AGOBJECT_CLASS(obj)->name) == 0 &&
-			    strcmp(blk->e, AGOBJECT_CLASS(parent)->name) == 0) {
+			    strcmp(blk->e, AGOBJECT_CLASS(parent)->name) == 0 &&
+			    TestSelectorCondition(blk, obj)) {
 				break;
 			}
 		}
 	}
-
-	if (blk == NULL) {                     /* Just E (lower precedence) */
-		TAILQ_FOREACH(blk, &css->blks, blks) {
-			if (blk->selector == AG_SELECTOR_CLASS_NAME) {
-				if (strcmp(blk->e, clName) == 0) {
-					break;
-				}
-			} else if (blk->selector == AG_SELECTOR_CLASS_PATTERN) {
-				if (AG_OfClass(obj, blk->e)) {
-					break;
-				}
+	if (blk != NULL) {
+#ifdef DEBUG_CSS
+		Debug(obj, "CSS (%s > %s) Cond#%d (%d - %d)\n",
+		    blk->e, blk->f, blk->cond, blk->x, blk->y);
+#endif
+		TAILQ_FOREACH(ent, &blk->ents, ents) {
+			if (strcmp(ent->key, key) == 0) {
+				*rv = ent->value;
+				break;
 			}
 		}
-	 	if (blk == NULL)
-			goto fail;
+		if (ent != NULL) {
+			goto out;                            /* Match found */
+		} else {
+			goto match_uncond_EF;
+		}
 	}
 
+	/* Conditional Selector `E' */
+	TAILQ_FOREACH(blk, &css->blksCond, blks) {
+		if (blk->selector == AG_SELECTOR_CLASS_NAME) {
+			if (strcmp(blk->e, clName) == 0 &&
+			    TestSelectorCondition(blk, obj)) {
+				break;
+			}
+		} else if (blk->selector == AG_SELECTOR_CLASS_PATTERN) {
+			if (AG_OfClass(obj, blk->e) &&
+			    TestSelectorCondition(blk, obj)) {
+				break;
+			}
+		}
+	}
+	if (blk != NULL) {
+#ifdef DEBUG_CSS
+		Debug(obj, "CSS (%s) Cond#%d (%d - %d)\n",
+		    blk->e, blk->cond, blk->x, blk->y);
+#endif
+		TAILQ_FOREACH(ent, &blk->ents, ents) {
+			if (strcmp(ent->key, key) == 0) {
+				*rv = ent->value;
+				break;
+			}
+		}
+		if (ent != NULL) {
+			goto out;                            /* Match found */
+		} else {
+			goto match_uncond_E;   /* Try `E' with no condition */
+		}
+	}
+
+match_uncond_EF:
+	/* Unconditional Selector `E > F' */
+	TAILQ_FOREACH(blk, &css->blks, blks) {
+		if (blk->selector == AG_SELECTOR_CHILD_NAMED) {
+			if (parent == NULL) {
+				continue;
+			}
+			if (strcmp(blk->f, OBJECT(obj)->name) == 0 &&
+			    strcmp(blk->e, AGOBJECT_CLASS(parent)->name) == 0)
+				break;
+		} else if (blk->selector == AG_SELECTOR_CHILD_OF_CLASS) {
+			if (parent == NULL) {
+				continue;
+			}
+			if (strcmp(blk->f, AGOBJECT_CLASS(obj)->name) == 0 &&
+			    strcmp(blk->e, AGOBJECT_CLASS(parent)->name) == 0)
+				break;
+		}
+	}
+	if (blk != NULL) {
+		TAILQ_FOREACH(ent, &blk->ents, ents) {
+			if (strcmp(ent->key, key) == 0) {
+				*rv = ent->value;
+				break;
+			}
+		}
+		if (ent != NULL)
+			goto out;                            /* Match found */
+	}
+
+match_uncond_E:
+	/* Unconditional Selector `E' */
+	TAILQ_FOREACH(blk, &css->blks, blks) {
+		if (blk->selector == AG_SELECTOR_CLASS_NAME) {
+			if (strcmp(blk->e, clName) == 0)
+				break;
+		} else if (blk->selector == AG_SELECTOR_CLASS_PATTERN) {
+			if (AG_OfClass(obj, blk->e))
+				break;
+		}
+	}
+ 	if (blk == NULL) {
+		goto fail;
+	}
 	TAILQ_FOREACH(ent, &blk->ents, ents) {
 		if (strcmp(ent->key, key) == 0) {
 			*rv = ent->value;
 			break;
 		}
 	}
-	if (ent == NULL) {
+	if (ent == NULL)
 		goto fail;
-	}
+out:
 	free(hier);
 	return (1);
 fail:

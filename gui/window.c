@@ -2818,6 +2818,8 @@ AG_WindowUpdate(AG_Window *_Nonnull win)
 	AG_SizeAlloc a;
 	
 	AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
+
+	AG_WidgetCompileStyle(win);
 	
 	if (WIDGET(win)->x != -1 && WIDGET(win)->y != -1) {
 		a.x = WIDGET(win)->x;

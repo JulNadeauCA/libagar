@@ -244,7 +244,7 @@ TestGUI(void *obj, AG_Window *win)
 {
 	char path[AG_PATHNAME_MAX];
 	MyTestInstance *ti = obj;
-	AG_Box *hBox, *vBox, *div;
+	AG_Box *hBox, *vBox, *div, *divRight;
 	AG_Pane *hPane, *vPane;
 	AG_Combo *com;
 	AG_UCombo *ucom;
@@ -260,6 +260,7 @@ TestGUI(void *obj, AG_Window *win)
 	AG_PaneSetDivisionMin(hPane, 0, 50, 100);
 /*	AG_PaneMoveDividerPct(hPane, 45); */
 	div = hPane->div[0];
+	divRight = hPane->div[1];
 
 	hBox = AG_BoxNewHoriz(div, AG_BOX_HFILL);
 	{
@@ -582,7 +583,7 @@ TestGUI(void *obj, AG_Window *win)
 		static int myInt[2];
 	
 		/* Create a test menu */
-		menu = AG_MenuNew(hPane->div[1], AG_MENU_HFILL);
+		menu = AG_MenuNew(divRight, AG_MENU_HFILL);
 		m = AG_MenuNode(menu->root, "File", NULL);
 		{
 			AG_MenuActionKb(m,
@@ -656,13 +657,14 @@ TestGUI(void *obj, AG_Window *win)
 			    &myInt[1], 1);
 		}
 
-		nb = AG_NotebookNew(hPane->div[1], AG_NOTEBOOK_EXPAND);
+		AG_LabelNewS(divRight, 0, "Here is a Notebook:");
+
+		nb = AG_NotebookNew(divRight, AG_NOTEBOOK_EXPAND);
 
 		nt = AG_NotebookAdd(nb,
-		    "Example Table\n"
+		    "A Table\n"
 		    AGSI_IDEOGRAM AGSI_MATH_X_EQUALS AGSI_RST
-		    AGSI_ITALIC "sin" AGSI_RST "(x), "
-		    AGSI_ITALIC "cos" AGSI_RST "(x)",
+		    AGSI_ITALIC "sin" AGSI_RST "(x)",
 		    AG_BOX_VERT);
 		{
 			float f;

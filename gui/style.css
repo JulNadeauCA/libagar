@@ -75,6 +75,15 @@ AG_Menu {
 	selection-color: rgb(40,40,110);
 	text-color#disabled: rgb(170,170,170);
 }
+AG_Menu (zoom = 0-9) {
+	font-family: league-spartan;
+	font-size: 140%;
+	padding: 1 2 1 2;
+}
+AG_Menu (zoom > 24) {
+	font-family: league-spartan-light;
+	padding: 2 5 10 5;
+}
 AG_MenuView {
 	padding: 4 8 4 8;
 	spacing: 8 0;
@@ -94,6 +103,18 @@ AG_Numerical > AG_Button {
 	font-size: 55%;
 	text-color: #ccc;
 	color#hover: #969590;
+}
+AG_HSVPal {
+	font-family: league-gothic;
+	font-size: 140%;
+}
+AG_HSVPal (width < 50) {
+	font-family: league-gothic-condensed;
+	font-size: 90%;
+}
+AG_HSVPal (width < 90) {
+	font-family: league-gothic-condensed;
+	font-size: 120%;
 }
 AG_Pane {
 	color: #666;
