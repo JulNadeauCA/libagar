@@ -64,8 +64,8 @@ static AG_Window *_Nullable agStyleEditorWindow = NULL;
 static AG_Tlist  *_Nullable agStyleEditorTlist = NULL;
 static AG_Box    *_Nullable agStyleEditorBox = NULL;
 
-static int  agStyleEditorCapture = 0;          /* Capture graphics surfaces */
-static int  agStyleEdListChldWindows = 0;  /* Include sub-windows in list */
+static int agStyleEditorCapture = 0;           /* Capture graphics surfaces */
+static int agStyleEdListChldWindows = 0;     /* Include sub-windows in list */
 
 static int
 FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth)
@@ -618,15 +618,15 @@ TargetWidget(AG_Event *_Nonnull event)
 			    ExportImageDlg, "%p", S); /* TODO */
 #endif
 		} else {
-			AG_LabelNew(nt, 0, _("* Capture failed (%s)"), AG_GetError());
+			AG_LabelNew(nt, 0, _("* Video Capture failed (%s)"), AG_GetError());
 		}
 	} else {
 		AG_LabelNewS(nt, AG_LABEL_HFILL,
-		    _("Surface capture is currently disabled.\n"
+		    _("Video Capture is currently disabled.\n"
 		      "Use "
 		      "["
 		      AGSI_IDEOGRAM AGSI_CHECKBOX AGSI_RST
-		      AGSI_ITALIC "Enable Capture" AGSI_RST
+		      AGSI_ITALIC "Enable Video Capture" AGSI_RST
 		      " ] "
 		      "below to enable."));
 	}
@@ -780,7 +780,7 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 		AG_CheckboxNewFn(box, 0, _("Pause Polling"),
 		    PausePolling,"%p",tl);
 
-		AG_CheckboxNewInt(box, 0, _("Enable Capture"),
+		AG_CheckboxNewInt(box, 0, _("Enable Video Capture"),
 		    &agStyleEditorCapture);
 	}
 

@@ -62,10 +62,8 @@ TestGUI(void *obj, AG_Window *win)
 	AG_SeparatorNewHoriz(win);
 
 	n1 = AG_NumericalNewS(win, AG_NUMERICAL_HFILL, "in", "Value: ");
-	AG_SetMargin(n1, "0 0 10 0");
 	n2 = AG_NumericalNewS(win, AG_NUMERICAL_HFILL, "mm", "Value: ");
-	AG_SetFontSize(n1, "140%");
-	AG_SetFontSize(n2, "140%");
+	AG_SetMargin(n1, "0 0 10 0");
 	AG_BindDouble(n1, "value", &value);
 	AG_BindDouble(n2, "value", &value);
 	AG_NumericalSizeHint(n1, "0000.00");

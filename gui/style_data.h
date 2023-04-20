@@ -102,7 +102,7 @@ const char *agStyleDefault_Data =
 	"AG_Numerical > AG_Button {\n"
 	"padding: 0;\n"
 	"font-size: 55%;\n"
-	"text-color: #ccc;\n"
+	"text-color: #bebebe;\n"
 	"color#hover: #969590;\n"
 	"}\n"
 	"AG_HSVPal {\n"
@@ -160,7 +160,7 @@ const char *agStyleDefault_Data =
 	"font-size: 60%;\n"
 	"color: #666;\n"
 	"color#hover: #777;\n"
-	"text-color: #fff;\n"
+	"text-color: #bebebe;\n"
 	"}\n"
 	"AG_Separator {\n"
 	"line-color: #888;\n"
@@ -185,7 +185,7 @@ const char *agStyleDefault_Data =
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	3266,
+	3272,
 	&agStyleDefault_Data,
 	NULL
 };

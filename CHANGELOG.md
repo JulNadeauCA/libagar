@@ -87,6 +87,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - Updated the build system. BSDBuild configure scripts are smaller and no longer emit unnecessary defines such as `foo_cflags.h` for dependent libraries. Such definitions are always available from `${DATADIR}/agar.mk`.
 - Don't install headers from libraries disabled from the build (by `--disable-foo`).
 - [**AG_Color**](https://libagar.org/man3/AG_Color): Handle `rgb16()` format in [AG_ColorFromString()](https://libagar.org/man3/AG_ColorFromString).
+- [**AG_Combo**](https://libagar.org/man3/AG_Combo): Make combo expansion windows detachable and resizable.
 - [**AG_Combo**](https://libagar.org/man3/AG_Combo): Make sub-elements style-addressable as `input` and `trigger`.
 - [**AG_FontSelector**](https://libagar.org/man3/AG_FontSelector): Add Unicode range information and more metrics under the "Metrics" tab.
 - [**AG_FontSelector**](https://libagar.org/man3/AG_FontSelector): The preview function now includes text in different scripts. It is now possible to set a user-defined preview function.
@@ -102,6 +103,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Now applies the "padding" attribute on a per-item basis.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): `AG_TlistSetCompareFn()` now returns a pointer to the previous compare function.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Make the comparison function of `AG_TlistSort()` ANSI-aware. Ignore SGR sequences as well as ideogram-range Unicodes.
+- [**AG_UCombo**](https://libagar.org/man3/AG_UCombo): Make combo expansion windows detachable and resizable.
 - [**AG_UCombo**](https://libagar.org/man3/AG_UCombo): Make the button style-addressable as `trigger`.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): In `AG_WidgetSensitive()`, use the `window` pointer to avoid an unnecessary traversal of parent objects.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Prevent delivery of redundant "widget-shown" or "widget-hidden" events if `AG_WidgetShow()` and `AG_WidgetHide()` are called multiple times.

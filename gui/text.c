@@ -183,24 +183,25 @@ AG_Font *_Nullable agDefaultFont = NULL;     /* Default font */
 static int agTextInitedSubsystem = 0;        /* AG_Text is initialized */
 
 /*
- * Save the current text rendering state to the AG_TextState stack
- * and increment the stack height by one unit. The text rendering state
- * includes:
- *  - Font Face (reference to an open font of given family, size & style).
- *  - Colors (Background / Foreground colors and ANSI color scheme).
- *  - Justification mode.
- *  - Vertical alignment mode.
+ * Save the current text rendering state to the AG_TextState stack and
+ * increment its height by one unit. The text rendering state includes:
+ *
+ *  - Current Font (reference to a loaded font).
+ *  - Current Background and Foreground colors.
+ *  - Current ANSI color scheme (16-color palette; copy-on-write).
+ *  - Horizontal justification and vertical alignment modes.
  *  - Width of tabs (\t) in pixels.
  *
- * Must be called from Widget draw(), size_alloc(), size_request() or
- * event-handling context. Widget must have the USE_TEXT flag set.
+ * This routine may be called from Widget operations draw(), size_alloc(),
+ * size_request() or from event-handling context. Widgets which do not use
+ * the USE_TEXT flag must push the rendering state prior to modifying it.
  */
 void
 AG_PushTextState(void)
 {
 	const AG_TextState *tsPrev = AG_TEXT_STATE_CUR();
-	AG_Font *fontPrev;
 	AG_TextState *ts;
+	AG_Font *fontPrev;
 
 	if ((agTextStateCur + 1) >= AG_TEXT_STATES_MAX)
 		AG_FatalError("PushTextState Overflow");
@@ -231,8 +232,9 @@ AG_CopyTextState(AG_TextState *dst)
 }
 
 /*
- * Override an entry in the 16-color (4-bit) ANSI color palette.
- * Duplicate the default palette into the current state if necessary.
+ * Set a color in the ANSI color scheme (16-color palette).
+ * Applies to the current text rendering state.
+ * the default, the modified palette is included in the text state.
  */
 void
 AG_TextColorANSI(enum ag_ansi_color colorANSI, const AG_Color *c)
@@ -254,10 +256,8 @@ AG_TextColorANSI(enum ag_ansi_color colorANSI, const AG_Color *c)
 }
 
 /*
- * Select the font face to use in rendering text.
- *
- * Must be called from Widget draw(), size_alloc(), size_request() or
- * event-handling context. Widget must have the USE_TEXT flag set.
+ * Select font family, size, style, weight and width variant.
+ * Applies to the current text rendering state.
  */
 AG_Font *
 AG_TextFontLookup(const char *face, float size, Uint flags)
@@ -274,10 +274,8 @@ AG_TextFontLookup(const char *face, float size, Uint flags)
 }
 
 /*
- * Set font size in points.
- *
- * Must be called from Widget draw(), size_alloc(), size_request() or
- * event-handling context. Widget must have the USE_TEXT flag set.
+ * Change the font size (in points) of the current font.
+ * Applies to the current text rendering state.
  */
 AG_Font *
 AG_TextFontPts(float size)
@@ -294,10 +292,8 @@ AG_TextFontPts(float size)
 }
 
 /*
- * Set font size as % of the current font size.
- *
- * Must be called from Widget draw(), size_alloc(), size_request() or
- * event-handling context. Widget must have the USE_TEXT flag set.
+ * Change the font size (in %) of the current font.
+ * Applies to the current text rendering state.
  */
 AG_Font *
 AG_TextFontPct(int pct)
@@ -309,6 +305,12 @@ AG_TextFontPct(int pct)
 	    (font->spec.size * pct / 100.0f),
 	    font->flags);
 }
+
+/*
+ * Change the font size (in %) and flags (style / weight / width variant)
+ * of the current font.
+ * Applies to the current text rendering state.
+ */
 AG_Font *
 AG_TextFontPctFlags(int pct, Uint flags)
 {
@@ -321,10 +323,8 @@ AG_TextFontPctFlags(int pct, Uint flags)
 }
 
 /*
- * Restore the previous font-engine rendering state.
- *
- * Must be called from Widget draw(), size_alloc(), size_request() or
- * event-handling context. Widget must have the USE_TEXT flag set.
+ * Restore the text rendering state to the previously saved state and
+ * decrease the height of the stack by one element.
  */
 void
 AG_PopTextState(void)
@@ -777,8 +777,8 @@ AG_TextAlign(int *x, int *y, int wArea, int hArea, int wText, int hText,
 }
 
 /*
- * Render text (UTF-8 encoded) onto a newly-allocated surface.
- * Inherit font, FG and BG colors from current text state.
+ * Render text onto a newly-allocated surface with typographical spacings.
+ * Text may contain UTF-8 and ANSI SGR sequences.
  */
 AG_Surface *
 AG_TextRenderF(const char *fmt, ...)
@@ -796,13 +796,13 @@ AG_TextRenderF(const char *fmt, ...)
 }
 
 /*
- * Render text (UTF-8 encoded) left-to-right onto a newly-allocated surface.
- * Inherit font, FG and BG colors from current text state.
+ * Render text onto a newly-allocated surface with typographical spacings.
+ * Text may contain UTF-8 and ANSI SGR sequences.
  */
 AG_Surface *
 AG_TextRender(const char *text)
 {
-	AG_TextState *ts = AG_TEXT_STATE_CUR();
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	AG_Surface *S;
 #ifdef AG_UNICODE
 	AG_Char *us;
@@ -820,13 +820,14 @@ AG_TextRender(const char *text)
 }
 
 /*
- * Render text (UTF-8 encoded) right-to-left onto a newly-allocated surface.
- * Inherit font, FG and BG colors from current text state.
+ * Render text onto a newly-allocated surface with typographical spacings.
+ * Text may contain UTF-8 and ANSI SGR sequences.
+ * Text is rendered Right-to-Left.
  */
 AG_Surface *
 AG_TextRenderRTL(const char *text)
 {
-	AG_TextState *ts = AG_TEXT_STATE_CUR();
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	AG_Surface *S;
 #ifdef AG_UNICODE
 	AG_Char *us, *usReversed, *c, *cReversed;
@@ -858,19 +859,19 @@ AG_TextRenderRTL(const char *text)
 }
 
 /*
- * Render text (UTF-8 encoded) onto a newly-allocated surface and crop the
- * surface to the rendered contents.
+ * Render text onto a newly-allocated surface and fast-crop the surface
+ * to its rendered contents (removing all typographical spacings).
  *
  * As opposed to the standard AG_TextRender() which returns a padded surface
  * suitable for typographical alignment, AG_TextRenderCropped() returns the
  * smallest possible surface that will contain the rendered glyph(s).
  *
- * Inherit font, FG and BG colors from current text state.
+ * Text may contain UTF-8 and ANSI SGR sequences.
  */
 AG_Surface *
 AG_TextRenderCropped(const char *text)
 {
-	AG_TextState *ts = AG_TEXT_STATE_CUR();
+	const AG_TextState *ts = AG_TEXT_STATE_CUR();
 	AG_Surface *S;
 #ifdef AG_UNICODE
 	AG_Char *us;
@@ -1013,8 +1014,8 @@ AG_TextRenderCropped(const char *text)
 }
 
 /*
- * Render text in native internal (AG_Char; UCS-4) format onto a newly
- * allocated surface.
+ * Render text in internal (UCS-4) format onto a newly-allocated surface
+ * with typographical spacings.
  */
 AG_Surface *
 AG_TextRenderInternal(const AG_Char *text, AG_Font *font, const AG_Color *cBg,
@@ -1256,8 +1257,10 @@ fail_param:
 }
 
 /*
- * Convert an internal UCS-4 string to a fixed-size buffer using the specified
- * encoding. Strip ANSI sequences. At most dstSize-1 bytes will be copied.
+ * Convert a string in internal (UCS-4) format to the specified encoding and
+ * write the result to a fixed-size buffer, removing any ANSI SGR sequences.
+ *
+ * At most dstSize-1 bytes will be copied.
  * The string is always NUL-terminated.
  */
 int
@@ -1399,76 +1402,121 @@ AG_TextRenderGlyph(AG_Driver *drv, AG_Font *font,
 	return (G);
 }
 
-/* Set active text color. */
+/*
+ * Set foreground text color from the given AG_Color(3).
+ * Applies to the current text rendering state.
+ */
 void
 AG_TextColor(const AG_Color *c)
 {
 	memcpy(&AG_TEXT_STATE_CUR()->color, c, sizeof(AG_Color));
 }
+
+/*
+ * Set foreground text color from the given 8-bit RGB triplet.
+ * Applies to the current text rendering state.
+ */
 void
 AG_TextColorRGB(Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_ColorRGB_8(&AG_TEXT_STATE_CUR()->color, r,g,b);
 }
+
+/*
+ * Set foreground text color from the given 8-bit RGBA quadruplet.
+ * Applies to the current text rendering state.
+ */
 void
 AG_TextColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	AG_ColorRGBA_8(&AG_TEXT_STATE_CUR()->color, r,g,b,a);
 }
 
-/* Set text color from 0xRRGGBBAA format. */
+/*
+ * Set foreground text color from a 32-bit hex value (0xRRGGBBAA).
+ * Applies to the current text rendering state.
+ */
 void
 AG_TextColorHex(Uint32 c)
 {
 	AG_ColorHex32(&AG_TEXT_STATE_CUR()->color, c);
 }
 
-/* Set active text background color. */
+/*
+ * Set background text color from the given AG_Color(3).
+ * Applies to the current text rendering state.
+ */
 void
 AG_TextBGColor(const AG_Color *c)
 {
 	memcpy(&AG_TEXT_STATE_CUR()->colorBG, c, sizeof(AG_Color));
 }
+
+/*
+ * Set background text color from the given 8-bit RGB triplet.
+ * Applies to the current text rendering state.
+ */
 void
 AG_TextBGColorRGB(Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_ColorRGB_8(&AG_TEXT_STATE_CUR()->colorBG, r,g,b);
 }
+
+/*
+ * Set background text color from the given 8-bit RGBA quadruplet.
+ * Applies to the current text rendering state.
+ */
 void
 AG_TextBGColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	AG_ColorRGBA_8(&AG_TEXT_STATE_CUR()->colorBG, r,g,b,a);
 }
 
-/* Set text BG color from 0xRRGGBBAA format. */
+/*
+ * Set background text color from a 32-bit hex value (0xRRGGBBAA).
+ * Applies to the current text rendering state.
+ */
 void
 AG_TextBGColorHex(Uint32 c)
 {
 	AG_ColorHex(&AG_TEXT_STATE_CUR()->colorBG, c);
 }
 
-/* Select a specific font face to use in rendering text. */
+/*
+ * Select an existing (loaded) font for rendering text.
+ * Applies to the current text rendering state.
+ */
 void
 AG_TextFont(AG_Font *font)
 {
 	AG_TEXT_STATE_CUR()->font = font;
 }
 
-/* Select the justification mode to use in rendering text. */
+/*
+ * Select the horizontal justification mode to use when rendering
+ * multi-line text (or rendering text to an existing surface).
+ * Applies to the current text rendering state.
+ */
 void
 AG_TextJustify(enum ag_text_justify mode)
 {
 	AG_TEXT_STATE_CUR()->justify = mode;
 }
 
-/* Select the vertical alignment mode to use in rendering text. */
+/*
+ * Select the vertical alignment mode to use when rendering text to
+ * an existing surface. Applies to the current text rendering state.
+ */
 void
 AG_TextValign(enum ag_text_valign mode)
 {
 	AG_TEXT_STATE_CUR()->valign = mode;
 }
 
-/* Select the tab width in pixels for rendering text. */
+/*
+ * Set the width of rendered tabs ("\t") in pixels.
+ * Applies to the current text rendering state.
+ */
 void
 AG_TextTabWidth(int px)
 {
@@ -1493,9 +1541,8 @@ SetDefaultFontAll(AG_Widget *wid, AG_Font *defaultFontPrev,
 
 
 /*
- * Set the default font to the specified font. Return a pointer to
- * the previous default font.
- *
+ * Set the application-global default font to the specified font.
+ * Return a pointer to the previous default font.
  * Updates the default font settings in AG_Config(3).
  * Updates agDefaultFont and agDefaultFont{Height,Ascent,LineSkip}.
  */

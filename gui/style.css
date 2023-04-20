@@ -101,7 +101,7 @@ AG_Numerical > AG_UCombo {
 AG_Numerical > AG_Button {
 	padding: 0;
 	font-size: 55%;
-	text-color: #ccc;
+	text-color: #bebebe;
 	color#hover: #969590;
 }
 AG_HSVPal {
@@ -159,7 +159,7 @@ AG_Scrollbar {
 	font-size: 60%;
 	color: #666;
 	color#hover: #777;
-	text-color: #fff;
+	text-color: #bebebe;
 }
 AG_Separator {
 	line-color: #888;

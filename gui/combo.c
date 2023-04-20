@@ -36,6 +36,8 @@
 
 static int agComboCounter = 0;
 
+static void PanelSepPressed(AG_Event *_Nonnull);
+
 AG_Combo *
 AG_ComboNew(void *parent, Uint flags, const char *fmt, ...)
 {
@@ -141,17 +143,136 @@ PanelCancelPressed(AG_Event *event)
 		ClosePanel(com, panel);
 }
 
-/* User pressed or released the expand ("...") button. */
+static AG_Window *_Nullable
+CreatePanel(AG_Combo *com, Uint winFlags)
+{
+	AG_Window *win, *winParent = WIDGET(com)->window;
+	AG_Button *btn;
+	AG_Tlist *tl;
+
+	if ((win = AG_WindowNew(winFlags)) == NULL) {
+		return (NULL);
+	}
+	if (winFlags & AG_WINDOW_NOTITLE)
+		win->wmType = AG_WINDOW_WM_COMBO;
+
+	AG_ObjectSetName(win, "_combo%u", agComboCounter++);
+
+	AG_SetPadding(win, "0"); /* TODO style */
+
+	com->panel = win;
+
+	btn = AG_ButtonNewFn(win, AG_BUTTON_HFILL, NULL,
+	    PanelSepPressed, "%p", com);
+	AG_SetPadding(btn, "5 0 5 0");  /* TODO style */
+
+	com->list = tl = AG_TlistNew(win, AG_TLIST_EXPAND |
+	                                  AG_TLIST_NO_KEYREPEAT); 
+
+	btn = AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Cancel"),
+	    PanelCancelPressed, "%p", com);
+	AG_SetPadding(btn, "0 4 3 4");  /* TODO style */
+
+	if (com->flags & AG_COMBO_POLL)        { tl->flags |= AG_TLIST_POLL; }
+	if (com->flags & AG_COMBO_SCROLLTOSEL) { tl->flags |= AG_TLIST_SCROLLTOSEL; }
+
+	AG_SetEvent(tl, "tlist-selected", SelectedItem, "%p", com);
+
+	AG_PostEvent(com, "combo-expanded", NULL);
+
+	if (winParent != NULL) {
+		AG_WindowAttach(winParent, win);
+		AG_WindowMakeTransient(winParent, win);
+/*		AG_WindowPin(winParent, win); */
+	}
+
+	WIDGET(win)->flags |= AG_WIDGET_UNFOCUSED_BUTTONDOWN;
+
+	AG_SetEvent(win, "window-close", PanelWindowClose, "%p", com);
+	AG_AddEvent(win, "mouse-button-down", PanelMouseButtonDown, "%p", com);
+
+	return (win);
+}
+
+static void
+ShowPanel(AG_Combo *com, AG_Window *win)
+{
+	AG_Driver *drv = WIDGET(com)->drv;
+	AG_Window *winParent = WIDGET(com)->window;
+	AG_Tlist *tl;
+	Uint wView, hView;
+	int x,y, w,h;
+
+	if (com->wSaved > 0) {
+		w = com->wSaved;
+		h = com->hSaved;
+	} else if ((tl = com->list) != NULL) {
+		AG_SizeReq rList;
+
+		if (com->wPreList != -1 && com->hPreList != -1) {
+			AG_TlistSizeHintPixels(tl, com->wPreList, com->hPreList);
+		}
+		AG_WidgetSizeReq(tl, &rList);
+		w = rList.w + WIDGET(win)->paddingLeft + WIDGET(win)->paddingRight + (win->wBorderSide << 1);
+		h = rList.h + WIDGET(win)->paddingTop + WIDGET(win)->paddingBottom +  win->wBorderBot;
+ 	} else {
+		return;
+	}
+
+	x = WIDGET(com)->rView.x2 - w;
+	y = WIDGET(com)->rView.y1;
+	AG_GetDisplaySize(drv, &wView, &hView);
+	if (x + w > wView) { w = wView - x; }
+	if (y + h > hView) { h = hView - y; }
+
+	if (winParent != NULL && AGDRIVER_CLASS(drv)->wm == AG_WM_MULTIPLE) {
+		x += WIDGET(winParent)->x;
+		y += WIDGET(winParent)->y;
+	}
+	if (x < 0) { x = 0; }
+	if (y < 0) { y = 0; }
+	if (w < 4 || h < 4) {                                    /* Minimum */
+		AG_PostEvent(com, "combo-collapsed", NULL);
+		AG_ObjectDetach(win);
+		com->list = NULL;
+		com->panel = NULL;
+		return;
+	}
+	com->wSaved = w;
+	com->hSaved = h;
+
+	AG_WindowSetGeometry(win, x,y, w,h);
+	AG_WindowShow(win);
+}
+
+static void
+PanelSepPressed(AG_Event *_Nonnull event)
+{
+	AG_Combo *com = AG_COMBO_PTR(1);
+	AG_Window *win;
+
+	AG_ObjectLock(com);
+
+	if ((win = com->panel) != NULL) {
+		ClosePanel(com, win);
+		AG_PostEvent(com, "combo-collapsed", NULL);
+	}
+	if ((win = CreatePanel(com, AG_WINDOW_KEEPABOVE | AG_WINDOW_NOMAXIMIZE |
+	                            AG_WINDOW_NOMINIMIZE)) != NULL) {
+		AG_WindowSetCaptionS(win, _("Menu"));
+		ShowPanel(com, win);
+	}
+
+	AG_ObjectUnlock(com);
+}
+
+
 static void
 ExpandButtonPushed(AG_Event *_Nonnull event)
 {
 	AG_Combo *com = AG_COMBO_PTR(1);
 	const int button_state = AG_INT(2);
-	AG_Driver *drv = WIDGET(com)->drv;
-	AG_Window *win, *winParent = WIDGET(com)->window;
-	AG_Tlist *tl;
-	Uint wView, hView;
-	int x,y, w,h;
+	AG_Window *win;
 
 	AG_ObjectLock(com);
 
@@ -165,89 +286,26 @@ ExpandButtonPushed(AG_Event *_Nonnull event)
 
 	if (com->panel != NULL) {                          /* Cached window */
 		win = com->panel;
-		AG_TlistClear(com->list);
-		AG_PostEvent(com, "combo-expanded", NULL);
+		if (win->flags & AG_WINDOW_NOTITLE) {
+			AG_TlistClear(com->list);
+			AG_PostEvent(com, "combo-expanded", NULL);
+			ShowPanel(com, win);
+		} else {
+			ClosePanel(com, win);
+			AG_PostEvent(com, "combo-collapsed", NULL);
+
+			win = CreatePanel(com, AG_WINDOW_MODAL |
+			                       AG_WINDOW_KEEPABOVE |
+			                       AG_WINDOW_NOTITLE);
+			if (win != NULL)
+				ShowPanel(com, win);
+		}
 	} else {                                              /* New window */
-		AG_Button *bu;
-
-		if ((win = AG_WindowNew(AG_WINDOW_MODAL | AG_WINDOW_NOTITLE)) == NULL) {
-			return;
-		}
-		win->wmType = AG_WINDOW_WM_COMBO;
-
-		AG_ObjectSetName(win, "_combo%u", agComboCounter++);
-
-		/* TODO specific style attribute. */
-		AG_SetPadding(win, "0");
-
-		com->panel = win;
-		com->list = tl = AG_TlistNew(win, AG_TLIST_EXPAND |
-		                                  AG_TLIST_NO_KEYREPEAT); 
-
-		bu = AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Cancel"),
-		    PanelCancelPressed, "%p", com);
-
-		AG_SetFontSize(bu, "80%");
-		AG_SetPadding(bu, "0 4 3 4");
-
-		if (com->flags & AG_COMBO_POLL) { tl->flags |= AG_TLIST_POLL; }
-		if (com->flags & AG_COMBO_SCROLLTOSEL) { tl->flags |= AG_TLIST_SCROLLTOSEL; }
-
-		AG_SetEvent(tl, "tlist-selected", SelectedItem,"%p",com);
-
-		AG_PostEvent(com, "combo-expanded", NULL);
-
-		if (winParent) {
-			AG_WindowAttach(winParent, win);
-			AG_WindowMakeTransient(winParent, win);
-/*			AG_WindowPin(winParent, win); */
-		}
-
-		WIDGET(win)->flags |= AG_WIDGET_UNFOCUSED_BUTTONDOWN;
-
-		AG_SetEvent(win, "window-close", PanelWindowClose, "%p", com);
-		AG_AddEvent(win, "mouse-button-down", PanelMouseButtonDown, "%p", com);
+		win = CreatePanel(com, AG_WINDOW_MODAL | AG_WINDOW_KEEPABOVE |
+		                       AG_WINDOW_NOTITLE);
+		if (win != NULL)
+			ShowPanel(com, win);
 	}
-
-	if (com->wSaved > 0) {
-		w = com->wSaved;
-		h = com->hSaved;
-	} else if (com->list != NULL) {
-		AG_SizeReq rList;
-
-		if (com->wPreList != -1 && com->hPreList != -1) {
-			AG_TlistSizeHintPixels(com->list, com->wPreList,
-			    com->hPreList);
-		}
-		AG_WidgetSizeReq(com->list, &rList);
-		w = rList.w + WIDGET(win)->paddingLeft + WIDGET(win)->paddingRight + (win->wBorderSide << 1);
-		h = rList.h + WIDGET(win)->paddingTop + WIDGET(win)->paddingBottom +  win->wBorderBot;
- 	} else {
-		goto out;
-	}
-	x = WIDGET(com)->rView.x2 - w;
-	y = WIDGET(com)->rView.y1;
-	AG_GetDisplaySize(WIDGET(com)->drv, &wView, &hView);
-	if (x+w > wView) { w = wView - x; }
-	if (y+h > hView) { h = hView - y; }
-
-	if (winParent && AGDRIVER_CLASS(drv)->wm == AG_WM_MULTIPLE) {
-		x += WIDGET(winParent)->x;
-		y += WIDGET(winParent)->y;
-	}
-	if (x < 0) { x = 0; }
-	if (y < 0) { y = 0; }
-	if (w < 4 || h < 4) {                                    /* Minimum */
-		AG_PostEvent(com, "combo-collapsed", NULL);
-		AG_ObjectDetach(win);
-		com->list = NULL;
-		com->panel = NULL;
-		goto out;
-	}
-	com->wSaved = w;
-	com->hSaved = h;
-	AG_WindowSetGeometry(win, x,y, w,h);
-	AG_WindowShow(win);
 out:
 	AG_ObjectUnlock(com);
 }
