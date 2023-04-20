@@ -492,8 +492,7 @@ SizeRequest(void *_Nonnull obj, AG_SizeReq *_Nonnull r)
 static int
 SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 {
-	if ((a->w < WIDGET(obj)->paddingLeft + 2 + WIDGET(obj)->paddingRight) ||
-	    (a->h < WIDGET(obj)->paddingTop + 2 + WIDGET(obj)->paddingBottom)) {
+	if (a->w < 4 || a->h < 4) {
 		return (-1);
 	}
 	return (0);
@@ -528,8 +527,8 @@ Draw(void *_Nonnull p)
 	AG_Variable *V;
 	void *pState;
 	AG_Surface *S;
-	int surface, pressed, x=0, y=0;
-	
+	int surface, pressed, x, y;
+
 	V = AG_GetVariable(bu, "state", &pState);
 	pressed = GetState(bu, V, pState);
 	AG_UnlockVariable(V);
@@ -561,11 +560,12 @@ Draw(void *_Nonnull p)
 	S = WSURFACE(bu,surface);
 
 	switch (bu->justify) {
+	case AG_TEXT_CENTER:
+	default:
+		x = ((WIDTH(bu) - 2) >> 1) - (S->w >> 1);
+		break;
 	case AG_TEXT_LEFT:
 		x = WIDGET(bu)->paddingLeft;
-		break;
-	case AG_TEXT_CENTER:
-		x = (WIDTH(bu) >> 1) - (S->w >> 1);
 		break;
 	case AG_TEXT_RIGHT:
 		x = WIDTH(bu) - S->w - WIDGET(bu)->paddingRight - 1;
@@ -573,11 +573,12 @@ Draw(void *_Nonnull p)
 	}
 
 	switch (bu->valign) {
+	case AG_TEXT_MIDDLE:
+	default:
+		y = (HEIGHT(bu) >> 1) - (S->h >> 1);
+		break;
 	case AG_TEXT_TOP:
 		y = WIDGET(bu)->paddingTop;
-		break;
-	case AG_TEXT_MIDDLE:
-		y = (HEIGHT(bu) >> 1) - (S->h >> 1);
 		break;
 	case AG_TEXT_BOTTOM:
 		y = HEIGHT(bu) - S->h - WIDGET(bu)->paddingBottom - 1;
@@ -589,9 +590,6 @@ Draw(void *_Nonnull p)
 		y++;
 	}
 
-	/* TODO Opaque label optimizations */
-	AG_PushBlendingMode(bu, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
-
 	if (AG_WidgetIsFocused(bu)) {
 		AG_DrawLineH(bu, 1, WIDTH(bu) - 3 + pressed,     /* x1,x2,y */
 		                   HEIGHT(bu) - 3 + pressed,
@@ -601,6 +599,9 @@ Draw(void *_Nonnull p)
 		             1, HEIGHT(bu) - 3 + pressed,
 		             &WCOLOR(bu, SELECTION_COLOR));
 	}
+
+	/* TODO Opaque label optimizations */
+	AG_PushBlendingMode(bu, AG_ALPHA_SRC, AG_ALPHA_ONE_MINUS_SRC);
 
 	if (WIDTH(bu) < bu->wReq || HEIGHT(bu) < bu->hReq) {   /* Undersize */
 		AG_PushClipRectInner(bu, &WIDGET(bu)->r);
