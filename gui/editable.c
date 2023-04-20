@@ -1197,7 +1197,8 @@ Draw(void *_Nonnull obj)
 		ed->xScrollTo = NULL;
 		WIDGET(ed)->window->dirty = 1;
 	}
-	if (ed->yScrollTo != NULL) {            /* Y scroll request (chars) */
+	if (ed->yScrollTo != NULL &&
+	    ed->flags & AG_EDITABLE_MULTILINE) {  /* Y scroll request (chars) */
 		const int yScrollTo = *ed->yScrollTo;
 
 		if ((yScrollTo - ed->y) < 0) {
