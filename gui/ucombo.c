@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -143,9 +143,11 @@ CreatePanel(AG_UCombo *com, Uint winFlags)
 
 	com->panel = win;
 
-	btn = AG_ButtonNewFn(win, AG_BUTTON_HFILL, NULL,
-	    PanelSepPressed, "%p", com);
-	AG_SetPadding(btn, "5 0 5 0");  /* TODO style */
+	if (winFlags & AG_WINDOW_NOTITLE) {
+		btn = AG_ButtonNewFn(win, AG_BUTTON_HFILL, NULL,
+		    PanelSepPressed, "%p", com);
+		AG_SetPadding(btn, "5 0 5 0");  /* TODO style */
+	}
 
 	com->list = tl = AG_TlistNew(win, AG_TLIST_EXPAND |
 	                                  AG_TLIST_NO_KEYREPEAT); 
@@ -221,6 +223,7 @@ ShowPanel(AG_UCombo *com, AG_Window *win)
 	com->wSaved = w;
 	com->hSaved = h;
 
+	AG_WindowSetMinSize(win, 50,50);     /* TODO style */
 	AG_WindowSetGeometry(win, x,y, w,h);
 	AG_WindowShow(win);
 }

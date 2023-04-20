@@ -709,8 +709,8 @@ Draw(void *_Nonnull obj)
 			DRAW_BORDER(AG_WINOP_LRESIZE, cFg);
 			r.x = w - wResizeCtrl;
 			DRAW_BORDER(AG_WINOP_RRESIZE, cFg);
-			r.x = wResizeCtrl;
-			r.w = w - wResizeCtrl2;
+			r.x = wResizeCtrl + 1;
+			r.w = w - wResizeCtrl2 - 1;
 			DRAW_BORDER(AG_WINOP_HRESIZE, cFg);
 		} else {
 			r.w = w;
