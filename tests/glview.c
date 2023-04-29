@@ -358,9 +358,7 @@ TestGUI(void *obj, AG_Window *win)
 			AG_Label *lbl;
 
 			/* Ambient */
-			ntab = AG_NotebookAdd(nbColor,
-			    "\xE2\x98\x80", /* U+2600 BLACK SUN WITH RAYS */
-			    AG_BOX_VERT);
+			ntab = AG_NotebookAdd(nbColor, "A", AG_BOX_VERT);
 			AG_BoxSetHorizAlign(AGBOX(ntab), AG_BOX_CENTER); 
 			lbl = AG_LabelNewS(ntab, 0, "Ambient");
 			AG_SetFontFamily(lbl, "league-spartan");
@@ -369,9 +367,7 @@ TestGUI(void *obj, AG_Window *win)
 			AG_BindFloat(pal, "RGBAv", ti->ambient);
 
 			/* Diffuse */
-			ntab = AG_NotebookAdd(nbColor,
-			    "\xE2\x9A\x9E", /* U+269E THREE LINES CONVERGING RIGHT */
-			    AG_BOX_VERT);
+			ntab = AG_NotebookAdd(nbColor, "D", AG_BOX_VERT);
 			AG_BoxSetHorizAlign(AGBOX(ntab), AG_BOX_CENTER); 
 			lbl = AG_LabelNewS(ntab, 0, "Diffuse");
 			AG_SetFontFamily(lbl, "league-spartan");
@@ -380,9 +376,7 @@ TestGUI(void *obj, AG_Window *win)
 			AG_BindFloat(pal, "RGBAv", ti->diffuse);
 
 			/* Specular */
-			ntab = AG_NotebookAdd(nbColor,
-			    "\xE2\x98\x87", /* U+2607 LIGHTNING */
-			    AG_BOX_VERT);
+			ntab = AG_NotebookAdd(nbColor, "S", AG_BOX_VERT);
 			AG_BoxSetHorizAlign(AGBOX(ntab), AG_BOX_CENTER); 
 			lbl = AG_LabelNewS(ntab, 0, "Specular");
 			AG_SetFontFamily(lbl, "league-spartan");

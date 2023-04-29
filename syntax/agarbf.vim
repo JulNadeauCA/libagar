@@ -3,7 +3,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agarbf.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 February 17
+" Last Change:  2023 April 25
 
 " quit when a syntax file was already loaded
 if !exists("main_syntax")
@@ -28,7 +28,7 @@ syn match agbfColor contained "#\x\{16\}\>" contains=agbfUnitDecorators
 syn match agbfValueInteger contained "[-+]\=\d\+" contains=agbfUnitDecorators
 syn match agbfValueNumber contained "[-+]\=\d\+\(\.\d*\)\=" contains=agbfUnitDecorators
 
-syn match agbfDirective "^unicode$"
+syn match agbfDirective "^\(unicode\|unicode idem\)$"
 syn match agbfDirective "^.$"
 syn match agbfDirective "^\(name\|author\|license\|colorize\|file\|size\|flags\|ascent\|advance\|lineskip\|underline-position\|underline-thickness\) "
 syn keyword agbfColorizeMode all grays none

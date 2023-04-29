@@ -564,7 +564,7 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 	if (AG_Strcasestr(font->name, "Arabic")) {
 		if (altPhrase) {
 			/*
-			 * Al-arabiyyah (Arabic).
+			 * Al-arabiyyah (Arabic)
 			 */
 			S = AG_TextRenderRTL(
 			    "\xD8\xA7" "\xd9\x8E" "\xd9\x84" "\xd9\x92"
@@ -675,37 +675,52 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
  		    "\xE0\xB1\x81" "\xE0\xB0\x97" "\xE0\xB1\x81");
 
 	} else if (AG_Strcasestr(font->name, "CJK HK") ||
-	           AG_Strcasestr(font->name, "Sans HK") ||
-	           AG_Strcasestr(font->name, "Serif HK")) {
+	           AG_Strcasecmp(font->name, "Noto Sans HK") == 0 ||
+	           AG_Strcasecmp(font->name, "Noto Serif HK") == 0) {
 
 		if (altPhrase) {
+			/*
+			 * Guandong hua (Cantonese)
+			 */
 			S = AG_TextRender(
-			    "\xe5\xbb\xa3" "\xe6\x9d\xb1" "\xe8\xa9\xb1");
+			    "\xE5\xBB\xA3" "\xE6\x9D\xB1" "\xE8\xA9\xB1");
 		} else {
+			/*
+			 * Xianggang tebie xingzhengqu
+			 * ("Hong Kong Special Administrative Region").
+			 */
 			S = AG_TextRender(
-			    "\xe9\xa6\x99" "\xe6\xb8\xaf" "\xe7\x89\xb9"
-			    "\xe5\x88\xa5" "\xe8\xa1\x8c" "\xe6\x94\xbf"
-			    "\xe5\x8d\x80");
+			    "\xE9\xA6\x99" "\xE6\xB8\xAF" "\xE7\x89\xB9"
+			    "\xE5\x88\xA5" "\xE8\xA1\x8C" "\xE6\x94\xBF"
+			    "\xE5\x8D\x80");
 		}
 
 	} else if (AG_Strcasestr(font->name, "CJK KR") ||
-	           AG_Strcasestr(font->name, "Sans KR") ||
-	           AG_Strcasestr(font->name, "Serif KR")) {
+	           AG_Strcasecmp(font->name, "Noto Sans KR") == 0 ||
+	           AG_Strcasecmp(font->name, "Noto Serif KR") == 0) {
 
 		if (altPhrase) {
+			/*
+			 * Hangug-eojoseonmal (Korean language)
+			 */
 			S = AG_TextRender(
-			    "\xed\x95\x9c" "\xea\xb5\xad" "\xec\x96\xb4" ", "
-			    "\xec\xa1\xb0" "\xec\x84\xa0" "\xeb\xa7\x90");
+			    "\xED\x95\x9C" "\xEA\xB5\xAD" "\xEC\x96\xB4" ", "
+			    "\xEC\xA1\xB0" "\xEC\x84\xA0" "\xEB\xA7\x90");
 		} else {
+			/*
+			 * Gongdeun tab-i muneojilya
+			 * (Hard work is never wasted)
+			 */
 			S = AG_TextRender(
-			    "\xea\xb3\xb5" "\xeb\x93\xa0" " " "\xed\x83\x91"
-			    "\xec\x9d\xb4" " " "\xeb\xac\xb4" "\xeb\x84\x88"
-			    "\xec\xa7\x80" "\xeb\x9e\xb4");
+			    "\xEA\xB3\xB5" "\xEB\x93\xA0" " " "\xED\x83\x91"
+			    "\xEC\x9D\xB4" " " "\xEB\xAC\xB4" "\xEB\x84\x88"
+			    "\xEC\xA7\x80" "\xEB\x9E\xB4");
 		}
 
 	} else if (AG_Strcasestr(font->name, "CJK SC") ||
-	           AG_Strcasestr(font->name, "Sans SC") ||
-	           AG_Strcasestr(font->name, "Serif SC")) {
+	           AG_Strcasecmp(font->name, "Noto Sans SC") == 0 ||
+	           AG_Strcasecmp(font->name, "Noto Serif SC") == 0) {
+
 		if (altPhrase) {
 			/*
 			 * Zhongwen (Chinese)
@@ -725,26 +740,27 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 		}
 
 	} else if (AG_Strcasestr(font->name, "CJK TC") ||
-	           AG_Strcasestr(font->name, "Sans TC") ||
-	           AG_Strcasestr(font->name, "Serif TC")) {
+	           AG_Strcasecmp(font->name, "Noto Sans TC") == 0 ||
+	           AG_Strcasecmp(font->name, "Noto Serif TC") == 0) {
 
 		if (altPhrase) {
 			/*
-			 * Hanyu.
+			 * Hanyu (Chinese)
 			 */
-			S = AG_TextRender("\xe6\xbc\xa2" "\xe8\xaa\x9e");
+			S = AG_TextRender("\xE6\xBC\xA2" "\xE8\xAA\x9E");
 		} else {
 
 			/*
-			 * Ren jiesheng er ziyou; zai zunyan ji quanli shang jun
-			 * ge pingdeng.
+			 * Ren jiesheng er ziyou; zai zunyan ji quanli shang
+			 * jun ge pingdeng ("All human beings are born free;
+			 * all equal in dignity and rights")
 			 */
 			S = AG_TextRender(
-			    "\xe4\xba\xba" "\xe7\x9a\x86" "\xe7\x94\x9f" "\xe8\x80\x8c"
-			    "\xe8\x87\xaa" "\xe7\x94\xb1" "\xef\xbc\x9b" "\xe5\x9c\xa8"
-			    "\xe5\xb0\x8a" "\xe5\x9a\xb4" "\xe5\x8f\x8a" "\xe6\xac\x8a"
-			    "\xe5\x88\xa9" "\xe4\xb8\x8a" "\xe5\x9d\x87" "\xe5\x90\x84"
-			    "\xe5\xb9\xb3" "\xe7\xad\x89");
+			    "\xE4\xBA\xBA" "\xE7\x9A\x86" "\xE7\x94\x9F" "\xE8\x80\x8C"
+			    "\xE8\x87\xAA" "\xE7\x94\xB1" "\xEF\xBC\x9B" "\xE5\x9C\xA8"
+			    "\xE5\xB0\x8A" "\xE5\x9A\xB4" "\xE5\x8F\x8A" "\xE6\xAC\x8A"
+			    "\xE5\x88\xA9" "\xE4\xB8\x8A" "\xE5\x9D\x87" "\xE5\x90\x84"
+			    "\xE5\xB9\xB3" "\xE7\xAD\x89");
 		}
 
 	} else if (AG_Strcasestr(font->name, "Estrangelo") ||
@@ -765,19 +781,16 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 			S = AG_TextRenderRTL(
 			    "\xDC\x9B" "\xDC\x98" "\xDC\xBC" "\xDC\x92" "\xDC\xB2"
 			    "\xDC\x9D" "\xDC\x97" "\xDC\x98" "\xDC\xBF" "\xDC\xA2" " "
-			    "\xDC\xA0" "\xDC\x90" "\xDC\xB2" "\xDC\x9D"
-			    "\xDC\xA0" "\xDC\xB9" "\xDC\x9D" "\xDC\xA2" " "
-			    "\xDC\x95" "\xDC\xB2" "\xDC\x95" "\xDD\x82"
-			    "\xDC\x9F" "\xDC\xB9" "\xDC\x9D" "\xDC\xA2" " "
-			    "\xDC\x92" "\xDC\xA0" "\xDC\xB8" "\xDC\x92"
-			    "\xCC\x87" "\xDC\x97" "\xDC\x98" "\xDC\xBF"
-			    "\xDC\xA2" "\xDC\x84" " "
-			    "\xDC\x95" "\xDC\x97" "\xDC\xB8" "\xDC\xA2" "\xDD\x82"
-			    "\xDC\x98" "\xDC\xBF" "\xDC\xA2" " "
-			    "\xDC\xA2" "\xDC\xB8" "\xDC\x9A" "\xDC\x99" "\xDC\x98"
-			    "\xDC\xBF" "\xDC\xA2" " "
-			    "\xDC\xA0" "\xDC\x90" "\xDC\xB2" "\xDC\xA0" "\xDC\xB5"
-			    "\xDC\x97" "\xDC\xB5" "\xDC\x90" "\xDC\x82");
+			    "\xDC\xA0" "\xDC\x90" "\xDC\xB2" "\xDC\x9D" "\xDC\xA0"
+			    "\xDC\xB9" "\xDC\x9D" "\xDC\xA2" " " "\xDC\x95" "\xDC\xB2"
+			    "\xDC\x95" "\xDD\x82" "\xDC\x9F" "\xDC\xB9" "\xDC\x9D"
+			    "\xDC\xA2" " " "\xDC\x92" "\xDC\xA0" "\xDC\xB8" "\xDC\x92"
+			    "\xCC\x87" "\xDC\x97" "\xDC\x98" "\xDC\xBF" "\xDC\xA2"
+			    "\xDC\x84" " " "\xDC\x95" "\xDC\x97" "\xDC\xB8" "\xDC\xA2"
+			    "\xDD\x82" "\xDC\x98" "\xDC\xBF" "\xDC\xA2" " " "\xDC\xA2"
+			    "\xDC\xB8" "\xDC\x9A" "\xDC\x99" "\xDC\x98" "\xDC\xBF"
+			    "\xDC\xA2" " " "\xDC\xA0" "\xDC\x90" "\xDC\xB2" "\xDC\xA0"
+			    "\xDC\xB5" "\xDC\x97" "\xDC\xB5" "\xDC\x90" "\xDC\x82");
 		}
 
 	} else if (AG_Strcasestr(font->name, "Ethiopic")) {
@@ -850,11 +863,11 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 			    "\xD7\x9D");
 		}
 	} else if (AG_Strcasestr(font->name, "Japanese") ||
-	           AG_Strcasecmp(font->name, "HanaMinA") == 0 ||
-		   AG_Strcasecmp(font->name, "HanaMinB") == 0 ||
 	           AG_Strcasestr(font->name, "CJK JP") ||
-	           AG_Strcasestr(font->name, "Sans JP") ||
-	           AG_Strcasestr(font->name, "Serif JP")) {
+	           AG_Strcasecmp(font->name, "Noto Sans JP") == 0 ||
+	           AG_Strcasecmp(font->name, "Noto Serif JP") == 0 ||
+	           AG_Strcasecmp(font->name, "HanaMinA") == 0 ||
+		   AG_Strcasecmp(font->name, "HanaMinB") == 0) {
 
 		if (altPhrase) {
 			/*
@@ -893,6 +906,7 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 		    "\xEF\xA3\x9B");
 
 	} else if (Strcasecmp(font->name, "Alef") == 0) {
+
 		S = AG_TextRender(
 		    "The Quick Br\xC3\xB8wn Fox Jumps \xC3\x95ver The "
 		    "\xD7\x9F"
@@ -902,6 +916,7 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 		    "\xD7\x91"
 		    "\xD7\x9C"
 		    "\xD7\x9B" ".");
+
 	} else if (Strcasecmp(font->name, "Noto Sans Linear B") == 0) {
 
 		if (altPhrase) {
@@ -930,8 +945,7 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 			    "\xF0\x90\x80\x9F" "\xF0\x90\x80\xA0" "\xF0\x90\x80\xA1"
 			    "\xF0\x90\x80\xA2" "\xF0\x90\x80\xA3" "\xF0\x90\x80\xA4"
 			    "\xF0\x90\x80\xA5" "\xF0\x90\x80\xA6" "\xF0\x90\x80\xA7"
-			    "\xF0\x90\x80\xA8" "\xF0\x90\x80\xA9" "\xF0\x90\x80\xAA"
-			    );
+			    "\xF0\x90\x80\xA8" "\xF0\x90\x80\xA9" "\xF0\x90\x80\xAA");
 		}
 
 
@@ -966,12 +980,12 @@ PreviewDefault(AG_FontSelector *fs, AG_Font *font)
 		    AGSI_USER_ACCESS AGSI_POPULATED_WINDOW AGSI_TWO_WINDOWS
 		    AGSI_MENUBOOL_TRUE AGSI_MENUBOOL_FALSE AGSI_MENU_EXPANDER
 		    AGSI_BOX_VERT AGSI_BOX_HORIZ
-		    AGSI_ALICE AGSI_BOB AGSI_TEE_SHIRT
+		    AGSI_UNUSED_1 AGSI_UNUSED_2 AGSI_TEE_SHIRT
 		    AGSI_JEANS AGSI_USER_W_3_SOUND_WAVES AGSI_PILE_OF_POO
 		    AGSI_FOLDED_DIAPER AGSI_UNFOLDED_DIAPER AGSI_PAPER_ROLL
-		    AGSI_CONTAINER AGSI_PARCEL AGSI_SIZE_XS AGSI_SIZE_SM
-		    AGSI_SIZE_MD AGSI_SIZE_LG AGSI_SIZE_XL AGSI_SIZE_2XL
-		    AGSI_SIZE_3XL AGSI_SIZE_4XL AGSI_LOWER_R_PENCIL 
+		    AGSI_CONTAINER AGSI_PARCEL AGSI_UNUSED_3 AGSI_UNUSED_4
+		    AGSI_UNUSED_5 AGSI_UNUSED_6 AGSI_UNUSED_7
+		    AGSI_LOWER_R_PENCIL 
 		    "\n"
 		    AGSI_LOWER_L_PENCIL AGSI_CLOSE_X AGSI_GEAR AGSI_EXPORT_DOCUMENT
 		    AGSI_PAD AGSI_DEBUGGER AGSI_L_MENU_EXPANDER AGSI_USB_STICK

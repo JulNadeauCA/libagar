@@ -119,7 +119,7 @@ typedef struct ag_font {
 #define AG_FONT_OBLIQUE        0x0080   /* Style - Oblique */
 #define AG_FONT_ITALIC         0x0100   /* Style - Italic */
                             /* 0x0200      (Unused) */
-#define AG_FONT_ULTRACONDENSED 0x0400   /* Wd(50%) - Ultra Condensed */
+#define AG_FONT_ULTRACONDENSED 0x0400   /* Wd(50%) - Ultra Condensed ("Compressed") */
 #define AG_FONT_CONDENSED      0x0800   /* Wd(75%) - Condensed */
 #define AG_FONT_SEMICONDENSED  0x1000   /* Wd(87.5%) - Semi Condensed ("Demi Condensed") */
 #define AG_FONT_SEMIEXPANDED   0x2000   /* Wd(112.5%) - Semi Expanded ("Demi Expanded") */

@@ -249,7 +249,7 @@ SelectedTest(AG_Event *event)
 	AG_TlistItem *it = AG_TLISTITEM_PTR(1);
 	AG_TestCase *tc = it->p1;
 
-	AG_ButtonText(btnTest, _("Run %s"), tc->name);
+	AG_ButtonText(btnTest, _("Run " AGSI_BOLD "%s"), tc->name);
 	AG_LabelText(status, _("Run %s (%s)."), tc->name, tc->descr);
 	if (tc->test != NULL || tc->testGUI != NULL) {
 		AG_WidgetEnable(btnTest);
@@ -1037,8 +1037,7 @@ main(int argc, char *argv[])
 	hBox = AG_BoxNewHoriz(pane->div[0], AG_BOX_HFILL | AG_BOX_HOMOGENOUS |
 	                                    AG_BOX_NO_SPACING);
 	{
-		btnTest = AG_ButtonNew(hBox, AG_BUTTON_EXCL, _("Run"));
-		AG_SetFontSize(btnTest, "120%");
+		btnTest = AG_ButtonNew(hBox, AG_BUTTON_EXCL, _("Run ..."));
 		AG_WidgetDisable(btnTest);
 	}
 

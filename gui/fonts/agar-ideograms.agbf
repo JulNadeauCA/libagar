@@ -7,10 +7,50 @@ author "Julien Nadeau Carriere <vedge@csoft.net>"
 license "OFL11.txt"
 colorize grays
 
-size 0.0-64.0
+size 0.0-11.9
 flags 0x0
 file "agar-ideograms-12.png"
 ascent 12
+advance 3
+underline-position 0
+underline-thickness 1
+unicode
+1f50a e013 e012 e014 e015 e016 e017 e018 e019 e01a e01b e01c e01d e01e e01f e020 e021
+e022 e023 e024 e025 e026 e027 1f3a8 e028 223f e029 e02a e02b e02c e02d e02e e02f e030
+e031 e032 e033 e034 e035 e036 e037 e038 e039 e002 e003 e005 e010 e011 e03a e03b 1f455
+1f456 e03c 1f4a9 e03d e03e e03f e040 e041 e042 e043 e044 e045 e046 e047 e048 e049 270e
+1f589 e04a 2699 e04b e04c e04d e04e e04f e050 e051 267f e052 e053 e054 23f1 e055 e056
+e057 e058 e059 e05a e05b e05c e05d e05e e05f e060 1f4be 1f4c0 e061 1f579 e062 e063 1f5b0
+e064 1f6a7 e065 e066 e067 e068 e069 e06a e06b e06c e06d e06e e06f e070 e071 e072 e073
+e074 e075 e076 e077 e078 e079 e07a e07b e07c e07d e07e e07f e080 e081 e082 e083 e084
+e085 e086 e087 2221 2696 e088 e089 e08a 2607 e08b e08c e08d e08e e08f 1f4f7 e090 25ad
+25b3 e091 e092 e093 e094 e095 e096 e097 e098 e099 e09a e09b e09c e09d e09e e09f
+.
+
+size 12.0-14.5
+flags 0x0
+file "agar-ideograms-14.png"
+ascent 14
+advance 3
+underline-position 0
+underline-thickness 1
+unicode
+1f50a e013 e012 e014 e015 e016 e017 e018 e019 e01a e01b e01c e01d e01e e01f e020 e021
+e022 e023 e024 e025 e026 e027 1f3a8 e028 223f e029 e02a e02b e02c e02d e02e e02f e030
+e031 e032 e033 e034 e035 e036 e037 e038 e039 e002 e003 e005 e010 e011 e03a e03b 1f455
+1f456 e03c 1f4a9 e03d e03e e03f e040 e041 e042 e043 e044 e045 e046 e047 e048 e049 270e
+1f589 e04a 2699 e04b e04c e04d e04e e04f e050 e051 267f e052 e053 e054 23f1 e055 e056
+e057 e058 e059 e05a e05b e05c e05d e05e e05f e060 1f4be 1f4c0 e061 1f579 e062 e063 1f5b0
+e064 1f6a7 e065 e066 e067 e068 e069 e06a e06b e06c e06d e06e e06f e070 e071 e072 e073
+e074 e075 e076 e077 e078 e079 e07a e07b e07c e07d e07e e07f e080 e081 e082 e083 e084
+e085 e086 e087 2221 2696 e088 e089 e08a 2607 e08b e08c e08d e08e e08f 1f4f7 e090 25ad
+25b3 e091 e092 e093 e094 e095 e096 e097 e098 e099 e09a e09b e09c e09d e09e e09f
+.
+
+size 14.5-50.0
+flags 0x0
+file "agar-ideograms-16.png"
+ascent 16
 advance 3
 underline-position 0
 underline-thickness 1

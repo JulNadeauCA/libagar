@@ -12,6 +12,8 @@ DATAFILES_SRC=	OFL11.txt OFL-FAQ.txt \
 		agar-minimal-12.png \
 		agar-ideograms.agbf \
 		agar-ideograms-12.png \
+		agar-ideograms-14.png \
+		agar-ideograms-16.png \
 		algue.ttf \
 		algue-bold.ttf \
 		algue-italic.ttf \
@@ -20,6 +22,18 @@ DATAFILES_SRC=	OFL11.txt OFL-FAQ.txt \
 		charter-bold.otf \
 		charter-italic.otf \
 		charter.otf \
+		fira-sans-bold-italic.otf \
+		fira-sans-bold.otf \
+		fira-sans-condensed-bold-italic.otf \
+		fira-sans-condensed-bold.otf \
+		fira-sans-condensed-italic.otf \
+		fira-sans-condensed-light-italic.otf \
+		fira-sans-condensed-light.otf \
+		fira-sans-condensed.otf \
+		fira-sans-italic.otf \
+		fira-sans-light-italic.otf \
+		fira-sans-light.otf \
+		fira-sans.otf \
 		fraktur-LICENSE.txt \
 		fraktur.ttf \
 		league-gothic.otf \

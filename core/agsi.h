@@ -144,23 +144,23 @@
 /*
  * Map core font names to SGR sequences.
  */
-#define AGSI_ALGUE               AGSI_FONT1     /* Algue */
-#define AGSI_UNIALGUE            AGSI_FONT2     /* Unialgue */
-#define AGSI_AGAR_MINIMAL        AGSI_FONT3     /* Agar Minimal */
-#define AGSI_AGAR_IDEOGRAMS      AGSI_FONT4     /* Agar Ideograms */
-#define AGSI_MONOALGUE           AGSI_FONT5     /* Monoalgue */
-#define AGSI_BITSTREAM_CHARTER   AGSI_FONT6     /* Bitstream Charter */
-#define AGSI_NOTO_SERIF          AGSI_FONT7     /* Noto Serif */
-#define AGSI_NOTO_SANS           AGSI_FONT8     /* Noto Sans */
-#define AGSI_LEAGUE_SPARTAN      AGSI_FONT9     /* League Spartan */
-#define AGSI_LEAGUE_GOTHIC       AGSI_FONT10    /* League Gothic */
-#define AGSI_UNIFRAKTUR_MAGUNTIA AGSI_FONT11    /* Unifraktur Maguntia */
-/* #define AGSI_UNUSED_FONT12    AGSI_FONT12 */
-/* #define AGSI_UNUSED_FONT13    AGSI_FONT13 */
-/* #define AGSI_UNUSED_FONT14    AGSI_FONT14 */
-/* #define AGSI_UNUSED_FONT15    AGSI_FONT15 */
-/* #define AGSI_UNUSED_FONT16    AGSI_FONT16 */
-/* #define AGSI_UNUSED_FONT17    AGSI_FONT17 */
+#define AGSI_ALGUE                AGSI_FONT1     /* Algue */
+#define AGSI_UNIALGUE             AGSI_FONT2     /* Unialgue */
+#define AGSI_AGAR_MINIMAL         AGSI_FONT3     /* Agar Minimal */
+#define AGSI_AGAR_IDEOGRAMS       AGSI_FONT4     /* Agar Ideograms */
+#define AGSI_MONOALGUE            AGSI_FONT5     /* Monoalgue */
+#define AGSI_BITSTREAM_CHARTER    AGSI_FONT6     /* Bitstream Charter */
+#define AGSI_NOTO_SERIF           AGSI_FONT7     /* Noto Serif */
+#define AGSI_NOTO_SANS            AGSI_FONT8     /* Noto Sans */
+#define AGSI_LEAGUE_SPARTAN       AGSI_FONT9     /* League Spartan */
+#define AGSI_LEAGUE_GOTHIC        AGSI_FONT10    /* League Gothic */
+#define AGSI_UNIFRAKTUR_MAGUNTIA  AGSI_FONT11    /* Unifraktur Maguntia */
+#define AGSI_FIRA_SANS            AGSI_FONT12    /* Fira Sans */
+#define AGSI_FIRA_SANS_CONDENSED  AGSI_FONT13    /* Fira Sans Condensed */
+#define AGSI_FIRA_SANS_COMPRESSED AGSI_FONT14    /* Fira Sans Compressed */
+/* #define AGSI_UNUSED_FONT15     AGSI_FONT15 */
+/* #define AGSI_UNUSED_FONT16     AGSI_FONT16 */
+/* #define AGSI_UNUSED_FONT17     AGSI_FONT17 */
 
 #define AGSI_MONOSPACE AGSI_MONOALGUE            /* A monospace font */
 #define AGSI_UNI       AGSI_UNIALGUE             /* An extended unicode font */
@@ -1808,22 +1808,22 @@
 #define AGSI_USER_ACCESS           "\xEE\x80\xB7"  /* U+E037 User Access */
 #define AGSI_POPULATED_WINDOW      "\xEE\x80\xB8"  /* U+E038 Populated Window */
 #define AGSI_TWO_WINDOWS           "\xEE\x80\xB9"  /* U+E039 Two Windows */
-#define AGSI_ALICE                 "\xEE\x80\xBA"  /* U+E03A Alice */
-#define AGSI_BOB                   "\xEE\x80\xBB"  /* U+E03B Bob */
+#define AGSI_UNUSED_1              "\xEE\x80\xBA"  /* U+E03A Unused 1 */
+#define AGSI_UNUSED_2              "\xEE\x80\xBB"  /* U+E03B Unused 2 */
 #define AGSI_USER_W_3_SOUND_WAVES  "\xEE\x80\xBC"  /* U+E03C User With 3 Sound Waves */
 #define AGSI_FOLDED_DIAPER         "\xEE\x80\xBD"  /* U+E03D Folded Diaper */
 #define AGSI_UNFOLDED_DIAPER       "\xEE\x80\xBE"  /* U+E03E Unfolded Diaper */
 #define AGSI_PAPER_ROLL            "\xEE\x80\xBF"  /* U+E03F Paper Roll */
 #define AGSI_CONTAINER             "\xEE\x81\x80"  /* U+E040 Container */
 #define AGSI_PARCEL                "\xEE\x81\x81"  /* U+E041 Parcel */
-#define AGSI_SIZE_XS               "\xEE\x81\x82"  /* U+E042 Size X-Small */
-#define AGSI_SIZE_SM               "\xEE\x81\x83"  /* U+E043 Size Small */
-#define AGSI_SIZE_MD               "\xEE\x81\x84"  /* U+E044 Size Medium */
-#define AGSI_SIZE_LG               "\xEE\x81\x85"  /* U+E045 Size Large */
-#define AGSI_SIZE_XL               "\xEE\x81\x86"  /* U+E046 Size X-Large */
-#define AGSI_SIZE_2XL              "\xEE\x81\x87"  /* U+E047 Size 2XL */
-#define AGSI_SIZE_3XL              "\xEE\x81\x88"  /* U+E048 Size 3XL */
-#define AGSI_SIZE_4XL              "\xEE\x81\x89"  /* U+E049 Size 4XL */
+#define AGSI_WAREHOUSE             "\xEE\x81\x82"  /* U+E042 Warehouse */
+#define AGSI_FORKLIFT              "\xEE\x81\x83"  /* U+E043 Forklift */
+#define AGSI_TRANSPORT_DRUM        "\xEE\x81\x84"  /* U+E044 Transport Drum */
+#define AGSI_UNUSED_3              "\xEE\x81\x85"  /* U+E045 Unused 3 */
+#define AGSI_UNUSED_4              "\xEE\x81\x86"  /* U+E046 Unused 4 */
+#define AGSI_UNUSED_5              "\xEE\x81\x87"  /* U+E047 Unused 5 */
+#define AGSI_UNUSED_6              "\xEE\x81\x88"  /* U+E048 Unused 6 */
+#define AGSI_UNUSED_7              "\xEE\x81\x89"  /* U+E049 Unused 7 */
 #define AGSI_CLOSE_X               "\xEE\x81\x8A"  /* U+E04A Close "X" */
 #define AGSI_EXPORT_DOCUMENT       "\xEE\x81\x8B"  /* U+E04B Export Document */
 #define AGSI_PAD                   "\xEE\x81\x8C"  /* U+E04C Pad */

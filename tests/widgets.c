@@ -617,30 +617,30 @@ TestGUI(void *obj, AG_Window *win)
 			    AGSI_IDEOGRAM AGSI_GAME_CONTROLLER AGSI_RST
 			    " Try Me!",
 			    NULL);
+
 			AG_MenuAction(mSub,
-			    AGSI_IDEOGRAM AGSI_ALICE AGSI_RST
-			    " Alice",
+			    AGSI_IDEOGRAM AGSI_BELL_JAR_W_VACUUM AGSI_RST
+			    " Bell Jar",
 			    NULL,
-			    TestMenuFn, "%s", "Hi Alice!");
+			    TestMenuFn, "%s", "Bell Jar "
+			    AGSI_IDEOGRAM AGSI_BELL_JAR_W_VACUUM);
 
 			AG_MenuAction(mSub,
-			    AGSI_IDEOGRAM AGSI_BOB AGSI_RST
-			    " Bob", NULL,
-			    TestMenuFn, "%s", "Hi Bob!");
+			    AGSI_IDEOGRAM AGSI_EDGAR_ALLAN_POE AGSI_RST
+			    " Edgar Allan Poe",
+			    NULL,
+			    TestMenuFn, "%s", "Edgar Allan Poe "
+			    AGSI_IDEOGRAM AGSI_EDGAR_ALLAN_POE);
 
-			AG_MenuAction(mSub,
-			    AGSI_IDEOGRAM AGSI_PILE_OF_POO AGSI_RST
-			    " Pile of Poo", NULL,
-			    TestMenuFn, "%s", "Pile of Poo!");
+			AG_MenuSeparator(m);
 
 			AG_MenuIntBool(mSub, "Togglable Binding #1 ",
 			    NULL, &myInt[0], 0);
 			AG_MenuIntBool(mSub, "Inverted Binding #1 ",
 			    NULL, &myInt[0], 1);
 
-			AG_MenuSeparator(m);
 			AG_MenuSectionS(m,
-			    AGSI_IDEOGRAM AGSI_VACUUM_TUBE AGSI_RST
+			    AGSI_IDEOGRAM AGSI_MAMISMOKE AGSI_RST
 			    AGSI_ITALIC " Non Selectable Text");
 			AG_MenuSeparator(m);
 

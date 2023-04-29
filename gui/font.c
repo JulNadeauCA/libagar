@@ -161,6 +161,8 @@ const AG_FontAdjustment agFontAdjustments[] = {
  { "ferrite core dx",              1.0f, { +1, +1, +1, +1,  +1, +1, +2, +1,  +1,  0,  0, +1, +1, +1, +1, +1,  0,  0,  0,  0,   0,  0,  0,  0,  -1, -1, -1, -1, -1, -1, -1, -2 }, 0, 0 },
  { "fira code",                    1.0f, { +1, +1,  0,  0,   0,  0, +1,  0,  -1, -1, -1, -1, +1,  0,  0, -1,  0, -1, -1, -1,  -1, -1, -2, -2,  -2, -3, -3, -4, -4, -2, -3, -4 }, 0, 0 },
  { "fira mono",                    1.0f, {  0,  0, +1, +1,   0, -1,  0, -1,  -1, -1,  0,  0, -1, -2, -2, -2, -2, -2, -2, -2,  -2, -3, -4, -3,  -5, -4, -5, -6, -6, -6, -9,-10 }, 0, 0 },
+ { "fira-sans.otf",                1.0f, {  0,  0,  0,  0,   0, -1,  0,  0,   0, -1,  0,  0, -1, -2, -2, -1, -2, -2, -2, -1,  -2, -3, -3, -2,  -4, -4, -6, -6, -7, -7, -9,-10 }, 0, 0 },
+ { "fira-sans-condensed.otf",      1.0f, {  0,  0, +1, +1,   0, -1,  0,  0,   0, -1,  0,  0, -1, -2, -2, -1, -2, -2, -2, -1,  -2, -3, -3, -3,  -4, -4, -6, -6, -7, -7, -9,-10 }, 0, 0 },
  { "fira sans",                    1.0f, {  0,  0,  0,  0,   0, -1,  0,  0,   0, -1,  0,  0, -1, -2, -2, -1, -2, -2, -2, -1,  -2, -3, -3, -2,  -4, -4, -6, -6, -7, -7, -9,-10 }, 0, 0 },
  { "fira sans compressed",         1.0f, {  0,  0, +1, +1,   0, -1,  0,  0,   0, -1,  0,  0, -1, -2, -2, -1, -2, -2, -2, -1,  -2, -3, -3, -3,  -4, -4, -6, -6, -7, -7, -9,-10 }, 0, 0 },
  { "fira sans condensed",          1.0f, {  0,  0, +1, +1,   0, -1,  0,  0,   0, -1,  0,  0, -1, -2, -2, -1, -2, -2, -2, -1,  -2, -3, -3, -3,  -4, -4, -6, -6, -7, -7, -9,-10 }, 0, 0 },
@@ -200,16 +202,39 @@ const AG_FontAdjustment agFontAdjustments[] = {
  { "mutt clearlyu wide",           1.0f, { -4, -4, -4, -4,  -4, -4, -4, -4,  -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4,  -4, -4, -4, -4,  -4, -4, -4, -4, -4, -4, -4,  0 }, 0, 0 },
  { "misc fixed",                   1.0f, { +5, +5, +5, +5,  +4, +4, +5, +5,  +4, +4, +4, +3, +3, +3, +4, +3, +3, +3, +1, +1,  +1, +1, +1, +1,  +1, +1, +1, +1, +1, +1, +1, +1 }, 0, 0 },
  { "misc fixed wide",              1.0f, { +4, +4, +4, +4,  +4, +4, +4, +4,  +4, +4, +4, +4, +4, +4, +4, +4, +4, +2, +2, +2,  +2, +2, +2, +2,  +2, +2, +2, +2, +2, +2, +2, +2 }, 0, 0 },
+ /*  family                        scale    4   5   6   7   7.5  8  8.5  9   9.5  10 10.5 11 11.5 12 12.5 13 14  15  16  17   18  19  20  22   24  26  28  30  34  38  42  50   regFlags stateFlags */
+ /*  ------                        -----    ----------------------------------------------------------------------------------------------------------------------------------   -------- ---------- */
  { "noto mono",                    1.0f, { +1,  0,  0,  0,  +1,  0, -1, -1,  -1, -2, -1, -2, -1, -2, -2, -2, -1, -1, -1, -3,  -2, -2, -2, -3,  -3, -4, -4, -4, -6, -7, -7, -9 }, 0, 0 },
  { "noto sans",                    1.0f, {  0, -1,  0, -1,  -1, -1, -2, -1,  -2, -1, -3, -3, -2, -2, -2, -2, -3, -4, -4, -4,  -4, -4, -4, -6,  -6, -7, -7, -8, -8,-10,-11,-13 }, 0, 0 },
- { "noto sans cjk sc",             1.0f, { +2, +2, +2, +2,  +3, +2, +2, +3,  +2, +3, +2, +3, +3, +3, +4, +3, +3, +3, +3, +3,  +4, +4, +4, +4,  +5, +6, +6, +5, +6, +6, +6, +7 }, 0, 0 },
+ { "noto sans cjk hk",             1.0f, { +3, +2, +3, +3,  +3, +2, +2, +3,  +2, +4, +3, +3, +3, +3, +4, +2, +3, +3, +4, +4,  +4, +4, +4, +4,  +5, +6, +6, +5, +6, +7, +7, +8 }, 0, 0 },
+ { "noto sans cjk jp",             1.0f, { +2, +2, +3, +3,  +3, +2, +2, +3,  +2, +2, +2, +3, +2, +3, +3, +3, +3, +2, +3, +4,  +4, +3, +4, +4,  +4, +5, +5, +4, +5, +5, +5, +7 }, 0, 0 },
+ { "noto sans cjk kr",             1.0f, { +2, +2, +3, +3,  +4, +3, +3, +3,  +2, +3, +2, +3, +3, +4, +4, +3, +4, +3, +4, +4,  +5, +5, +5, +5,  +5, +6, +6, +6, +8, +8, +8, +9 }, 0, 0 },
+ { "noto sans cjk sc",             1.0f, { +2, +2, +2, +2,  +3, +2, +2, +3,  +2, +3, +2, +3, +3, +3, +4, +3, +3, +3, +3, +3,  +4, +4, +4, +4,  +5, +5, +6, +5, +6, +6, +6, +7 }, 0, 0 },
+ { "noto sans cjk tc",             1.0f, { +2, +2, +2, +3,  +3, +2, +2, +3,  +2, +3, +2, +2, +2, +3, +4, +2, +2, +3, +3, +2,  +3, +3, +3, +3,  +4, +4, +5, +4, +5, +6, +6, +7 }, 0, 0 },
+ { "noto sans hk",                 1.0f, { +3, +2, +3, +3,  +3, +2, +2, +3,  +2, +4, +3, +3, +3, +3, +4, +2, +3, +3, +4, +4,  +4, +4, +4, +4,  +5, +6, +6, +5, +6, +7, +7, +8 }, 0, 0 },
+ { "noto sans jp",                 1.0f, { +2, +2, +3, +3,  +3, +2, +2, +3,  +2, +2, +2, +3, +2, +3, +3, +3, +3, +2, +3, +4,  +4, +3, +4, +4,  +4, +5, +5, +4, +5, +5, +5, +7 }, 0, 0 },
+ { "noto sans kr",                 1.0f, { +2, +2, +3, +3,  +4, +3, +3, +3,  +2, +3, +2, +3, +3, +4, +4, +3, +4, +3, +4, +4,  +5, +5, +5, +5,  +5, +6, +6, +6, +8, +8, +8, +9 }, 0, 0 },
  { "noto sans linear b",           1.0f, {  0,  0,  0, -1,  -2, -1, -1, -1,  -2, -1, -2, -2, -2, -2, -2, -1, -2, -3, -3, -3,  -4, -4, -4, -5,  -6, -5, -6, -7, -7, -9, -9,-12 }, 0, 0 },
+ { "noto sans mono cjk hk",        1.0f, { +3, +2, +3, +3,  +3, +2, +2, +3,  +2, +4, +3, +3, +3, +3, +4, +2, +3, +3, +4, +4,  +4, +4, +4, +4,  +5, +6, +6, +5, +6, +7, +7, +8 }, 0, 0 },
+ { "noto sans mono cjk jp",        1.0f, { +2, +2, +3, +3,  +3, +2, +2, +3,  +2, +2, +2, +3, +2, +3, +3, +3, +3, +2, +3, +4,  +4, +3, +4, +4,  +4, +5, +5, +4, +5, +5, +5, +7 }, 0, 0 },
+ { "noto sans mono cjk kr",        1.0f, { +2, +2, +3, +3,  +4, +3, +3, +3,  +2, +3, +2, +3, +3, +4, +4, +3, +4, +3, +4, +4,  +5, +5, +5, +5,  +5, +6, +6, +6, +8, +8, +8, +9 }, 0, 0 },
+ { "noto sans mono cjk sc",        1.0f, { +2, +2, +2, +2,  +3, +2, +2, +3,  +2, +3, +2, +3, +3, +3, +4, +3, +3, +3, +3, +3,  +4, +4, +4, +4,  +5, +5, +6, +5, +6, +6, +6, +7 }, 0, 0 },
+ { "noto sans mono cjk tc",        1.0f, { +2, +2, +2, +3,  +3, +2, +2, +3,  +2, +3, +2, +2, +2, +3, +4, +2, +2, +3, +3, +2,  +3, +3, +3, +3,  +4, +4, +5, +4, +5, +6, +6, +7 }, 0, 0 },
  { "noto sans mono cjk sc",        1.0f, { +2, +2, +2, +2,  +3, +2, +2, +3,  +2, +3, +2, +3, +3, +3, +4, +3, +3, +3, +3, +3,  +4, +4, +4, +4,  +5, +6, +6, +5, +7, +7, +7, +9 }, 0, 0 },
  { "noto sans sc",                 1.0f, { +2, +2, +2, +2,  +3, +2, +2, +3,  +2, +3, +2, +3, +3, +3, +4, +3, +3, +4, +5, +4,  +5, +5, +4, +4,  +6, +6, +7, +6, +7, +7, +7, +9 }, 0, 0 },
  { "noto sans symbols",            1.0f, { -1, -1, -1, -2,  -4, -3, -4, -5,  -4, -4, -4, -6, -6, -6, -7, -8, -6, -8, -9,-10, -10,-11,-11,-12, -14,-15,-16,-18,-21,-23,-25,-30 }, 0, 0 },
+ { "noto sans tc",                 1.0f, { +2, +2, +2, +3,  +3, +2, +2, +3,  +2, +3, +2, +2, +2, +3, +4, +2, +2, +3, +3, +2,  +3, +3, +3, +3,  +4, +4, +5, +4, +5, +6, +6, +7 }, 0, 0 },
  { "noto serif",                   1.0f, {  0, -1, +1, -1,  -2, -1, -2, -1,  -2, -1, -3, -3, -2, -2, -3, -2, -3, -4, -4, -4,  -5, -4, -4, -6,  -6, -6, -7, -8, -8,-10,-11,-14 }, 0, 0 },
+ { "noto serif cjk hk",            1.0f, { +3, +2, +3, +3,  +3, +2, +2, +3,  +2, +4, +3, +3, +3, +3, +4, +2, +3, +3, +4, +4,  +4, +4, +4, +4,  +5, +6, +6, +5, +6, +7, +7, +8 }, 0, 0 },
+ { "noto serif cjk jp",            1.0f, { +2, +2, +3, +3,  +3, +2, +2, +3,  +2, +2, +2, +3, +2, +3, +3, +3, +3, +2, +3, +4,  +4, +3, +4, +4,  +4, +5, +5, +4, +5, +5, +5, +7 }, 0, 0 },
+ { "noto serif cjk kr",            1.0f, { +2, +2, +3, +3,  +4, +3, +3, +3,  +2, +3, +2, +3, +3, +4, +4, +3, +4, +3, +4, +4,  +5, +5, +5, +5,  +5, +6, +6, +6, +8, +8, +8, +9 }, 0, 0 },
  { "noto serif cjk sc",            1.0f, { +2, +2, +2, +2,  +3, +3, +2, +3,  +3, +3, +3, +4, +3, +4, +4, +3, +4, +3, +4, +4,  +4, +5, +5, +5,  +6, +7, +8, +8, +9,+10,+11,+12 }, 0, 0 },
+ { "noto serif cjk tc",            1.0f, { +2, +2, +2, +3,  +3, +2, +2, +3,  +2, +3, +2, +2, +2, +3, +4, +2, +2, +3, +3, +2,  +3, +3, +3, +3,  +4, +4, +5, +4, +5, +6, +6, +7 }, 0, 0 },
+ { "noto serif hk",                1.0f, { +3, +2, +3, +3,  +3, +2, +2, +3,  +2, +4, +3, +3, +3, +3, +4, +2, +3, +3, +4, +4,  +4, +4, +4, +4,  +5, +6, +6, +5, +6, +7, +7, +8 }, 0, 0 },
+ { "noto serif jp",                1.0f, { +2, +2, +3, +3,  +3, +2, +2, +3,  +2, +2, +2, +3, +2, +3, +3, +3, +3, +2, +3, +4,  +4, +3, +4, +4,  +4, +5, +5, +4, +5, +5, +5, +7 }, 0, 0 },
+ { "noto serif kr",                1.0f, { +2, +2, +3, +3,  +4, +3, +3, +3,  +2, +3, +2, +3, +3, +4, +4, +3, +4, +3, +4, +4,  +5, +5, +5, +5,  +5, +6, +6, +6, +8, +8, +8, +9 }, 0, 0 },
  { "noto serif sc",                1.0f, { +2, +2, +2, +2,  +3, +3, +2, +3,  +3, +3, +3, +4, +3, +4, +4, +3, +4, +3, +4, +4,  +4, +5, +5, +5,  +6, +7, +8, +8, +9,+10,+11,+12 }, 0, 0 },
+ { "noto serif tc",                1.0f, { +2, +2, +2, +3,  +3, +2, +2, +3,  +2, +3, +2, +2, +2, +3, +4, +2, +2, +3, +3, +2,  +3, +3, +3, +3,  +4, +4, +5, +4, +5, +6, +6, +7 }, 0, 0 },
  { "schumacher clean",             1.0f, { +3, +3, +3, +3,  +3, +3, +3, +3,  +3, +3, +3, +3, +3, +3, +3, +3, +3, +3, +3, +3,  +3, +3, +3, +3,  +3, +3, +3, +3, +3, +3, +3, +3 }, 0, 0 },
  { "schumacher clean wide",        1.0f, { +5, +5, +5, +5,  +5, +5, +5, +5,  +5, +5, +5, +5, +5, +5, +5, +5, +5, +5, +5, +5,  +5, +5, +5, +5,  +5, +5, +5, +5, +5, +5, +5, +5 }, 0, 0 },
  { "serto batnan",                 1.0f, {  0, +1,  0, -1,   0, -1, -1, -1,  -2, -2, -2, -2, -2, -2, -1, -2, -2, -1, -3, -2,  -3, -4, -3, -3,  -5, -4, -5, -6, -6, -8, -8,-11 }, 0, 0 },
@@ -232,31 +257,42 @@ const AG_FontAdjustment agFontAdjustments[] = {
  * not have to cycle through (and test) every possible font file extension.
  */
 const AG_FontAlias agFontAliases[] = {
-	{ "algue",                          "_agFontAlgue" },
-	{ "algue.ttf",                      "_agFontAlgue" },
-	{ "algue-bold",                     "_agFontAlgue_Bold" },
-	{ "algue-bold.ttf",                 "_agFontAlgue_Bold" },
-	{ "algue-italic",                   "_agFontAlgue_Italic" },
-	{ "algue-italic.ttf",               "_agFontAlgue_Italic" },
-	{ "algue-bold-italic",              "_agFontAlgue_BoldItalic" },
-	{ "algue-bold-italic.ttf",          "_agFontAlgue_BoldItalic" },
-	{ "unialgue",                       "unialgue.ttf" },
-	{ "agar-minimal",                   "agar-minimal.agbf" },
-	{ "agar-ideograms",                 "agar-ideograms.agbf" },
-	{ "monoalgue",                      "monoalgue.ttf" },
-	{ "monoalgue-bold",                 "monoalgue-bold.ttf" },
-	{ "monoalgue-italic",               "monoalgue-italic.ttf" },
-	{ "monoalgue-bold-italic",          "monoalgue-bold-italic.ttf" },
-	{ "charter",                        "charter.otf" },
-	{ "charter-bold",                   "charter-bold.otf" },
-	{ "charter-italic",                 "charter-bold-italic.otf" },
-	{ "league-spartan",                 "league-spartan.otf" },
-	{ "league-gothic",                  "league-gothic.otf" },
-	{ "league-gothic-italic",           "league-gothic-italic.otf" },
-	{ "league-gothic-condensed",        "league-gothic-condensed.otf" },
-	{ "league-gothic-condensed-italic", "league-gothic-condensed-italic.otf" },
-	{ "fraktur",                        "fraktur.ttf" },
-	{ NULL,                             NULL }
+	{ "algue",                                 "_agFontAlgue" },
+	{ "algue.ttf",                             "_agFontAlgue" },
+	{ "algue-bold",                            "_agFontAlgue_Bold" },
+	{ "algue-bold.ttf",                        "_agFontAlgue_Bold" },
+	{ "algue-italic",                          "_agFontAlgue_Italic" },
+	{ "algue-italic.ttf",                      "_agFontAlgue_Italic" },
+	{ "algue-bold-italic",                     "_agFontAlgue_BoldItalic" },
+	{ "algue-bold-italic.ttf",                 "_agFontAlgue_BoldItalic" },
+	{ "unialgue",                              "unialgue.ttf" },
+	{ "agar-minimal",                          "agar-minimal.agbf" },
+	{ "agar-ideograms",                        "agar-ideograms.agbf" },
+	{ "monoalgue",                             "monoalgue.ttf" },
+	{ "monoalgue-bold",                        "monoalgue-bold.ttf" },
+	{ "monoalgue-italic",                      "monoalgue-italic.ttf" },
+	{ "monoalgue-bold-italic",                 "monoalgue-bold-italic.ttf" },
+	{ "charter",                               "charter.otf" },
+	{ "charter-bold",                          "charter-bold.otf" },
+	{ "charter-italic",                        "charter-bold-italic.otf" },
+	{ "league-spartan",                        "league-spartan.otf" },
+	{ "league-gothic",                         "league-gothic.otf" },
+	{ "league-gothic-italic",                  "league-gothic-italic.otf" },
+	{ "league-gothic-condensed",               "league-gothic-condensed.otf" },
+	{ "league-gothic-condensed-italic",        "league-gothic-condensed-italic.otf" },
+	{ "fira-sans-bold-italic",                 "fira-sans-bold-italic.otf" },
+	{ "fira-sans-condensed-bold-italic",       "fira-sans-condensed-bold-italic.otf" },
+	{ "fira-sans-condensed-bold",              "fira-sans-condensed-bold.otf" },
+	{ "fira-sans-condensed-italic",            "fira-sans-condensed-italic.otf" },
+	{ "fira-sans-condensed-light-italic",      "fira-sans-condensed-light-italic.otf" },
+	{ "fira-sans-condensed-light",             "fira-sans-condensed-light.otf" },
+	{ "fira-sans-condensed",                   "fira-sans-condensed.otf" },
+	{ "fira-sans-italic",                      "fira-sans-italic.otf" },
+	{ "fira-sans-light-italic",                "fira-sans-light-italic.otf" },
+	{ "fira-sans-light",                       "fira-sans-light.otf" },
+	{ "fira-sans",                             "fira-sans.otf" },
+	{ "fraktur",                               "fraktur.ttf" },
+	{ NULL,                                    NULL }
 };
 
 /* Map fontconfig FC_STYLE names to AG_Font flags. */
@@ -546,7 +582,7 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 	AG_Font *font;
 	const AG_FontAdjustment *fontAdj;
 	const AG_FontAlias *fontAlias;
-	int isInFontPath, foundByFontconfig = 0;
+	int isInFontPath, foundByFontconfig=0;
 
 	if (face == NULL) {                                  /* Use default */
 		Strlcpy(name, agConfig->fontFace, sizeof(name));
@@ -594,14 +630,22 @@ AG_FetchFont(const char *face, float fontSize, Uint flags)
 
 	AG_MutexLock(&agTextLock);
 
-	TAILQ_FOREACH(font, &agFontCache, fonts) {
-		if (font->spec.type == AG_FONT_BITMAP) {
+	if (strstr(name, ".agbf") != NULL) {            /* Agar bitmap font */
+		TAILQ_FOREACH(font, &agFontCache, fonts) {
+			if (font->spec.type != AG_FONT_BITMAP) {
+				continue;
+			}
 			if (strcmp(font->name, name) == 0 &&
 			    font->flags == flags &&
-			    fontSize >= AGFONTBF(font)->sizeMin &&
-			    fontSize <= AGFONTBF(font)->sizeMax)
+			    AGFONTBF(font)->sizeMin <= fontSize &&
+			    AGFONTBF(font)->sizeMax >= fontSize)
 				break;
-		} else {
+		}
+	} else {
+		TAILQ_FOREACH(font, &agFontCache, fonts) {
+			if (font->spec.type == AG_FONT_BITMAP) {
+				continue;
+			}
 			if (strcmp(font->name, name) == 0 &&
 			    font->flags == flags &&
 			    Fabs(font->spec.size - fontSize) < AG_FONT_PTS_EPSILON)

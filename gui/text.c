@@ -68,10 +68,10 @@
 /* #define DEBUG_ANSI */
 
 #ifndef AG_DEFAULT_FT_FONT_FACE
-#define AG_DEFAULT_FT_FONT_FACE "_agFontAlgue"
+#define AG_DEFAULT_FT_FONT_FACE "fira-sans"
 #endif
 #ifndef AG_DEFAULT_FT_FONT_SIZE
-#define AG_DEFAULT_FT_FONT_SIZE 14.0f
+#define AG_DEFAULT_FT_FONT_SIZE 16.0f
 #endif
 #ifndef AG_DEFAULT_BF_FONT_FACE
 #define AG_DEFAULT_BF_FONT_FACE "agar-minimal.agbf"
@@ -135,23 +135,23 @@ AG_Color agTextColorANSI[] = {
 
 /* Core fonts provided with Agar (and ANSI SGR addressable) */
 const char *agCoreFonts[] = {
-	"algue",               /*  #1 Algue (default font; built-in) */
-	"unialgue",            /*  #2 Unialgue (default font w/ extended Unicode) */
-	"agar-minimal",        /*  #3 Agar Minimal (our bitmap font) */
-	"agar-ideograms",      /*  #4 Agar Ideograms (our graphical icons) */
-	"monoalgue",           /*  #5 Monoalgue (a monospace sans-serif) */
-	"charter",             /*  #6 Bitstream Charter (a transitional serif font) */
-	"Noto Serif CJK SC",   /*  #7 Noto Serif CJK (locale-dependent variant) */
-	"Noto Sans CJK SC",    /*  #8 Noto Sans CJK (locale-dependent variant) */
-	"league-spartan",      /*  #9 League Spartan (a geometric sans-serif) */
-	"league-gothic",       /* #10 League Gothic (a condensable Gothic font) */
-	"fraktur",             /* #11 Unifraktur Maguntia (a Fraktur font) */
-	"algue",               /* #12 unused */
-	"algue",               /* #13 unused */
-	"algue",               /* #14 unused */
-	"algue",               /* #15 unused */
-	"algue",               /* #16 unused */
-	"algue",               /* #17 unused */
+	"algue",                    /*  #1 Algue (default font; built-in) */
+	"unialgue",                 /*  #2 Unialgue (default font w/ extended Unicode) */
+	"agar-minimal",             /*  #3 Agar Minimal (our bitmap font) */
+	"agar-ideograms",           /*  #4 Agar Ideograms (our graphical icons) */
+	"monoalgue",                /*  #5 Monoalgue (a monospace sans-serif) */
+	"charter",                  /*  #6 Bitstream Charter (a transitional serif font) */
+	"Noto Serif CJK SC",        /*  #7 Noto Serif CJK (locale-dependent variant) */
+	"Noto Sans CJK SC",         /*  #8 Noto Sans CJK (locale-dependent variant) */
+	"league-spartan",           /*  #9 League Spartan (a geometric sans-serif) */
+	"league-gothic",            /* #10 League Gothic (a condensable Gothic font) */
+	"fraktur",                  /* #11 Unifraktur Maguntia (a Fraktur font) */
+	"fira-sans",                /* #12 Fira Sans */
+	"fira-sans-condensed",      /* #13 Fira Sans Condensed */
+	"algue",                    /* #14 unused */
+	"algue",                    /* #15 unused */
+	"algue",                    /* #16 unused */
+	"algue",                    /* #17 unused */
 	NULL
 };
 

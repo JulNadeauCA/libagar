@@ -166,7 +166,7 @@ TestGUI(void *obj, AG_Window *win)
 			    AGSI_IDEOGRAM AGSI_AGAR_AG AGSI_AGAR_AR AGSI_RST
 			    " ideograms ("
 			    AGSI_IDEOGRAM AGSI_PARCEL AGSI_ARTISTS_PALETTE
-			    AGSI_VACUUM_TUBE AGSI_ALICE AGSI_BOB AGSI_RST ")");
+			    AGSI_RST ")");
 		} else if (i == 6 || i == 7) {
 			TestMsg(obj,
 			    "Core Font #%d (AGSI_FONT%d): \x1b[%dm%s (%s)\x1b[0m",

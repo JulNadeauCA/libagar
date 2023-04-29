@@ -421,16 +421,19 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 			}
 		} else if (strncmp(line,"size ",5) == 0 && line[5] != '\0') {
 			char *ep;
+			float sizeMin, sizeMax;
 
-			fontBf->sizeMin = (float)strtod(&line[5],&ep);
+			sizeMin = (float)strtod(&line[5],&ep);
 			if (ep == NULL || *ep != '-') {
 				goto syntax_error;
 			}
-			fontBf->sizeMax = (float)strtod(&ep[1],NULL);
+			sizeMax = (float)strtod(&ep[1],NULL);
 
-			if (spec->size >= fontBf->sizeMin &&
-			    spec->size <= fontBf->sizeMax) {
+			if (spec->size >= sizeMin &&
+			    spec->size <= sizeMax) {
 				inMatchingSize = 1;
+				fontBf->sizeMin = sizeMin;
+				fontBf->sizeMax = sizeMax;
 			} else {
 				inMatchingSize = 0;
 			}
