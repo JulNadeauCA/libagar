@@ -282,11 +282,22 @@ Draw(void *_Nonnull obj)
 	if (cb->flags & AG_CHECKBOX_INVERT)
 		state = !state;
 
-	if (WIDGET(cb)->flags & AG_WIDGET_MOUSEOVER)
-		AG_DrawRect(cb, &WIDGET(cb)->r, &WCOLOR_HOVER(cb,BG_COLOR));
+	if (WIDGET(cb)->flags & AG_WIDGET_MOUSEOVER) {
+		AG_Rect rOver = WIDGET(cb)->r;
 
-	if (AG_WidgetIsFocused(cb))
-		AG_DrawRectOutline(cb, &WIDGET(cb)->r, &WCOLOR(cb,LINE_COLOR));
+		--rOver.x;
+		++rOver.w;
+		++rOver.y;
+		AG_DrawRect(cb, &rOver, &WCOLOR_HOVER(cb,BG_COLOR));
+	}
+
+	if (AG_WidgetIsFocused(cb)) {
+		AG_Rect rOutline = WIDGET(cb)->r;
+
+		rOutline.x -= 1;
+		rOutline.w += 1;
+		AG_DrawRectOutline(cb, &rOutline, &WCOLOR(cb,LINE_COLOR));
+	}
 
 	r.x = 1 + WIDGET(cb)->paddingLeft;
 	r.y = cb->boxOffs;

@@ -927,12 +927,12 @@ DrawVert(AG_Scrollbar *_Nonnull sb, int y, int len)
 	S = WSURFACE(sb, sb->lbl1);
 	if (btn == AG_SCROLLBAR_BUTTON_DEC) {
 		AG_DrawBoxSunk(sb, &r, cFg);
-		lblX1 = r.x + ((r.w >> 1) - (S->w >> 1)) + 1;
-		lblY1 = r.y + ((r.h >> 1) - (S->h >> 1) + 1) + 1;
+		lblX1 = r.x + ((r.w >> 1) - (S->w >> 1));
+		lblY1 = r.y + ((r.h >> 1) - (S->h >> 1)) + 1;
 	} else {
 		AG_DrawBoxRaised(sb, &r, cFg);
-		lblX1 = r.x + ((r.w >> 1) - (S->w >> 1));
-		lblY1 = r.y + ((r.h >> 1) - (S->h >> 1) + 1);
+		lblX1 = r.x + ((r.w >> 1) - (S->w >> 1) - 1);
+		lblY1 = r.y + ((r.h >> 1) - (S->h >> 1));
 	}
 
 	r.y = sbThick + y;                                   /* Control bar */
@@ -959,12 +959,12 @@ DrawVert(AG_Scrollbar *_Nonnull sb, int y, int len)
 	S = WSURFACE(sb, sb->lbl2);
 	if (btn == AG_SCROLLBAR_BUTTON_INC) {
 		AG_DrawBoxSunk(sb, &r, cFg);
-		lblX2 = r.x + ((r.w >> 1) - (S->w >> 1)) + 1;
-		lblY2 = r.y + ((r.h >> 1) - (S->h >> 1) + 1) + 1;
+		lblX2 = r.x + ((r.w >> 1) - (S->w >> 1));
+		lblY2 = r.y + ((r.h >> 1) - (S->h >> 1)) + 1;
 	} else {
 		AG_DrawBoxRaised(sb, &r, cFg);
-		lblX2 = r.x + ((r.w >> 1) - (S->w >> 1));
-		lblY2 = r.y + ((r.h >> 1) - (S->h >> 1) + 1);
+		lblX2 = r.x + ((r.w >> 1) - (S->w >> 1) - 1);
+		lblY2 = r.y + ((r.h >> 1) - (S->h >> 1));
 	}
 
 	if (S->w < w && S->h < h) {
