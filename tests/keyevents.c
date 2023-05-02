@@ -20,7 +20,7 @@ MyKeyboardHandler(AG_Event *event)
 	const int sym = AG_INT(2);
 	const int mod = AG_INT(3);
 	const AG_Char ch = AG_CHAR(4);
-	char pc[8], psym[16];
+	char pc[16], psym[16];
 
 	/* Format the character for printing */
 	pc[0] = '\0';

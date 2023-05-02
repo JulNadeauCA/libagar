@@ -4,8 +4,6 @@
 --                                 S p e c                                  --
 ------------------------------------------------------------------------------
 with Interfaces.C;
-with Interfaces.C.Strings;
-with Agar.Types; use Agar.Types;
 
 package Agar.Classes is
   package C renames Interfaces.C;
@@ -94,7 +92,7 @@ package Agar.Classes is
      AGC_SG_VIEW,
      AGC_M_PLOTTER,
      AGC_M_MATVIEW,
-     AGC_WIDGET_LAST
+     AGC_WIDGET_LAST,
      AGC_VG,
      AGC_MAP,
      AGC_MAP_OBJECT,
@@ -204,7 +202,7 @@ package Agar.Classes is
      AGC_SG_VIEW         => 16#2E_000001#,
      AGC_M_PLOTTER       => 16#2F_000001#,
      AGC_M_MATVIEW       => 16#30_000001#,
-     AGC_WIDGET_LAST     => 16#30_000001#,
+     AGC_WIDGET_LAST     => 16#30_000002#,
 
      AGC_VG              => 16#71_000001#,
      AGC_MAP             => 16#72_000001#,

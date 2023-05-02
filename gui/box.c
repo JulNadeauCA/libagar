@@ -182,7 +182,7 @@ Draw(void *_Nonnull obj)
 	AG_Box *box = obj;
 	const AG_Color *cBg = &WCOLOR(box, BG_COLOR);
 	AG_Widget *chld;
-	AG_Rect r;
+	AG_Rect r = WIDGET(box)->r;
 
 	if (box->style != AG_BOX_STYLE_NONE && cBg->a > 0) {
 		static void (*pfBox[])(void *_Nonnull, const AG_Rect *_Nonnull,

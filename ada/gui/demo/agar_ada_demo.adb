@@ -407,7 +407,8 @@ begin
            " Clip_Y:" & C.int'Image(Surf.Clip_Rect.Y) &
            " Clip_W:" & C.int'Image(Surf.Clip_Rect.W) &
            " Clip_H:" & C.int'Image(Surf.Clip_Rect.H) &
-           " Padding:" & C.unsigned'Image(Surf.Padding));
+           " L_Padding:" & C.unsigned'Image(Surf.L_Padding) &
+           " R_Padding:" & C.unsigned'Image(Surf.R_Padding));
 
     --
     -- Load a surface from a PNG file and blit it onto Surf. Transparency is
@@ -415,9 +416,10 @@ begin
     --
     T_IO.Put_Line("Testing transparency");
     declare
+      use C;
       Denis : constant Surface_Access := New_Surface("champden.png");
       Degs  : Float := 0.0;
-      Alpha : AG_Component := 0;
+      Alpha : C.unsigned := 0;
     begin
       if Denis /= null then
         T_IO.Put_Line
@@ -428,13 +430,11 @@ begin
 	        " Clip_Y:" & C.int'Image(Denis.Clip_Rect.Y) &
 	        " Clip_W:" & C.int'Image(Denis.Clip_Rect.W) &
 	        " Clip_H:" & C.int'Image(Denis.Clip_Rect.H) &
-	        " Padding:" & C.unsigned'Image(Denis.Padding));
+	        " L_Padding:" & C.unsigned'Image(Denis.L_Padding) &
+	        " R_Padding:" & C.unsigned'Image(Denis.R_Padding));
         for Y in 1 .. 50 loop
           Degs := Degs + 30.0;
-
-          Set_Alpha
-            (Surface => Denis,
-             Alpha   => Alpha);       -- Per-surface alpha
+          Denis.Alpha := Alpha;
 
 #if AG_MODEL = AG_LARGE
           Alpha := Alpha + 3084;

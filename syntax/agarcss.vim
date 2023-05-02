@@ -8,7 +8,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agarcss.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 April 15
+" Last Change:  2023 May 1
 
 " quit when a syntax file was already loaded
 if !exists("main_syntax")
@@ -123,9 +123,28 @@ syn match cssFontAttr contained "\(Bitstream Charter\|Bitstream Vera\|Courier\|D
 
 " font-family attributes (core fonts)
 syn case match
-syn keyword cssFontAttr contained algue unialgue monoalgue charter
-syn keyword cssFontAttr contained league-spartan league-gothic fraktur
-syn keyword cssFontAttr contained agar-minimal agar-ideograms
+syn keyword cssFontAttr contained algue agar-minimal agar-ideograms
+syn keyword cssFontAttr contained charter charter-bold-italic
+syn keyword cssFontAttr contained charter-bold charter-italic charter
+syn keyword cssFontAttr contained fira-sans fira-sans-condensed
+syn keyword cssFontAttr contained fira-sans-bold-italic fira-sans-bold
+syn keyword cssFontAttr contained fira-sans-condensed-bold-italic
+syn keyword cssFontAttr contained fira-sans-condensed-bold
+syn keyword cssFontAttr contained fira-sans-condensed-italic
+syn keyword cssFontAttr contained fira-sans-condensed-light-italic
+syn keyword cssFontAttr contained fira-sans-condensed-light
+syn keyword cssFontAttr contained fira-sans-condensed
+syn keyword cssFontAttr contained fira-sans-italic fira-sans-light-italic
+syn keyword cssFontAttr contained fira-sans-light fira-sans
+syn keyword cssFontAttr contained fraktur
+syn keyword cssFontAttr contained league-gothic league-gothic-condensed
+syn keyword cssFontAttr contained league-gothic-italic league-gothic-condensed-italic
+syn keyword cssFontAttr contained league-spartan league-spartan-black
+syn keyword cssFontAttr contained league-spartan-bold league-spartan-extrabold 
+syn keyword cssFontAttr contained league-spartan-extralight league-spartan-light 
+syn keyword cssFontAttr contained league-spartan-semibold
+syn keyword cssFontAttr contained monoalgue monoalgue-bold monoalgue-italic
+syn keyword cssFontAttr contained monoalgue-bold-italic unialgue
 
 " font-stretch attributes
 syn case ignore

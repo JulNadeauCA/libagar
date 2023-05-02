@@ -884,22 +884,6 @@ package body Agar.Surface is
   end;
 
   --
-  -- Set source alpha flag and per-surface alpha value.
-  --
-  procedure Set_Alpha
-    (Surface   : in Surface_not_null_Access;
-     Enable    : in Boolean := false;
-     Alpha     : in AG_Component := AG_OPAQUE) is
-  begin
-    if (Enable) then
-      Surface.Flags := Surface.Flags or SURFACE_ALPHA;
-    else
-      Surface.Flags := Surface.Flags and not SURFACE_ALPHA;
-    end if;
-    Surface.Alpha := Alpha;
-  end;
-  
-  --
   -- Set source colorkey flag and surface colorkey value.
   --
   procedure Set_Colorkey

@@ -81,7 +81,7 @@ AG_Menu (zoom = 0-9) {
 	padding: 1 2 1 2;
 }
 AG_Menu (zoom > 24) {
-	font-family: league-spartan-light;
+	font-family: fira-sans-condensed;
 	padding: 2 5 10 5;
 }
 AG_MenuView {
@@ -91,6 +91,12 @@ AG_MenuView {
 	selection-color: rgb(40,40,110);
 	color#disabled: rgb(40,40,110);
 	text-color#disabled: rgb(170,170,170);
+}
+AG_MenuView (zoom = 0-9) {
+	font-family: league-spartan
+}
+AG_MenuView (zoom > 24) {
+	font-family: fira-sans-condensed;
 }
 AG_Notebook {
 	margin: 2;

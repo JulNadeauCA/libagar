@@ -99,7 +99,7 @@ typedef enum ag_class {
 	AGC_SG_VIEW         = 0x2E000001,  /* AG_Widget -> SG_View (ag_sg) */
 	AGC_M_PLOTTER       = 0x2F000001,  /* AG_Widget -> M_Plotter */
 	AGC_M_MATVIEW       = 0x30000001,  /* AG_Widget -> M_Matview */
-	AGC_WIDGET_LAST     = 0x30000001,
+	AGC_WIDGET_LAST     = 0x30000002,
 
 	AGC_VG              = 0x71000001,  /* VG (in ag_vg) */
 	AGC_MAP             = 0x72000001,  /* MAP (in ag_map) */

@@ -82,7 +82,7 @@ const char *agStyleDefault_Data =
 	"padding: 1 2 1 2;\n"
 	"}\n"
 	"AG_Menu (zoom > 24) {\n"
-	"font-family: league-spartan-light;\n"
+	"font-family: fira-sans-condensed;\n"
 	"padding: 2 5 10 5;\n"
 	"}\n"
 	"AG_MenuView {\n"
@@ -92,6 +92,12 @@ const char *agStyleDefault_Data =
 	"selection-color: rgb(40,40,110);\n"
 	"color#disabled: rgb(40,40,110);\n"
 	"text-color#disabled: rgb(170,170,170);\n"
+	"}\n"
+	"AG_MenuView (zoom = 0-9) {\n"
+	"font-family: league-spartan\n"
+	"}\n"
+	"AG_MenuView (zoom > 24) {\n"
+	"font-family: fira-sans-condensed;\n"
 	"}\n"
 	"AG_Notebook {\n"
 	"margin: 2;\n"
@@ -185,7 +191,7 @@ const char *agStyleDefault_Data =
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	3272,
+	3390,
 	&agStyleDefault_Data,
 	NULL
 };

@@ -794,14 +794,6 @@ package Agar.Surface is
 #end if;
 
   --
-  -- Set source alpha flag and per-surface alpha value.
-  --
-  procedure Set_Alpha
-    (Surface : in Surface_not_null_Access;
-     Enable  : in Boolean := false;
-     Alpha   : in AG_Component := AG_OPAQUE);
-  
-  --
   -- Set source colorkey flag and surface colorkey value.
   --
   procedure Set_Colorkey
@@ -944,12 +936,6 @@ package Agar.Surface is
      W,H     : in C.unsigned) return C.int
     with Import, Convention => C, Link_Name => "AG_SurfaceResize";
 
-  procedure AG_SurfaceSetAlpha
-    (Surface : in Surface_not_null_Access;
-     Flags   : in C.unsigned;
-     Alpha   : in AG_Component)
-    with Import, Convention => C, Link_Name => "ag_surface_set_alpha";
-  
   procedure AG_SurfaceSetColorkey
     (Surface  : in Surface_not_null_Access;
      Flags    : in C.unsigned;

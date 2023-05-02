@@ -1,39 +1,37 @@
 # Changelog
 All notable changes to Agar will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - YYYY-MM-DD
+## [1.7.0] - 2023-05-02
 ### Added
 - [**sdl2fb**](https://libagar.org/man3/AG_DriverSDL2FB): New driver for SDL 2.0 (single-window; frame-buffer mode).
 - [**sdl2gl**](https://libagar.org/man3/AG_DriverSDL2GL): New driver for SDL 2.0 (single-window; OpenGL mode).
 - [**sdl2mw**](https://libagar.org/man3/AG_DriverSDL2MW): New driver for SDL 2.0 (multi-window; OpenGL mode).
-- [**glx**](https://libagar.org/man3/AG_DriverGLX): Add support for X Input Methods. Thanks sr20det!
+- [**glx**](https://libagar.org/man3/AG_DriverGLX): Added support for X Input Methods. Thanks sr20det!
 - [**AG_Button**](https://libagar.org/man3/AG_Button): New option `AG_BUTTON_CROP` (crop label surface to fit contents). Useful for condensing or removing typographical spacings so that individual glyphs (for example "Geometrical Shapes") can be made to align precisely.
-- [**AG_Color**](https://libagar.org/man3/AG_Color): Add compression / decompression macros for 4/12/24/48-bit values.
+- [**AG_Color**](https://libagar.org/man3/AG_Color): Added compression / decompression macros for 4/12/24/48-bit values.
 - [**AG_Driver**](https://libagar.org/man3/AG_Driver): New operation: `setMouseAutoCapture` (enable, disable or reset mouse auto-capture on button-down).
 - [**AG_DriverSw**](https://libagar.org/man3/AG_DriverSw): New option `clampOnResize` (clamp active Agar windows against new display size).
 - [**AG_Error**](https://libagar.org/man3/AG_Error): New function `AG_Debug2()` (output debug message when debug level is >= 2).
 - [**AG_FontBf**](https://libagar.org/man3/AG_FontBf): New bitmap font engine for the `.agbf` font format.
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): Implemented keyboard shortcuts. Added `AG_MENU_NO_BOOL_MSG` and `AG_MENU_FAST_BOOL_MSG` options.
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): Improved the performance of the `AG_MenuView` renderer by caching state-dependent opaque labels (embedding any icons), so blending is no longer required by `draw()`. Improved appearance of `AG_MenuView`.
-- [**AG_Menu**](https://libagar.org/man3/AG_Menu): When an `AG_MenuView` is detached, immediately invalidate the `view` pointers of its `AG_MenuItem`.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Introduce numerical class IDs and `*_ISA()` macros.
-- [**AG_Object**](https://libagar.org/man3/AG_Object): Improve the object validity test by using a pseudo-random signature generated on initialization. Make validity and class-membership testing possible outside of Debug builds.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): New function `AG_ObjectFreeChildrenOfType()`.
 - [**AG_Radio**](https://libagar.org/man3/AG_Radio): New `HOMOGENOUS` option to divide space equally between items. Thanks Stephen!
-- [**AG_StyleSheet**](https://libagar.org/man3/AG_StyleSheet): New `E > F` selector. Allows child widgets to be addressed by either instance name or class name.
-- [**AG_StyleSheet**](https://libagar.org/man3/AG_StyleSheet): New selector conditionals `width`, `height` and `zoom`. Allows widgets to be styled based on their current geometry or the zoom level of their parent window.
+- [**AG_StyleSheet**](https://libagar.org/man3/AG_StyleSheet): New CSS selectors `E > F`. Child widgets are now addressable by instance name (e.g., `AG_Combo > "trigger"`) or class name (e.g., `AG_Combo > AG_Button`).
+- [**AG_StyleSheet**](https://libagar.org/man3/AG_StyleSheet): New CSS selector conditionals `width`, `height` and `zoom`. Widgets can be styled based on their current geometry or zoom level.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): New field `Lpadding` (scaline start padding). Allows fast cropping of lines from the left.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Make it possible to increment the `pixels` pointer to fast crop lines from the top. Added `pixelsBase` pointer.
-- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Add standard palettes for 1/2/4/8-bit modes. New Indexed surfaces are now initialized with a standard palette by default.
-- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Add support for 40- and 48-bpp surfaces.
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Added standard palettes for 1/2/4/8-bit modes. New Indexed surfaces are now initialized with a standard palette by default.
+- [**AG_Surface**](https://libagar.org/man3/AG_Surface): Added support for 40- and 48-bpp surfaces.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Introduce optimized blitter tables.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): New function `AG_PixelFormatMaximum()` to return the maximum possible pixel value for a given format.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): New function `AG_SurfaceBlend8()` for blending 1/2/4/8-bpp surfaces against an `AG_Color` using the closest approximation available.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Embed 4 general-purpose 16-bit guides. Guides are useful for typography, graphics and other applications.
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Make the `AG_SURFACE_TRACE` flag useful for tracing surface operations such as blits, copies / conversions and mapping to widgets (needs `--enable-debug-surfaces`).
-- [**AG_Text**](https://libagar.org/man3/AG_Text): Expand the list of standard font sizes to 32 sizes. Add fractional sizes between 7.0 and 13.0.
+- [**AG_Text**](https://libagar.org/man3/AG_Text): Expand the list of standard font sizes to 32 sizes. Added fractional sizes between 7.0 and 13.0.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): Expanded font adjustments to include subpixel alignment corrections for all 32 standard sizes. The table now covers over 150 popular open-source fonts. Adjustments allow different fonts to align with pixel-perfect accuracy.
-- [**AG_Text**](https://libagar.org/man3/AG_Text): Add OS/2 metrics and Unicode range information to the `AG_Font` structure.
+- [**AG_Text**](https://libagar.org/man3/AG_Text): Added OS/2 metrics and Unicode range information to the `AG_Font` structure.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): Utilize OS/2 metrics `typoAscender` and `typoDescender` where available.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): New macros `AGSI_IS_*(c)` for testing whether a character lies within a given Unicode range.
 - [**AG_Text**](https://libagar.org/man3/AG_Text): New macros `AG_FONT_HAS_*()` for testing the Unicode coverage of a font.
@@ -91,6 +89,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Combo**](https://libagar.org/man3/AG_Combo): Make sub-elements style-addressable as `input` and `trigger`.
 - [**AG_FontSelector**](https://libagar.org/man3/AG_FontSelector): Add Unicode range information and more metrics under the "Metrics" tab.
 - [**AG_FontSelector**](https://libagar.org/man3/AG_FontSelector): The preview function now includes text in different scripts. It is now possible to set a user-defined preview function.
+- [**AG_Object**](https://libagar.org/man3/AG_Object): Improve the object validity test by using a pseudo-random signature generated on initialization. Make validity and class-membership testing possible outside of Debug builds.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Event argument accessor macros of the form `AG_CONST_FOO_PTR()` are now defined as `AG_cFOO_PTR()`.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): In `AG_ObjectGenName()`, convert the prefix (class name) to lowercase in its entirety.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): With the `AG_OBJECT_NAME_ONATTACH` option, do not generate a name if the object has a non-empty name set.
@@ -121,6 +120,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - `install-sdk.exe` now installs include files in `include\x86` or `include\x64`.
 - [**AG_Console**](https://libagar.org/man3/AG_Console): Garbage-collect generated textures more efficiently.
 - [**AG_HSVPal**](https://libagar.org/man3/AG_HSVPal): Fixed color not updating on `agcolor` binding change.
+- [**AG_Menu**](https://libagar.org/man3/AG_Menu): When an `AG_MenuView` is detached, immediately invalidate the `view` pointers of its `AG_MenuItem`.
 - [**AG_Menu**](https://libagar.org/man3/AG_Menu): Fixed styling errors. Honor the `#disabled` state.
 - [**AG_Numerical**](https://libagar.org/man3/AG_Numerical): Fixed styling errors. Use `AG_BUTTON_CROP` to align the arrows. Make the buttons style-addressable. Thanks Kristof!
 - [**AG_Surface**](https://libagar.org/man3/AG_Surface): Fixed loading of PNG files in 16bpc format (the surface was not being initialized with the correct 64-bit masks). Fix transparency to colorkey translation when loading a PNG in an Indexed format.
