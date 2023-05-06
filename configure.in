@@ -8,7 +8,7 @@
 #
 
 package("Agar")
-version("1.7.0")
+version("1.7.1")
 release("Ancient Egypt")
 
 register_section("Libraries to build:")
