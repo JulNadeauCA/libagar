@@ -150,10 +150,11 @@ SDL2MW_Open(void *_Nonnull obj, const char *_Nullable spec)
 	drv->flags |= AG_DRIVER_WINDOW_BG;
 
 	if (nDrivers == 0) {			/* Root driver instance */
+#ifdef SDL_HINT_MOUSE_AUTO_CAPTURE
 		if (AG_Defined(drv, "noAutoCapture") &&
 		    AG_GetInt(drv, "noAutoCapture"))
 			SDL_SetHint(SDL_HINT_MOUSE_AUTO_CAPTURE, "0");
-
+#endif
 		/* Enable the joystick subsystem if requested. */
 		if (AG_Defined(drv, "ctrl")) {
 			Uint32 sdlFlags = SDL_INIT_GAMECONTROLLER;
@@ -753,6 +754,7 @@ SDL2MW_SetWindowMaxSize(AG_Window *_Nonnull win, int w, int h)
 static void
 SDL2MW_SetMouseAutoCapture(void *_Nonnull obj, int state)
 {
+#ifdef SDL_HINT_MOUSE_AUTO_CAPTURE
 	if (state == 0) {
 		SDL_SetHint(SDL_HINT_MOUSE_AUTO_CAPTURE, "0");
 	} else if (state == -1) {
@@ -760,6 +762,7 @@ SDL2MW_SetMouseAutoCapture(void *_Nonnull obj, int state)
 	} else {
 		SDL_SetHint(SDL_HINT_MOUSE_AUTO_CAPTURE, "1");
 	}
+#endif
 }
 
 #if defined(AG_WIDGETS) && defined(AG_DEBUG)
