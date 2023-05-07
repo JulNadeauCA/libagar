@@ -202,8 +202,8 @@ ExpandItems(AG_Event *event)
 {
 	AG_Combo *com = AG_COMBO_SELF();
 
-	AG_TlistAdd(com, NULL, "Foo");
-	AG_TlistAdd(com, NULL, "Bar");
+	AG_TlistAdd(com->list, NULL, "Foo");
+	AG_TlistAdd(com->list, NULL, "Bar");
 }
 
 static void
@@ -230,13 +230,13 @@ ExpandTreeItems(AG_Event *event)
 	AG_Combo *com = AG_COMBO_SELF();
 	AG_TlistItem *it;
 
-	it = AG_TlistAdd(com, NULL, "Foo");
+	it = AG_TlistAdd(com->list, NULL, "Foo");
 	it->depth = 1;
 	it->flags |= AG_TLIST_HAS_CHILDREN;
 	{
-		it = AG_TlistAdd(com, NULL, "Bar");
+		it = AG_TlistAdd(com->list, NULL, "Bar");
 		it->depth = 2;
-		it = AG_TlistAdd(com, NULL, "Baz");
+		it = AG_TlistAdd(com->list, NULL, "Baz");
 		it->depth = 2;
 	}
 }
