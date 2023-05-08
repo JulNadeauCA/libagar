@@ -216,7 +216,7 @@ SelectItem(AG_Event *event)
 
 AG_Combo *com;
 
-com = AG_ComboNew(NULL, 0);
+com = AG_ComboNew(NULL, 0, NULL);
 AG_SetEvent(com, "combo-expanded", ExpandItems, NULL);
 AG_SetEvent(com, "combo-selected", SelectItem, NULL);
 .Ed
@@ -243,7 +243,7 @@ ExpandTreeItems(AG_Event *event)
 
 AG_Combo *com;
 
-com = AG_ComboNew(NULL, 0);
+com = AG_ComboNew(NULL, 0, NULL);
 AG_SetEvent(com, "combo-expanded", ExpandTreeItems, NULL);
 .Ed
 .Sh SEE ALSO

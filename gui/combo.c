@@ -263,6 +263,9 @@ PanelSepPressed(AG_Event *_Nonnull event)
 	if ((win = CreatePanel(com, AG_WINDOW_KEEPABOVE | AG_WINDOW_NOMAXIMIZE |
 	                            AG_WINDOW_NOMINIMIZE)) != NULL) {
 		AG_WindowSetCaptionS(win, _("Menu"));
+
+		AG_TlistClear(com->list);
+		AG_PostEvent(com, "combo-expanded", NULL);
 		ShowPanel(com, win);
 	}
 
@@ -300,14 +303,20 @@ ExpandButtonPushed(AG_Event *_Nonnull event)
 			win = CreatePanel(com, AG_WINDOW_MODAL |
 			                       AG_WINDOW_KEEPABOVE |
 			                       AG_WINDOW_NOTITLE);
-			if (win != NULL)
+			if (win != NULL) {
+				AG_TlistClear(com->list);
+				AG_PostEvent(com, "combo-expanded", NULL);
 				ShowPanel(com, win);
+			}
 		}
 	} else {                                              /* New window */
 		win = CreatePanel(com, AG_WINDOW_MODAL | AG_WINDOW_KEEPABOVE |
 		                       AG_WINDOW_NOTITLE);
-		if (win != NULL)
+		if (win != NULL) {
+			AG_TlistClear(com->list);
+			AG_PostEvent(com, "combo-expanded", NULL);
 			ShowPanel(com, win);
+		}
 	}
 out:
 	AG_ObjectUnlock(com);
