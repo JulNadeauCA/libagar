@@ -104,7 +104,6 @@ ComboExpanded(AG_Event *_Nonnull event)
 		if (unit == num->unit)
 			it->selected++;
 	}
-	AG_TlistSizeHintLargest(tl, 5);
 }
 
 static __inline__ void

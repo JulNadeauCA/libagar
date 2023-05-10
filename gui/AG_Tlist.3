@@ -312,6 +312,9 @@ and the category
 .Fn AG_TlistMoveToTail "AG_Tlist *tl" "AG_TlistItem *item"
 .Pp
 .Ft void
+.Fn AG_TlistCopy "AG_Tlist *tlDst" "const AG_Tlist *tlSrc"
+.Pp
+.Ft void
 .Fn AG_TlistSetIcon "AG_Tlist *tl" "AG_TlistItem *item" "const AG_Surface *icon"
 .Pp
 .Ft void
@@ -432,6 +435,14 @@ to the head of the list.
 moves an existing item
 .Fa item
 to the tail of the list.
+.Pp
+The
+.Fn AG_TlistCopy
+routine copies all items from
+.Fa tlSrc
+into
+.Fa tlDst .
+Item attributes and selection flags are preserved.
 .Pp
 .Fn AG_TlistSetIcon
 sets the icon surface associated with

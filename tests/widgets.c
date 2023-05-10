@@ -221,6 +221,7 @@ ComboExpanded(AG_Event *_Nonnull event)
 		AG_TlistAddS(tl, NULL, text);
 	}
 
+	AG_TlistSelectIdx(tl, 1);
 }
 
 static void

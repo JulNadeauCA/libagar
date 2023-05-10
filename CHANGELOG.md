@@ -2,8 +2,12 @@
 All notable changes to Agar will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.7.1] - Unreleased
+### Added
+- [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New function `AG_TlistCopy()`. Copy all items from a source to a destination `AG_Tlist`.
+- [**AG_Combo**](https://libagar.org/man3/AG_Combo): New member `nVisItems`. Set the number of items to show by default in expansions.
 
 ### Fixed
+- [**AG_Combo**](https://libagar.org/man3/AG_Combo): Make it again possible to statically initialize `list` before `combo-expanded`. Restores compatibility pre-1.6. Thanks Wally!
 - [**AG_FileDlg**](https://libagar.org/man3/AG_FileDlg): Add "Any File" type. Fix widget geometries not updating when switching to a different Type filter.
 
 ## [1.7.0] - 2023-05-02

@@ -168,18 +168,20 @@ CreatePanel(AG_Combo *com, Uint winFlags)
 		AG_SetPadding(btn, "5 0 5 0");  /* TODO style */
 	}
 
-	com->list = tl = AG_TlistNew(win, AG_TLIST_EXPAND |
-	                                  AG_TLIST_NO_KEYREPEAT); 
+	com->listExp = tl = AG_TlistNew(win, AG_TLIST_EXPAND |
+	                                     AG_TLIST_NO_KEYREPEAT); 
+	if (com->flags & AG_COMBO_POLL)        { tl->flags |= AG_TLIST_POLL; }
+	if (com->flags & AG_COMBO_SCROLLTOSEL) { tl->flags |= AG_TLIST_SCROLLTOSEL; }
+	AG_SetEvent(tl, "tlist-selected", SelectedItem, "%p", com);
+	
+	AG_TlistCopy(tl, com->list);
+	AG_TlistSizeHintLargest(tl, com->nVisItems);
 
 	btn = AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Cancel"),
 	    PanelCancelPressed, "%p", com);
 	AG_SetPadding(btn, "0 4 3 4");  /* TODO style */
 
-	if (com->flags & AG_COMBO_POLL)        { tl->flags |= AG_TLIST_POLL; }
-	if (com->flags & AG_COMBO_SCROLLTOSEL) { tl->flags |= AG_TLIST_SCROLLTOSEL; }
-
-	AG_SetEvent(tl, "tlist-selected", SelectedItem, "%p", com);
-
+	AG_TlistClear(com->list);
 	AG_PostEvent(com, "combo-expanded", NULL);
 
 	if (winParent != NULL) {
@@ -208,7 +210,7 @@ ShowPanel(AG_Combo *com, AG_Window *win)
 	if (com->wSaved > 0) {
 		w = com->wSaved;
 		h = com->hSaved;
-	} else if ((tl = com->list) != NULL) {
+	} else if ((tl = com->listExp) != NULL) {
 		AG_SizeReq rList;
 
 		if (com->wPreList != -1 && com->hPreList != -1) {
@@ -236,7 +238,7 @@ ShowPanel(AG_Combo *com, AG_Window *win)
 	if (w < 4 || h < 4) {                                    /* Minimum */
 		AG_PostEvent(com, "combo-collapsed", NULL);
 		AG_ObjectDetach(win);
-		com->list = NULL;
+		com->listExp = NULL;
 		com->panel = NULL;
 		return;
 	}
@@ -263,9 +265,6 @@ PanelSepPressed(AG_Event *_Nonnull event)
 	if ((win = CreatePanel(com, AG_WINDOW_KEEPABOVE | AG_WINDOW_NOMAXIMIZE |
 	                            AG_WINDOW_NOMINIMIZE)) != NULL) {
 		AG_WindowSetCaptionS(win, _("Menu"));
-
-		AG_TlistClear(com->list);
-		AG_PostEvent(com, "combo-expanded", NULL);
 		ShowPanel(com, win);
 	}
 
@@ -292,7 +291,7 @@ ExpandButtonPushed(AG_Event *_Nonnull event)
 
 	if (com->panel != NULL) {                          /* Cached window */
 		win = com->panel;
-		if (win->flags & AG_WINDOW_NOTITLE) {
+		if (win->flags & AG_WINDOW_NOTITLE) {            /* Refresh */
 			AG_TlistClear(com->list);
 			AG_PostEvent(com, "combo-expanded", NULL);
 			ShowPanel(com, win);
@@ -303,20 +302,14 @@ ExpandButtonPushed(AG_Event *_Nonnull event)
 			win = CreatePanel(com, AG_WINDOW_MODAL |
 			                       AG_WINDOW_KEEPABOVE |
 			                       AG_WINDOW_NOTITLE);
-			if (win != NULL) {
-				AG_TlistClear(com->list);
-				AG_PostEvent(com, "combo-expanded", NULL);
+			if (win != NULL)
 				ShowPanel(com, win);
-			}
 		}
 	} else {                                              /* New window */
 		win = CreatePanel(com, AG_WINDOW_MODAL | AG_WINDOW_KEEPABOVE |
 		                       AG_WINDOW_NOTITLE);
-		if (win != NULL) {
-			AG_TlistClear(com->list);
-			AG_PostEvent(com, "combo-expanded", NULL);
+		if (win != NULL)
 			ShowPanel(com, win);
-		}
 	}
 out:
 	AG_ObjectUnlock(com);
@@ -330,13 +323,18 @@ AG_ComboSelectPointer(AG_Combo *com, void *p)
 	AG_TlistItem *it;
 
 	AG_OBJECT_ISA(com, "AG_Widget:AG_Combo:*");
-	tl = com->list;
-	AG_ObjectLock(tl);
+	AG_ObjectLock(com);
 
-	if ((it = AG_TlistSelectPtr(tl, p)) != NULL)
+	if ((tl = com->listExp) != NULL) {
+		AG_ObjectLock(tl);
+		AG_TlistSelectPtr(tl, p);
+		AG_ObjectUnlock(tl);
+	}
+	if ((it = AG_TlistSelectPtr(com->list, p)) != NULL)
 		AG_TextboxSetString(com->tbox, it->text);
 
-	AG_ObjectUnlock(tl);
+	AG_ObjectUnlock(com);
+
 	return (it);
 }
 
@@ -348,29 +346,31 @@ AG_ComboSelectText(AG_Combo *com, const char *text)
 	AG_TlistItem *it;
 
 	AG_OBJECT_ISA(com, "AG_Widget:AG_Combo:*");
-	tl = com->list;
-	AG_ObjectLock(tl);
+	AG_ObjectLock(com);
 
-	if ((it = AG_TlistSelectText(tl, text)) != NULL)
+	if ((tl = com->listExp) != NULL) {
+		AG_ObjectLock(tl);
+		AG_TlistSelectText(tl, text);
+		AG_ObjectUnlock(tl);
+	}
+	if ((it = AG_TlistSelectText(com->list, text)) != NULL)
 		AG_TextboxSetString(com->tbox, it->text);
 
-	AG_ObjectUnlock(tl);
+	AG_ObjectUnlock(com);
 	return (it);
 }
 
+/* Select a combo item by reference. */
 void
 AG_ComboSelect(AG_Combo *com, AG_TlistItem *it)
 {
-	AG_Tlist *tl;
-
 	AG_OBJECT_ISA(com, "AG_Widget:AG_Combo:*");
-	tl = com->list;
-	AG_ObjectLock(tl);
+	AG_ObjectLock(com);
 
+	AG_TlistSelect(com->list, it);
 	AG_TextboxSetString(com->tbox, it->text);
-	AG_TlistSelect(tl, it);
 
-	AG_ObjectUnlock(tl);
+	AG_ObjectUnlock(com);
 }
 
 static void
@@ -378,7 +378,7 @@ Return(AG_Event *_Nonnull event)
 {
 	AG_Textbox *tbox = AG_TEXTBOX_SELF();
 	AG_Combo *com = AG_COMBO_PTR(1);
-	AG_Tlist *tl = com->list;
+	AG_Tlist *tl = com->listExp;
 	const char *text = tbox->text;
 	
 	AG_ObjectLock(tl);
@@ -404,6 +404,19 @@ Return(AG_Event *_Nonnull event)
 }
 
 static void
+OnShow(AG_Event *_Nonnull event)
+{
+	AG_Combo *com = AG_COMBO_SELF();
+	AG_TlistItem *it;
+
+	AG_TlistClear(com->list);
+	AG_PostEvent(com, "combo-expanded", NULL);
+
+	if ((it = AG_TlistSelectedItem(com->list)) != NULL)
+		AG_TextboxSetString(com->tbox, it->text);
+}
+
+static void
 Init(void *_Nonnull obj)
 {
 	AG_Combo *com = obj;
@@ -411,6 +424,7 @@ Init(void *_Nonnull obj)
 	AG_Button *btn;
 
 	com->flags = 0;
+	com->nVisItems = 10;
 	com->wSaved = 0;
 	com->hSaved = 0;
 	com->wPreList = -1;
@@ -426,8 +440,11 @@ Init(void *_Nonnull obj)
 	AG_ObjectSetNameS(btn, "trigger");
 	AG_SetEvent(btn, "button-pushed", ExpandButtonPushed,"%p",com);
 
-	com->list = NULL;
+	com->list = AG_TlistNew(NULL, 0);
+	com->listExp = NULL;
 	com->panel = NULL;
+
+	AG_AddEvent(com, "widget-shown", OnShow, NULL);
 }
 
 void

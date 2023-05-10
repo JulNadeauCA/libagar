@@ -161,7 +161,6 @@ ExpandArchExts(AG_Event *_Nonnull event)
 		if (agCPU.ext & fd->bitmask)
 			AG_TlistAddS(tl, NULL, _(fd->descr));
 	}
-	AG_TlistSizeHintLargest(tl, 10);
 }
 
 static void

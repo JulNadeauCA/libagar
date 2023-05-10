@@ -156,6 +156,8 @@ widget generates the following events:
 An item was selected.
 .It Fn combo-expanded "void"
 The drop-down menu is now visible.
+May be used to populate
+.Va list .
 .It Fn combo-collapsed "void"
 The drop-down menu is now hidden.
 .It Fn combo-text-entry "const char *text"
@@ -191,6 +193,8 @@ The input
 The
 .Xr AG_Button 3
 which triggers expansion (RO).
+.It Ft int nVisItems
+Initial number of items to show in expanded list.
 .El
 .Sh EXAMPLES
 The following code fragment generates a drop-down menu and reacts to
@@ -262,10 +266,3 @@ As of Agar 1.6.0,
 .Dv AG_COMBO_TREE
 is a deprecated no-op.
 "combo-expanded" and "combo-selected" appeared in Agar 1.7.0.
-The
-.Xr AG_Tlist 3
-was formerly pre-generated and attached to the window on expansion, but as of
-Agar 1.7.0 the
-.Va list
-member is now initialized to NULL and the list contents must be generated
-on demand from "combo-expanded".

@@ -100,6 +100,8 @@ widget generates the following events:
 An item was selected.
 .It Fn ucombo-expanded "void"
 The drop-down menu is now visible.
+May be used to populate
+.Va list .
 .It Fn ucombo-collapsed "void"
 The drop-down menu is now hidden.
 .El
@@ -160,10 +162,3 @@ The
 .Nm
 widget first appeared in Agar 1.0.
 "ucombo-expanded" and "ucombo-selected" appeared in Agar 1.7.0.
-The
-.Xr AG_Tlist 3
-was formerly pre-generated and attached to the window on expansion, but
-as of Agar 1.7.0 the
-.Va list
-member is now initialized to NULL and the list must be generated on demand
-from "ucombo-expanded".

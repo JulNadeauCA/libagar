@@ -260,6 +260,7 @@ int  AG_TlistComparePtrsAndCats(const AG_TlistItem *_Nonnull,
 void AG_TlistSort(AG_Tlist *_Nonnull);
 void AG_TlistSortByInt(AG_Tlist *_Nonnull);
 void AG_TlistRefresh(AG_Tlist *_Nonnull);
+void AG_TlistCopy(AG_Tlist *_Nonnull, AG_Tlist *_Nonnull);
 
 #ifdef AG_TYPE_SAFETY
 AG_TlistItem *_Nullable AG_TlistGetItemPtr(const AG_Event *_Nonnull, int, int);

@@ -233,7 +233,6 @@ ExpandUnicodeRanges(AG_Event *event)
 		    unicodeRanges[i].name);
 		ti->p1 = (void *)&unicodeRanges[i];
 	}
-	AG_TlistSizeHintLargest(tl, 10);
 }
 
 AG_Window *

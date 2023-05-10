@@ -1073,7 +1073,7 @@ AG_TlistVisibleChildren(AG_Tlist *tl, AG_TlistItem *it)
 }
 
 void
-AG_TlistRefresh(AG_Tlist *_Nonnull tl)
+AG_TlistRefresh(AG_Tlist *tl)
 {
 	AG_OBJECT_ISA(tl, "AG_Widget:AG_Tlist:*");
 	AG_ObjectLock(tl);
@@ -1238,6 +1238,41 @@ AG_TlistMoveToTail(AG_Tlist *tl, AG_TlistItem *it)
 
 	AG_Redraw(tl);
 	AG_ObjectUnlock(tl);
+}
+
+/* Copy the contents of tlSrc into tlDst. */
+void
+AG_TlistCopy(AG_Tlist *_Nonnull tlDst, AG_Tlist *_Nonnull tlSrc)
+{
+	AG_TlistItem *itSrc, *itDst;
+
+	AG_OBJECT_ISA(tlDst, "AG_Widget:AG_Tlist:*");
+	AG_OBJECT_ISA(tlSrc, "AG_Widget:AG_Tlist:*");
+
+	AG_ObjectLock(tlDst);
+	AG_ObjectLock(tlSrc);
+
+	TAILQ_FOREACH(itSrc, &tlSrc->items, items) {
+		itDst = AG_TlistAddS(tlDst, itSrc->iconsrc, itSrc->text);
+		itDst->v = itSrc->v;
+		itDst->cat = itSrc->cat;
+		itDst->p1 = itSrc->p1;
+		if (itSrc->color != NULL) {
+			itDst->color = Malloc(sizeof(AG_Color));
+			memcpy(itDst->color, itSrc->color, sizeof(AG_Color));
+		} else {
+			itDst->color = itSrc->color;
+		}
+		itDst->font = itSrc->font;
+		itDst->selected = itSrc->selected;
+		itDst->depth = itSrc->depth;
+		itDst->flags = itSrc->flags;
+		itDst->scale = itSrc->scale;
+		itDst->u = itSrc->u;
+	}
+
+	AG_ObjectUnlock(tlSrc);
+	AG_ObjectUnlock(tlDst);
 }
 
 /* Return a newly allocated and initialized AG_TlistItem */

@@ -20,11 +20,12 @@ typedef struct ag_combo {
 #define AG_COMBO_VFILL       0x10
 #define AG_COMBO_SCROLLTOSEL 0x40       /* Scroll to initial selection */
 #define AG_COMBO_EXPAND      (AG_COMBO_HFILL | AG_COMBO_VFILL)
-	Uint32 _pad;
+	Uint nVisItems;                 /* Default number of items to show */
 	AG_Textbox *_Nonnull  tbox;     /* Text input */
 	AG_Button  *_Nonnull  button;   /* [...] button */
-	AG_Tlist   *_Nonnull  list;     /* List of items */
-	AG_Window  *_Nullable panel;    /* Expanded panel */
+	AG_Tlist   *_Nonnull  list;     /* List of items (static) */
+	AG_Tlist   *_Nullable listExp;  /* List of items (in expanded window) */
+	AG_Window  *_Nullable panel;    /* Expanded window */
 	int wSaved, hSaved;             /* Saved window size */
 	int wPreList, hPreList;         /* Size hints */
 } AG_Combo;
