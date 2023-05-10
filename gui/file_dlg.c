@@ -1011,6 +1011,7 @@ AG_FileDlgSelectType(AG_FileDlg *fd, AG_FileType *ft)
 		return;
 	}
 	AG_ObjectFreeChildren(fd->optsCtr);
+	AG_WindowUpdate(WIDGET(fd->optsCtr)->window);
 
 	if (ft == NULL)
 		return;
@@ -1070,8 +1071,12 @@ FileTypeSelected(AG_Event *_Nonnull event)
 
 	AG_ObjectLock(fd);
 
-	AG_FileDlgSelectType(fd, (it != NULL) ? it->p1 :
-	                                        TAILQ_FIRST(&fd->types));
+	if (it != NULL) {
+		AG_FileDlgSelectType(fd, it->p1);
+	} else {
+		AG_FileDlgSelectType(fd, TAILQ_FIRST(&fd->types));
+	}
+
 	AG_ObjectUnlock(fd);
 }
 
@@ -1083,10 +1088,16 @@ FileTypesExpanded(AG_Event *_Nonnull event)
 	AG_FileDlg *fd = AG_FILEDLG_PTR(1);
 	AG_Tlist *tl = com->list;
 	AG_FileType *ft;
+	AG_TlistItem *it;
+
+	it = AG_TlistAddS(tl, NULL, _("Any file ( *.* )"));
+	it->p1 = NULL;
+
+	if (fd->curType == NULL)
+		it->selected = 1;
 
 	TAILQ_FOREACH(ft, &fd->types, types) {
 		char extsLbl[64];
-		AG_TlistItem *ti;
 		Uint i;
 	
 		extsLbl[0] = '\0';
@@ -1109,13 +1120,12 @@ FileTypesExpanded(AG_Event *_Nonnull event)
 			}
 		}
 		if (extsLbl[0] != '\0') {
-			ti = AG_TlistAdd(tl, NULL, "%s ( %s)", ft->descr, extsLbl);
+			it = AG_TlistAdd(tl, NULL, "%s ( %s)", ft->descr, extsLbl);
 		} else {
-			ti = AG_TlistAddS(tl, NULL, ft->descr);
+			it = AG_TlistAddS(tl, NULL, ft->descr);
 		}
-		ti->p1 = ft;
+		it->p1 = ft;
 	}
-	AG_TlistSizeHintLargest(tl, 5);
 }
 
 static void
@@ -1455,6 +1465,7 @@ AG_FileDlgNew(void *parent, Uint flags)
 	/* File type selector */
 	if (!(flags & AG_FILEDLG_NOTYPESELECT)) {
 		fd->comTypes = AG_ComboNew(fd, AG_COMBO_HFILL, _("Type: "));
+		fd->comTypes->nVisItems = 5;
 		AG_SetEvent(fd->comTypes, "combo-selected", FileTypeSelected,"%p",fd);
 		AG_SetEvent(fd->comTypes, "combo-expanded", FileTypesExpanded,"%p",fd);
 	}

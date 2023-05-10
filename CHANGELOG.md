@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to Agar will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - Unreleased
+
+### Fixed
+- [**AG_FileDlg**](https://libagar.org/man3/AG_FileDlg): Add "Any File" type. Fix widget geometries not updating when switching to a different Type filter.
+
 ## [1.7.0] - 2023-05-02
 ### Added
 - [**sdl2fb**](https://libagar.org/man3/AG_DriverSDL2FB): New driver for SDL 2.0 (single-window; frame-buffer mode).
