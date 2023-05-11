@@ -587,6 +587,7 @@ COCOA_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 	AG_DriverCocoa *co;
 	AG_DriverEvent *devFirst;
 	NSEvent *event;
+	AG_Mouse *ms;
 	int rv = 0;
 	
 	if (!TAILQ_EMPTY(&cocEventQ))
@@ -611,6 +612,7 @@ COCOA_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 	AG_LockVFS(&agDrivers);
 	drv = WIDGET(win)->drv;
 	co = (AG_DriverCocoa *)drv;
+	ms = drv->mouse;
 	
 	switch ([event type]) {
 	case NSMouseMoved:
@@ -619,7 +621,6 @@ COCOA_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 	case NSOtherMouseDragged:
 		{
 			NSPoint point = [event locationInWindow];
-			AG_Mouse *ms = drv->mouse;
 			const int x = (int)point.x;
 			const int y = (int)(WIDGET(win)->h - point.y);
 
@@ -644,7 +645,8 @@ COCOA_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 			if (btn == AG_MOUSE_NONE) {
 				break;
 			}
-			AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_PRESSED, btn);
+			ms->btnState |= AG_MOUSE_BUTTON(btn);
+
 			dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
 			dev->win = win;
 			dev->button.which = btn;
@@ -658,8 +660,9 @@ COCOA_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 	case NSRightMouseDown:
 		{
 			AG_MouseButton btn = GetMouseButton([event buttonNumber]);
+
+			ms->btnState |= AG_MOUSE_BUTTON(btn);
 			
-			AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_PRESSED, btn);
 			dev->type = AG_DRIVER_MOUSE_BUTTON_DOWN;
 			dev->win = win;
 			dev->button.which = btn;
@@ -674,7 +677,8 @@ COCOA_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 		{
 			AG_MouseButton btn = GetMouseButton([event buttonNumber]);
 			
-			AG_MouseButtonUpdate(drv->mouse, AG_BUTTON_RELEASED, btn);
+			ms->btnState &= ~( AG_MOUSE_BUTTON(btn) );
+
 			dev->type = AG_DRIVER_MOUSE_BUTTON_UP;
 			dev->win = win;
 			dev->button.which = btn;
