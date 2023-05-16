@@ -9214,12 +9214,12 @@ $ECHO_N '# checking whether SDL2 works...' >>config.log
 MK_COMPILE_STATUS=OK
 cat << EOT >conftest$$.c
 #ifdef _USE_SDL_FRAMEWORK
-# include <SDL2/SDL.h>
+# include <SDL.h>
 # ifdef main
 #  undef main
 # endif
 #else
-# include <SDL2/SDL.h>
+# include <SDL.h>
 #endif
 int main(int argc, char *argv[]) {
 	SDL_Surface *su;
@@ -9298,12 +9298,12 @@ SDL2_LIBS="${SDL2_LIBS} -L/usr/X11R6/lib -lX11 -lXext -lXrandr -lXrender"
 MK_COMPILE_STATUS=OK
 cat << EOT >conftest$$.c
 #ifdef _USE_SDL_FRAMEWORK
-# include <SDL2/SDL.h>
+# include <SDL.h>
 # ifdef main
 #  undef main
 # endif
 #else
-# include <SDL2/SDL.h>
+# include <SDL.h>
 #endif
 int main(int argc, char *argv[]) {
 	SDL_Surface *su;
