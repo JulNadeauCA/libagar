@@ -66,6 +66,9 @@ but also adds support for text search and arbitrary text input.
 .Ft "AG_Combo *"
 .Fn AG_ComboNewS "AG_Widget *parent" "Uint flags" "const char *label"
 .Pp
+.Ft "AG_Combo *"
+.Fn AG_ComboNewFn "AG_Widget *parent" "Uint flags" "const char *label" "AG_EventFn fn" "const char *fnArgs" "..."
+.Pp
 .Ft "void"
 .Fn AG_ComboSizeHint "AG_Combo *combo" "const char *text" "int nitems"
 .Pp
@@ -80,6 +83,13 @@ function allocates, initializes, and attaches a new
 widget.
 The string argument specifies an optional text label to be displayed at the
 left of the textbox.
+The
+.Fn AG_ComboNewFn
+variant sets the "combo-expanded" event handler to
+.Fa fn
+with optional arguments
+.Fa fnArgs .
+.Pp
 Acceptable
 .Fa flags
 include:
@@ -205,9 +215,10 @@ static void
 ExpandItems(AG_Event *event)
 {
 	AG_Combo *com = AG_COMBO_SELF();
+	AG_Tlist *tl = com->list;
 
-	AG_TlistAdd(com->list, NULL, "Foo");
-	AG_TlistAdd(com->list, NULL, "Bar");
+	AG_TlistAdd(tl, NULL, "Foo");
+	AG_TlistAdd(tl, NULL, "Bar");
 }
 
 static void
@@ -220,7 +231,7 @@ SelectItem(AG_Event *event)
 
 AG_Combo *com;
 
-com = AG_ComboNew(NULL, 0, NULL);
+com = AG_ComboNew(NULL, 0, "My combo: ");
 AG_SetEvent(com, "combo-expanded", ExpandItems, NULL);
 AG_SetEvent(com, "combo-selected", SelectItem, NULL);
 .Ed
@@ -232,23 +243,25 @@ static void
 ExpandTreeItems(AG_Event *event)
 {
 	AG_Combo *com = AG_COMBO_SELF();
+	AG_Tlist *tl = com->list;
 	AG_TlistItem *it;
 
-	it = AG_TlistAdd(com->list, NULL, "Foo");
+	it = AG_TlistAdd(tl, NULL, "Foo");
 	it->depth = 1;
 	it->flags |= AG_TLIST_HAS_CHILDREN;
 	{
-		it = AG_TlistAdd(com->list, NULL, "Bar");
+		it = AG_TlistAdd(tl, NULL, "Bar");
 		it->depth = 2;
-		it = AG_TlistAdd(com->list, NULL, "Baz");
+		it = AG_TlistAdd(tl, NULL, "Baz");
 		it->depth = 2;
+		{
+			it = AG_TlistAdd(tl, NULL, "Bezo");
+			it->depth = 3;
+		}
 	}
 }
 
-AG_Combo *com;
-
-com = AG_ComboNew(NULL, 0, NULL);
-AG_SetEvent(com, "combo-expanded", ExpandTreeItems, NULL);
+AG_ComboNewFn(NULL, 0, "My tree: ", ExpandTreeItems, NULL);
 .Ed
 .Sh SEE ALSO
 .Xr AG_Button 3 ,
@@ -266,3 +279,5 @@ As of Agar 1.6.0,
 .Dv AG_COMBO_TREE
 is a deprecated no-op.
 "combo-expanded" and "combo-selected" appeared in Agar 1.7.0.
+.Fn AG_ComboNewFn
+appeared in Agar 1.7.1.

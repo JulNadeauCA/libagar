@@ -131,9 +131,10 @@ static void
 ComboExpanded(AG_Event *event)
 {
 	AG_UCombo *com = AG_UCOMBO_SELF();
+	AG_Tlist *tl = com->list;
 
-	AG_TlistAdd(com, NULL, "Foo");
-	AG_TlistAdd(com, NULL, "Bar");
+	AG_TlistAdd(tl, NULL, "Foo");
+	AG_TlistAdd(tl, NULL, "Bar");
 }
 
 static void

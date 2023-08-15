@@ -739,31 +739,27 @@ Init(void *_Nonnull obj)
 	dd->dirMRU = NULL;
 	(void)AG_GetCWD(dd->cwd, sizeof(dd->cwd));
 
-	dd->comLoc = AG_ComboNewS(dd, AG_COMBO_HFILL, NULL);
+	dd->comLoc = AG_ComboNewFn(dd, AG_COMBO_HFILL, NULL,
+	    LocExpanded,"%p",dd);
 	AG_ComboSizeHint(dd->comLoc, "XXXXXXXXXXXXXXXXXXXXXXXXXXXX", 5);
+	AG_SetEvent(dd->comLoc, "combo-selected", LocSelected,"%p",dd);
 
 	dd->tlDirs = AG_TlistNew(dd, AG_TLIST_EXPAND);
 
 	dd->tbInput = AG_TextboxNewS(dd, AG_TEXTBOX_EXCL, _("Directory: "));
+	AG_SetEvent(dd->tlDirs, "tlist-dblclick", DirSelected,"%p",dd);
 	AG_TlistSizeHint(dd->tlDirs, "XXXXXXXXXXXXXX", 8);
+	AG_SetEvent(dd->tbInput, "textbox-postchg", TextboxChanged,"%p",dd);
+	AG_SetEvent(dd->tbInput, "textbox-return",  TextboxReturn,"%p",dd);
 
 	dd->btnOk = AG_ButtonNewS(dd, 0, _("OK"));
 	dd->btnCancel = AG_ButtonNewS(dd, 0, _("Cancel"));
 	dd->okAction = NULL;
 	dd->cancelAction = NULL;
+	AG_SetEvent(dd->btnOk, "button-pushed", PressedOK,"%p",dd);
+	AG_SetEvent(dd->btnCancel, "button-pushed", PressedCancel,"%p",dd);
 
 	AG_AddEvent(dd, "widget-shown", OnShow, NULL);
-
-	AG_SetEvent(dd->tlDirs, "tlist-dblclick", DirSelected,"%p",dd);
-
-	AG_SetEvent(dd->comLoc, "combo-selected", LocSelected,"%p",dd);
-	AG_SetEvent(dd->comLoc, "combo-expanded", LocExpanded,"%p",dd);
-
-	AG_SetEvent(dd->tbInput, "textbox-postchg", TextboxChanged,"%p",dd);
-	AG_SetEvent(dd->tbInput, "textbox-return",  TextboxReturn,"%p",dd);
-
-	AG_SetEvent(dd->btnOk,     "button-pushed", PressedOK,"%p",dd);
-	AG_SetEvent(dd->btnCancel, "button-pushed", PressedCancel,"%p",dd);
 }
 
 /*

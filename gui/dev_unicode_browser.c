@@ -249,7 +249,8 @@ AG_DEV_UnicodeBrowser(void)
 	AG_WindowSetCaptionS(win, _("Unicode Browser"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
-	comRange = AG_ComboNew(win, AG_COMBO_HFILL, _("Range: "));
+	comRange = AG_ComboNewFn(win, AG_COMBO_HFILL, _("Range: "),
+	    ExpandUnicodeRanges, NULL);
 
 	AG_SpacerNewHoriz(win);
 
@@ -261,7 +262,6 @@ AG_DEV_UnicodeBrowser(void)
 	AG_SetColor(tt, "rgb(20,20,20)");
 	AG_SetFontSize(tt, "120%");
 
-	AG_SetEvent(comRange, "combo-expanded", ExpandUnicodeRanges, NULL);
 	AG_SetEvent(comRange, "combo-selected", SelectUnicodeRange, "%p", tt);
 
 	AG_WidgetFocus(comRange);

@@ -51,6 +51,8 @@ extern AG_WidgetClass agComboClass;
 
 AG_Combo *_Nonnull AG_ComboNew(void *_Nullable, Uint, const char *_Nullable, ...)
 		              FORMAT_ATTRIBUTE(printf,3,4);
+AG_Combo *_Nonnull AG_ComboNewFn(void *_Nullable, Uint, const char *_Nullable,
+                                 AG_EventFn, const char *_Nullable, ...);
 AG_Combo *_Nonnull AG_ComboNewS(void *_Nullable, Uint, const char *_Nullable);
 
 void AG_ComboSizeHint(AG_Combo *_Nonnull, const char *_Nonnull, int);

@@ -1435,10 +1435,10 @@ AG_FileDlgNew(void *parent, Uint flags)
 	AG_PaneResizeAction(fd->hPane, AG_PANE_DIVIDE_EVEN);
 
 	/* Shortcuts combo. */
-	fd->comLoc = AG_ComboNewS(fd->hPane->div[0], AG_COMBO_HFILL, NULL);
-	AG_ComboSizeHint(fd->comLoc, "XXXXXXXXXXXXXXXXXXXXXXXXXXXX", 5);
+	fd->comLoc = AG_ComboNewFn(fd->hPane->div[0], AG_COMBO_HFILL, NULL,
+	    LocExpanded,"%p",fd);
 	AG_SetEvent(fd->comLoc, "combo-selected", LocSelected,"%p",fd);
-	AG_SetEvent(fd->comLoc, "combo-expanded", LocExpanded,"%p",fd);
+	AG_ComboSizeHint(fd->comLoc, "XXXXXXXXXXXXXXXXXXXXXXXXXXXX", 5);
 
 	/* Directories list. */
 	fd->tlDirs = AG_TlistNew(fd->hPane->div[0], AG_TLIST_EXPAND);
@@ -1464,10 +1464,13 @@ AG_FileDlgNew(void *parent, Uint flags)
 
 	/* File type selector */
 	if (!(flags & AG_FILEDLG_NOTYPESELECT)) {
-		fd->comTypes = AG_ComboNew(fd, AG_COMBO_HFILL, _("Type: "));
+		fd->comTypes = AG_ComboNewFn(fd, AG_COMBO_HFILL, _("Type: "),
+		    FileTypesExpanded,"%p",fd);
+
+		AG_SetEvent(fd->comTypes, "combo-selected",
+		    FileTypeSelected,"%p",fd);
+
 		fd->comTypes->nVisItems = 5;
-		AG_SetEvent(fd->comTypes, "combo-selected", FileTypeSelected,"%p",fd);
-		AG_SetEvent(fd->comTypes, "combo-expanded", FileTypesExpanded,"%p",fd);
 	}
 	/* "Mask files" checkboxes. */
 	if (!(flags & AG_FILEDLG_NOMASKOPTS)) {

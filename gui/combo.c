@@ -58,6 +58,24 @@ AG_ComboNew(void *parent, Uint flags, const char *fmt, ...)
 }
 
 AG_Combo *
+AG_ComboNewFn(void *parent, Uint flags, const char *label, AG_EventFn fn,
+    const char *fmt, ...)
+{
+	AG_Combo *com;
+	AG_Event *ev;
+	va_list ap;
+
+	com = AG_ComboNewS(parent, flags, label);
+
+	ev = AG_SetEvent(com, "combo-expanded", fn, NULL);
+	va_start(ap, fmt);
+	AG_EventGetArgs(ev, fmt, ap);
+	va_end(ap);
+
+	return (com);
+}
+
+AG_Combo *
 AG_ComboNewS(void *parent, Uint flags, const char *label)
 {
 	AG_Combo *com;
@@ -438,7 +456,7 @@ Init(void *_Nonnull obj)
 	btn = com->button = AG_ButtonNewS(com, AG_BUTTON_STICKY |
 	                                       AG_BUTTON_NO_FOCUS, _(" ... "));
 	AG_ObjectSetNameS(btn, "trigger");
-	AG_SetEvent(btn, "button-pushed", ExpandButtonPushed,"%p",com);
+	AG_SetEvent(btn, "button-pushed", ExpandButtonPushed, "%p", com);
 
 	com->list = AG_TlistNew(NULL, 0);
 	com->listExp = NULL;
