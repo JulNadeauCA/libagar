@@ -654,7 +654,7 @@ GLX_GetNextEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 		x = AGDRIVER_BOUNDED_WIDTH(win, xev.xbutton.x);
 		y = AGDRIVER_BOUNDED_HEIGHT(win, xev.xbutton.y);
 
-		ms = WIDGET(win)->drv->mouse,
+		ms = WIDGET(win)->drv->mouse;
 		ms->btnState &= ~(AG_MOUSE_BUTTON(xev.xbutton.button));
 
 		dev->type = AG_DRIVER_MOUSE_BUTTON_UP;
