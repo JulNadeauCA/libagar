@@ -4,6 +4,7 @@
 #define _AGAR_GUI_GUI_H_
 
 #include <agar/config/have_sdl.h>
+#include <agar/config/have_sdl2.h>
 #include <agar/gui/begin.h>
 
 #define AG_ZOOM_MIN 0                   /* Index of first zoom level */
@@ -58,7 +59,10 @@ void  AG_DestroyGUI(void);
 int   AG_InitGUIGlobals(void);
 void  AG_DestroyGUIGlobals(void);
 
-#ifdef HAVE_SDL
+#if defined(HAVE_SDL2)
+int   AG_InitVideoSDL2(void *_Nonnull, Uint);
+int   AG_SetVideoSurfaceSDL2(void *_Nonnull);
+#elif defined(HAVE_SDL)
 int   AG_InitVideoSDL(void *_Nonnull, Uint);
 int   AG_SetVideoSurfaceSDL(void *_Nonnull);
 #endif

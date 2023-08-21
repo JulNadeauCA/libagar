@@ -50,6 +50,101 @@ static void AG_SDL2_SoftBlit_Colorkey(const AG_Surface *_Nonnull, AG_Rect,
 static void AG_SDL2_SoftBlit_NoColorkey(const AG_Surface *_Nonnull, AG_Rect,
                                         SDL_Surface *_Nonnull, AG_Rect);
 
+/*
+ * Initialize Agar with an existing SDL2 display. If the display surface has
+ * flags SDL_OPENGL / SDL_OPENGLBLIT set, the "sdl2gl" driver is selected;
+ * otherwise, the "sdl2fb" driver is used.
+ */
+int
+AG_InitVideoSDL2(void *pDisplay, Uint flags)
+{
+	SDL_Surface *display = pDisplay;
+	AG_Driver *drv = NULL;
+	AG_DriverClass *dc = NULL, **pd;
+	int useGL = 0;
+
+	if (AG_InitGUIGlobals() == -1)
+		return (-1);
+#if 0
+	/* Enable OpenGL mode if the surface has SDL_OPENGL set. */
+	if ((display->flags & SDL_OPENGL)
+#ifdef SDL_OPENGLBLIT
+	    || (display->flags & SDL_OPENGLBLIT)
+#endif
+	    ) {
+		useGL = 1;
+	} else {
+		if (flags & AG_VIDEO_OPENGL) {
+			AG_SetErrorS(_("AG_VIDEO_OPENGL flag requested and "
+			               "display surface is !SDL_OPENGL"));
+			goto fail;
+		}
+	}
+#endif
+	for (pd = &agDriverList[0]; *pd != NULL; pd++) {
+		if (((*pd)->wm == AG_WM_SINGLE) &&
+		    ((*pd)->flags & AG_DRIVER_SDL2)) {
+			if (useGL) {
+				if (!((*pd)->flags & AG_DRIVER_OPENGL))
+					continue;
+			} else {
+				if ((*pd)->flags & AG_DRIVER_OPENGL)
+					continue;
+			}
+			dc = *pd;
+			break;
+		}
+	}
+	if (dc == NULL) {
+		AG_SetError(_("No compatible %s driver is available"),
+		    useGL ? "SDL2/OpenGL" : "SDL2");
+		goto fail;
+	}
+	if ((drv = AG_DriverOpen(dc, NULL)) == NULL)
+		goto fail;
+
+	/* Open a video display. */
+	if (AGDRIVER_SW_CLASS(drv)->openVideoContext(drv, (void *)display,
+	    flags) == -1) {
+		AG_DriverClose(drv);
+		goto fail;
+	}
+	if (drv->videoFmt == NULL)
+		AG_FatalError("Driver did not set video format");
+
+	/* Generic Agar-GUI initialization. */
+	if (AG_InitGUI(0) == -1) {
+		AG_DriverClose(drv);
+		goto fail;
+	}
+
+	agDriverOps = dc;
+	agDriverSw = AGDRIVERSW(drv);
+	return (0);
+fail:
+	AG_DestroyGUIGlobals();
+	return (-1);
+}
+
+/*
+ * Reattach to a different SDL2 display surface.
+ */
+int
+AG_SetVideoSurfaceSDL2(void *pDisplay)
+{
+	if (agDriverSw == NULL ||
+	    !(agDriverOps->flags & AG_DRIVER_SDL2)) {
+		AG_SetErrorS(_("Current driver is not an SDL2 driver"));
+		return (-1);
+	}
+	if (AGDRIVER_SW_CLASS(agDriverSw)->setVideoContext(agDriverSw,
+	    pDisplay) == -1) {
+		return (-1);
+	}
+	AG_PostResizeDisplay(agDriverSw);
+	return (0);
+}
+
 /* Return the Agar pixel format corresponding to that of an SDL2 surface. */
 AG_PixelFormat *
 AG_SDL2_GetPixelFormat(const SDL_Surface *s)
