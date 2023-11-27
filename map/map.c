@@ -2440,13 +2440,17 @@ static void
 CreateObjectDlg(AG_Event *_Nonnull event)
 {
 	AG_Window *win;
-	AG_Object *pLibsRoot = AG_OBJECT_PTR(1);
+	AG_Object *pLibsRoot = (AG_Object *)AG_PTR(1);
 	AG_ObjectClass *cls = AG_PTR(2);
 	AG_Window *winParent = AG_WINDOW_PTR(3);
 	MAP_View *mv = MAP_VIEW_PTR(4);
 	AG_Box *bo;
 	AG_Textbox *tb;
 
+	if (pLibsRoot == NULL) {
+		AG_TextError("No pLibsRoot");
+		return;
+	}
 	if ((win = AG_WindowNew(0)) == NULL) {
 		return;
 	}
