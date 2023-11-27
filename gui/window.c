@@ -2127,7 +2127,7 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	const int spacing = WIDGET(win)->spacingVert;
 	const int wBorderSide = win->wBorderSide;
 	const int wBorderBot = win->wBorderBot;
-	int wAvail, hAvail, hReqd, nWidgets, x, y;
+	int wAvail, hAvail, hReqd, x, y;
 
 	/*
 	 * Set cursor-change areas over the window resize controls
@@ -2175,7 +2175,6 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 	         (wBorderSide << 1);
 	hAvail = a->h - WIDGET(win)->paddingTop - WIDGET(win)->paddingBottom -
 	         wBorderBot;
-	nWidgets = 0;
 	hReqd = 0;
 	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
 		AG_OBJECT_ISA(chld, "AG_Widget:*");
@@ -2186,10 +2185,8 @@ SizeAllocate(void *_Nonnull obj, const AG_SizeAlloc *_Nonnull a)
 		if ((chld->flags & AG_WIDGET_VFILL) == 0) {
 			hReqd += req.h;
 		}
-		if (chld != WIDGET(win->tbar)) {
+		if (chld != WIDGET(win->tbar))
 			hReqd += spacing;
-		}
-		nWidgets++;
 	}
 	if (hReqd >= spacing)
 		hReqd -= spacing;

@@ -117,13 +117,13 @@ AG_RadioItemsFromArray(AG_Radio *rad, const char **itemText)
 {
 	const char *s, **pItems;
 	AG_RadioItem *ri;
-	int i, w;
+	int w;
 	
 	AG_OBJECT_ISA(rad, "AG_Widget:AG_Radio:*");
 	AG_ObjectLock(rad);
 
-	for (i=0, pItems=itemText; (s = *pItems++) != NULL; i++) {
-		rad->items = Realloc(rad->items, (rad->nItems+1) *
+	for (pItems = itemText; (s = *pItems++) != NULL;) {
+		rad->items = Realloc(rad->items, (rad->nItems + 1) *
 		                                 sizeof(AG_RadioItem));
 		ri = &rad->items[rad->nItems++];
 		Strlcpy(ri->text, s, sizeof(ri->text));

@@ -1501,7 +1501,7 @@ Draw(void *_Nonnull obj)
 #endif
 	RG_Tile *t = tv->tile;
 	AG_Rect rs, rd;
-	int x, y, n;
+	int x, y;
 
 	if (t == NULL)
 		return;
@@ -1600,7 +1600,6 @@ Draw(void *_Nonnull obj)
 			int th = t->su->h*tv->pxsz;
 			int nx, ny;
 		
-			n = 0;
 			for (y=0, ny=0; y < th; y+=tsz, ny++) {
 				for (x=0, nx=0; x < tw; x+=tsz, nx++) {
 					AG_Rect r;
@@ -1627,8 +1626,6 @@ Draw(void *_Nonnull obj)
 					AG_DrawRectBlended(tv, &r, &c,
 					    AG_ALPHA_SRC,
 					    AG_ALPHA_ONE_MINUS_SRC);
-
-					n++;
 				}
 			}
 			
@@ -1646,7 +1643,6 @@ Draw(void *_Nonnull obj)
 			int nx, ny;
 
 			AG_PushTextState();
-			n = 0;
 			for (y=0, ny=0; y < th; y+=tsz, ny++) {
 				for (x=0, nx=0; x < tw; x+=tsz, nx++) {
 					AG_Color c;

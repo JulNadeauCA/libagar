@@ -1261,7 +1261,7 @@ AG_TlistCopy(AG_Tlist *_Nonnull tlDst, AG_Tlist *_Nonnull tlSrc)
 			itDst->color = Malloc(sizeof(AG_Color));
 			memcpy(itDst->color, itSrc->color, sizeof(AG_Color));
 		} else {
-			itDst->color = itSrc->color;
+			itDst->color = NULL;
 		}
 		itDst->font = itSrc->font;
 		itDst->selected = itSrc->selected;
