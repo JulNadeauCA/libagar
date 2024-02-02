@@ -3,6 +3,7 @@ All notable changes to Agar will be documented in this file. The format is based
 
 ## [1.7.1] - Unreleased
 ### Added
+- Added [cmake](https://cmake.org) support.
 - New functions [**AG_InitVideoSDL2**](https://libagar.org/man3/AG_InitVideoSDL2) and [**AG_SetVideoSurfaceSDL2**](https://libagar.org/man3/AG_SetVideoSurfaceSDL2) for integrating with an existing SDL2 display context. Thanks Brigham Keys!
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New function `AG_TlistCopy()`. Copy all items from a source to a destination `AG_Tlist`.
 - [**AG_Combo**](https://libagar.org/man3/AG_Combo): New member `nVisItems`. Set the number of items to show by default in expansions.

@@ -7,6 +7,8 @@ PROJCONFIGDIR=	include/agar/config
 
 include ${TOP}/Makefile.proj
 
+MKCONFIGURE_FLAGS=	--output-cmake=CMakeChecks.cmake
+
 SUBDIR=		core \
 		${SUBDIR_gui} \
 		${SUBDIR_micro} \

@@ -103,6 +103,8 @@ SRCS_GENERATED?=
 SHOBJS?=
 WINRES?=
 
+MKCONFIGURE_FLAGS?=
+
 all: all-subdir lib${LIB}.a lib${LIB}.so lib${LIB}.la
 install: install-lib install-subdir
 deinstall: deinstall-lib deinstall-subdir
@@ -928,10 +930,10 @@ ${LTCONFIG} ${LTCONFIG_DEPS}:
 configure-lib:
 	@if [ "${LIB}" != "" ]; then \
 		if [ -e "configure.in" ]; then \
-			echo "cat configure.in | mkconfigure > configure"; \
-			cat configure.in | mkconfigure > configure; \
+			echo "cat configure.in | mkconfigure ${MKCONFIGURE_FLAGS} > configure"; \
+			cat configure.in | mkconfigure ${MKCONFIGURE_FLAGS} > configure; \
 			if [ ! -e configure ]; then \
-				echo "mkconfigure (BSDBuild) failed."; \
+				echo "mkconfigure failed. Is BSDBuild installed?"; \
 				exit 1; \
 			fi; \
 			if [ ! -x configure ]; then \

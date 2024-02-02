@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2022 Julien Nadeau Carriere <vedge@csoft.net>
+# Copyright (c) 2001-2023 Julien Nadeau Carriere <vedge@csoft.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -105,6 +105,8 @@ PROG_REQUIRED_CAPABILITIES?=
 # camera-flash front-facing-camera gamekit gps gyroscope healthkit
 # location-services magnetometer metal microphone opengles-1 opengles-2
 # opengles-3 peer-peer sms still-camera telephony video-camera wifi
+
+MKCONFIGURE_FLAGS?=
 
 all: all-subdir ${PROG}
 install: install-prog install-subdir
@@ -599,10 +601,10 @@ check-prog:
 configure-prog:
 	@if [ "${PROG}" != "" ]; then \
 		if [ -e "configure.in" ]; then \
-			echo "cat configure.in | mkconfigure > configure"; \
-			cat configure.in | mkconfigure > configure; \
+			echo "cat configure.in | mkconfigure ${MKCONFIGURE_FLAGS} > configure"; \
+			cat configure.in | mkconfigure ${MKCONFIGURE_FLAGS} > configure; \
 			if [ ! -e configure ]; then \
-				echo "mkconfigure (BSDBuild) failed."; \
+				echo "mkconfigure failed. Is BSDBuild installed?"; \
 				exit 1; \
 			fi; \
 			if [ ! -x configure ]; then \

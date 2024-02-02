@@ -41,6 +41,8 @@ PROJFILES?=	windows:vs2005:: \
 
 CLEANFILES+=	${PREMAKEOUT}
 
+MKCONFIGURE_FLAGS?=
+
 configure: configure-proj
 
 proj-package:
@@ -153,12 +155,10 @@ proj:
 configure-proj:
 	@if [ "${PROG}" = "" -a "${LIB}" = "" ]; then \
 		if [ -e "configure.in" ]; then \
-			echo "cat configure.in | mkconfigure > configure"; \
-			cat configure.in | mkconfigure > configure; \
+			echo "cat configure.in | mkconfigure ${MKCONFIGURE_FLAGS} > configure"; \
+			cat configure.in | mkconfigure ${MKCONFIGURE_FLAGS} > configure; \
 			if [ ! -e configure ]; then \
-				echo "mkconfigure failed."; \
-				echo "Note: mkconfigure is part of BSDBuild"; \
-				echo "(http://bsdbuild.hypertriton.com/)"; \
+				echo "mkconfigure failed. Is BSDBuild installed?"; \
 				exit 1; \
 			fi; \
 			if [ ! -x configure ]; then \

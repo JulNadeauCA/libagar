@@ -977,6 +977,19 @@ fi
 if [ "${HAVE_MYSQL}" = 'yes' ]; then
 	mappend(SRCS_CORE, "db_mysql.c")
 fi
+if [ "${HAVE_GETPWUID}" = 'yes' ]; then
+	mappend(SRCS_CORE, "user_posix.c")
+fi
+if [ "${HAVE_XBOX}" = 'yes' ]; then
+	mappend(SRCS_CORE, "user_xbox.c xbox.c")
+fi
+if [ "${HAVE_CSIDL}" = 'yes' ]; then
+	mappend(SRCS_CORE, "user_win32.c")
+fi
+
+#
+# NET: Conditionally compiled sources in Agar-Net.
+#
 if [ "${HAVE_NETWORK}" = 'yes' ]; then
 	if [ "${HAVE_WINSOCK1}" = 'yes' ]; then
 		mappend(SRCS_NET, "net_winsock1.c")
@@ -990,15 +1003,6 @@ if [ "${HAVE_NETWORK}" = 'yes' ]; then
 	if [ "${HAVE_WEB}" = 'yes' ]; then
 		mappend(SRCS_NET, "web.c web_auth.c web_var.c")
 	fi
-fi
-if [ "${HAVE_GETPWUID}" = 'yes' ]; then
-	mappend(SRCS_CORE, "user_posix.c")
-fi
-if [ "${HAVE_XBOX}" = 'yes' ]; then
-	mappend(SRCS_CORE, "user_xbox.c xbox.c")
-fi
-if [ "${HAVE_CSIDL}" = 'yes' ]; then
-	mappend(SRCS_CORE, "user_win32.c")
 fi
 
 #
