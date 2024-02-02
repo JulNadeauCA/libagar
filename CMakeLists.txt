@@ -13,6 +13,8 @@ project(AGAR
 	LANGUAGES C CXX)
 
 set(AGAR_RELEASE_NAME "Ancient Egypt")
+set(AGAR_LIBRARY_VERSION_MAJOR 8)
+set(AGAR_LIBRARY_VERSION "${AGAR_LIBRARY_VERSION_MAJOR}.0.0")
 
 #
 # Global build options (pseudo-package).
@@ -316,14 +318,18 @@ set(AGAR_CORE_LIBS "-lag_core")
 set(AGAR_GUI_CFLAGS "${AGAR_GLOBAL_CFLAGS}")
 set(AGAR_GUI_LIBS "-lag_gui")
 
-message("Preprocessing C includes files...")
+message(STATUS "Preprocessing C includes files")
 file(MAKE_DIRECTORY "${AGAR_BINARY_DIR}/include")
 file(MAKE_DIRECTORY "${AGAR_BINARY_DIR}/include/agar")
 file(MAKE_DIRECTORY "${AGAR_BINARY_DIR}/include/agar/config")
 execute_process(COMMAND "perl" "${AGAR_SOURCE_DIR}/mk/gen-includes.pl" "${AGAR_BINARY_DIR}/include/agar"
 	WORKING_DIRECTORY ${AGAR_SOURCE_DIR}
 	COMMAND_ERROR_IS_FATAL ANY)
-message("Include files generated successfully")
+foreach(agar_incl
+    au core gui map net sg sk vg)
+	file(COPY_FILE ${AGAR_BINARY_DIR}/include/agar/${agar_incl}/${agar_incl}_pub.h
+	    ${AGAR_BINARY_DIR}/include/agar/${agar_incl}.h)
+endforeach()
 
 # Set defaults preventing destination file conflicts
 set(AGAR_CMAKE_DEBUG_POSTFIX "d"
@@ -654,7 +660,7 @@ message(STATUS "")
 message(STATUS "Platform:     ${CMAKE_SYSTEM}")
 message(STATUS "64-bit:       ${ARCH_64}")
 message(STATUS "Compiler:     ${CMAKE_C_COMPILER}")
-message(STATUS "Agar Version: ${AGAR_VERSION}")
+message(STATUS "Agar Version: ${AGAR_VERSION} (Library Version: ${AGAR_LIBRARY_VERSION})")
 message(STATUS "Memory Model: ${AGAR_MEMORY_MODEL}")
 
 set(AGAR_LIBS_ENABLED " CORE")
@@ -723,27 +729,25 @@ message(STATUS "Static Library: ${AGAR_STATIC} (Static PIC: ${AGAR_STATIC_PIC})"
 # Ensure that the extra cflags are used at compile time
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS}")
 
+#
+# Shared Library Build
+#
 if(AGAR_SHARED)
 	BB_Save_MakeVar(LIB_SHARED "Yes")
 
 	add_library(ag_core SHARED ${SOURCE_FILES_CORE})
 	target_compile_definitions(ag_core PUBLIC _AGAR_CORE_INTERNAL)
 
+	set_target_properties(ag_core PROPERTIES
+	    VERSION ${AGAR_LIBRARY_VERSION}
+	    SOVERSION ${AGAR_LIBRARY_VERSION_MAJOR}
+	    OUTPUT_NAME "ag_core")
+
 	if(APPLE)
-		set_target_properties(ag_core PROPERTIES
-		    MACOSX_RPATH 1
-		    OUTPUT_NAME "ag_core-${AGAR_VERSION_MAJOR}.${AGAR_VERSION_MINOR}")
-	elseif(UNIX AND NOT ANDROID)
-		set_target_properties(ag_core PROPERTIES
-		    VERSION ${AGAR_VERSION} SOVERSION ${AGAR_VERSION_MAJOR}
-		    OUTPUT_NAME "ag_core-${AGAR_VERSION}")
-	else()
-		if(WINDOWS OR CYGWIN)
-			set_target_properties(ag_core PROPERTIES DEFINE_SYMBOL DLL_EXPORT)
-		endif()
-		set_target_properties(ag_core PROPERTIES
-		    VERSION ${AGAR_VERSION} SOVERSION ${AGAR_VERSION_MAJOR}
-		    OUTPUT_NAME "ag_core")
+		set_target_properties(ag_core PROPERTIES MACOSX_RPATH 1)
+	endif()
+	if(WINDOWS OR CYGWIN)
+		set_target_properties(ag_core PROPERTIES DEFINE_SYMBOL DLL_EXPORT)
 	endif()
 	if(MSVC AND NOT MSVC_CLANG)
 		if(NOT WINDOWS_STORE)
@@ -769,6 +773,9 @@ else()
 	BB_Save_MakeVar(LIB_SHARED "No")
 endif()
 
+#
+# Static Library Build
+#
 if(AGAR_STATIC)
 	set(BUILD_SHARED_LIBS FALSE)
 
@@ -777,30 +784,25 @@ if(AGAR_STATIC)
 
 	if(NOT AGAR_SHARED OR NOT WIN32 OR MINGW)
 		set_target_properties(ag_core-static PROPERTIES OUTPUT_NAME "ag_core")
-		# Note: Apparently, OUTPUT_NAME must really be unique; even when
-		# CMAKE_IMPORT_LIBRARY_SUFFIX or the like are given. Otherwise
-		# the static build may race with the import lib and one will get
-		# clobbered, when the suffix is realized via subsequent rename.
 	endif()
 
 	set_target_properties(ag_core-static PROPERTIES POSITION_INDEPENDENT_CODE ${AGAR_STATIC_PIC})
 
-	# Note: The clang toolset for Visual Studio does not support /NODEFAULTLIB.
 	if(MSVC AND NOT MSVC_CLANG)
 		set_target_properties(ag_core-static PROPERTIES LINK_FLAGS_RELEASE "/NODEFAULTLIB")
 		set_target_properties(ag_core-static PROPERTIES LINK_FLAGS_DEBUG "/NODEFAULTLIB")
 		set_target_properties(ag_core-static PROPERTIES STATIC_LIBRARY_FLAGS "/NODEFAULTLIB")
 	endif()
 
-	# TODO: Win32 platforms keep the same suffix .lib for import and static
-	# libraries - do we need to consider this?
 	target_link_libraries(ag_core-static PRIVATE ${EXTRA_LIBS} ${EXTRA_LDFLAGS})
+
 	target_include_directories(ag_core-static BEFORE PRIVATE "${AGAR_BINARY_DIR}/include")
 	target_include_directories(ag_core-static PUBLIC
 		"$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>" $<INSTALL_INTERFACE:include> $<INSTALL_INTERFACE:include/agar>)
 
 	# Import global Agar build options
 	target_link_libraries(ag_core-static PRIVATE $<BUILD_INTERFACE:agar-build-options>)
+
 	if(NOT ANDROID)
 		set_target_properties(ag_core-static PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
 	endif()
@@ -853,12 +855,18 @@ if(AGAR_STATIC)
 #	install(EXPORT ag_guiStaticTargets FILE ag_guiStaticTargets.cmake NAMESPACE ag_gui:: DESTINATION ${PKG_PREFIX})
 endif()
 
-install(FILES ${AGAR_BINARY_DIR}/agarConfig.cmake ${AGAR_BINARY_DIR}/agarConfigVersion.cmake
+install(FILES ${AGAR_SOURCE_DIR}/agarConfig.cmake ${AGAR_BINARY_DIR}/agarConfigVersion.cmake
     DESTINATION ${PKG_PREFIX}
     COMPONENT Devel)
 
-file(GLOB INCLUDE_FILES ${AGAR_BINARY_DIR}/*/*.h)
-install(FILES ${INCLUDE_FILES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/agar)
+foreach(agar_incl_subdir
+    au config core gui map math net sg sk vg)
+	file(GLOB include_files ${AGAR_BINARY_DIR}/include/agar/${agar_incl_subdir}/*.h)
+	install(FILES ${include_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/agar/${agar_incl_subdir})
+endforeach()
+
+file(GLOB include_files ${AGAR_BINARY_DIR}/include/agar/*.h)
+install(FILES ${include_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/agar)
 
 string(TOUPPER "${CMAKE_BUILD_TYPE}" UPPER_BUILD_TYPE)
 if(UPPER_BUILD_TYPE MATCHES DEBUG)
@@ -882,16 +890,16 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 		endif()
 	endif()
 
-	if(FREEBSD)
-		install(FILES ${AGAR_BINARY_DIR}/agar.pc
-		    DESTINATION "libdata/pkgconfig")
-	else()
-		install(FILES ${AGAR_BINARY_DIR}/agar.pc
-		    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
-	endif()
-
-	install(PROGRAMS ${AGAR_BINARY_DIR}/agar-config DESTINATION "${CMAKE_INSTALL_BINDIR}")
-	install(FILES "${AGAR_BINARY_DIR}/agar.m4" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/aclocal")
+	# TODO
+#	if(FREEBSD)
+#		install(FILES ${AGAR_BINARY_DIR}/agar.pc
+#		    DESTINATION "libdata/pkgconfig")
+#	else()
+#		install(FILES ${AGAR_BINARY_DIR}/agar.pc
+#		    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+#	endif()
+#	install(PROGRAMS ${AGAR_BINARY_DIR}/agar-config DESTINATION "${CMAKE_INSTALL_BINDIR}")
+#	install(FILES "${AGAR_BINARY_DIR}/agar.m4" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/aclocal")
 endif()
 
 ##### Uninstall target #####
