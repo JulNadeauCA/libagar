@@ -938,7 +938,7 @@ AG_TlistBegin(AG_Tlist *tl)
 	     it != TAILQ_END(&tl->items);
 	     it = nit) {
 		nit = TAILQ_NEXT(it, items);
-		if ((!(tl->flags & AG_TLIST_NOSELSTATE) && it->selected) ||
+		if ((!(tl->flags & AG_TLIST_STATELESS) && it->selected) ||
 		      (it->flags & AG_TLIST_HAS_CHILDREN)) {
 			TAILQ_INSERT_HEAD(&tl->selitems, it, selitems);
 		} else {
@@ -1031,7 +1031,7 @@ AG_TlistEnd(AG_Tlist *tl)
 			if (!tl->compare_fn(sit, cit)) {
 				continue;
 			}
-			if (!(tl->flags & AG_TLIST_NOSELSTATE)) {
+			if (!(tl->flags & AG_TLIST_STATELESS)) {
 				cit->selected = sit->selected;
 			}
 			if (sit->flags & AG_TLIST_ITEM_EXPANDED) {
