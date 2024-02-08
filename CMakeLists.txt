@@ -1,5 +1,11 @@
 #
-# CMake Buildsystem for Agar
+# CMake Buildsystem for Agar.
+#
+# Limitations when building with Cmake (as opposed to ./configure and make):
+# - No built-in support for cross-compiling to devkitARM / devkitPPC / devkitA64.
+# - No support for cc65 and cross-compiling to 8-bit targets (e.g., --host=c64).
+# - No support for linking against external libraries installed under specific
+#   prefixes (e.g., --with-png=/some/alternate/prefix).
 #
 if(${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_BINARY_DIR})
 	message(FATAL_ERROR "Prevented in-tree build. Please create a build directory outside of the Agar source code and run \"cmake -S ${CMAKE_SOURCE_DIR} -B .\" from there")
@@ -10,7 +16,7 @@ project(AGAR
 	VERSION 1.7.1
 	DESCRIPTION "Agar GUI System"
 	HOMEPAGE_URL "https://libagar.org"
-	LANGUAGES C CXX)
+	LANGUAGES C CXX OBJC)
 
 set(AGAR_RELEASE_NAME "Ancient Egypt")
 set(AGAR_LIBRARY_VERSION_MAJOR 8)
@@ -21,17 +27,18 @@ set(AGAR_LIBRARY_VERSION "${AGAR_LIBRARY_VERSION_MAJOR}.0.0")
 #
 add_library(agar-build-options INTERFACE)
 
-target_compile_definitions(agar-build-options INTERFACE "-D_AGAR_INTERNAL")
-target_compile_definitions(agar-build-options INTERFACE "-D_DEFAULT_SOURCE")
-target_compile_definitions(agar-build-options INTERFACE "-D_BSD_SOURCE")
+target_compile_definitions(agar-build-options INTERFACE _AGAR_INTERNAL)
+target_compile_definitions(agar-build-options INTERFACE _DEFAULT_SOURCE)
+target_compile_definitions(agar-build-options INTERFACE _BSD_SOURCE)
 
 if(WINDOWS_STORE)
-	target_compile_definitions(agar-build-options INTERFACE "-DAGAR_BUILDING_WINRT=1")
+	target_compile_definitions(agar-build-options INTERFACE AGAR_BUILDING_WINRT=1)
 	target_compile_options(agar-build-options INTERFACE "-ZW")
 endif()
+
 if(MSVC)
-	target_compile_definitions(agar-build-options INTERFACE "-D_CRT_SECURE_NO_WARNINGS")
-	target_compile_definitions(agar-build-options INTERFACE "-D_CRT_SECURE_NO_DEPRECATE")
+	target_compile_definitions(agar-build-options INTERFACE _CRT_SECURE_NO_WARNINGS)
+	target_compile_definitions(agar-build-options INTERFACE _CRT_SECURE_NO_DEPRECATE)
 	target_compile_options(agar-build-options INTERFACE "/MP")
 endif(MSVC)
 
@@ -46,6 +53,7 @@ include(CheckCSourceCompiles)
 include(CheckCSourceRuns)
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
+include(CheckOBJCSourceCompiles)
 include(CheckTypeSize)
 include(CheckStructHasMember)
 include(CMakeDependentOption)
@@ -124,6 +132,11 @@ if(NOT DEFINED AGAR_SHARED_ENABLED_BY_DEFAULT)
 endif()
 
 set(AGAR_GLOBAL_CFLAGS "")
+set(AGAR_GLOBAL_LIBS "")
+set(AGAR_CORE_CFLAGS "")
+set(AGAR_CORE_LIBS "")
+set(AGAR_GUI_CFLAGS "")
+set(AGAR_GUI_LIBS "")
 
 #
 # Which Agar libraries to build?
@@ -147,7 +160,7 @@ option(AGAR_STATIC_PIC "Build the static library as Position Independent Code" O
 option(AGAR_WARNINGS "Use recommended compiler warnings" OFF)
 option(AGAR_TYPE_SAFETY "Run-time type safety checks (implied by Debug)" OFF)
 option(AGAR_DEBUG_SURFACES "Trace AG_Surface operations (expensive)" OFF)
-option(AGAR_ENABLE_LEGACY "Enable obsolete and deprecated interfaces" ON)
+option(AGAR_LEGACY "Enable obsolete and deprecated interfaces" ON)
 option(AGAR_THREADS "Thread safety and multithreading support" ${AGAR_THREADS_ENABLED_BY_DEFAULT})
 option(AGAR_ATTRIBUTES "Enable compiler attributes and annotations" ON)
 option(AGAR_INLINE_FUNCTIONS "Enable inline functions as appropriate" ON)
@@ -169,10 +182,20 @@ option(AGAR_ENABLE_USER "The AG_User(3) interface" ON)
 option(AGAR_ENABLE_VERBOSITY "Verbose error messages" ON)
 
 #
-# Options specific to Agar-GUI (but defined globally).
+# Options specific to Agar-GUI.
 #
-option(AGAR_ENABLE_WIDGETS "Build the set of standard Agar GUI widgets" ON)
+option(AGAR_ENABLE_WIDGETS "Build the set of standard GUI widgets" ON)
 option(AGAR_ENABLE_WM_HINTS "Enable interaction with Window Managers" ON)
+option(AGAR_GUI_SDL "SDL 1.2 support in GUI (sdlfb, sdlgl drivers)" ON)
+option(AGAR_GUI_SDL2 "SDL 2.0 support in GUI (sdl2fb, sdl2gl and sdl2mw drivers)" ON)
+option(AGAR_GUI_OPENGL "OpenGL support in GUI (recommended)" ON)
+option(AGAR_GUI_X11 "X Windows support in GUI (glx driver)" ON)
+option(AGAR_GUI_XINERAMA "Support Xinerama extension in glx driver" ON)
+option(AGAR_GUI_COCOA "MacOS X Cocoa support (cocoa driver)" ON)
+option(AGAR_GUI_FREETYPE "Use the FreeType font engine (recommended)" ON)
+option(AGAR_GUI_FONTCONFIG "Use fontconfig library to access system fonts" ON)
+option(AGAR_GUI_JPEG "Support for image files in JPEG format" ON)
+option(AGAR_GUI_PNG "Support for image files in PNG format" ON)
 
 option(AGAR_TESTS "Build the Agar Test Suite (agartest)" OFF)
 
@@ -197,10 +220,9 @@ endif()
 # Set recommended compiler warnings.
 #
 if(AGAR_WARNINGS)
-	set(AGAR_GLOBAL_CFLAGS "${AGAR_GLOBAL_CFLAGS} -Wall -Werror")
-	set(AGAR_GLOBAL_CFLAGS "${AGAR_GLOBAL_CFLAGS} -Wmissing-prototypes -Wno-switch")
+	list(APPEND AGAR_GLOBAL_CFLAGS "-Wall -Werror -Wmissing-prototypes -Wno-switch")
 	if(DARWIN)
-		set(AGAR_GLOBAL_CFLAGS "${AGAR_GLOBAL_CFLAGS} -Wno-deprecated-declarations")
+		list(APPEND AGAR_GLOBAL_CFLAGS "-Wno-deprecated-declarations")
 	endif()
 endif()
 
@@ -219,7 +241,7 @@ else()
 	endif()
 endif()
 if(AGAR_DEBUG_SURFACES)
-	set(AGAR_GUI_CFLAGS "${AGAR_GUI_CFLAGS} -DDEBUG_SURFACES")
+	list(APPEND AGAR_GUI_CFLAGS "-DDEBUG_SURFACES")
 endif()
 
 if(AGAR_ENABLE_ANSI_COLOR)
@@ -312,21 +334,43 @@ else()
 	BB_Save_Undef(AG_LEGACY)
 endif()
 
-set(AGAR_CORE_CFLAGS "${AGAR_GLOBAL_CFLAGS}")
-set(AGAR_CORE_LIBS "-lag_core")
-
-set(AGAR_GUI_CFLAGS "${AGAR_GLOBAL_CFLAGS}")
-set(AGAR_GUI_LIBS "-lag_gui")
-
+#
+# C Include Preparation.
+#
 message(STATUS "Preprocessing C includes files")
 file(MAKE_DIRECTORY "${AGAR_BINARY_DIR}/include")
 file(MAKE_DIRECTORY "${AGAR_BINARY_DIR}/include/agar")
 file(MAKE_DIRECTORY "${AGAR_BINARY_DIR}/include/agar/config")
-execute_process(COMMAND "perl" "${AGAR_SOURCE_DIR}/mk/gen-includes.pl" "${AGAR_BINARY_DIR}/include/agar"
-	WORKING_DIRECTORY ${AGAR_SOURCE_DIR}
-	COMMAND_ERROR_IS_FATAL ANY)
-foreach(agar_incl
-    au core gui map net sg sk vg)
+foreach(agar_include_subdir core au gui map math net sg sk vg)
+	file(MAKE_DIRECTORY "${AGAR_BINARY_DIR}/include/agar/${agar_include_subdir}")
+endforeach()
+
+include(FindPerl)
+if(PERL_EXECUTABLE)
+	#
+	# If we have a perl, preprocess include files such that declarations enclosed in
+	# __BEGIN_DECLS and __END_DECLS are automatically tagged with platform-specific
+	# keywords as needed.
+	#
+	execute_process(COMMAND ${PERL_EXECUTABLE}
+	    "${AGAR_SOURCE_DIR}/mk/gen-includes.pl"
+	    "${AGAR_BINARY_DIR}/include/agar"
+	    WORKING_DIRECTORY ${AGAR_SOURCE_DIR}
+	    COMMAND_ERROR_IS_FATAL ANY)
+else()
+	#
+	# If perl is unavailable, copy the as-is.
+	#
+	foreach(agar_include_subdir core au gui map math net sg sk vg)
+		file(GLOB agar_include_files ${AGAR_SOURCE_DIR}/${agar_include_subdir}/*.h)
+		foreach(agar_include_file ${agar_include_files})
+			file(COPY ${agar_include_file}
+			    DESTINATION ${AGAR_BINARY_DIR}/include/agar/${agar_include_subdir})
+		endforeach()
+	endforeach()
+endif()
+
+foreach(agar_incl core au gui map net sg sk vg)
 	file(COPY_FILE ${AGAR_BINARY_DIR}/include/agar/${agar_incl}/${agar_incl}_pub.h
 	    ${AGAR_BINARY_DIR}/include/agar/${agar_incl}.h)
 endforeach()
@@ -338,12 +382,6 @@ set(AGAR_CMAKE_DEBUG_POSTFIX "d"
 mark_as_advanced(CMAKE_IMPORT_LIBRARY_SUFFIX AGAR_CMAKE_DEBUG_POSTFIX)
 
 set(LIBRARY_OUTPUT_DIRECTORY "build")
-
-set(LIBNAME agar)
-
-if(NOT LIBTYPE)
-	set(LIBTYPE SHARED)
-endif()
 
 #
 # Platform detection.
@@ -422,11 +460,11 @@ if(CYGWIN)
 	set(CMAKE_REQUIRED_FLAGS ${ORIG_CMAKE_REQUIRED_FLAGS})
 
 	if(HAVE_GCC_NO_CYGWIN)
+		list(APPEND AGAR_GLOBAL_CFLAGS "-mno-cygwin")
 		list(APPEND EXTRA_LDFLAGS "-mno-cygwin")
-		list(APPEND AGAR_CORE_LIBS "-mno-cygwin")
 	endif()
 
-	set(AGAR_CORE_CFLAGS "${AGAR_CORE_CFLAGS} -I/usr/include/mingw")
+	list(APPEND AGAR_GLOBAL_CFLAGS "-I/usr/include/mingw")
 endif()
 
 # Use our generated C includes.
@@ -469,6 +507,94 @@ set(SOURCE_FILES_CORE
     ${AGAR_SOURCE_DIR}/core/user_getenv.c
     ${AGAR_SOURCE_DIR}/core/variable.c
     ${AGAR_SOURCE_DIR}/core/vec.c)
+
+set(SOURCE_FILES_GUI
+    ${AGAR_SOURCE_DIR}/gui/box.c
+    ${AGAR_SOURCE_DIR}/gui/button.c
+    ${AGAR_SOURCE_DIR}/gui/checkbox.c
+    ${AGAR_SOURCE_DIR}/gui/colors.c
+    ${AGAR_SOURCE_DIR}/gui/combo.c
+    ${AGAR_SOURCE_DIR}/gui/console.c
+    ${AGAR_SOURCE_DIR}/gui/controller.c
+    ${AGAR_SOURCE_DIR}/gui/cursors.c
+    ${AGAR_SOURCE_DIR}/gui/debugger.c
+    ${AGAR_SOURCE_DIR}/gui/dev_browser.c
+    ${AGAR_SOURCE_DIR}/gui/dev_classinfo.c
+    ${AGAR_SOURCE_DIR}/gui/dev_config.c
+    ${AGAR_SOURCE_DIR}/gui/dev_fonts.c
+    ${AGAR_SOURCE_DIR}/gui/dev_object_edit.c
+    ${AGAR_SOURCE_DIR}/gui/dev_timer_inspector.c
+    ${AGAR_SOURCE_DIR}/gui/dev_unicode_browser.c
+    ${AGAR_SOURCE_DIR}/gui/dir_dlg.c
+    ${AGAR_SOURCE_DIR}/gui/drv.c
+    ${AGAR_SOURCE_DIR}/gui/drv_dummy.c
+    ${AGAR_SOURCE_DIR}/gui/drv_mw.c
+    ${AGAR_SOURCE_DIR}/gui/drv_sw.c
+    ${AGAR_SOURCE_DIR}/gui/editable.c
+    ${AGAR_SOURCE_DIR}/gui/file_dlg.c
+    ${AGAR_SOURCE_DIR}/gui/fixed.c
+    ${AGAR_SOURCE_DIR}/gui/fixed_plotter.c
+    ${AGAR_SOURCE_DIR}/gui/font_selector.c
+    ${AGAR_SOURCE_DIR}/gui/font.c
+    ${AGAR_SOURCE_DIR}/gui/font_bf.c
+    ${AGAR_SOURCE_DIR}/gui/geometry.c
+    ${AGAR_SOURCE_DIR}/gui/global_keys.c
+    ${AGAR_SOURCE_DIR}/gui/glview.c
+    ${AGAR_SOURCE_DIR}/gui/graph.c
+    ${AGAR_SOURCE_DIR}/gui/gui.c
+    ${AGAR_SOURCE_DIR}/gui/hsvpal.c
+    ${AGAR_SOURCE_DIR}/gui/icon.c
+    ${AGAR_SOURCE_DIR}/gui/iconmgr.c
+    ${AGAR_SOURCE_DIR}/gui/input_device.c
+    ${AGAR_SOURCE_DIR}/gui/joystick.c
+    ${AGAR_SOURCE_DIR}/gui/keyboard.c
+    ${AGAR_SOURCE_DIR}/gui/keymap.c
+    ${AGAR_SOURCE_DIR}/gui/keymap_compose.c
+    ${AGAR_SOURCE_DIR}/gui/keymap_latin1.c
+    ${AGAR_SOURCE_DIR}/gui/keysyms.c
+    ${AGAR_SOURCE_DIR}/gui/label.c
+    ${AGAR_SOURCE_DIR}/gui/load_bmp.c
+    ${AGAR_SOURCE_DIR}/gui/load_color.c
+    ${AGAR_SOURCE_DIR}/gui/load_jpg.c
+    ${AGAR_SOURCE_DIR}/gui/load_png.c
+    ${AGAR_SOURCE_DIR}/gui/load_surface.c
+    ${AGAR_SOURCE_DIR}/gui/menu.c
+    ${AGAR_SOURCE_DIR}/gui/menu_view.c
+    ${AGAR_SOURCE_DIR}/gui/mfspinbutton.c
+    ${AGAR_SOURCE_DIR}/gui/mouse.c
+    ${AGAR_SOURCE_DIR}/gui/mpane.c
+    ${AGAR_SOURCE_DIR}/gui/mspinbutton.c
+    ${AGAR_SOURCE_DIR}/gui/notebook.c
+    ${AGAR_SOURCE_DIR}/gui/numerical.c
+    ${AGAR_SOURCE_DIR}/gui/objsel.c
+    ${AGAR_SOURCE_DIR}/gui/packedpixel.c
+    ${AGAR_SOURCE_DIR}/gui/pane.c
+    ${AGAR_SOURCE_DIR}/gui/pixmap.c
+    ${AGAR_SOURCE_DIR}/gui/primitive.c
+    ${AGAR_SOURCE_DIR}/gui/progress_bar.c
+    ${AGAR_SOURCE_DIR}/gui/radio.c
+    ${AGAR_SOURCE_DIR}/gui/scrollbar.c
+    ${AGAR_SOURCE_DIR}/gui/scrollview.c
+    ${AGAR_SOURCE_DIR}/gui/separator.c
+    ${AGAR_SOURCE_DIR}/gui/slider.c
+    ${AGAR_SOURCE_DIR}/gui/socket.c
+    ${AGAR_SOURCE_DIR}/gui/statusbar.c
+    ${AGAR_SOURCE_DIR}/gui/style_editor.c
+    ${AGAR_SOURCE_DIR}/gui/stylesheet.c
+    ${AGAR_SOURCE_DIR}/gui/surface.c
+    ${AGAR_SOURCE_DIR}/gui/table.c
+    ${AGAR_SOURCE_DIR}/gui/text.c
+    ${AGAR_SOURCE_DIR}/gui/text_cache.c
+    ${AGAR_SOURCE_DIR}/gui/textbox.c
+    ${AGAR_SOURCE_DIR}/gui/time_sdl.c
+    ${AGAR_SOURCE_DIR}/gui/titlebar.c
+    ${AGAR_SOURCE_DIR}/gui/tlist.c
+    ${AGAR_SOURCE_DIR}/gui/toolbar.c
+    ${AGAR_SOURCE_DIR}/gui/treetbl.c
+    ${AGAR_SOURCE_DIR}/gui/ucombo.c
+    ${AGAR_SOURCE_DIR}/gui/units.c
+    ${AGAR_SOURCE_DIR}/gui/widget.c
+    ${AGAR_SOURCE_DIR}/gui/window.c)
 
 #
 # Specify the installation directories.
@@ -563,13 +689,13 @@ Disable_Db4()
 Disable_Db5()
 Disable_Mysql()
 
-#
 # Check for threads support.
-#
 if(AGAR_THREADS)
 	Check_Pthreads()
 	if(HAVE_PTHREADS)
 		BB_Save_Define(AG_THREADS)
+		list(APPEND AGAR_CORE_CFLAGS ${PTHREADS_CFLAGS})
+		list(APPEND AGAR_CORE_LIBS ${PTHREADS_LIBS})
 	else()
 		BB_Save_Undef(AG_THREADS)
 
@@ -578,7 +704,7 @@ if(AGAR_THREADS)
 			# Lock macros expand to no-ops and cause unused variables
 			# to appear in unthreaded builds.
 			#
-			set(AGAR_GLOBAL_CFLAGS "${AGAR_GLOBAL_CFLAGS} -Wno-unused")
+			list(APPEND AGAR_GLOBAL_CFLAGS "-Wno-unused")
 		endif()
 	endif()
 else()
@@ -586,14 +712,26 @@ else()
 	BB_Save_Undef(AG_THREADS)
 endif()
 
-#
-# Check for libintl / gettext
-#
+# Check for libintl / gettext.
 if(AGAR_NLS)
 	Check_Iconv()
+	if(HAVE_ICONV)
+		if(ICONV_CFLAGS)
+			list(APPEND AGAR_CORE_CFLAGS ${ICONV_CFLAGS})
+		endif()
+		if(ICONV_LIBS)
+			list(APPEND AGAR_CORE_LIBS ${ICONV_LIBS})
+		endif()
+	endif()
 	Check_Gettext()
 	if(HAVE_GETTEXT)
 		BB_Save_Define(ENABLE_NLS)
+		if(GETTEXT_CFLAGS)
+			list(APPEND AGAR_CORE_CFLAGS ${GETTEXT_CFLAGS})
+		endif()
+		if(GETTEXT_LIBS)
+			list(APPEND AGAR_CORE_LIBS ${GETTEXT_LIBS})
+		endif()
 	else()
 		BB_Save_Undef(ENABLE_NLS)
 	endif()
@@ -602,6 +740,149 @@ else()
 	Disable_Gettext()
 	BB_Save_Undef(ENABLE_NLS)
 endif()
+
+if(AGAR_GUI)
+	BB_Save_Define(ENABLE_GUI)
+
+	# Check for SDL 2.0.
+	if(AGAR_GUI_SDL2)
+		Check_Sdl2()
+		if(SDL2_CFLAGS)
+			list(APPEND AGAR_GUI_CFLAGS ${SDL2_CFLAGS})
+		endif()
+		if(SDL2_LIBS)
+			list(APPEND AGAR_GUI_LIBS ${SDL2_LIBS})
+		endif()
+	else()
+		Disable_Sdl2()
+	endif()
+
+	# Fallback to SDL 1.2 (which conflicts with SDL2).
+	if(AGAR_GUI_SDL AND NOT HAVE_SDL2)
+		Check_Sdl()
+		if(SDL_CFLAGS)
+			list(APPEND AGAR_GUI_CFLAGS ${SDL_CFLAGS})
+		endif()
+		if(SDL_LIBS)
+			list(APPEND AGAR_GUI_LIBS ${SDL_LIBS})
+		endif()
+	else()
+		Disable_Sdl()
+	endif()
+
+	# Check for OpenGL (and extensions such as GLX and WGL).
+	if(AGAR_GUI_OPENGL)
+		Check_OpenGL()
+		if(OPENGL_CFLAGS)
+			list(APPEND AGAR_GUI_CFLAGS ${OPENGL_CFLAGS})
+		endif()
+		if(OPENGL_LIBS)
+			list(APPEND AGAR_GUI_LIBS ${OPENGL_LIBS})
+		endif()
+	else()
+		Disable_OpenGL()
+	endif()
+
+	# Check for X Windows and the Xinerama extension.
+	if(AGAR_GUI_X11)
+		Check_X11()
+		if(X11_CFLAGS)
+			list(APPEND AGAR_GUI_CFLAGS ${X11_CFLAGS})
+		endif()
+		if(X11_LIBS)
+			list(APPEND AGAR_GUI_LIBS ${X11_LIBS})
+		endif()
+		if(XINERAMA_CFLAGS)
+			list(APPEND AGAR_GUI_CFLAGS ${XINERAMA_CFLAGS})
+		endif()
+		if(XINERAMA_LIBS)
+			list(APPEND AGAR_GUI_LIBS ${XINERAMA_LIBS})
+		endif()
+	else()
+		Disable_X11()
+
+		set(HAVE_GLX OFF)
+		BB_Save_Undef(HAVE_GLX)
+	endif()
+
+	# Check for Cocoa on MacOS X.
+	if(AGAR_GUI_COCOA)
+		Check_Cocoa()
+		if(COCOA_CFLAGS)
+			list(APPEND AGAR_GUI_CFLAGS ${COCOA_CFLAGS})
+		endif()
+		if(COCOA_LIBS)
+			list(APPEND AGAR_GUI_LIBS ${COCOA_LIBS})
+		endif()
+	else()
+		Disable_Cocoa()
+	endif()
+
+	# Check for the FreeType font engine.
+	if(AGAR_GUI_FREETYPE)
+		Check_FreeType()
+		if(FREETYPE_CFLAGS)
+			list(APPEND AGAR_GUI_CFLAGS ${FREETYPE_CFLAGS})
+		endif()
+		if(FREETYPE_LIBS)
+			list(APPEND AGAR_GUI_LIBS ${FREETYPE_LIBS})
+		endif()
+	else()
+		Disable_FreeType()
+	endif()
+
+	# Check for the Fontconfig library.
+	if(AGAR_GUI_FONTCONFIG)
+		Check_Fontconfig()
+		if(FONTCONFIG_CFLAGS)
+			list(APPEND AGAR_GUI_CFLAGS ${FONTCONFIG_CFLAGS})
+		endif()
+		if(FONTCONFIG_LIBS)
+			list(APPEND AGAR_GUI_LIBS ${FONTCONFIG_LIBS})
+		endif()
+	else()
+		Disable_Fontconfig()
+	endif()
+
+	# Check for libjpeg.
+	if(AGAR_GUI_JPEG)
+		Check_Jpeg()
+		if(JPEG_CFLAGS)
+			list(APPEND AGAR_GUI_CFLAGS ${JPEG_CFLAGS})
+		endif()
+		if(JPEG_LIBS)
+			list(APPEND AGAR_GUI_LIBS ${JPEG_LIBS})
+		endif()
+	else()
+		Disable_Jpeg()
+	endif()
+
+	# Check for libpng.
+	if(AGAR_GUI_PNG)
+		Check_Png()
+		if(PNG_CFLAGS)
+			list(APPEND AGAR_GUI_CFLAGS ${PNG_CFLAGS})
+		endif()
+		if(PNG_LIBS)
+			list(APPEND AGAR_GUI_LIBS ${PNG_LIBS})
+		endif()
+	else()
+		Disable_Png()
+	endif()
+
+else()
+	BB_Save_Undef(ENABLE_GUI)
+	Disable_Sdl2()
+	Disable_Sdl()
+	Disable_OpenGL()
+	Disable_X11()
+	Disable_Cocoa()
+	Disable_FreeType()
+	Disable_Fontconfig()
+	Disable_Jpeg()
+	Disable_Png()
+endif()
+
 
 #
 # Agar-Core conditionally compiled sources
@@ -625,13 +906,6 @@ if(HAVE_GETTIMEOFDAY AND HAVE_SELECT)
 	set(SOURCE_FILES_CORE ${SOURCE_FILES_CORE} ${AGAR_SOURCE_DIR}/core/time_gettimeofday.c)
 endif()
 
-if(HAVE_DB4)
-	message(STATUS "HAVE DB4")
-endif()
-if(HAVE_DB5)
-	message(STATUS "HAVE DB5")
-endif()
-
 # TODO
 #if(HAVE_DB4 OR HAVE_DB5)
 #	set(SOURCE_FILES_CORE ${SOURCE_FILES_CORE} ${AGAR_SOURCE_DIR}/core/db_bdb.c)
@@ -652,7 +926,18 @@ if(HAVE_CSIDL)
 endif()
 
 #
-# Display information
+# Agar-GUI conditionally compiled sources
+#
+if(HAVE_SDL2)
+	set(SOURCE_FILES_GUI ${SOURCE_FILES_GUI} ${AGAR_SOURCE_DIR}/gui/drv_sdl2fb.c)
+	if(HAVE_OPENGL)
+		set(SOURCE_FILES_GUI ${SOURCE_FILES_GUI} ${AGAR_SOURCE_DIR}/gui/drv_sdl2gl.c)
+		set(SOURCE_FILES_GUI ${SOURCE_FILES_GUI} ${AGAR_SOURCE_DIR}/gui/drv_sdl2mw.c)
+	endif()
+endif()
+
+#
+# Display build information.
 #
 message(STATUS "")
 message(STATUS "Agar build successfully configured with the following options:")
@@ -725,91 +1010,163 @@ message(STATUS "EXTRA_LIBS:    ${EXTRA_LIBS}")
 message(STATUS "")
 message(STATUS "Shared Library: ${AGAR_SHARED}")
 message(STATUS "Static Library: ${AGAR_STATIC} (Static PIC: ${AGAR_STATIC_PIC})")
+message(STATUS "")
+message(STATUS "AGAR_GLOBAL_CFLAGS: ${AGAR_GLOBAL_CFLAGS}")
+message(STATUS "AGAR_CORE_CFLAGS:   ${AGAR_CORE_CFLAGS}")
+message(STATUS "AGAR_CORE_LIBS:     ${AGAR_CORE_LIBS}")
+message(STATUS "AGAR_GUI_CFLAGS:    ${AGAR_GUI_CFLAGS}")
+message(STATUS "AGAR_GUI_LIBS:      ${AGAR_GUI_LIBS}")
 
-# Ensure that the extra cflags are used at compile time
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${AGAR_GLOBAL_CFLAGS} ${EXTRA_CFLAGS}")
 
-#
-# Shared Library Build
-#
-if(AGAR_SHARED)
-	BB_Save_MakeVar(LIB_SHARED "Yes")
-
-	add_library(ag_core SHARED ${SOURCE_FILES_CORE})
-	target_compile_definitions(ag_core PUBLIC _AGAR_CORE_INTERNAL)
-
-	set_target_properties(ag_core PROPERTIES
-	    VERSION ${AGAR_LIBRARY_VERSION}
-	    SOVERSION ${AGAR_LIBRARY_VERSION_MAJOR}
-	    OUTPUT_NAME "ag_core")
+# Set common platform-specific properties on shared-library targets.
+macro(Agar_SetPlatformSpecificShared lib outname)
+	set_target_properties(${lib} PROPERTIES VERSION ${AGAR_LIBRARY_VERSION}
+	    SOVERSION ${AGAR_LIBRARY_VERSION_MAJOR} OUTPUT_NAME "${outname}")
 
 	if(APPLE)
-		set_target_properties(ag_core PROPERTIES MACOSX_RPATH 1)
+		set_target_properties(${lib} PROPERTIES MACOSX_RPATH 1)
 	endif()
 	if(WINDOWS OR CYGWIN)
-		set_target_properties(ag_core PROPERTIES DEFINE_SYMBOL DLL_EXPORT)
+		set_target_properties(${lib} PROPERTIES DEFINE_SYMBOL DLL_EXPORT)
 	endif()
 	if(MSVC AND NOT MSVC_CLANG)
 		if(NOT WINDOWS_STORE)
-			set_target_properties(ag_core PROPERTIES LINK_FLAGS_RELEASE "/NODEFAULTLIB")
-			set_target_properties(ag_core PROPERTIES LINK_FLAGS_DEBUG "/NODEFAULTLIB")
+			set_target_properties(${lib} PROPERTIES LINK_FLAGS_RELEASE "/NODEFAULTLIB")
+			set_target_properties(${lib} PROPERTIES LINK_FLAGS_DEBUG "/NODEFAULTLIB")
 		endif()
-		set_target_properties(ag_core PROPERTIES STATIC_LIBRARY_FLAGS "/NODEFAULTLIB")
+		set_target_properties(${lib} PROPERTIES STATIC_LIBRARY_FLAGS "/NODEFAULTLIB")
+	endif()
+endmacro()
+
+# Set common platform-specific properties on static-library targets.
+macro(Agar_SetPlatformSpecificStatic lib outname)
+	if(NOT AGAR_SHARED OR NOT WIN32 OR MINGW)
+		set_target_properties(${lib} PROPERTIES OUTPUT_NAME "${outname}")
 	endif()
 
-	target_link_libraries(ag_core PRIVATE ${EXTRA_LIBS} ${EXTRA_LDFLAGS})
+	set_target_properties(${lib} PROPERTIES POSITION_INDEPENDENT_CODE ${AGAR_STATIC_PIC})
 
+	if(MSVC AND NOT MSVC_CLANG)
+		set_target_properties(${lib} PROPERTIES LINK_FLAGS_RELEASE "/NODEFAULTLIB")
+		set_target_properties(${lib} PROPERTIES LINK_FLAGS_DEBUG "/NODEFAULTLIB")
+		set_target_properties(${lib} PROPERTIES STATIC_LIBRARY_FLAGS "/NODEFAULTLIB")
+	endif()
+endmacro()
+
+#
+# Shared Libraries
+#
+if(AGAR_SHARED)
+	add_library(ag_core SHARED ${SOURCE_FILES_CORE})
+	add_library(ag_core::ag_core ALIAS ag_core)
+	target_compile_options(ag_core PUBLIC ${AGAR_CORE_CFLAGS})
+	target_compile_definitions(ag_core PUBLIC _AGAR_CORE_INTERNAL)
+	Agar_SetPlatformSpecificShared(ag_core "ag_core")
+	target_link_libraries(ag_core PRIVATE ${AGAR_CORE_LIBS} ${EXTRA_LIBS} ${EXTRA_LDFLAGS})
 	target_include_directories(ag_core BEFORE PRIVATE "${AGAR_BINARY_DIR}/include")
 	target_include_directories(ag_core PUBLIC
 		"$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>;$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>;$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/agar>")
-
-	# Import global Agar build options
 	target_link_libraries(ag_core PRIVATE $<BUILD_INTERFACE:agar-build-options>)
+	set_target_properties(ag_core PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
 
-	if(NOT ANDROID)
-		set_target_properties(ag_core PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
+	if(HAVE_ICONV)
+		target_include_directories(ag_core PRIVATE ${Iconv_INCLUDE_DIRS})
+		target_link_libraries(ag_core PRIVATE ${Iconv_LIBRARIES})
 	endif()
+	if(HAVE_GETTEXT)
+		target_include_directories(ag_core PRIVATE ${Intl_INCLUDE_DIRS})
+		target_link_libraries(ag_core PRIVATE ${Intl_LIBRARIES})
+	endif()
+
+	if(AGAR_GUI)
+		add_library(ag_gui SHARED ${SOURCE_FILES_GUI})
+		add_library(ag_gui::ag_gui ALIAS ag_gui)
+		target_compile_options(ag_gui PUBLIC ${AGAR_CORE_CFLAGS} ${AGAR_GUI_CFLAGS})
+		target_compile_definitions(ag_gui PUBLIC _AGAR_GUI_INTERNAL)
+		Agar_SetPlatformSpecificShared(ag_gui "ag_gui")
+		target_link_libraries(ag_gui PRIVATE ${AGAR_GUI_LIBS} ${AGAR_CORE_LIBS} ${EXTRA_LIBS} ${EXTRA_LDFLAGS})
+		target_include_directories(ag_gui BEFORE PRIVATE "${AGAR_BINARY_DIR}/include")
+		target_include_directories(ag_gui PUBLIC
+			"$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>;$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>;$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/agar>")
+		target_link_libraries(ag_gui PRIVATE $<BUILD_INTERFACE:agar-build-options>)
+		set_target_properties(ag_gui PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
+
+		if(HAVE_SDL2)
+			target_include_directories(ag_gui PRIVATE ${SDL2_INCLUDE_DIRS})
+			target_link_libraries(ag_gui PRIVATE ${SDL2_LIBRARIES})
+		endif()
+		if(HAVE_OPENGL)
+			target_include_directories(ag_gui PRIVATE ${OPENGL_INCLUDE_DIR})
+			target_link_libraries(ag_gui PRIVATE ${OPENGL_LIBRARIES})
+		endif()
+		if(HAVE_X11)
+			target_include_directories(ag_gui PRIVATE ${X11_INCLUDE_DIR})
+			target_link_libraries(ag_gui PRIVATE ${X11_LIBRARIES})
+		endif()
+	endif()
+
+	BB_Save_MakeVar(LIB_SHARED "Yes")
 else()
 	BB_Save_MakeVar(LIB_SHARED "No")
 endif()
 
 #
-# Static Library Build
+# Static Libraries
 #
 if(AGAR_STATIC)
 	set(BUILD_SHARED_LIBS FALSE)
 
 	add_library(ag_core-static STATIC ${SOURCE_FILES_CORE})
+	target_compile_options(ag_core-static PUBLIC ${AGAR_CORE_CFLAGS})
 	target_compile_definitions(ag_core-static PUBLIC _AGAR_CORE_INTERNAL)
-
-	if(NOT AGAR_SHARED OR NOT WIN32 OR MINGW)
-		set_target_properties(ag_core-static PROPERTIES OUTPUT_NAME "ag_core")
-	endif()
-
-	set_target_properties(ag_core-static PROPERTIES POSITION_INDEPENDENT_CODE ${AGAR_STATIC_PIC})
-
-	if(MSVC AND NOT MSVC_CLANG)
-		set_target_properties(ag_core-static PROPERTIES LINK_FLAGS_RELEASE "/NODEFAULTLIB")
-		set_target_properties(ag_core-static PROPERTIES LINK_FLAGS_DEBUG "/NODEFAULTLIB")
-		set_target_properties(ag_core-static PROPERTIES STATIC_LIBRARY_FLAGS "/NODEFAULTLIB")
-	endif()
-
-	target_link_libraries(ag_core-static PRIVATE ${EXTRA_LIBS} ${EXTRA_LDFLAGS})
-
+	Agar_SetPlatformSpecificStatic(ag_core-static "ag_core")
+	target_link_libraries(ag_core-static PRIVATE ${AGAR_CORE_LIBS} ${EXTRA_LIBS} ${EXTRA_LDFLAGS})
 	target_include_directories(ag_core-static BEFORE PRIVATE "${AGAR_BINARY_DIR}/include")
 	target_include_directories(ag_core-static PUBLIC
 		"$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>" $<INSTALL_INTERFACE:include> $<INSTALL_INTERFACE:include/agar>)
-
-	# Import global Agar build options
 	target_link_libraries(ag_core-static PRIVATE $<BUILD_INTERFACE:agar-build-options>)
+	set_target_properties(ag_core-static PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
 
-	if(NOT ANDROID)
-		set_target_properties(ag_core-static PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
+	if(HAVE_ICONV)
+		target_include_directories(ag_core-static PRIVATE ${Iconv_INCLUDE_DIRS})
+		target_link_libraries(ag_core-static PRIVATE ${Iconv_LIBRARIES})
+	endif()
+	if(HAVE_GETTEXT)
+		target_include_directories(ag_core-static PRIVATE ${Intl_INCLUDE_DIRS})
+		target_link_libraries(ag_core-static PRIVATE ${Intl_LIBRARIES})
+	endif()
+
+	if(AGAR_GUI)
+		add_library(ag_gui-static STATIC ${SOURCE_FILES_GUI})
+		target_compile_options(ag_gui-static PUBLIC ${AGAR_CORE_CFLAGS} ${AGAR_GUI_CFLAGS})
+		target_compile_definitions(ag_gui-static PUBLIC _AGAR_GUI_INTERNAL)
+		Agar_SetPlatformSpecificStatic(ag_gui-static "ag_gui")
+		target_link_libraries(ag_gui-static PRIVATE ${AGAR_GUI_LIBS} ${AGAR_CORE_LIBS} ${EXTRA_LIBS} ${EXTRA_LDFLAGS})
+		target_include_directories(ag_gui-static BEFORE PRIVATE "${AGAR_BINARY_DIR}/include")
+		target_include_directories(ag_gui-static PUBLIC
+			"$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>" $<INSTALL_INTERFACE:include> $<INSTALL_INTERFACE:include/agar>)
+		target_link_libraries(ag_gui-static PRIVATE $<BUILD_INTERFACE:agar-build-options>)
+		set_target_properties(ag_gui-static PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
+
+		if(HAVE_SDL2)
+			target_include_directories(ag_gui-static PRIVATE ${SDL2_INCLUDE_DIRS})
+			target_link_libraries(ag_gui-static PRIVATE ${SDL2_LIBRARIES})
+		endif()
+		if(HAVE_OPENGL)
+			target_include_directories(ag_gui-static PRIVATE ${OPENGL_INCLUDE_DIR})
+			target_link_libraries(ag_gui-static PRIVATE ${OPENGL_LIBRARIES})
+		endif()
+		if(HAVE_X11)
+			target_include_directories(ag_gui-static PRIVATE ${X11_INCLUDE_DIR})
+			target_link_libraries(ag_gui-static PRIVATE ${X11_LIBRARIES})
+		endif()
 	endif()
 endif()
 
-##### Tests #####
-
+#
+# Test suite
+#
 #if(AGAR_TESTS)
 #  include_directories(BEFORE "${AGAR_SOURCE_DIR}/include")
 #  include_directories(AFTER "${AGAR_SOURCE_DIR}/include")
@@ -817,12 +1174,20 @@ endif()
 #  add_subdirectory(tests)
 #endif()
 
-##### Installation targets #####
+#
+# Install: Shared and Static Libraries.
+#
 if(AGAR_SHARED)
 	install(TARGETS ag_core EXPORT ag_coreTargets
 		LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
 		ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
 		RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+	if(AGAR_GUI)
+		install(TARGETS ag_gui EXPORT ag_guiTargets
+			LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+			ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+			RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+	endif()
 endif()
 
 if(AGAR_STATIC)
@@ -830,15 +1195,22 @@ if(AGAR_STATIC)
 		LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
 		ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
 		RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+	if(AGAR_GUI)
+		install(TARGETS ag_gui-static EXPORT ag_guiStaticTargets
+			LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+			ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+			RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+	endif()
 endif()
 
-##### Export files #####
+#
+# Install: Cmake Package Helpers.
+#
 if(WINDOWS AND NOT MINGW)
 	set(PKG_PREFIX "cmake")
 else()
 	set(PKG_PREFIX "${CMAKE_INSTALL_LIBDIR}/cmake/agar")
 endif()
-
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file("${AGAR_BINARY_DIR}/agarConfigVersion.cmake"
 	VERSION ${AGAR_VERSION}
@@ -847,24 +1219,28 @@ write_basic_package_version_file("${AGAR_BINARY_DIR}/agarConfigVersion.cmake"
 
 if(AGAR_SHARED)
 	install(EXPORT ag_coreTargets FILE ag_coreTargets.cmake NAMESPACE ag_core:: DESTINATION ${PKG_PREFIX})
-#	install(EXPORT ag_guiTargets FILE ag_guiTargets.cmake NAMESPACE ag_gui:: DESTINATION ${PKG_PREFIX})
+	if(AGAR_GUI)
+		install(EXPORT ag_guiTargets FILE ag_guiTargets.cmake NAMESPACE ag_gui:: DESTINATION ${PKG_PREFIX})
+	endif()
 endif()
-
 if(AGAR_STATIC)
 	install(EXPORT ag_coreStaticTargets FILE ag_coreStaticTargets.cmake NAMESPACE ag_core:: DESTINATION ${PKG_PREFIX})
-#	install(EXPORT ag_guiStaticTargets FILE ag_guiStaticTargets.cmake NAMESPACE ag_gui:: DESTINATION ${PKG_PREFIX})
+	if(AGAR_GUI)
+		install(EXPORT ag_guiStaticTargets FILE ag_guiStaticTargets.cmake NAMESPACE ag_gui:: DESTINATION ${PKG_PREFIX})
+	endif()
 endif()
-
 install(FILES ${AGAR_SOURCE_DIR}/agarConfig.cmake ${AGAR_BINARY_DIR}/agarConfigVersion.cmake
     DESTINATION ${PKG_PREFIX}
     COMPONENT Devel)
 
+#
+# Install: Agar C Include Files.
+#
 foreach(agar_incl_subdir
     au config core gui map math net sg sk vg)
 	file(GLOB include_files ${AGAR_BINARY_DIR}/include/agar/${agar_incl_subdir}/*.h)
 	install(FILES ${include_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/agar/${agar_incl_subdir})
 endforeach()
-
 file(GLOB include_files ${AGAR_BINARY_DIR}/include/agar/*.h)
 install(FILES ${include_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/agar)
 
@@ -876,21 +1252,34 @@ else()
 endif()
 
 if(NOT (WINDOWS OR CYGWIN) OR MINGW)
-	if(AGAR_SHARED)
+	#
+	# Install: Symbolic Links for Shared Libraries.
+	#
+	if(AGAR_SHARED AND NOT MINGW)
 		set(SOEXT ${CMAKE_SHARED_LIBRARY_SUFFIX})
+
 		get_target_property(SONAME ag_core OUTPUT_NAME)
-		if(NOT ANDROID AND NOT MINGW)
+		install(CODE "
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+\"lib${SONAME}${SOPOSTFIX}${SOEXT}.${AGAR_LIBRARY_VERSION}\" \"libag_core${SOPOSTFIX}${SOEXT}\"
+ WORKING_DIRECTORY \"${AGAR_BINARY_DIR}\")")
+		install(FILES ${AGAR_BINARY_DIR}/libag_core${SOPOSTFIX}${SOEXT}
+		    DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+	
+		if(AGAR_GUI)
+			get_target_property(SONAME ag_gui OUTPUT_NAME)
 			install(CODE "
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
- \"lib${SONAME}${SOPOSTFIX}${SOEXT}\" \"libag_core${SOPOSTFIX}${SOEXT}\"
- WORKING_DIRECTORY \"${AGAR_BINARY_DIR}\")"
-)
-			install(FILES ${AGAR_BINARY_DIR}/libag_core${SOPOSTFIX}${SOEXT}
+\"lib${SONAME}${SOPOSTFIX}${SOEXT}.${AGAR_LIBRARY_VERSION}\" \"libag_gui${SOPOSTFIX}${SOEXT}\"
+ WORKING_DIRECTORY \"${AGAR_BINARY_DIR}\")")
+			install(FILES ${AGAR_BINARY_DIR}/libag_gui${SOPOSTFIX}${SOEXT}
 			    DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 		endif()
 	endif()
 
-	# TODO
+	#
+	# Install: Helper packages for the Unix shell, pkgconfig and GNU autotools.
+	#
 #	if(FREEBSD)
 #		install(FILES ${AGAR_BINARY_DIR}/agar.pc
 #		    DESTINATION "libdata/pkgconfig")
@@ -902,8 +1291,9 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 #	install(FILES "${AGAR_BINARY_DIR}/agar.m4" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/aclocal")
 endif()
 
-##### Uninstall target #####
-
+#
+# Uninstall Target.
+#
 if(NOT TARGET uninstall)
 	configure_file(
 		"${AGAR_SOURCE_DIR}/cmake_uninstall.cmake.in"

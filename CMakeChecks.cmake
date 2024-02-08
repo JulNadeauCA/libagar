@@ -58,6 +58,45 @@ macro(BB_Save_MakeVar arg val)
 endmacro()
 
 #
+# From BSDBuild/cocoa.pm:
+#
+macro(Check_Cocoa)
+	set(COCOA_CFLAGS "-DTARGET_API_MAC_CARBON -DTARGET_API_MAC_OSX -force_cpusubtype_ALL -fpascal-strings")
+	set(COCOA_LIBS "-lobjc -Wl,-framework,Cocoa -Wl,-framework,OpenGL -Wl,-framework,IOKit")
+
+	set(ORIG_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+	set(ORIG_CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
+	set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${COCOA_CFLAGS}")
+	set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} ${COCOA_LIBS}")
+		
+	check_objc_source_compiles("
+#import <Cocoa/Cocoa.h>
+
+int main(int argc, char *argv[]) { return (0); }
+" HAVE_COCOA)
+	if (HAVE_COCOA)
+		BB_Save_Define(HAVE_COCOA)
+	else()
+		set(COCOA_CFLAGS "")
+		set(COCOA_LIBS "")
+		BB_Save_Undef(HAVE_COCOA)
+	endif()
+
+	set(CMAKE_REQUIRED_FLAGS ${ORIG_CMAKE_REQUIRED_FLAGS})
+	set(CMAKE_REQUIRED_LIBRARIES ${ORIG_CMAKE_REQUIRED_LIBRARIES})
+
+	BB_Save_MakeVar(COCOA_CFLAGS "${COCOA_CFLAGS}")
+	BB_Save_MakeVar(COCOA_LIBS "${COCOA_LIBS}")
+endmacro()
+
+macro(Disable_Cocoa)
+	set(HAVE_COCOA OFF)
+	BB_Save_Undef(HAVE_COCOA)
+	BB_Save_MakeVar(COCOA_CFLAGS "")
+	BB_Save_MakeVar(COCOA_LIBS "")
+endmacro()
+
+#
 # From BSDBuild/gettimeofday.pm:
 #
 macro(Check_Gettimeofday)
@@ -477,6 +516,40 @@ main(int argc, char *argv[])
 endmacro()
 
 #
+# From BSDBuild/jpeg.pm:
+#
+macro(Check_Jpeg)
+	set(JPEG_CFLAGS "")
+	set(JPEG_LIBS "")
+
+	include(FindJPEG)
+	if(JPEG_FOUND)
+		set(HAVE_JPEG ON)
+
+		foreach(jpegincdir ${JPEG_INCLUDE_DIRS})
+			list(APPEND JPEG_CFLAGS "-I${jpegincdir}")
+		endforeach()
+		foreach(jpeglib ${JPEG_LIBRARIES})
+			list(APPEND JPEG_LIBS "${jpeglib}")
+		endforeach()
+		BB_Save_Define(HAVE_JPEG)
+	else()
+		set(HAVE_JPEG OFF)
+		BB_Save_Undef(HAVE_JPEG)
+	endif()
+
+	BB_Save_MakeVar(JPEG_CFLAGS "${JPEG_CFLAGS}")
+	BB_Save_MakeVar(JPEG_LIBS "${JPEG_LIBS}")
+endmacro()
+
+macro(Disable_Jpeg)
+	set(HAVE_JPEG OFF)
+	BB_Save_Undef(HAVE_JPEG)
+	BB_Save_MakeVar(JPEG_CFLAGS "")
+	BB_Save_MakeVar(JPEG_LIBS "")
+endmacro()
+
+#
 # From BSDBuild/vasprintf.pm:
 #
 macro(Check_Vasprintf)
@@ -657,11 +730,11 @@ main(int argc, char *argv[])
 	lli = strtoll(foo, &ep, 10);
 	return (lli != 0);
 }
-" HAVE_STRTOLL)
-	if (HAVE_STRTOLL)
-		BB_Save_Define(HAVE_STRTOLL)
+" _MK_HAVE_STRTOLL)
+	if (_MK_HAVE_STRTOLL)
+		BB_Save_Define(_MK_HAVE_STRTOLL)
 	else()
-		BB_Save_Undef(HAVE_STRTOLL)
+		BB_Save_Undef(_MK_HAVE_STRTOLL)
 	endif()
 endmacro()
 
@@ -747,6 +820,80 @@ macro(Disable_Dyld)
 	BB_Save_Undef(HAVE_DYLD)
 	BB_Save_Undef(HAVE_MACH_O_DYLD_H)
 	BB_Save_Undef(HAVE_DYLD_RETURN_ON_ERROR)
+endmacro()
+
+#
+# From BSDBuild/fontconfig.pm:
+#
+macro(Check_Fontconfig)
+	set(FONTCONFIG_CFLAGS "")
+	set(FONTCONFIG_LIBS "")
+
+	include(FindFontconfig)
+	if(Fontconfig_FOUND)
+		set(HAVE_FONTCONFIG ON)
+
+		if(Fontconfig_COMPILE_OPTIONS)
+			foreach(fontconfigopt ${Fontconfig_COMPILE_OPTIONS})
+				list(APPEND FONTCONFIG_CFLAGS ${fontconfigopt})
+			endforeach()
+		endif()
+		foreach(fontconfigincdir ${Fontconfig_INCLUDE_DIRS})
+			list(APPEND FONTCONFIG_CFLAGS "-I${fontconfigincdir}")
+		endforeach()
+		foreach(fontconfiglib ${Fontconfig_LIBRARIES})
+			list(APPEND FONTCONFIG_LIBS "${fontconfiglib}")
+		endforeach()
+		BB_Save_Define(HAVE_FONTCONFIG)
+	else()
+		set(HAVE_FONTCONFIG OFF)
+		BB_Save_Undef(HAVE_FONTCONFIG)
+	endif()
+
+	BB_Save_MakeVar(FONTCONFIG_CFLAGS "${FONTCONFIG_CFLAGS}")
+	BB_Save_MakeVar(FONTCONFIG_LIBS "${FONTCONFIG_LIBS}")
+endmacro()
+
+macro(Disable_Fontconfig)
+	set(HAVE_FONTCONFIG OFF)
+	BB_Save_Undef(HAVE_FONTCONFIG)
+	BB_Save_MakeVar(FONTCONFIG_CFLAGS "")
+	BB_Save_MakeVar(FONTCONFIG_LIBS "")
+endmacro()
+
+#
+# From BSDBuild/sdl.pm:
+#
+macro(Check_Sdl)
+	set(SDL_CFLAGS "")
+	set(SDL_LIBS "")
+
+	set(SDL_BUILDING_LIBRARY ON)
+	include(FindSDL)
+	if(SDL_FOUND)
+		set(HAVE_SDL ON)
+		foreach(sdlincdir ${SDL_INCLUDE_DIRS})
+			list(APPEND SDL_CFLAGS "-I${sdlincdir}")
+		endforeach()
+
+		foreach(sdllib ${SDL_LIBRARIES})
+			list(APPEND SDL_LIBS "${sdllib}")
+		endforeach()
+		BB_Save_Define(HAVE_SDL)
+	else()
+		set(HAVE_SDL OFF)
+		BB_Save_Undef(HAVE_SDL)
+	endif()
+
+	BB_Save_MakeVar(SDL_CFLAGS "${SDL_CFLAGS}")
+	BB_Save_MakeVar(SDL_LIBS "${SDL_LIBS}")
+endmacro()
+
+macro(Disable_Sdl)
+	set(HAVE_SDL OFF)
+	BB_Save_Undef(HAVE_SDL)
+	BB_Save_MakeVar(SDL_CFLAGS "")
+	BB_Save_MakeVar(SDL_LIBS "")
 endmacro()
 
 #
@@ -843,6 +990,121 @@ macro(Disable_Shl_load)
 	BB_Save_Undef(HAVE_SHL_LOAD)
 	BB_Save_Undef(HAVE_DL_H)
 	BB_Save_MakeVar(SHL_LOAD_LIBS "")
+endmacro()
+
+#
+# From BSDBuild/x11.pm:
+#
+macro(Check_X11)
+	set(X11_CFLAGS "")
+	set(X11_LIBS "")
+	set(XINERAMA_CFLAGS "")
+	set(XINERAMA_LIBS "")
+
+	include(FindX11)
+	if(X11_FOUND)
+		set(HAVE_X11 ON)
+
+		if(X11_INCLUDE_DIR)
+			list(APPEND X11_CFLAGS "-I${X11_INCLUDE_DIR}")
+		endif()
+		foreach(x11lib ${X11_LIBRARIES})
+			list(APPEND X11_LIBS "${x11lib}")
+		endforeach()
+
+		BB_Save_Define(HAVE_X11)
+
+		if(X11_Xinerama_FOUND)
+			if(X11_Xinerama_INCLUDE_PATH)
+				list(APPEND XINERAMA_CFLAGS "-I${X11_Xinerama_INCLUDE_PATH}")
+			endif()
+			if(X11_Xinerama_LIB)
+				list(APPEND XINERAMA_LIBS ${X11_Xinerama_LIB})
+			endif()
+
+			set(HAVE_XINERAMA ON)
+			BB_Save_Define(HAVE_XINERAMA)
+		else()
+			set(HAVE_XINERAMA OFF)
+			BB_Save_Undef(HAVE_XINERAMA)
+		endif()
+
+		set(ORIG_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+		set(ORIG_CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
+		set(CMAKE_REQUIRED_FLAGS ${X11_CFLAGS})
+		set(CMAKE_REQUIRED_LIBRARIES ${X11_LIBS})
+
+		check_c_source_compiles("
+#include <X11/Xlib.h>
+#include <X11/XKBlib.h>
+int main(int argc, char *argv[])
+{
+	Display *disp = XOpenDisplay(NULL);
+	KeyCode kc = 0;
+	KeySym ks = XkbKeycodeToKeysym(disp, kc, 0, 0);
+	XCloseDisplay(disp);
+	return (ks != NoSymbol);
+}
+" HAVE_XKB)
+		if (HAVE_XKB)
+			BB_Save_Define(HAVE_XKB)
+		else()
+			BB_Save_Undef(HAVE_XKB)
+		endif()
+
+		set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} -lXxf86misc")
+		check_c_source_compiles("
+#include <X11/Xlib.h>
+#include <X11/extensions/xf86misc.h>
+int main(int argc, char *argv[])
+{
+	Display *disp = XOpenDisplay(NULL);
+	int dummy, rv;
+	rv = XF86MiscQueryExtension(disp, &dummy, &dummy);
+	XCloseDisplay(disp);
+	return (rv != 0);
+}
+" HAVE_XF86MISC)
+		if (HAVE_XF86MISC)
+			BB_Save_Define(HAVE_XF86MISC)
+			set(X11_LIBS "${X11_LIBS} -lXxf86misc")
+		else()
+			BB_Save_Undef(HAVE_XF86MISC)
+		endif()
+
+		set(CMAKE_REQUIRED_FLAGS ${ORIG_CMAKE_REQUIRED_FLAGS})
+		set(CMAKE_REQUIRED_LIBRARIES ${ORIG_CMAKE_REQUIRED_LIBRARIES})
+	else()
+		set(HAVE_X11 OFF)
+		set(HAVE_XKB OFF)
+		set(HAVE_XF86MISC OFF)
+		set(HAVE_XINERAMA OFF)
+		BB_Save_Undef(HAVE_X11)
+		BB_Save_Undef(HAVE_XKB)
+		BB_Save_Undef(HAVE_XF86MISC)
+		BB_Save_Undef(HAVE_XINERAMA)
+	endif()
+
+	BB_Save_MakeVar(X11_CFLAGS "${X11_CFLAGS}")
+	BB_Save_MakeVar(X11_LIBS "${X11_LIBS}")
+
+	BB_Save_MakeVar(XINERAMA_CFLAGS "${XINERAMA_CFLAGS}")
+	BB_Save_MakeVar(XINERAMA_LIBS "${XINERAMA_LIBS}")
+endmacro()
+
+macro(Disable_X11)
+	set(HAVE_X11 OFF)
+	set(HAVE_XKB OFF)
+	set(HAVE_XF86MISC OFF)
+	set(HAVE_XINERAMA OFF)
+	BB_Save_Undef(HAVE_X11)
+	BB_Save_Undef(HAVE_XKB)
+	BB_Save_Undef(HAVE_XF86MISC)
+	BB_Save_Undef(HAVE_XINERAMA)
+	BB_Save_MakeVar(X11_CFLAGS "")
+	BB_Save_MakeVar(X11_LIBS "")
+	BB_Save_MakeVar(XINERAMA_CFLAGS "")
+	BB_Save_MakeVar(XINERAMA_LIBS "")
 endmacro()
 
 #
@@ -1016,6 +1278,117 @@ macro(Disable_Dlopen)
 endmacro()
 
 #
+# From BSDBuild/opengl.pm:
+#
+macro(Check_OpenGL)
+	set(OPENGL_CFLAGS "")
+	set(OPENGL_LIBS "")
+
+	include(FindOpenGL)
+	if(OPENGL_FOUND)
+		set(HAVE_OPENGL ON)
+
+		if(OPENGL_INCLUDE_DIR)
+			list(APPEND OPENGL_CFLAGS "-I${OPENGL_INCLUDE_DIR}")
+		endif()
+		foreach(opengllib ${OPENGL_LIBRARIES})
+			list(APPEND OPENGL_LIBS "${opengllib}")
+		endforeach()
+
+		BB_Save_Define(HAVE_OPENGL)
+	else()
+		set(HAVE_OPENGL OFF)
+		BB_Save_Undef(HAVE_OPENGL)
+	endif()
+
+	if(OpenGL_GLX_FOUND)
+		set(HAVE_GLX ON)
+		BB_Save_Define(HAVE_GLX)
+	else()
+		set(HAVE_GLX OFF)
+		BB_Save_Undef(HAVE_GLX)
+	endif()
+
+	set(ORIG_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+	set(ORIG_CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
+
+	set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${OPENGL_CFLAGS}")
+	set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} ${OPENGL_LIBS}")
+
+	check_c_source_compiles("
+#define GL_GLEXT_PROTOTYPES
+#ifdef _USE_OPENGL_FRAMEWORK
+# include <OpenGL/gl.h>
+# include <OpenGL/glext.h>
+#else
+# include <GL/gl.h>
+# include <GL/glext.h>
+#endif
+
+static void
+DebugMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
+    GLsizei length, const GLchar *message, const void *userParam)
+{ }
+
+int main(int argc, char *argv[]) {
+	glEnable(GL_DEBUG_OUTPUT);
+	glDebugMessageCallback(DebugMessageCallback, 0);
+	return (0);
+}
+" HAVE_GLEXT)
+	if(HAVE_GLEXT)
+		BB_Save_Define(HAVE_GLEXT)
+	else()
+		BB_Save_Undef(HAVE_GLEXT)
+	endif()
+
+	set(CMAKE_REQUIRED_LIBRARIES "${ORIG_CMAKE_REQUIRED_LIBRARIES} ${OPENGL_LIBS} -lgdi32")
+
+	check_c_source_compiles("
+#include <windows.h>
+
+int main(int argc, char *argv[]) {
+	HWND hwnd;
+	HDC hdc;
+	HGLRC hglrc;
+
+	hwnd = CreateWindowEx(0, \"a\", \"a\", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
+	    CW_USEDEFAULT, 0,0, NULL, NULL, GetModuleHandle(NULL), NULL);
+	hdc = GetDC(hwnd);
+	hglrc = wglCreateContext(hdc);
+	SwapBuffers(hdc);
+	wglDeleteContext(hglrc);
+	ReleaseDC(hwnd, hdc);
+	DestroyWindow(hwnd);
+	return (0);
+}
+" HAVE_WGL)
+	if(HAVE_WGL)
+		BB_Save_Define(HAVE_WGL)
+		set(OPENGL_LIBS "${OPENGL_LIBS} -lgdi32")
+	else()
+		BB_Save_Undef(HAVE_WGL)
+	endif()
+
+	set(CMAKE_REQUIRED_FLAGS ${ORIG_CMAKE_REQUIRED_FLAGS})
+	set(CMAKE_REQUIRED_LIBRARIES ${ORIG_CMAKE_REQUIRED_LIBRARIES})
+
+	BB_Save_MakeVar(OPENGL_CFLAGS "${OPENGL_CFLAGS}")
+	BB_Save_MakeVar(OPENGL_LIBS "${OPENGL_LIBS}")
+endmacro()
+
+macro(Disable_OpenGL)
+	set(HAVE_OPENGL OFF)
+	set(HAVE_GLEXT OFF)
+	set(HAVE_WGL OFF)
+	BB_Save_Undef(HAVE_OPENGL)
+	BB_Save_Undef(HAVE_GLEXT)
+	BB_Save_Undef(HAVE_WGL)
+	BB_Save_MakeVar(OPENGL_CFLAGS "")
+	BB_Save_MakeVar(OPENGL_LIBS "")
+endmacro()
+
+#
 # From BSDBuild/strtold.pm:
 #
 macro(Check_Strtold)
@@ -1061,6 +1434,44 @@ int main(int argc, char *argv[]) {
 	else()
 		BB_Save_Undef(_MK_HAVE_SYS_STAT_H)
 	endif()
+endmacro()
+
+#
+# From BSDBuild/sdl2.pm:
+#
+macro(Check_Sdl2)
+	set(SDL2_CFLAGS "")
+	set(SDL2_LIBS "")
+
+	find_package(SDL2)
+	if(SDL2_FOUND)
+		set(HAVE_SDL2 ON)
+
+		foreach(sdl2incdir ${SDL2_INCLUDE_DIRS})
+			list(APPEND SDL2_CFLAGS "-I${sdl2incdir}")
+		endforeach()
+
+		find_library(SDL2_LIBRARY NAMES SDL2)
+		if(SDL2_LIBRARY)
+			list(APPEND SDL2_LIBS "${SDL2_LIBRARY}")
+		endif()
+
+		message(STATUS "Found SDL2: ${SDL2_LIBS} (found version \"${SDL2_VERSION}\")")
+		BB_Save_Define(HAVE_SDL2)
+	else()
+		set(HAVE_SDL2 OFF)
+		BB_Save_Undef(HAVE_SDL2)
+	endif()
+
+	BB_Save_MakeVar(SDL2_CFLAGS "${SDL2_CFLAGS}")
+	BB_Save_MakeVar(SDL2_LIBS "${SDL2_LIBS}")
+endmacro()
+
+macro(Disable_Sdl2)
+	set(HAVE_SDL2 OFF)
+	BB_Save_Undef(HAVE_SDL2)
+	BB_Save_MakeVar(SDL2_CFLAGS "")
+	BB_Save_MakeVar(SDL2_LIBS "")
 endmacro()
 
 #
@@ -1374,6 +1785,39 @@ macro(Disable_Mysql)
 endmacro()
 
 #
+# From BSDBuild/freetype.pm:
+#
+macro(Check_FreeType)
+	set(FREETYPE_CFLAGS "")
+	set(FREETYPE_LIBS "")
+
+	include(FindFreetype)
+	if(FREETYPE_FOUND)
+		set(HAVE_FREETYPE ON)
+		foreach(freetypeincdir ${FREETYPE_INCLUDE_DIRS})
+			list(APPEND FREETYPE_CFLAGS "-I${freetypeincdir}")
+		endforeach()
+		foreach(freetypelib ${FREETYPE_LIBRARIES})
+			list(APPEND FREETYPE_LIBS "${freetypelib}")
+		endforeach()
+		BB_Save_Define(HAVE_FREETYPE)
+	else()
+		set(HAVE_FREETYPE OFF)
+		BB_Save_Undef(HAVE_FREETYPE)
+	endif()
+
+	BB_Save_MakeVar(FREETYPE_CFLAGS "${FREETYPE_CFLAGS}")
+	BB_Save_MakeVar(FREETYPE_LIBS "${FREETYPE_LIBS}")
+endmacro()
+
+macro(Disable_FreeType)
+	set(HAVE_FREETYPE OFF)
+	BB_Save_Undef(HAVE_FREETYPE)
+	BB_Save_MakeVar(FREETYPE_CFLAGS "")
+	BB_Save_MakeVar(FREETYPE_LIBS "")
+endmacro()
+
+#
 # From BSDBuild/gettext.pm:
 #
 macro(Check_Gettext)
@@ -1384,8 +1828,8 @@ macro(Check_Gettext)
 	if(Intl_FOUND)
 		set(HAVE_GETTEXT ON)
 		BB_Save_Define(HAVE_GETTEXT)
-		if(${Intl_INCLUDE_DIRS})
-			set(GETTEXT_CFLAGS "-I${Intl_INCLUDE_DIRS}")
+		if(Intl_INCLUDE_DIRS)
+			list(APPEND GETTEXT_CFLAGS "-I${Intl_INCLUDE_DIRS}")
 		endif()
 		set(GETTEXT_LIBS "${Intl_LIBRARIES}")
 	else()
@@ -1803,6 +2247,56 @@ main(int argc, char *argv[])
 endmacro()
 
 #
+# From BSDBuild/png.pm:
+#
+macro(Check_Png)
+	set(PNG_CFLAGS "")
+	set(PNG_LIBS "")
+
+	include(FindPNG)
+	if(PNG_FOUND)
+		set(HAVE_PNG ON)
+
+		foreach(pngdef ${PNG_DEFINITIONS})
+			list(APPEND PNG_CFLAGS "-D${pngdef}")
+		endforeach()
+		foreach(pngincdir ${PNG_INCLUDE_DIRS})
+			list(APPEND PNG_CFLAGS "-I${pngincdir}")
+		endforeach()
+		foreach(pnglib ${PNG_LIBRARIES})
+			list(APPEND PNG_LIBS "${pnglib}")
+		endforeach()
+
+		BB_Save_Define(HAVE_PNG)
+
+		if(${PNG_VERSION_STRING} VERSION_GREATER_EQUAL "1.4.0")
+			set(HAVE_LIBPNG14 ON)
+			BB_Save_Define(HAVE_LIBPNG14)
+		else()
+			set(HAVE_LIBPNG14 OFF)
+			BB_Save_Undef(HAVE_LIBPNG14)
+		endif()
+	else()
+		set(HAVE_PNG OFF)
+		set(HAVE_LIBPNG14 OFF)
+		BB_Save_Undef(HAVE_PNG)
+		BB_Save_Undef(HAVE_LIBPNG14)
+	endif()
+
+	BB_Save_MakeVar(PNG_CFLAGS "${PNG_CFLAGS}")
+	BB_Save_MakeVar(PNG_LIBS "${PNG_LIBS}")
+endmacro()
+
+macro(Disable_Png)
+	set(HAVE_PNG OFF)
+	set(HAVE_LIBPNG14 OFF)
+	BB_Save_Undef(HAVE_PNG)
+	BB_Save_Undef(HAVE_LIBPNG14)
+	BB_Save_MakeVar(PNG_CFLAGS "")
+	BB_Save_MakeVar(PNG_LIBS "")
+endmacro()
+
+#
 # From BSDBuild/select.pm:
 #
 macro(Check_Select)
@@ -1840,7 +2334,8 @@ macro(Check_Pthreads)
 	set(ORIG_CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
 
 	set(PTHREADS_CFLAGS "")
-	set(PTHREADS_LIBS "-lpthread")
+
+	find_library(PTHREADS_LIBS NAMES "pthread")
 
 	set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} ${PTHREADS_LIBS}")
 	check_c_source_compiles("
@@ -2014,11 +2509,10 @@ int main(int argc, char *argv[])
 	BB_Save_MakeVar(PTHREADS_CFLAGS "${PTHREADS_CFLAGS}")
 	BB_Save_MakeVar(PTHREADS_LIBS "${PTHREADS_LIBS}")
 	BB_Save_MakeVar(PTHREADS_XOPEN_CFLAGS "${PTHREADS_XOPEN_CFLAGS}")
-	BB_Save_MakeVar(PTHREADS_XOPEN_LIBS "${PTHREADS_XOPEN_LIBS}")
+	BB_Save_MakeVar(PTHREADS_XOPEN_LIBS "")
 
 	set(CMAKE_REQUIRED_FLAGS ${ORIG_CMAKE_REQUIRED_FLAGS})
 	set(CMAKE_REQUIRED_LIBRARIES ${ORIG_CMAKE_REQUIRED_LIBRARIES})
-
 endmacro()
 
 macro(Disable_Pthreads)

@@ -11146,7 +11146,7 @@ fi
 fi
 XINERAMA_LIBS=`$PKGCONFIG xinerama --libs 2>/dev/null`
 else
-XINERAM_CFLAGS=""
+XINERAMA_CFLAGS=""
 XINERAMA_LIBS=""
 if [ "${prefix_xinerama}" != "" ]; then
 if [ -e "${prefix_xinerama}/include/X11" ]; then
@@ -12403,6 +12403,7 @@ if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_PNG}" = "no" ]; then
+HAVE_LIBPNG14="no"
 PNG_CFLAGS=""
 PNG_LIBS=""
 echo '#undef HAVE_PNG' >$bb_incdir/have_png.h
@@ -12448,6 +12449,7 @@ fi
 fi
 else
 HAVE_PNG="no"
+HAVE_LIBPNG14="no"
 PNG_CFLAGS=""
 PNG_LIBS=""
 echo '#undef HAVE_PNG' >$bb_incdir/have_png.h
@@ -12470,6 +12472,7 @@ fi
 				exit 1
 			fi
 HAVE_PNG="no"
+HAVE_LIBPNG14="no"
 PNG_CFLAGS=""
 PNG_LIBS=""
 echo '#undef HAVE_PNG' >$bb_incdir/have_png.h
@@ -12479,6 +12482,7 @@ echo 'hdefs["HAVE_LIBPNG14"] = nil' >>configure.lua
 		fi
 	else
 HAVE_PNG="no"
+HAVE_LIBPNG14="no"
 PNG_CFLAGS=""
 PNG_LIBS=""
 echo '#undef HAVE_PNG' >$bb_incdir/have_png.h
@@ -12554,6 +12558,7 @@ JPEG_LIBS=""
 echo '#undef HAVE_JPEG' >$bb_incdir/have_jpeg.h
 echo 'hdefs["HAVE_JPEG"] = nil' >>configure.lua
 HAVE_PNG="no"
+HAVE_LIBPNG14="no"
 PNG_CFLAGS=""
 PNG_LIBS=""
 echo '#undef HAVE_PNG' >$bb_incdir/have_png.h
