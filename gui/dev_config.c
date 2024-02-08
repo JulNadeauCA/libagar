@@ -55,11 +55,11 @@
  * CPU-specific architecture extension names.
  */
 AG_FlagDescrRO agArchExtnNames[] = {
-	{ AG_EXT_CPUID,          _(AGSI_CODE "CPUID" AGSI_RST " Instruction") },
+	{ AG_EXT_CPUID,          N_(AGSI_CODE "CPUID" AGSI_RST " Instruction") },
 	{ AG_EXT_MMX,            "MMX" },
-	{ AG_EXT_MMX_EXT,        _("MMX + AMD extensions") },
+	{ AG_EXT_MMX_EXT,        N_("MMX + AMD extensions") },
 	{ AG_EXT_3DNOW,          "3dNow!" },
-	{ AG_EXT_3DNOW_EXT,      _("3dNow! + extensions") },
+	{ AG_EXT_3DNOW_EXT,      N_("3dNow! + extensions") },
 	{ AG_EXT_3DNOW_PREFETCH, "3dNow! " AGSI_CODE "PREFETCH" },
 	{ AG_EXT_ALTIVEC,        "AltiVec" },
 	{ AG_EXT_SSE,            "SSE" },
@@ -70,18 +70,18 @@ AG_FlagDescrRO agArchExtnNames[] = {
 	{ AG_EXT_SSE41,          "SSE41" },
 	{ AG_EXT_SSE42,          "SSE42" },
 	{ AG_EXT_SSE5A,          "SSE5a" },
-	{ AG_EXT_SSE_MISALIGNED, _("Misaligned SSE Mode") },
-	{ AG_EXT_LONG_MODE,      _("Long Mode") },
-	{ AG_EXT_RDTSCP,         _(AGSI_CODE "RDTSCP" AGSI_RST " Instruction") },
+	{ AG_EXT_SSE_MISALIGNED, N_("Misaligned SSE Mode") },
+	{ AG_EXT_LONG_MODE,      N_("Long Mode") },
+	{ AG_EXT_RDTSCP,         N_(AGSI_CODE "RDTSCP" AGSI_RST " Instruction") },
 	{ AG_EXT_FXSR,           "FXSR" },
 	{ AG_EXT_PAGE_NX,        "PAGE_NX (W^X)" },
-	{ AG_EXT_ONCHIP_FPU,     _("On-chip FPU") },
-	{ AG_EXT_TSC,            _("Time Stamp Counter") },
-	{ AG_EXT_CMOV,           _("Conditional Move") },
-	{ AG_EXT_CLFLUSH,        _("Cache-Line Flush") },
-	{ AG_EXT_HTT,            _("Hyper-Threading Technology") },
-	{ AG_EXT_MON,            _(AGSI_CODE "MONITOR/MWAIT" AGSI_RST " Instructions") },
-	{ AG_EXT_VMX,            _("Virtual Machine Extensions") },
+	{ AG_EXT_ONCHIP_FPU,     N_("On-chip FPU") },
+	{ AG_EXT_TSC,            N_("Time Stamp Counter") },
+	{ AG_EXT_CMOV,           N_("Conditional Move") },
+	{ AG_EXT_CLFLUSH,        N_("Cache-Line Flush") },
+	{ AG_EXT_HTT,            N_("Hyper-Threading Technology") },
+	{ AG_EXT_MON,            N_(AGSI_CODE "MONITOR/MWAIT" AGSI_RST " Instructions") },
+	{ AG_EXT_VMX,            N_("Virtual Machine Extensions") },
 	{ 0,                       NULL }
 };
 

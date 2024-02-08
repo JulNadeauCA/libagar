@@ -51,9 +51,9 @@ const char *agBoxHorizAlignNames[] = {
 	NULL
 };
 const char *agBoxVertAlignNames[] = {
-	_("Top"),
-	_("Middle"),
-	_("Bottom"),
+	N_("Top"),
+	N_("Middle"),
+	N_("Bottom"),
 	NULL
 };
 
