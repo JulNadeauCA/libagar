@@ -67,9 +67,11 @@
 
 #include <agar/config/have_iconv.h>
 #ifdef HAVE_ICONV
-# include <agar/config/have_iconv_const.h>
 # include <iconv.h>
 #endif
+
+/* TODO */
+#undef HAVE_ICONV_CONST
 
 /* Print buffer and table of format extensions for AG_Printf() */
 #ifdef AG_ENABLE_STRING
@@ -1101,7 +1103,7 @@ ExportUnicodeICONV(const char *_Nonnull encoding, char *_Nonnull dst,
 	char *wrPtr;
 	iconv_t cd;
 
-	inSize = AG_LengthUCS4(ucs) * sizeof(AG_Char)
+	inSize = AG_LengthUCS4(ucs) * sizeof(AG_Char);
 	outSize = dstSize;
 	wrPtr = dst;
 

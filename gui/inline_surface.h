@@ -65,6 +65,8 @@ ag_pixel_format_is_supported(AG_SurfaceMode mode, int BitsPerPixel)
 			return (1);
 		}
 		break;
+	default:
+		break;
 	}
 	return (0);
 }

@@ -101,6 +101,8 @@ AG_WriteSurface(AG_DataSource *ds, AG_Surface *s)
 	case AG_SURFACE_GRAYSCALE:
 		AG_WriteUint8(ds, pf->graymode);
 		break;
+	default:
+		break;
 	}
 
 	AG_WriteRect(ds, &s->clipRect);
