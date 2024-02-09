@@ -1075,9 +1075,6 @@ M_PlotSetYoffs(M_Plot *pl, int yOffs)
 void
 M_PlotterSetDefaultFont(M_Plotter *ptr, const char *face, float sizePts)
 {
-	if (ptr->font != agDefaultFont) {
-		AG_UnusedFont(ptr->font);
-	}
 	ptr->font = AG_FetchFont(face, sizePts, 0);
 	AG_Redraw(ptr);
 }
