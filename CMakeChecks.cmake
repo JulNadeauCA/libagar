@@ -282,6 +282,126 @@ int main(int argc, char *argv[]) {
 endmacro()
 
 #
+# From BSDBuild/sse.pm:
+#
+macro(Check_SSE)
+	set(ORIG_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+
+	set(CMAKE_REQUIRED_FLAGS "${ORIG_CMAKE_REQUIRED_FLAGS} -msse")
+	check_c_source_compiles("
+#include <xmmintrin.h>
+#include <stdio.h>
+
+#define MAXERR 1e-4
+
+typedef union vec {
+	float v[4];
+	__m128 m128;
+	struct { float x, y, z, pad; };
+} MyVector __attribute__ ((aligned(16)));
+
+int
+main(int argc, char *argv[])
+{
+	MyVector a;
+	__m128 v;
+
+	a.x = 1.0f;
+	a.y = 2.0f;
+	a.z = 3.0f;
+	v = _mm_set1_ps(1.0f);
+	a.m128 = _mm_mul_ps(a.m128, v);
+	return (0);
+}
+" HAVE_SSE)
+	if (HAVE_SSE)
+		set(SSE_CFLAGS "-msse")
+		BB_Save_MakeVar(SSE_CFLAGS "${SSE_CFLAGS}")
+		BB_Save_Define(HAVE_SSE)
+	else()
+		set(SSE_CFLAGS "")
+		BB_Save_MakeVar(SSE_CFLAGS "")
+		BB_Save_Undef(HAVE_SSE)
+	endif()
+
+	set(CMAKE_REQUIRED_FLAGS "${ORIG_CMAKE_REQUIRED_FLAGS} -msse2")
+	check_c_source_compiles("
+#include <emmintrin.h>
+
+int
+main(int argc, char *argv[])
+{
+	double a[4] __attribute__ ((aligned(16)));
+	double b[4] __attribute__ ((aligned(16)));
+	double rv;
+	__m128d vec1, vec2;
+	a[0] = 1.0f; a[1] = 2.0f; a[2] = 3.0f; a[3] = 4.0f;
+	b[0] = 1.0f; b[1] = 2.0f; b[2] = 3.0f; b[3] = 4.0f;
+	vec1 = _mm_load_pd(a);
+	vec2 = _mm_load_pd(b);
+	vec1 = _mm_xor_pd(vec1, vec2);
+	_mm_store_sd(&rv, vec1);
+	return (0);
+}
+" HAVE_SSE2)
+	if (HAVE_SSE2)
+		set(SSE2_CFLAGS "-msse2")
+		BB_Save_MakeVar(SSE2_CFLAGS "${SSE2_CFLAGS}")
+		BB_Save_Define(HAVE_SSE2)
+	else()
+		set(SSE2_CFLAGS "")
+		BB_Save_MakeVar(SSE2_CFLAGS "")
+		BB_Save_Undef(HAVE_SSE2)
+	endif()
+
+	set(CMAKE_REQUIRED_FLAGS "${ORIG_CMAKE_REQUIRED_FLAGS} -msse3")
+	check_c_source_compiles("
+#include <pmmintrin.h>
+
+int
+main(int argc, char *argv[])
+{
+	float a[4] __attribute__ ((aligned(16)));
+	float b[4] __attribute__ ((aligned(16)));
+	__m128 vec1, vec2;
+	float rv;
+	a[0] = 1.0f; a[1] = 2.0f; a[2] = 3.0f; a[3] = 4.0f;
+	b[0] = 1.0f; b[1] = 2.0f; b[2] = 3.0f; b[3] = 4.0f;
+	vec1 = _mm_load_ps(a);
+	vec2 = _mm_load_ps(b);
+	vec1 = _mm_mul_ps(vec1, vec2);
+	vec1 = _mm_hadd_ps(vec1, vec1);
+	vec1 = _mm_hadd_ps(vec1, vec1);
+	_mm_store_ss(&rv, vec1);
+	return (0);
+}
+" HAVE_SSE3)
+	if (HAVE_SSE3)
+		set(SSE3_CFLAGS "-msse3")
+		BB_Save_MakeVar(SSE3_CFLAGS "${SSE3_CFLAGS}")
+		BB_Save_Define(HAVE_SSE3)
+	else()
+		set(SSE3_CFLAGS "")
+		BB_Save_MakeVar(SSE3_CFLAGS "")
+		BB_Save_Undef(HAVE_SSE3)
+	endif()
+
+	set(CMAKE_REQUIRED_FLAGS ${ORIG_CMAKE_REQUIRED_FLAGS})
+endmacro()
+
+macro(Disable_SSE)
+	set(SSE_CFLAGS "")
+	set(SSE2_CFLAGS "")
+	set(SSE3_CFLAGS "")
+	BB_Save_MakeVar(SSE_CFLAGS "")
+	BB_Save_MakeVar(SSE2_CFLAGS "")
+	BB_Save_MakeVar(SSE3_CFLAGS "")
+	BB_Save_Undef(HAVE_SSE)
+	BB_Save_Undef(HAVE_SSE2)
+	BB_Save_Undef(HAVE_SSE3)
+endmacro()
+
+#
 # From BSDBuild/timerfd.pm:
 #
 macro(Check_Timerfd)
@@ -1769,6 +1889,48 @@ macro(Disable_Iconv)
 	BB_Save_Undef(HAVE_ICONV)
 	BB_Save_MakeVar(ICONV_CFLAGS "")
 	BB_Save_MakeVar(ICONV_LIBS "")
+endmacro()
+
+#
+# From BSDBuild/altivec.pm:
+#
+macro(Check_Altivec)
+	set(ORIG_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+
+	set(CMAKE_REQUIRED_FLAGS "${ORIG_CMAKE_REQUIRED_FLAGS} -maltivec")
+	check_c_source_compiles("
+float a[4] = { 1,2,3,4 };
+float b[4] = { 5,6,7,8 };
+float c[4];
+
+int
+main(int argc, char *argv[])
+{
+	vector float *va = (vector float *)a;
+	vector float *vb = (vector float *)b;
+	vector float *vc = (vector float *)c;
+
+	*vc = vec_add(*va, *vb);
+	return (0);
+}
+" HAVE_ALTIVEC)
+	if (HAVE_ALTIVEC)
+		set(ALTIVEC_CFLAGS "-maltivec")
+		BB_Save_MakeVar(ALTIVEC_CFLAGS "${ALTIVEC_CFLAGS}")
+		BB_Save_Define(HAVE_ALTIVEC)
+	else()
+		set(ALTIVEC_CFLAGS "")
+		BB_Save_MakeVar(ALTIVEC_CFLAGS "")
+		BB_Save_Undef(HAVE_ALTIVEC)
+	endif()
+
+	set(CMAKE_REQUIRED_FLAGS ${ORIG_CMAKE_REQUIRED_FLAGS})
+endmacro()
+
+macro(Disable_Altivec)
+	set(ALTIVEC_CFLAGS "")
+	BB_Save_MakeVar(ALTIVEC_CFLAGS "")
+	BB_Save_Undef(HAVE_ALTIVEC)
 endmacro()
 
 #

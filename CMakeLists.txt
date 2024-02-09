@@ -137,6 +137,10 @@ set(AGAR_CORE_CFLAGS "")
 set(AGAR_CORE_LIBS "")
 set(AGAR_GUI_CFLAGS "")
 set(AGAR_GUI_LIBS "")
+set(AGAR_MAP_CFLAGS "")
+set(AGAR_MAP_LIBS "")
+set(AGAR_MATH_CFLAGS "")
+set(AGAR_MATH_LIBS "")
 
 #
 # Which Agar libraries to build?
@@ -196,6 +200,12 @@ option(AGAR_GUI_FREETYPE "Use the FreeType font engine (recommended)" ON)
 option(AGAR_GUI_FONTCONFIG "Use fontconfig library to access system fonts" ON)
 option(AGAR_GUI_JPEG "Support for image files in JPEG format" ON)
 option(AGAR_GUI_PNG "Support for image files in PNG format" ON)
+
+#
+# Options specific to Agar-Math.
+#
+option(AGAR_MATH_SSE "Enable inline SSE/SSE2/SSE3 optimizations" OFF)
+set(AGAR_MATH_PRECISION "DOUBLE" CACHE STRING "Precision of M_Real type (SINGLE|DOUBLE|QUAD)")
 
 option(AGAR_TESTS "Build the Agar Test Suite (agartest)" OFF)
 
@@ -449,21 +459,17 @@ endif()
 
 set(ORIG_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
 
+# On Cygwin, build without Cygwin dependencies.
 if(CYGWIN)
 	target_include_directories(agar-build-options INTERFACE "/usr/include/mingw")
-
 	set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -mno-cygwin")
-
 	check_c_source_compiles("int main(int argc, char **argv) {}"
 	    HAVE_GCC_NO_CYGWIN)
-
 	set(CMAKE_REQUIRED_FLAGS ${ORIG_CMAKE_REQUIRED_FLAGS})
-
 	if(HAVE_GCC_NO_CYGWIN)
 		list(APPEND AGAR_GLOBAL_CFLAGS "-mno-cygwin")
 		list(APPEND EXTRA_LDFLAGS "-mno-cygwin")
 	endif()
-
 	list(APPEND AGAR_GLOBAL_CFLAGS "-I/usr/include/mingw")
 endif()
 
@@ -596,6 +602,75 @@ set(SOURCE_FILES_GUI
     ${AGAR_SOURCE_DIR}/gui/widget.c
     ${AGAR_SOURCE_DIR}/gui/window.c)
 
+set(SOURCE_FILES_MAP
+    ${AGAR_SOURCE_DIR}/map/fill.c
+    ${AGAR_SOURCE_DIR}/map/flip.c
+    ${AGAR_SOURCE_DIR}/map/invert.c
+    ${AGAR_SOURCE_DIR}/map/map.c
+    ${AGAR_SOURCE_DIR}/map/mapview.c
+    ${AGAR_SOURCE_DIR}/map/nodesel.c
+    ${AGAR_SOURCE_DIR}/map/tool.c
+    ${AGAR_SOURCE_DIR}/map/insert.c
+    ${AGAR_SOURCE_DIR}/map/insert_obj.c
+    ${AGAR_SOURCE_DIR}/map/eraser.c
+    ${AGAR_SOURCE_DIR}/map/rg_tileset.c
+    ${AGAR_SOURCE_DIR}/map/rg_tileview.c
+    ${AGAR_SOURCE_DIR}/map/rg_tile.c
+    ${AGAR_SOURCE_DIR}/map/rg_feature.c
+    ${AGAR_SOURCE_DIR}/map/rg_fill.c
+    ${AGAR_SOURCE_DIR}/map/rg_pixmap.c
+    ${AGAR_SOURCE_DIR}/map/rg_prim.c
+    ${AGAR_SOURCE_DIR}/map/rg_texture.c
+    ${AGAR_SOURCE_DIR}/map/rg_transform.c
+    ${AGAR_SOURCE_DIR}/map/map_object.c
+    ${AGAR_SOURCE_DIR}/map/map_tile.c
+    ${AGAR_SOURCE_DIR}/map/map_img.c
+    ${AGAR_SOURCE_DIR}/map/map_link.c)
+
+set(SOURCE_FILES_MATH
+    ${AGAR_SOURCE_DIR}/math/m_math.c
+    ${AGAR_SOURCE_DIR}/math/m_complex.c
+    ${AGAR_SOURCE_DIR}/math/m_quaternion.c
+    ${AGAR_SOURCE_DIR}/math/m_vector.c
+    ${AGAR_SOURCE_DIR}/math/m_vectorz.c
+    ${AGAR_SOURCE_DIR}/math/m_vector_fpu.c
+    ${AGAR_SOURCE_DIR}/math/m_vector2_fpu.c
+    ${AGAR_SOURCE_DIR}/math/m_vector3_fpu.c
+    ${AGAR_SOURCE_DIR}/math/m_vector4_fpu.c
+    ${AGAR_SOURCE_DIR}/math/m_vector3_sse.c
+    ${AGAR_SOURCE_DIR}/math/m_matrix.c
+    ${AGAR_SOURCE_DIR}/math/m_matrix_fpu.c
+    ${AGAR_SOURCE_DIR}/math/m_matrix44_fpu.c
+    ${AGAR_SOURCE_DIR}/math/m_matrix44_sse.c
+    ${AGAR_SOURCE_DIR}/math/m_gui.c
+    ${AGAR_SOURCE_DIR}/math/m_plotter.c
+    ${AGAR_SOURCE_DIR}/math/m_matview.c
+    ${AGAR_SOURCE_DIR}/math/m_line.c
+    ${AGAR_SOURCE_DIR}/math/m_circle.c
+    ${AGAR_SOURCE_DIR}/math/m_triangle.c
+    ${AGAR_SOURCE_DIR}/math/m_rectangle.c
+    ${AGAR_SOURCE_DIR}/math/m_polygon.c
+    ${AGAR_SOURCE_DIR}/math/m_plane.c
+    ${AGAR_SOURCE_DIR}/math/m_coordinates.c
+    ${AGAR_SOURCE_DIR}/math/m_heapsort.c
+    ${AGAR_SOURCE_DIR}/math/m_mergesort.c
+    ${AGAR_SOURCE_DIR}/math/m_qsort.c
+    ${AGAR_SOURCE_DIR}/math/m_radixsort.c
+    ${AGAR_SOURCE_DIR}/math/m_point_set.c
+    ${AGAR_SOURCE_DIR}/math/m_color.c
+    ${AGAR_SOURCE_DIR}/math/m_sphere.c
+    ${AGAR_SOURCE_DIR}/math/m_polyhedron.c
+    ${AGAR_SOURCE_DIR}/math/m_matrix_sparse.c
+    ${AGAR_SOURCE_DIR}/math/m_sparse_allocate.c
+    ${AGAR_SOURCE_DIR}/math/m_sparse_build.c
+    ${AGAR_SOURCE_DIR}/math/m_sparse_eda.c
+    ${AGAR_SOURCE_DIR}/math/m_sparse_factor.c
+    ${AGAR_SOURCE_DIR}/math/m_sparse_output.c
+    ${AGAR_SOURCE_DIR}/math/m_sparse_solve.c
+    ${AGAR_SOURCE_DIR}/math/m_sparse_utils.c
+    ${AGAR_SOURCE_DIR}/math/m_bezier.c
+    ${AGAR_SOURCE_DIR}/math/m_bezier_primitives.c)
+
 #
 # Specify the installation directories.
 #
@@ -689,6 +764,10 @@ Disable_Db4()
 Disable_Db5()
 Disable_Mysql()
 
+#
+# Agar-Core Library.
+#
+
 # Check for threads support.
 if(AGAR_THREADS)
 	Check_Pthreads()
@@ -741,6 +820,9 @@ else()
 	BB_Save_Undef(ENABLE_NLS)
 endif()
 
+#
+# Agar-GUI Library.
+#
 if(AGAR_GUI)
 	BB_Save_Define(ENABLE_GUI)
 
@@ -883,6 +965,95 @@ else()
 	Disable_Png()
 endif()
 
+#
+# Agar-Map Library.
+#
+if(AGAR_MAP)
+	BB_Save_Define(ENABLE_MAP)
+else()
+	BB_Save_Undef(ENABLE_MAP)
+endif()
+
+#
+# Agar-Math Library.
+#
+if(AGAR_MATH)
+	BB_Save_Define(ENABLE_MATH)
+
+	list(APPEND AGAR_MATH_CFLAGS ${MATH_CFLAGS})
+	list(APPEND AGAR_MATH_LIBS ${MATH_LIBS})
+
+	if(HAVE_CC_ASM)
+		# SSE Extensions.
+		Check_SSE()
+		if(HAVE_SSE)
+			list(APPEND AGAR_MATH_CFLAGS "-msse")
+		endif()
+		if(HAVE_SSE2)
+			list(APPEND AGAR_MATH_CFLAGS "-msse2")
+		endif()
+		if(HAVE_SSE3)
+			list(APPEND AGAR_MATH_CFLAGS "-msse3")
+		endif()
+		if(AGAR_MATH_SSE)
+			BB_Save_Define(INLINE_SSE)
+		else()
+			BB_Save_Undef(INLINE_SSE)
+		endif()
+
+		# Altivec Extensions.
+		Check_Altivec()
+		if(HAVE_ALTIVEC)
+			list(APPEND AGAR_MATH_CFLAGS "-maltivec")
+		endif()
+		if(AGAR_MATH_ALTIVEC)
+			BB_Save_Define(INLINE_ALTIVEC)
+		else()
+			BB_Save_Undef(INLINE_ALTIVEC)
+		endif()
+
+		# Select the natural precision of the Agar-Math M_Real type.
+		if(AGAR_MATH_PRECISION STREQUAL "SINGLE" AND NOT HAVE_MATH_C99)
+			message(WARNING "Forcing AGAR_MATH_PRECISION to DOUBLE due to missing C99 math extensions.")
+			set(AGAR_MATH_PRECISION "DOUBLE")
+		elseif(AGAR_MATH_PRECISION STREQUAL "QUAD")
+			if(NOT HAVE_LONG_DOUBLE)
+				message(WARNING "Forcing AGAR_MATH_PRECISION to DOUBLE due to missing long double type.")
+				set(AGAR_MATH_PRECISION "DOUBLE")
+			endif()
+			if(NOT HAVE_MATH_C99)
+				message(WARNING "Forcing AGAR_MATH_PRECISION to DOUBLE due to missing C99 math extensions.")
+				set(AGAR_MATH_PRECISION "DOUBLE")
+			endif()
+		endif()
+		if(AGAR_MATH_PRECISION STREQUAL "SINGLE")
+			BB_Save_Define(SINGLE_PRECISION)
+			BB_Save_Undef(DOUBLE_PRECISION)
+			BB_Save_Undef(QUAD_PRECISION)
+		elseif(AGAR_MATH_PRECISION STREQUAL "QUAD")
+			BB_Save_Undef(SINGLE_PRECISION)
+			BB_Save_Undef(DOUBLE_PRECISION)
+			BB_Save_Define(QUAD_PRECISION)
+		else()
+			BB_Save_Undef(SINGLE_PRECISION)
+			BB_Save_Define(DOUBLE_PRECISION)
+			BB_Save_Undef(QUAD_PRECISION)
+		endif()
+
+	else()
+		Disable_SSE()
+		Disable_Altivec()
+		BB_Save_Undef(INLINE_SSE)
+		BB_Save_Undef(INLINE_ALTIVEC)
+		BB_Save_Undef(SINGLE_PRECISION)
+		BB_Save_Undef(DOUBLE_PRECISION)
+		BB_Save_Undef(QUAD_PRECISION)
+	endif()
+else()
+	BB_Save_Undef(ENABLE_MATH)
+	BB_Save_Undef(INLINE_SSE)
+	BB_Save_Undef(INLINE_ALTIVEC)
+endif()
 
 #
 # Agar-Core conditionally compiled sources
@@ -1016,6 +1187,10 @@ message(STATUS "AGAR_CORE_CFLAGS:   ${AGAR_CORE_CFLAGS}")
 message(STATUS "AGAR_CORE_LIBS:     ${AGAR_CORE_LIBS}")
 message(STATUS "AGAR_GUI_CFLAGS:    ${AGAR_GUI_CFLAGS}")
 message(STATUS "AGAR_GUI_LIBS:      ${AGAR_GUI_LIBS}")
+message(STATUS "AGAR_MAP_CFLAGS:    ${AGAR_MAP_CFLAGS}")
+message(STATUS "AGAR_MAP_LIBS:      ${AGAR_MAP_LIBS}")
+message(STATUS "AGAR_MATH_CFLAGS:   ${AGAR_MATH_CFLAGS}")
+message(STATUS "AGAR_MATH_LIBS:     ${AGAR_MATH_LIBS}")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${AGAR_GLOBAL_CFLAGS} ${EXTRA_CFLAGS}")
 
@@ -1065,8 +1240,7 @@ if(AGAR_SHARED)
 	Agar_SetPlatformSpecificShared(ag_core "ag_core")
 	target_link_libraries(ag_core PRIVATE ${AGAR_CORE_LIBS} ${EXTRA_LIBS} ${EXTRA_LDFLAGS})
 	target_include_directories(ag_core BEFORE PRIVATE "${AGAR_BINARY_DIR}/include")
-	target_include_directories(ag_core PUBLIC
-		"$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>;$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>;$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/agar>")
+	target_include_directories(ag_core PUBLIC "$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>;$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>;$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/agar>")
 	target_link_libraries(ag_core PRIVATE $<BUILD_INTERFACE:agar-build-options>)
 	set_target_properties(ag_core PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
 
@@ -1087,23 +1261,40 @@ if(AGAR_SHARED)
 		Agar_SetPlatformSpecificShared(ag_gui "ag_gui")
 		target_link_libraries(ag_gui PRIVATE ${AGAR_GUI_LIBS} ${AGAR_CORE_LIBS} ${EXTRA_LIBS} ${EXTRA_LDFLAGS})
 		target_include_directories(ag_gui BEFORE PRIVATE "${AGAR_BINARY_DIR}/include")
-		target_include_directories(ag_gui PUBLIC
-			"$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>;$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>;$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/agar>")
+		target_include_directories(ag_gui PUBLIC "$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>;$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>;$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/agar>")
 		target_link_libraries(ag_gui PRIVATE $<BUILD_INTERFACE:agar-build-options>)
 		set_target_properties(ag_gui PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
+	endif()
 
-		if(HAVE_SDL2)
-			target_include_directories(ag_gui PRIVATE ${SDL2_INCLUDE_DIRS})
-			target_link_libraries(ag_gui PRIVATE ${SDL2_LIBRARIES})
+	if(AGAR_MAP)
+		add_library(ag_map SHARED ${SOURCE_FILES_MAP})
+		add_library(ag_map::ag_map ALIAS ag_map)
+		target_compile_options(ag_map PUBLIC ${AGAR_CORE_CFLAGS} ${AGAR_GUI_CFLAGS} ${AGAR_MAP_CFLAGS})
+		target_compile_definitions(ag_map PUBLIC _AGAR_MAP_INTERNAL _AGAR_RG_INTERNAL)
+		Agar_SetPlatformSpecificShared(ag_map "ag_map")
+		target_link_libraries(ag_map PRIVATE ${AGAR_MAP_LIBS} ${AGAR_GUI_LIBS} ${AGAR_CORE_LIBS} ${EXTRA_LIBS} ${EXTRA_LDFLAGS})
+		target_include_directories(ag_map BEFORE PRIVATE "${AGAR_BINARY_DIR}/include")
+		target_include_directories(ag_map PUBLIC "$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>;$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>;$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/agar>")
+		target_link_libraries(ag_map PRIVATE $<BUILD_INTERFACE:agar-build-options>)
+		set_target_properties(ag_map PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
+	endif()
+
+	if(AGAR_MATH)
+		add_library(ag_math SHARED ${SOURCE_FILES_MATH})
+		add_library(ag_math::ag_math ALIAS ag_math)
+		target_compile_options(ag_math PUBLIC ${AGAR_CORE_CFLAGS} ${AGAR_GUI_CFLAGS} ${AGAR_MATH_CFLAGS})
+		if(AGAR_WARNINGS)
+			# XXX gcc warnings in m_matrix44_sse.c
+			target_compile_options(ag_math PUBLIC "-Wno-uninitialized")
 		endif()
-		if(HAVE_OPENGL)
-			target_include_directories(ag_gui PRIVATE ${OPENGL_INCLUDE_DIR})
-			target_link_libraries(ag_gui PRIVATE ${OPENGL_LIBRARIES})
-		endif()
-		if(HAVE_X11)
-			target_include_directories(ag_gui PRIVATE ${X11_INCLUDE_DIR})
-			target_link_libraries(ag_gui PRIVATE ${X11_LIBRARIES})
-		endif()
+
+		target_compile_definitions(ag_math PUBLIC _AGAR_MATH_INTERNAL)
+		Agar_SetPlatformSpecificShared(ag_math "ag_math")
+		target_link_libraries(ag_math PRIVATE ${AGAR_MATH_LIBS} ${AGAR_GUI_LIBS} ${AGAR_CORE_LIBS} ${EXTRA_LIBS} ${EXTRA_LDFLAGS})
+		target_include_directories(ag_math BEFORE PRIVATE "${AGAR_BINARY_DIR}/include")
+		target_include_directories(ag_math PUBLIC "$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>;$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>;$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/agar>")
+		target_link_libraries(ag_math PRIVATE $<BUILD_INTERFACE:agar-build-options>)
+		set_target_properties(ag_math PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
 	endif()
 
 	BB_Save_MakeVar(LIB_SHARED "Yes")
@@ -1123,8 +1314,7 @@ if(AGAR_STATIC)
 	Agar_SetPlatformSpecificStatic(ag_core-static "ag_core")
 	target_link_libraries(ag_core-static PRIVATE ${AGAR_CORE_LIBS} ${EXTRA_LIBS} ${EXTRA_LDFLAGS})
 	target_include_directories(ag_core-static BEFORE PRIVATE "${AGAR_BINARY_DIR}/include")
-	target_include_directories(ag_core-static PUBLIC
-		"$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>" $<INSTALL_INTERFACE:include> $<INSTALL_INTERFACE:include/agar>)
+	target_include_directories(ag_core-static PUBLIC "$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>" $<INSTALL_INTERFACE:include> $<INSTALL_INTERFACE:include/agar>)
 	target_link_libraries(ag_core-static PRIVATE $<BUILD_INTERFACE:agar-build-options>)
 	set_target_properties(ag_core-static PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
 
@@ -1144,23 +1334,37 @@ if(AGAR_STATIC)
 		Agar_SetPlatformSpecificStatic(ag_gui-static "ag_gui")
 		target_link_libraries(ag_gui-static PRIVATE ${AGAR_GUI_LIBS} ${AGAR_CORE_LIBS} ${EXTRA_LIBS} ${EXTRA_LDFLAGS})
 		target_include_directories(ag_gui-static BEFORE PRIVATE "${AGAR_BINARY_DIR}/include")
-		target_include_directories(ag_gui-static PUBLIC
-			"$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>" $<INSTALL_INTERFACE:include> $<INSTALL_INTERFACE:include/agar>)
+		target_include_directories(ag_gui-static PUBLIC "$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>" $<INSTALL_INTERFACE:include> $<INSTALL_INTERFACE:include/agar>)
 		target_link_libraries(ag_gui-static PRIVATE $<BUILD_INTERFACE:agar-build-options>)
 		set_target_properties(ag_gui-static PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
+	endif()
 
-		if(HAVE_SDL2)
-			target_include_directories(ag_gui-static PRIVATE ${SDL2_INCLUDE_DIRS})
-			target_link_libraries(ag_gui-static PRIVATE ${SDL2_LIBRARIES})
+	if(AGAR_MAP)
+		add_library(ag_map-static STATIC ${SOURCE_FILES_MAP})
+		target_compile_options(ag_map-static PUBLIC ${AGAR_CORE_CFLAGS} ${AGAR_GUI_CFLAGS} ${AGAR_MATH_CFLAGS} ${AGAR_MAP_CFLAGS})
+		target_compile_definitions(ag_map-static PUBLIC _AGAR_MAP_INTERNAL _AGAR_RG_INTERNAL)
+		Agar_SetPlatformSpecificStatic(ag_map-static "ag_map")
+		target_link_libraries(ag_map-static PRIVATE ${AGAR_MAP_LIBS} ${AGAR_MATH_LIBS} ${AGAR_GUI_LIBS} ${AGAR_CORE_LIBS} ${EXTRA_LIBS} ${EXTRA_LDFLAGS})
+		target_include_directories(ag_map-static BEFORE PRIVATE "${AGAR_BINARY_DIR}/include")
+		target_include_directories(ag_map-static PUBLIC "$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>" $<INSTALL_INTERFACE:include> $<INSTALL_INTERFACE:include/agar>)
+		target_link_libraries(ag_map-static PRIVATE $<BUILD_INTERFACE:agar-build-options>)
+		set_target_properties(ag_map-static PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
+	endif()
+
+	if(AGAR_MATH)
+		add_library(ag_math-static STATIC ${SOURCE_FILES_MATH})
+		target_compile_options(ag_math-static PUBLIC ${AGAR_CORE_CFLAGS} ${AGAR_GUI_CFLAGS} ${AGAR_MATH_CFLAGS})
+		if(AGAR_WARNINGS)
+			# XXX gcc warnings in m_matrix44_sse.c
+			target_compile_options(ag_math-static PUBLIC "-Wno-uninitialized")
 		endif()
-		if(HAVE_OPENGL)
-			target_include_directories(ag_gui-static PRIVATE ${OPENGL_INCLUDE_DIR})
-			target_link_libraries(ag_gui-static PRIVATE ${OPENGL_LIBRARIES})
-		endif()
-		if(HAVE_X11)
-			target_include_directories(ag_gui-static PRIVATE ${X11_INCLUDE_DIR})
-			target_link_libraries(ag_gui-static PRIVATE ${X11_LIBRARIES})
-		endif()
+		target_compile_definitions(ag_math-static PUBLIC _AGAR_MATH_INTERNAL)
+		Agar_SetPlatformSpecificStatic(ag_math-static "ag_math")
+		target_link_libraries(ag_math-static PRIVATE ${AGAR_MATH_LIBS} ${AGAR_GUI_LIBS} ${AGAR_CORE_LIBS} ${EXTRA_LIBS} ${EXTRA_LDFLAGS})
+		target_include_directories(ag_math-static BEFORE PRIVATE "${AGAR_BINARY_DIR}/include")
+		target_include_directories(ag_math-static PUBLIC "$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>" $<INSTALL_INTERFACE:include> $<INSTALL_INTERFACE:include/agar>)
+		target_link_libraries(ag_math-static PRIVATE $<BUILD_INTERFACE:agar-build-options>)
+		set_target_properties(ag_math-static PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
 	endif()
 endif()
 
@@ -1188,6 +1392,18 @@ if(AGAR_SHARED)
 			ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
 			RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 	endif()
+	if(AGAR_MAP)
+		install(TARGETS ag_map EXPORT ag_mapTargets
+			LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+			ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+			RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+	endif()
+	if(AGAR_MATH)
+		install(TARGETS ag_math EXPORT ag_mathTargets
+			LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+			ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+			RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+	endif()
 endif()
 
 if(AGAR_STATIC)
@@ -1197,6 +1413,18 @@ if(AGAR_STATIC)
 		RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 	if(AGAR_GUI)
 		install(TARGETS ag_gui-static EXPORT ag_guiStaticTargets
+			LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+			ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+			RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+	endif()
+	if(AGAR_MAP)
+		install(TARGETS ag_map-static EXPORT ag_mapStaticTargets
+			LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+			ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+			RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+	endif()
+	if(AGAR_MATH)
+		install(TARGETS ag_math-static EXPORT ag_mathStaticTargets
 			LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
 			ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
 			RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
@@ -1222,13 +1450,26 @@ if(AGAR_SHARED)
 	if(AGAR_GUI)
 		install(EXPORT ag_guiTargets FILE ag_guiTargets.cmake NAMESPACE ag_gui:: DESTINATION ${PKG_PREFIX})
 	endif()
+	if(AGAR_MAP)
+		install(EXPORT ag_mapTargets FILE ag_mapTargets.cmake NAMESPACE ag_map:: DESTINATION ${PKG_PREFIX})
+	endif()
+	if(AGAR_MATH)
+		install(EXPORT ag_mathTargets FILE ag_mathTargets.cmake NAMESPACE ag_math:: DESTINATION ${PKG_PREFIX})
+	endif()
 endif()
 if(AGAR_STATIC)
 	install(EXPORT ag_coreStaticTargets FILE ag_coreStaticTargets.cmake NAMESPACE ag_core:: DESTINATION ${PKG_PREFIX})
 	if(AGAR_GUI)
 		install(EXPORT ag_guiStaticTargets FILE ag_guiStaticTargets.cmake NAMESPACE ag_gui:: DESTINATION ${PKG_PREFIX})
 	endif()
+	if(AGAR_MAP)
+		install(EXPORT ag_mapStaticTargets FILE ag_mapStaticTargets.cmake NAMESPACE ag_map:: DESTINATION ${PKG_PREFIX})
+	endif()
+	if(AGAR_MATH)
+		install(EXPORT ag_mathStaticTargets FILE ag_mathStaticTargets.cmake NAMESPACE ag_math:: DESTINATION ${PKG_PREFIX})
+	endif()
 endif()
+
 install(FILES ${AGAR_SOURCE_DIR}/agarConfig.cmake ${AGAR_BINARY_DIR}/agarConfigVersion.cmake
     DESTINATION ${PKG_PREFIX}
     COMPONENT Devel)
@@ -1273,6 +1514,26 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 \"lib${SONAME}${SOPOSTFIX}${SOEXT}.${AGAR_LIBRARY_VERSION}\" \"libag_gui${SOPOSTFIX}${SOEXT}\"
  WORKING_DIRECTORY \"${AGAR_BINARY_DIR}\")")
 			install(FILES ${AGAR_BINARY_DIR}/libag_gui${SOPOSTFIX}${SOEXT}
+			    DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+		endif()
+
+		if(AGAR_MAP)
+			get_target_property(SONAME ag_map OUTPUT_NAME)
+			install(CODE "
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+\"lib${SONAME}${SOPOSTFIX}${SOEXT}.${AGAR_LIBRARY_VERSION}\" \"libag_map${SOPOSTFIX}${SOEXT}\"
+ WORKING_DIRECTORY \"${AGAR_BINARY_DIR}\")")
+			install(FILES ${AGAR_BINARY_DIR}/libag_map${SOPOSTFIX}${SOEXT}
+			    DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+		endif()
+
+		if(AGAR_MATH)
+			get_target_property(SONAME ag_math OUTPUT_NAME)
+			install(CODE "
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+\"lib${SONAME}${SOPOSTFIX}${SOEXT}.${AGAR_LIBRARY_VERSION}\" \"libag_math${SOPOSTFIX}${SOEXT}\"
+ WORKING_DIRECTORY \"${AGAR_BINARY_DIR}\")")
+			install(FILES ${AGAR_BINARY_DIR}/libag_math${SOPOSTFIX}${SOEXT}
 			    DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 		endif()
 	endif()
