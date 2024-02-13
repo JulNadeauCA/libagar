@@ -787,6 +787,55 @@ main(int argc, char *argv[])
 endmacro()
 
 #
+# From BSDBuild/siocgifconf.pm:
+#
+macro(Check_Siocgifconf)
+	check_c_source_compiles("
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <sys/time.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <net/if.h>
+#include <netdb.h>
+int
+main(int argc, char *argv[])
+{
+	char buf[4096];
+	struct ifconf conf;
+	struct ifreq *ifr;
+	int sock;
+	if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+		return (1);
+	}
+	conf.ifc_len = sizeof(buf);
+	conf.ifc_buf = (caddr_t)buf;
+	if (ioctl(sock, SIOCGIFCONF, &conf) < 0) {
+		return (1);
+	}
+#if !defined(_SIZEOF_ADDR_IFREQ)
+#define _SIZEOF_ADDR_IFREQ sizeof
+#endif
+	for (ifr = (struct ifreq *)buf;
+	     (char *)ifr < &buf[conf.ifc_len];
+	     ifr = (struct ifreq *)((char *)ifr + _SIZEOF_ADDR_IFREQ(*ifr))) {
+		if (ifr->ifr_addr.sa_family == AF_INET)
+			return (1);
+	}
+	close(sock);
+	return (0);
+}
+" HAVE_SIOCGIFCONF)
+	if (HAVE_SIOCGIFCONF)
+		BB_Save_Define(HAVE_SIOCGIFCONF)
+	else()
+		BB_Save_Undef(HAVE_SIOCGIFCONF)
+	endif()
+endmacro()
+
+#
 # From BSDBuild/signal.pm:
 #
 macro(Check_Signal)
@@ -856,6 +905,37 @@ main(int argc, char *argv[])
 	else()
 		BB_Save_Undef(_MK_HAVE_STRTOLL)
 	endif()
+endmacro()
+
+#
+# From BSDBuild/zlib.pm:
+#
+macro(Check_Zlib)
+	set(ZLIB_CFLAGS "")
+	set(ZLIB_LIBS "")
+
+	include(FindZLIB)
+	if(ZLIB_FOUND)
+		set(HAVE_ZLIB ON)
+		BB_Save_Define(HAVE_ZLIB)
+		if(${ZLIB_INCLUDE_DIRS})
+			set(ZLIB_CFLAGS "-I${ZLIB_INCLUDE_DIRS}")
+		endif()
+		set(ZLIB_LIBS "${ZLIB_LIBRARIES}")
+	else()
+		set(HAVE_ZLIB OFF)
+		BB_Save_Undef(HAVE_ZLIB)
+	endif()
+
+	BB_Save_MakeVar(ZLIB_CFLAGS "${ZLIB_CFLAGS}")
+	BB_Save_MakeVar(ZLIB_LIBS "${ZLIB_LIBS}")
+endmacro()
+
+macro(Disable_Zlib)
+	set(HAVE_ZLIB OFF)
+	BB_Save_Undef(HAVE_ZLIB)
+	BB_Save_MakeVar(ZLIB_CFLAGS "")
+	BB_Save_MakeVar(ZLIB_LIBS "")
 endmacro()
 
 #
@@ -1110,6 +1190,183 @@ macro(Disable_Shl_load)
 	BB_Save_Undef(HAVE_SHL_LOAD)
 	BB_Save_Undef(HAVE_DL_H)
 	BB_Save_MakeVar(SHL_LOAD_LIBS "")
+endmacro()
+
+#
+# From BSDBuild/winsock.pm:
+#
+macro(Check_Winsock)
+	if(WINDOWS)
+		BB_Save_Define(HAVE_WINSOCK1)
+		BB_Save_Define(HAVE_WINSOCK2)
+	else()
+		BB_Save_Undef(HAVE_WINSOCK1)
+		BB_Save_Undef(HAVE_WINSOCK2)
+	endif()
+endmacro()
+
+macro(Disable_Winsock)
+	BB_Save_Undef(HAVE_WINSOCK1)
+	BB_Save_Undef(HAVE_WINSOCK2)
+endmacro()
+
+#
+# From BSDBuild/sockopts.pm:
+#
+macro(Check_Setsockopts)
+
+	check_c_source_compiles("
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <fcntl.h>
+int
+main(int argc, char *argv[])
+{
+	int fd = 0, rv;
+	struct timeval tv;
+	socklen_t tvLen = sizeof(tv);
+	tv.tv_sec = 1; tv.tv_usec = 0;
+	rv = setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, tvLen);
+	return (rv != 0);
+}
+" HAVE_SETSOCKOPT)
+	if (HAVE_SETSOCKOPT)
+		BB_Save_Define(HAVE_SETSOCKOPT)
+	else()
+		BB_Save_Undef(HAVE_SETSOCKOPT)
+	endif()
+
+	check_c_source_compiles("
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <fcntl.h>
+int
+main(int argc, char *argv[])
+{
+	int fd = 0, val = 1, rv;
+	socklen_t valLen = sizeof(val);
+	rv = setsockopt(fd, SOL_SOCKET, SO_OOBINLINE, &val, valLen);
+	return (rv != 0);
+}
+" HAVE_SO_OOBINLINE)
+	if (HAVE_SO_OOBINLINE)
+		BB_Save_Define(HAVE_SO_OOBINLINE)
+	else()
+		BB_Save_Undef(HAVE_SO_OOBINLINE)
+	endif()
+
+	check_c_source_compiles("
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <fcntl.h>
+int
+main(int argc, char *argv[])
+{
+	int fd = 0, val = 1, rv;
+	socklen_t valLen = sizeof(val);
+	rv = setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &val, valLen);
+	return (rv != 0);
+}
+" HAVE_SO_REUSEPORT)
+	if (HAVE_SO_REUSEPORT)
+		BB_Save_Define(HAVE_SO_REUSEPORT)
+	else()
+		BB_Save_Undef(HAVE_SO_REUSEPORT)
+	endif()
+
+	check_c_source_compiles("
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <fcntl.h>
+int
+main(int argc, char *argv[])
+{
+	int fd = 0, val = 1, rv;
+	socklen_t valLen = sizeof(val);
+	rv = setsockopt(fd, SOL_SOCKET, SO_TIMESTAMP, &val, valLen);
+	return (rv != 0);
+}
+" HAVE_SO_TIMESTAMP)
+	if (HAVE_SO_TIMESTAMP)
+		BB_Save_Define(HAVE_SO_TIMESTAMP)
+	else()
+		BB_Save_Undef(HAVE_SO_TIMESTAMP)
+	endif()
+
+	check_c_source_compiles("
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <fcntl.h>
+int
+main(int argc, char *argv[])
+{
+	int fd = 0, val = 1, rv;
+	socklen_t valLen = sizeof(val);
+	rv = setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &val, valLen);
+	return (rv != 0);
+}
+" HAVE_SO_NOSIGPIPE)
+	if (HAVE_SO_NOSIGPIPE)
+		BB_Save_Define(HAVE_SO_NOSIGPIPE)
+	else()
+		BB_Save_Undef(HAVE_SO_NOSIGPIPE)
+	endif()
+
+	check_c_source_compiles("
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <fcntl.h>
+int
+main(int argc, char *argv[])
+{
+	int fd = 0, rv;
+	struct linger ling;
+	socklen_t lingLen = sizeof(ling);
+	ling.l_onoff = 1; ling.l_linger = 1;
+	rv = setsockopt(fd, SOL_SOCKET, SO_LINGER, &ling, lingLen);
+	return (rv != 0);
+}
+" HAVE_SO_LINGER)
+	if (HAVE_SO_LINGER)
+		BB_Save_Define(HAVE_SO_LINGER)
+	else()
+		BB_Save_Undef(HAVE_SO_LINGER)
+	endif()
+
+	check_c_source_compiles("
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <fcntl.h>
+int
+main(int argc, char *argv[])
+{
+	int fd = 0, rv;
+	struct accept_filter_arg afa;
+	socklen_t afaLen = sizeof(afa);
+	afa.af_name[0] = 'A';
+	afa.af_arg[0] = 'A';
+	rv = setsockopt(fd, SOL_SOCKET, SO_ACCEPTFILTER, &afa, afaLen);
+	return (rv != 0);
+}
+" HAVE_SO_ACCEPTFILTER)
+	if (HAVE_SO_ACCEPTFILTER)
+		BB_Save_Define(HAVE_SO_ACCEPTFILTER)
+	else()
+		BB_Save_Undef(HAVE_SO_ACCEPTFILTER)
+	endif()
+
+
+endmacro()
+
+macro(Disable_Setsockopts)
+	BB_Save_Undef(HAVE_SETSOCKOPT)
+	BB_Save_Undef(HAVE_SO_OOBINLINE)
+	BB_Save_Undef(HAVE_SO_REUSEPORT)
+	BB_Save_Undef(HAVE_SO_TIMESTAMP)
+	BB_Save_Undef(HAVE_SO_NOSIGPIPE)
+	BB_Save_Undef(HAVE_SO_LINGER)
+	BB_Save_Undef(HAVE_SO_ACCEPTFILTER)
 endmacro()
 
 #
@@ -1421,6 +1678,14 @@ macro(Check_OpenGL)
 		BB_Save_Undef(HAVE_OPENGL)
 	endif()
 
+	if(OpenGL_GLU_FOUND)
+		set(HAVE_GLU ON)
+		BB_Save_Define(HAVE_GLU)
+	else()
+		set(HAVE_GLU OFF)
+		BB_Save_Undef(HAVE_GLU)
+	endif()
+
 	if(OpenGL_GLX_FOUND)
 		set(HAVE_GLX ON)
 		BB_Save_Define(HAVE_GLX)
@@ -1499,9 +1764,13 @@ endmacro()
 
 macro(Disable_OpenGL)
 	set(HAVE_OPENGL OFF)
+	set(HAVE_GLU OFF)
+	set(HAVE_GLX OFF)
 	set(HAVE_GLEXT OFF)
 	set(HAVE_WGL OFF)
 	BB_Save_Undef(HAVE_OPENGL)
+	BB_Save_Undef(HAVE_GLU)
+	BB_Save_Undef(HAVE_GLX)
 	BB_Save_Undef(HAVE_GLEXT)
 	BB_Save_Undef(HAVE_WGL)
 	BB_Save_MakeVar(OPENGL_CFLAGS "")
@@ -1889,6 +2158,39 @@ macro(Disable_Iconv)
 	BB_Save_Undef(HAVE_ICONV)
 	BB_Save_MakeVar(ICONV_CFLAGS "")
 	BB_Save_MakeVar(ICONV_LIBS "")
+endmacro()
+
+#
+# From BSDBuild/getaddrinfo.pm:
+#
+macro(Check_Getaddrinfo)
+	check_c_source_compiles("
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+
+int
+main(int argc, char *argv[])
+{
+	struct addrinfo hints, *res0;
+	const char *s;
+	int rv;
+
+	hints.ai_family = PF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
+	rv = getaddrinfo(\"hostname\", \"port\", &hints, &res0);
+	s = gai_strerror(rv);
+	freeaddrinfo(res0);
+	return (s != NULL);
+}
+" HAVE_GETADDRINFO)
+	if (HAVE_GETADDRINFO)
+		BB_Save_Define(HAVE_GETADDRINFO)
+	else()
+		BB_Save_Undef(HAVE_GETADDRINFO)
+	endif()
 endmacro()
 
 #

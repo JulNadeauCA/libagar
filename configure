@@ -13011,8 +13011,8 @@ main(int argc, char *argv[])
 	int fd = 0, rv;
 	struct accept_filter_arg afa;
 	socklen_t afaLen = sizeof(afa);
-	afa.af_name[0] = '\0';
-	afa.af_arg[0] = '\0';
+	afa.af_name[0] = 'A';
+	afa.af_arg[0] = 'A';
 	rv = setsockopt(fd, SOL_SOCKET, SO_ACCEPTFILTER, &afa, afaLen);
 	return (rv != 0);
 }
@@ -13159,8 +13159,8 @@ cat << EOT >conftest$$.c
 #include <stdio.h>
 #include <string.h>
 #include <zlib.h>
-
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 	z_stream strm;
 	strm.zalloc = Z_NULL;
 	strm.zfree = Z_NULL;

@@ -1,0 +1,66 @@
+#!/bin/sh
+
+prefix='@CMAKE_INSTALL_PREFIX@'
+exec_prefix='@CMAKE_INSTALL_PREFIX@'
+exec_prefix_set='no'
+libdir='@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@'
+
+usage='Usage: agar-map-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--host] [--version] [--release] [--cflags] [--libs]'
+
+if test $# -eq 0; then
+	echo "${usage}" 1>&2
+	exit 1
+fi
+
+while test $# -gt 0; do
+	case "$1" in
+	-*=*)
+		optarg=`echo "$1" | LC_ALL='C' sed 's/[-_a-zA-Z0-9]*=//'`
+		;;
+	*)
+		optarg=
+		;;
+	esac
+
+	case $1 in
+	--prefix=*)
+		prefix=$optarg
+		if test $exec_prefix_set = no ; then
+			exec_prefix=$optarg
+		fi
+		;;
+	--prefix)
+		echo "$prefix"
+		;;
+	--exec-prefix=*)
+		exec_prefix=$optarg
+		exec_prefix_set=yes
+		;;
+	--exec-prefix)
+		echo "$exec_prefix"
+		;;
+	--host)
+		echo '@CMAKE_SYSTEM_PROCESSOR@-unknown-@CMAKE_SYSTEM_NAME@'
+		;;
+	--version)
+		echo '@AGAR_VERSION@'
+		;;
+	--release)
+		echo '@AGAR_RELEASE_NAME@'
+		;;
+	--cflags)
+		echo '-I@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@/agar @AGAR_CONFIG_CFLAGS@'
+		;;
+	--libs)
+		echo '-L@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@ -lag_map'
+		;;
+	--static-libs)
+		echo '-L@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@ -lag_map -lag_gui -lag_core @AGAR_CONFIG_LIBS@'
+		;;
+	*)
+		echo "${usage}" 1>&2
+		exit 1
+		;;
+	esac
+	shift
+done
