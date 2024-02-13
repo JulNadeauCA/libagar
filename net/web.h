@@ -602,6 +602,7 @@ int WEB_PostEvent(const char *_Nullable, _Nullable WEB_EventFilterFn,
                   const void *_Nullable, const char *_Nonnull,
                   const char *_Nonnull, ...)
                  FORMAT_ATTRIBUTE(__printf__,5,6);
+__END_DECLS
 
 static __inline__ void
 WEB_SetHomeOp(const char *_Nonnull op)
@@ -1123,7 +1124,6 @@ WEB_GetSV(void *_Nonnull sess, const char *_Nonnull key)
 		return ("");
 	}
 }
-__END_DECLS
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_WEB)
 # define VAR		WEB_Variable
