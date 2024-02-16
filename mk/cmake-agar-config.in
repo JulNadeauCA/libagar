@@ -3,7 +3,7 @@
 prefix='@CMAKE_INSTALL_PREFIX@'
 exec_prefix='@CMAKE_INSTALL_PREFIX@'
 exec_prefix_set='no'
-libdir='@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@'
+libdir='@AGAR_LIBDIR@'
 
 usage='Usage: agar-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--host] [--version] [--release] [--cflags] [--libs]'
 
@@ -52,10 +52,10 @@ while test $# -gt 0; do
 		echo '-I@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@/agar @AGAR_CONFIG_CFLAGS@'
 		;;
 	--libs)
-		echo '-L@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@ -lag_gui'
+		echo '-L@AGAR_LIBDIR@ -lag_gui @AGAR_CONFIG_LIBS@'
 		;;
 	--static-libs)
-		echo '-L@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@ -lag_gui -lag_core @AGAR_CONFIG_LIBS@'
+		echo '-L@AGAR_LIBDIR@ @AGAR_LIBDIR@/libag_gui.a @AGAR_LIBDIR@/libag_core.a @AGAR_CONFIG_LIBS@'
 		;;
 	*)
 		echo "${usage}" 1>&2
