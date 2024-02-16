@@ -224,8 +224,6 @@ set(AGAR_MATH_PRECISION "DOUBLE" CACHE STRING "Precision of M_Real type (SINGLE|
 #
 option(AGAR_NET_WEB "Enable HTTP application server in Agar-Net" OFF)
 
-option(AGAR_TESTS "Build the Agar Test Suite (agartest)" OFF)
-
 BB_Save_Define_Value(VERSION ${AGAR_VERSION})
 BB_Save_Define_Value(RELEASE ${AGAR_RELEASE_NAME})
 
@@ -434,295 +432,295 @@ target_include_directories(agar-build-options BEFORE INTERFACE "${AGAR_BINARY_DI
 # Agar-Core Sources.
 #
 set(SOURCE_FILES_CORE
-    ${AGAR_SOURCE_DIR}/core/byteswap.c
-    ${AGAR_SOURCE_DIR}/core/config.c
-    ${AGAR_SOURCE_DIR}/core/core.c
-    ${AGAR_SOURCE_DIR}/core/cpuinfo.c
-    ${AGAR_SOURCE_DIR}/core/crc32.c
-    ${AGAR_SOURCE_DIR}/core/data_source.c
-    ${AGAR_SOURCE_DIR}/core/db.c
-    ${AGAR_SOURCE_DIR}/core/dir.c
-    ${AGAR_SOURCE_DIR}/core/dso.c
-    ${AGAR_SOURCE_DIR}/core/error.c
-    ${AGAR_SOURCE_DIR}/core/event.c
-    ${AGAR_SOURCE_DIR}/core/exec.c
-    ${AGAR_SOURCE_DIR}/core/file.c
-    ${AGAR_SOURCE_DIR}/core/getopt.c
-    ${AGAR_SOURCE_DIR}/core/load_integral.c
-    ${AGAR_SOURCE_DIR}/core/load_real.c
-    ${AGAR_SOURCE_DIR}/core/load_string.c
-    ${AGAR_SOURCE_DIR}/core/load_version.c
-    ${AGAR_SOURCE_DIR}/core/object.c
-    ${AGAR_SOURCE_DIR}/core/string.c
-    ${AGAR_SOURCE_DIR}/core/tbl.c
-    ${AGAR_SOURCE_DIR}/core/text.c
-    ${AGAR_SOURCE_DIR}/core/time.c
-    ${AGAR_SOURCE_DIR}/core/time_dummy.c
-    ${AGAR_SOURCE_DIR}/core/timeout.c
-    ${AGAR_SOURCE_DIR}/core/threads.c
-    ${AGAR_SOURCE_DIR}/core/vasprintf.c
-    ${AGAR_SOURCE_DIR}/core/vsnprintf.c
-    ${AGAR_SOURCE_DIR}/core/user.c
-    ${AGAR_SOURCE_DIR}/core/user_dummy.c
-    ${AGAR_SOURCE_DIR}/core/user_getenv.c
-    ${AGAR_SOURCE_DIR}/core/variable.c
-    ${AGAR_SOURCE_DIR}/core/vec.c)
+	${AGAR_SOURCE_DIR}/core/byteswap.c
+	${AGAR_SOURCE_DIR}/core/config.c
+	${AGAR_SOURCE_DIR}/core/core.c
+	${AGAR_SOURCE_DIR}/core/cpuinfo.c
+	${AGAR_SOURCE_DIR}/core/crc32.c
+	${AGAR_SOURCE_DIR}/core/data_source.c
+	${AGAR_SOURCE_DIR}/core/db.c
+	${AGAR_SOURCE_DIR}/core/dir.c
+	${AGAR_SOURCE_DIR}/core/dso.c
+	${AGAR_SOURCE_DIR}/core/error.c
+	${AGAR_SOURCE_DIR}/core/event.c
+	${AGAR_SOURCE_DIR}/core/exec.c
+	${AGAR_SOURCE_DIR}/core/file.c
+	${AGAR_SOURCE_DIR}/core/getopt.c
+	${AGAR_SOURCE_DIR}/core/load_integral.c
+	${AGAR_SOURCE_DIR}/core/load_real.c
+	${AGAR_SOURCE_DIR}/core/load_string.c
+	${AGAR_SOURCE_DIR}/core/load_version.c
+	${AGAR_SOURCE_DIR}/core/object.c
+	${AGAR_SOURCE_DIR}/core/string.c
+	${AGAR_SOURCE_DIR}/core/tbl.c
+	${AGAR_SOURCE_DIR}/core/text.c
+	${AGAR_SOURCE_DIR}/core/time.c
+	${AGAR_SOURCE_DIR}/core/time_dummy.c
+	${AGAR_SOURCE_DIR}/core/timeout.c
+	${AGAR_SOURCE_DIR}/core/threads.c
+	${AGAR_SOURCE_DIR}/core/vasprintf.c
+	${AGAR_SOURCE_DIR}/core/vsnprintf.c
+	${AGAR_SOURCE_DIR}/core/user.c
+	${AGAR_SOURCE_DIR}/core/user_dummy.c
+	${AGAR_SOURCE_DIR}/core/user_getenv.c
+	${AGAR_SOURCE_DIR}/core/variable.c
+	${AGAR_SOURCE_DIR}/core/vec.c)
 
 #
 # Agar-GUI Sources.
 #
 set(SOURCE_FILES_GUI
-    ${AGAR_SOURCE_DIR}/gui/box.c
-    ${AGAR_SOURCE_DIR}/gui/button.c
-    ${AGAR_SOURCE_DIR}/gui/checkbox.c
-    ${AGAR_SOURCE_DIR}/gui/colors.c
-    ${AGAR_SOURCE_DIR}/gui/combo.c
-    ${AGAR_SOURCE_DIR}/gui/console.c
-    ${AGAR_SOURCE_DIR}/gui/controller.c
-    ${AGAR_SOURCE_DIR}/gui/cursors.c
-    ${AGAR_SOURCE_DIR}/gui/debugger.c
-    ${AGAR_SOURCE_DIR}/gui/dev_browser.c
-    ${AGAR_SOURCE_DIR}/gui/dev_classinfo.c
-    ${AGAR_SOURCE_DIR}/gui/dev_config.c
-    ${AGAR_SOURCE_DIR}/gui/dev_fonts.c
-    ${AGAR_SOURCE_DIR}/gui/dev_object_edit.c
-    ${AGAR_SOURCE_DIR}/gui/dev_timer_inspector.c
-    ${AGAR_SOURCE_DIR}/gui/dev_unicode_browser.c
-    ${AGAR_SOURCE_DIR}/gui/dir_dlg.c
-    ${AGAR_SOURCE_DIR}/gui/drv.c
-    ${AGAR_SOURCE_DIR}/gui/drv_dummy.c
-    ${AGAR_SOURCE_DIR}/gui/drv_mw.c
-    ${AGAR_SOURCE_DIR}/gui/drv_sw.c
-    ${AGAR_SOURCE_DIR}/gui/editable.c
-    ${AGAR_SOURCE_DIR}/gui/file_dlg.c
-    ${AGAR_SOURCE_DIR}/gui/fixed.c
-    ${AGAR_SOURCE_DIR}/gui/fixed_plotter.c
-    ${AGAR_SOURCE_DIR}/gui/font_selector.c
-    ${AGAR_SOURCE_DIR}/gui/font.c
-    ${AGAR_SOURCE_DIR}/gui/font_bf.c
-    ${AGAR_SOURCE_DIR}/gui/geometry.c
-    ${AGAR_SOURCE_DIR}/gui/global_keys.c
-    ${AGAR_SOURCE_DIR}/gui/glview.c
-    ${AGAR_SOURCE_DIR}/gui/graph.c
-    ${AGAR_SOURCE_DIR}/gui/gui.c
-    ${AGAR_SOURCE_DIR}/gui/hsvpal.c
-    ${AGAR_SOURCE_DIR}/gui/icon.c
-    ${AGAR_SOURCE_DIR}/gui/iconmgr.c
-    ${AGAR_SOURCE_DIR}/gui/input_device.c
-    ${AGAR_SOURCE_DIR}/gui/joystick.c
-    ${AGAR_SOURCE_DIR}/gui/keyboard.c
-    ${AGAR_SOURCE_DIR}/gui/keymap.c
-    ${AGAR_SOURCE_DIR}/gui/keymap_compose.c
-    ${AGAR_SOURCE_DIR}/gui/keymap_latin1.c
-    ${AGAR_SOURCE_DIR}/gui/keysyms.c
-    ${AGAR_SOURCE_DIR}/gui/label.c
-    ${AGAR_SOURCE_DIR}/gui/load_bmp.c
-    ${AGAR_SOURCE_DIR}/gui/load_color.c
-    ${AGAR_SOURCE_DIR}/gui/load_jpg.c
-    ${AGAR_SOURCE_DIR}/gui/load_png.c
-    ${AGAR_SOURCE_DIR}/gui/load_surface.c
-    ${AGAR_SOURCE_DIR}/gui/menu.c
-    ${AGAR_SOURCE_DIR}/gui/menu_view.c
-    ${AGAR_SOURCE_DIR}/gui/mfspinbutton.c
-    ${AGAR_SOURCE_DIR}/gui/mouse.c
-    ${AGAR_SOURCE_DIR}/gui/mpane.c
-    ${AGAR_SOURCE_DIR}/gui/mspinbutton.c
-    ${AGAR_SOURCE_DIR}/gui/notebook.c
-    ${AGAR_SOURCE_DIR}/gui/numerical.c
-    ${AGAR_SOURCE_DIR}/gui/objsel.c
-    ${AGAR_SOURCE_DIR}/gui/packedpixel.c
-    ${AGAR_SOURCE_DIR}/gui/pane.c
-    ${AGAR_SOURCE_DIR}/gui/pixmap.c
-    ${AGAR_SOURCE_DIR}/gui/primitive.c
-    ${AGAR_SOURCE_DIR}/gui/progress_bar.c
-    ${AGAR_SOURCE_DIR}/gui/radio.c
-    ${AGAR_SOURCE_DIR}/gui/scrollbar.c
-    ${AGAR_SOURCE_DIR}/gui/scrollview.c
-    ${AGAR_SOURCE_DIR}/gui/separator.c
-    ${AGAR_SOURCE_DIR}/gui/slider.c
-    ${AGAR_SOURCE_DIR}/gui/socket.c
-    ${AGAR_SOURCE_DIR}/gui/statusbar.c
-    ${AGAR_SOURCE_DIR}/gui/style_editor.c
-    ${AGAR_SOURCE_DIR}/gui/stylesheet.c
-    ${AGAR_SOURCE_DIR}/gui/surface.c
-    ${AGAR_SOURCE_DIR}/gui/table.c
-    ${AGAR_SOURCE_DIR}/gui/text.c
-    ${AGAR_SOURCE_DIR}/gui/text_cache.c
-    ${AGAR_SOURCE_DIR}/gui/textbox.c
-    ${AGAR_SOURCE_DIR}/gui/time_sdl.c
-    ${AGAR_SOURCE_DIR}/gui/titlebar.c
-    ${AGAR_SOURCE_DIR}/gui/tlist.c
-    ${AGAR_SOURCE_DIR}/gui/toolbar.c
-    ${AGAR_SOURCE_DIR}/gui/treetbl.c
-    ${AGAR_SOURCE_DIR}/gui/ucombo.c
-    ${AGAR_SOURCE_DIR}/gui/units.c
-    ${AGAR_SOURCE_DIR}/gui/widget.c
-    ${AGAR_SOURCE_DIR}/gui/window.c)
+	${AGAR_SOURCE_DIR}/gui/box.c
+	${AGAR_SOURCE_DIR}/gui/button.c
+	${AGAR_SOURCE_DIR}/gui/checkbox.c
+	${AGAR_SOURCE_DIR}/gui/colors.c
+	${AGAR_SOURCE_DIR}/gui/combo.c
+	${AGAR_SOURCE_DIR}/gui/console.c
+	${AGAR_SOURCE_DIR}/gui/controller.c
+	${AGAR_SOURCE_DIR}/gui/cursors.c
+	${AGAR_SOURCE_DIR}/gui/debugger.c
+	${AGAR_SOURCE_DIR}/gui/dev_browser.c
+	${AGAR_SOURCE_DIR}/gui/dev_classinfo.c
+	${AGAR_SOURCE_DIR}/gui/dev_config.c
+	${AGAR_SOURCE_DIR}/gui/dev_fonts.c
+	${AGAR_SOURCE_DIR}/gui/dev_object_edit.c
+	${AGAR_SOURCE_DIR}/gui/dev_timer_inspector.c
+	${AGAR_SOURCE_DIR}/gui/dev_unicode_browser.c
+	${AGAR_SOURCE_DIR}/gui/dir_dlg.c
+	${AGAR_SOURCE_DIR}/gui/drv.c
+	${AGAR_SOURCE_DIR}/gui/drv_dummy.c
+	${AGAR_SOURCE_DIR}/gui/drv_mw.c
+	${AGAR_SOURCE_DIR}/gui/drv_sw.c
+	${AGAR_SOURCE_DIR}/gui/editable.c
+	${AGAR_SOURCE_DIR}/gui/file_dlg.c
+	${AGAR_SOURCE_DIR}/gui/fixed.c
+	${AGAR_SOURCE_DIR}/gui/fixed_plotter.c
+	${AGAR_SOURCE_DIR}/gui/font_selector.c
+	${AGAR_SOURCE_DIR}/gui/font.c
+	${AGAR_SOURCE_DIR}/gui/font_bf.c
+	${AGAR_SOURCE_DIR}/gui/geometry.c
+	${AGAR_SOURCE_DIR}/gui/global_keys.c
+	${AGAR_SOURCE_DIR}/gui/glview.c
+	${AGAR_SOURCE_DIR}/gui/graph.c
+	${AGAR_SOURCE_DIR}/gui/gui.c
+	${AGAR_SOURCE_DIR}/gui/hsvpal.c
+	${AGAR_SOURCE_DIR}/gui/icon.c
+	${AGAR_SOURCE_DIR}/gui/iconmgr.c
+	${AGAR_SOURCE_DIR}/gui/input_device.c
+	${AGAR_SOURCE_DIR}/gui/joystick.c
+	${AGAR_SOURCE_DIR}/gui/keyboard.c
+	${AGAR_SOURCE_DIR}/gui/keymap.c
+	${AGAR_SOURCE_DIR}/gui/keymap_compose.c
+	${AGAR_SOURCE_DIR}/gui/keymap_latin1.c
+	${AGAR_SOURCE_DIR}/gui/keysyms.c
+	${AGAR_SOURCE_DIR}/gui/label.c
+	${AGAR_SOURCE_DIR}/gui/load_bmp.c
+	${AGAR_SOURCE_DIR}/gui/load_color.c
+	${AGAR_SOURCE_DIR}/gui/load_jpg.c
+	${AGAR_SOURCE_DIR}/gui/load_png.c
+	${AGAR_SOURCE_DIR}/gui/load_surface.c
+	${AGAR_SOURCE_DIR}/gui/menu.c
+	${AGAR_SOURCE_DIR}/gui/menu_view.c
+	${AGAR_SOURCE_DIR}/gui/mfspinbutton.c
+	${AGAR_SOURCE_DIR}/gui/mouse.c
+	${AGAR_SOURCE_DIR}/gui/mpane.c
+	${AGAR_SOURCE_DIR}/gui/mspinbutton.c
+	${AGAR_SOURCE_DIR}/gui/notebook.c
+	${AGAR_SOURCE_DIR}/gui/numerical.c
+	${AGAR_SOURCE_DIR}/gui/objsel.c
+	${AGAR_SOURCE_DIR}/gui/packedpixel.c
+	${AGAR_SOURCE_DIR}/gui/pane.c
+	${AGAR_SOURCE_DIR}/gui/pixmap.c
+	${AGAR_SOURCE_DIR}/gui/primitive.c
+	${AGAR_SOURCE_DIR}/gui/progress_bar.c
+	${AGAR_SOURCE_DIR}/gui/radio.c
+	${AGAR_SOURCE_DIR}/gui/scrollbar.c
+	${AGAR_SOURCE_DIR}/gui/scrollview.c
+	${AGAR_SOURCE_DIR}/gui/separator.c
+	${AGAR_SOURCE_DIR}/gui/slider.c
+	${AGAR_SOURCE_DIR}/gui/socket.c
+	${AGAR_SOURCE_DIR}/gui/statusbar.c
+	${AGAR_SOURCE_DIR}/gui/style_editor.c
+	${AGAR_SOURCE_DIR}/gui/stylesheet.c
+	${AGAR_SOURCE_DIR}/gui/surface.c
+	${AGAR_SOURCE_DIR}/gui/table.c
+	${AGAR_SOURCE_DIR}/gui/text.c
+	${AGAR_SOURCE_DIR}/gui/text_cache.c
+	${AGAR_SOURCE_DIR}/gui/textbox.c
+	${AGAR_SOURCE_DIR}/gui/time_sdl.c
+	${AGAR_SOURCE_DIR}/gui/titlebar.c
+	${AGAR_SOURCE_DIR}/gui/tlist.c
+	${AGAR_SOURCE_DIR}/gui/toolbar.c
+	${AGAR_SOURCE_DIR}/gui/treetbl.c
+	${AGAR_SOURCE_DIR}/gui/ucombo.c
+	${AGAR_SOURCE_DIR}/gui/units.c
+	${AGAR_SOURCE_DIR}/gui/widget.c
+	${AGAR_SOURCE_DIR}/gui/window.c)
 
 #
 # Agar-Map Sources.
 #
 set(SOURCE_FILES_MAP
-    ${AGAR_SOURCE_DIR}/map/fill.c
-    ${AGAR_SOURCE_DIR}/map/flip.c
-    ${AGAR_SOURCE_DIR}/map/invert.c
-    ${AGAR_SOURCE_DIR}/map/map.c
-    ${AGAR_SOURCE_DIR}/map/mapview.c
-    ${AGAR_SOURCE_DIR}/map/nodesel.c
-    ${AGAR_SOURCE_DIR}/map/tool.c
-    ${AGAR_SOURCE_DIR}/map/insert.c
-    ${AGAR_SOURCE_DIR}/map/insert_obj.c
-    ${AGAR_SOURCE_DIR}/map/eraser.c
-    ${AGAR_SOURCE_DIR}/map/rg_tileset.c
-    ${AGAR_SOURCE_DIR}/map/rg_tileview.c
-    ${AGAR_SOURCE_DIR}/map/rg_tile.c
-    ${AGAR_SOURCE_DIR}/map/rg_feature.c
-    ${AGAR_SOURCE_DIR}/map/rg_fill.c
-    ${AGAR_SOURCE_DIR}/map/rg_pixmap.c
-    ${AGAR_SOURCE_DIR}/map/rg_prim.c
-    ${AGAR_SOURCE_DIR}/map/rg_texture.c
-    ${AGAR_SOURCE_DIR}/map/rg_transform.c
-    ${AGAR_SOURCE_DIR}/map/map_object.c
-    ${AGAR_SOURCE_DIR}/map/map_tile.c
-    ${AGAR_SOURCE_DIR}/map/map_img.c
-    ${AGAR_SOURCE_DIR}/map/map_link.c)
+	${AGAR_SOURCE_DIR}/map/fill.c
+	${AGAR_SOURCE_DIR}/map/flip.c
+	${AGAR_SOURCE_DIR}/map/invert.c
+	${AGAR_SOURCE_DIR}/map/map.c
+	${AGAR_SOURCE_DIR}/map/mapview.c
+	${AGAR_SOURCE_DIR}/map/nodesel.c
+	${AGAR_SOURCE_DIR}/map/tool.c
+	${AGAR_SOURCE_DIR}/map/insert.c
+	${AGAR_SOURCE_DIR}/map/insert_obj.c
+	${AGAR_SOURCE_DIR}/map/eraser.c
+	${AGAR_SOURCE_DIR}/map/rg_tileset.c
+	${AGAR_SOURCE_DIR}/map/rg_tileview.c
+	${AGAR_SOURCE_DIR}/map/rg_tile.c
+	${AGAR_SOURCE_DIR}/map/rg_feature.c
+	${AGAR_SOURCE_DIR}/map/rg_fill.c
+	${AGAR_SOURCE_DIR}/map/rg_pixmap.c
+	${AGAR_SOURCE_DIR}/map/rg_prim.c
+	${AGAR_SOURCE_DIR}/map/rg_texture.c
+	${AGAR_SOURCE_DIR}/map/rg_transform.c
+	${AGAR_SOURCE_DIR}/map/map_object.c
+	${AGAR_SOURCE_DIR}/map/map_tile.c
+	${AGAR_SOURCE_DIR}/map/map_img.c
+	${AGAR_SOURCE_DIR}/map/map_link.c)
 
 #
 # Agar-Math Sources.
 #
 set(SOURCE_FILES_MATH
-    ${AGAR_SOURCE_DIR}/math/m_math.c
-    ${AGAR_SOURCE_DIR}/math/m_complex.c
-    ${AGAR_SOURCE_DIR}/math/m_quaternion.c
-    ${AGAR_SOURCE_DIR}/math/m_vector.c
-    ${AGAR_SOURCE_DIR}/math/m_vectorz.c
-    ${AGAR_SOURCE_DIR}/math/m_vector_fpu.c
-    ${AGAR_SOURCE_DIR}/math/m_vector2_fpu.c
-    ${AGAR_SOURCE_DIR}/math/m_vector3_fpu.c
-    ${AGAR_SOURCE_DIR}/math/m_vector4_fpu.c
-    ${AGAR_SOURCE_DIR}/math/m_vector3_sse.c
-    ${AGAR_SOURCE_DIR}/math/m_matrix.c
-    ${AGAR_SOURCE_DIR}/math/m_matrix_fpu.c
-    ${AGAR_SOURCE_DIR}/math/m_matrix44_fpu.c
-    ${AGAR_SOURCE_DIR}/math/m_matrix44_sse.c
-    ${AGAR_SOURCE_DIR}/math/m_gui.c
-    ${AGAR_SOURCE_DIR}/math/m_plotter.c
-    ${AGAR_SOURCE_DIR}/math/m_matview.c
-    ${AGAR_SOURCE_DIR}/math/m_line.c
-    ${AGAR_SOURCE_DIR}/math/m_circle.c
-    ${AGAR_SOURCE_DIR}/math/m_triangle.c
-    ${AGAR_SOURCE_DIR}/math/m_rectangle.c
-    ${AGAR_SOURCE_DIR}/math/m_polygon.c
-    ${AGAR_SOURCE_DIR}/math/m_plane.c
-    ${AGAR_SOURCE_DIR}/math/m_coordinates.c
-    ${AGAR_SOURCE_DIR}/math/m_heapsort.c
-    ${AGAR_SOURCE_DIR}/math/m_mergesort.c
-    ${AGAR_SOURCE_DIR}/math/m_qsort.c
-    ${AGAR_SOURCE_DIR}/math/m_radixsort.c
-    ${AGAR_SOURCE_DIR}/math/m_point_set.c
-    ${AGAR_SOURCE_DIR}/math/m_color.c
-    ${AGAR_SOURCE_DIR}/math/m_sphere.c
-    ${AGAR_SOURCE_DIR}/math/m_polyhedron.c
-    ${AGAR_SOURCE_DIR}/math/m_matrix_sparse.c
-    ${AGAR_SOURCE_DIR}/math/m_sparse_allocate.c
-    ${AGAR_SOURCE_DIR}/math/m_sparse_build.c
-    ${AGAR_SOURCE_DIR}/math/m_sparse_eda.c
-    ${AGAR_SOURCE_DIR}/math/m_sparse_factor.c
-    ${AGAR_SOURCE_DIR}/math/m_sparse_output.c
-    ${AGAR_SOURCE_DIR}/math/m_sparse_solve.c
-    ${AGAR_SOURCE_DIR}/math/m_sparse_utils.c
-    ${AGAR_SOURCE_DIR}/math/m_bezier.c
-    ${AGAR_SOURCE_DIR}/math/m_bezier_primitives.c)
+	${AGAR_SOURCE_DIR}/math/m_math.c
+	${AGAR_SOURCE_DIR}/math/m_complex.c
+	${AGAR_SOURCE_DIR}/math/m_quaternion.c
+	${AGAR_SOURCE_DIR}/math/m_vector.c
+	${AGAR_SOURCE_DIR}/math/m_vectorz.c
+	${AGAR_SOURCE_DIR}/math/m_vector_fpu.c
+	${AGAR_SOURCE_DIR}/math/m_vector2_fpu.c
+	${AGAR_SOURCE_DIR}/math/m_vector3_fpu.c
+	${AGAR_SOURCE_DIR}/math/m_vector4_fpu.c
+	${AGAR_SOURCE_DIR}/math/m_vector3_sse.c
+	${AGAR_SOURCE_DIR}/math/m_matrix.c
+	${AGAR_SOURCE_DIR}/math/m_matrix_fpu.c
+	${AGAR_SOURCE_DIR}/math/m_matrix44_fpu.c
+	${AGAR_SOURCE_DIR}/math/m_matrix44_sse.c
+	${AGAR_SOURCE_DIR}/math/m_gui.c
+	${AGAR_SOURCE_DIR}/math/m_plotter.c
+	${AGAR_SOURCE_DIR}/math/m_matview.c
+	${AGAR_SOURCE_DIR}/math/m_line.c
+	${AGAR_SOURCE_DIR}/math/m_circle.c
+	${AGAR_SOURCE_DIR}/math/m_triangle.c
+	${AGAR_SOURCE_DIR}/math/m_rectangle.c
+	${AGAR_SOURCE_DIR}/math/m_polygon.c
+	${AGAR_SOURCE_DIR}/math/m_plane.c
+	${AGAR_SOURCE_DIR}/math/m_coordinates.c
+	${AGAR_SOURCE_DIR}/math/m_heapsort.c
+	${AGAR_SOURCE_DIR}/math/m_mergesort.c
+	${AGAR_SOURCE_DIR}/math/m_qsort.c
+	${AGAR_SOURCE_DIR}/math/m_radixsort.c
+	${AGAR_SOURCE_DIR}/math/m_point_set.c
+	${AGAR_SOURCE_DIR}/math/m_color.c
+	${AGAR_SOURCE_DIR}/math/m_sphere.c
+	${AGAR_SOURCE_DIR}/math/m_polyhedron.c
+	${AGAR_SOURCE_DIR}/math/m_matrix_sparse.c
+	${AGAR_SOURCE_DIR}/math/m_sparse_allocate.c
+	${AGAR_SOURCE_DIR}/math/m_sparse_build.c
+	${AGAR_SOURCE_DIR}/math/m_sparse_eda.c
+	${AGAR_SOURCE_DIR}/math/m_sparse_factor.c
+	${AGAR_SOURCE_DIR}/math/m_sparse_output.c
+	${AGAR_SOURCE_DIR}/math/m_sparse_solve.c
+	${AGAR_SOURCE_DIR}/math/m_sparse_utils.c
+	${AGAR_SOURCE_DIR}/math/m_bezier.c
+	${AGAR_SOURCE_DIR}/math/m_bezier_primitives.c)
 
 #
 # Agar-Net Sources.
 #
 set(SOURCE_FILES_NET
-    ${AGAR_SOURCE_DIR}/net/net.c
-    ${AGAR_SOURCE_DIR}/net/net_dummy.c)
+	${AGAR_SOURCE_DIR}/net/net.c
+	${AGAR_SOURCE_DIR}/net/net_dummy.c)
 
 #
 # Agar-SG Sources.
 #
 set(SOURCE_FILES_SG
-    ${AGAR_SOURCE_DIR}/sg/sg.c
-    ${AGAR_SOURCE_DIR}/sg/sg_node.c
-    ${AGAR_SOURCE_DIR}/sg/sg_view.c
-    ${AGAR_SOURCE_DIR}/sg/sg_camera.c
-    ${AGAR_SOURCE_DIR}/sg/sg_gui.c
-    ${AGAR_SOURCE_DIR}/sg/sg_edit.c
-    ${AGAR_SOURCE_DIR}/sg/sg_dummy.c
-    ${AGAR_SOURCE_DIR}/sg/sg_point.c
-    ${AGAR_SOURCE_DIR}/sg/sg_light.c
-    ${AGAR_SOURCE_DIR}/sg/sg_plane.c
-    ${AGAR_SOURCE_DIR}/sg/sg_object.c
-    ${AGAR_SOURCE_DIR}/sg/sg_texture.c
-    ${AGAR_SOURCE_DIR}/sg/sg_voxel.c
-    ${AGAR_SOURCE_DIR}/sg/sg_program.c
-    ${AGAR_SOURCE_DIR}/sg/sg_load_ply.c
-    ${AGAR_SOURCE_DIR}/sg/sg_image.c
-    ${AGAR_SOURCE_DIR}/sg/sg_script.c
-    ${AGAR_SOURCE_DIR}/sg/sg_line.c
-    ${AGAR_SOURCE_DIR}/sg/sg_geom.c
-    ${AGAR_SOURCE_DIR}/sg/sg_circle.c
-    ${AGAR_SOURCE_DIR}/sg/sg_polygon.c
-    ${AGAR_SOURCE_DIR}/sg/sg_triangle.c
-    ${AGAR_SOURCE_DIR}/sg/sg_rectangle.c
-    ${AGAR_SOURCE_DIR}/sg/sg_sphere.c
-    ${AGAR_SOURCE_DIR}/sg/sg_polyball.c
-    ${AGAR_SOURCE_DIR}/sg/sg_polybox.c
-    ${AGAR_SOURCE_DIR}/sg/sg_action.c
-    ${AGAR_SOURCE_DIR}/sg/sg_widget.c)
+	${AGAR_SOURCE_DIR}/sg/sg.c
+	${AGAR_SOURCE_DIR}/sg/sg_node.c
+	${AGAR_SOURCE_DIR}/sg/sg_view.c
+	${AGAR_SOURCE_DIR}/sg/sg_camera.c
+	${AGAR_SOURCE_DIR}/sg/sg_gui.c
+	${AGAR_SOURCE_DIR}/sg/sg_edit.c
+	${AGAR_SOURCE_DIR}/sg/sg_dummy.c
+	${AGAR_SOURCE_DIR}/sg/sg_point.c
+	${AGAR_SOURCE_DIR}/sg/sg_light.c
+	${AGAR_SOURCE_DIR}/sg/sg_plane.c
+	${AGAR_SOURCE_DIR}/sg/sg_object.c
+	${AGAR_SOURCE_DIR}/sg/sg_texture.c
+	${AGAR_SOURCE_DIR}/sg/sg_voxel.c
+	${AGAR_SOURCE_DIR}/sg/sg_program.c
+	${AGAR_SOURCE_DIR}/sg/sg_load_ply.c
+	${AGAR_SOURCE_DIR}/sg/sg_image.c
+	${AGAR_SOURCE_DIR}/sg/sg_script.c
+	${AGAR_SOURCE_DIR}/sg/sg_line.c
+	${AGAR_SOURCE_DIR}/sg/sg_geom.c
+	${AGAR_SOURCE_DIR}/sg/sg_circle.c
+	${AGAR_SOURCE_DIR}/sg/sg_polygon.c
+	${AGAR_SOURCE_DIR}/sg/sg_triangle.c
+	${AGAR_SOURCE_DIR}/sg/sg_rectangle.c
+	${AGAR_SOURCE_DIR}/sg/sg_sphere.c
+	${AGAR_SOURCE_DIR}/sg/sg_polyball.c
+	${AGAR_SOURCE_DIR}/sg/sg_polybox.c
+	${AGAR_SOURCE_DIR}/sg/sg_action.c
+	${AGAR_SOURCE_DIR}/sg/sg_widget.c)
 
 #
 # Agar-SK Sources.
 #
 set(SOURCE_FILES_SK
-    ${AGAR_SOURCE_DIR}/sk/sk.c
-    ${AGAR_SOURCE_DIR}/sk/sk_view.c
-    ${AGAR_SOURCE_DIR}/sk/sk_tool.c
-    ${AGAR_SOURCE_DIR}/sk/sk_edit.c
-    ${AGAR_SOURCE_DIR}/sk/sk_select.c
-    ${AGAR_SOURCE_DIR}/sk/sk_solve.c
-    ${AGAR_SOURCE_DIR}/sk/sk_group.c
-    ${AGAR_SOURCE_DIR}/sk/sk_intersect.c
-    ${AGAR_SOURCE_DIR}/sk/sk_dummy.c
-    ${AGAR_SOURCE_DIR}/sk/sk_point.c
-    ${AGAR_SOURCE_DIR}/sk/sk_line.c
-    ${AGAR_SOURCE_DIR}/sk/sk_circle.c
-    ${AGAR_SOURCE_DIR}/sk/sk_arc.c
-    ${AGAR_SOURCE_DIR}/sk/sk_placement.c
-    ${AGAR_SOURCE_DIR}/sk/sk_annot.c
-    ${AGAR_SOURCE_DIR}/sk/sk_dimension.c
-    ${AGAR_SOURCE_DIR}/sk/sk_measure.c
-    ${AGAR_SOURCE_DIR}/sk/sk_geometry.c
-    ${AGAR_SOURCE_DIR}/sk/sk_pixmap.c
-    ${AGAR_SOURCE_DIR}/sk/sk_polygon.c
-    ${AGAR_SOURCE_DIR}/sk/sk_gui.c)
+	${AGAR_SOURCE_DIR}/sk/sk.c
+	${AGAR_SOURCE_DIR}/sk/sk_view.c
+	${AGAR_SOURCE_DIR}/sk/sk_tool.c
+	${AGAR_SOURCE_DIR}/sk/sk_edit.c
+	${AGAR_SOURCE_DIR}/sk/sk_select.c
+	${AGAR_SOURCE_DIR}/sk/sk_solve.c
+	${AGAR_SOURCE_DIR}/sk/sk_group.c
+	${AGAR_SOURCE_DIR}/sk/sk_intersect.c
+	${AGAR_SOURCE_DIR}/sk/sk_dummy.c
+	${AGAR_SOURCE_DIR}/sk/sk_point.c
+	${AGAR_SOURCE_DIR}/sk/sk_line.c
+	${AGAR_SOURCE_DIR}/sk/sk_circle.c
+	${AGAR_SOURCE_DIR}/sk/sk_arc.c
+	${AGAR_SOURCE_DIR}/sk/sk_placement.c
+	${AGAR_SOURCE_DIR}/sk/sk_annot.c
+	${AGAR_SOURCE_DIR}/sk/sk_dimension.c
+	${AGAR_SOURCE_DIR}/sk/sk_measure.c
+	${AGAR_SOURCE_DIR}/sk/sk_geometry.c
+	${AGAR_SOURCE_DIR}/sk/sk_pixmap.c
+	${AGAR_SOURCE_DIR}/sk/sk_polygon.c
+	${AGAR_SOURCE_DIR}/sk/sk_gui.c)
 
 #
 # Agar-VG Sources.
 #
 set(SOURCE_FILES_VG
-    ${AGAR_SOURCE_DIR}/vg/vg.c
-    ${AGAR_SOURCE_DIR}/vg/vg_circle.c
-    ${AGAR_SOURCE_DIR}/vg/vg_arc.c
-    ${AGAR_SOURCE_DIR}/vg/vg_line.c
-    ${AGAR_SOURCE_DIR}/vg/vg_point.c
-    ${AGAR_SOURCE_DIR}/vg/vg_snap.c
-    ${AGAR_SOURCE_DIR}/vg/vg_tables.c
-    ${AGAR_SOURCE_DIR}/vg/vg_text.c
-    ${AGAR_SOURCE_DIR}/vg/vg_polygon.c
-    ${AGAR_SOURCE_DIR}/vg/vg_view.c
-    ${AGAR_SOURCE_DIR}/vg/vg_tool.c
-    ${AGAR_SOURCE_DIR}/vg/vg_circle_tool.c
-    ${AGAR_SOURCE_DIR}/vg/vg_line_tool.c
-    ${AGAR_SOURCE_DIR}/vg/vg_point_tool.c
-    ${AGAR_SOURCE_DIR}/vg/vg_proximity_tool.c
-    ${AGAR_SOURCE_DIR}/vg/vg_text_tool.c
-    ${AGAR_SOURCE_DIR}/vg/vg_arc_tool.c
-    ${AGAR_SOURCE_DIR}/vg/vg_polygon_tool.c
-    ${AGAR_SOURCE_DIR}/vg/vg_select_tool.c)
+	${AGAR_SOURCE_DIR}/vg/vg.c
+	${AGAR_SOURCE_DIR}/vg/vg_circle.c
+	${AGAR_SOURCE_DIR}/vg/vg_arc.c
+	${AGAR_SOURCE_DIR}/vg/vg_line.c
+	${AGAR_SOURCE_DIR}/vg/vg_point.c
+	${AGAR_SOURCE_DIR}/vg/vg_snap.c
+	${AGAR_SOURCE_DIR}/vg/vg_tables.c
+	${AGAR_SOURCE_DIR}/vg/vg_text.c
+	${AGAR_SOURCE_DIR}/vg/vg_polygon.c
+	${AGAR_SOURCE_DIR}/vg/vg_view.c
+	${AGAR_SOURCE_DIR}/vg/vg_tool.c
+	${AGAR_SOURCE_DIR}/vg/vg_circle_tool.c
+	${AGAR_SOURCE_DIR}/vg/vg_line_tool.c
+	${AGAR_SOURCE_DIR}/vg/vg_point_tool.c
+	${AGAR_SOURCE_DIR}/vg/vg_proximity_tool.c
+	${AGAR_SOURCE_DIR}/vg/vg_text_tool.c
+	${AGAR_SOURCE_DIR}/vg/vg_arc_tool.c
+	${AGAR_SOURCE_DIR}/vg/vg_polygon_tool.c
+	${AGAR_SOURCE_DIR}/vg/vg_select_tool.c)
 
 #
 # Specify the installation directories.
@@ -1348,7 +1346,7 @@ list(REMOVE_DUPLICATES AGAR_VG_CFLAGS)
 list(REMOVE_DUPLICATES AGAR_VG_LIBS)
 
 message(STATUS "")
-message(STATUS "Agar build successfully configured with the following options:")
+message(STATUS "Agar build configured successfully!")
 message(STATUS "")
 message(STATUS "Platform:     ${CMAKE_SYSTEM}")
 message(STATUS "64-bit:       ${ARCH_64}")
@@ -1401,6 +1399,8 @@ endif()
 
 message(STATUS "Enable Libs: ${AGAR_LIBS_ENABLED}")
 message(STATUS "Disable Libs:${AGAR_LIBS_DISABLED}")
+message(STATUS "Shared Libs:  ${AGAR_SHARED}")
+message(STATUS "Static Libs:  ${AGAR_STATIC} (Static PIC: ${AGAR_STATIC_PIC})")
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 	message(STATUS "Build Type:   DEBUG")
@@ -1415,29 +1415,64 @@ message(STATUS "CFLAGS:        ${CMAKE_C_FLAGS}")
 message(STATUS "EXTRA_CFLAGS:  ${EXTRA_CFLAGS}")
 message(STATUS "EXTRA_LDFLAGS: ${EXTRA_LDFLAGS}")
 message(STATUS "EXTRA_LIBS:    ${EXTRA_LIBS}")
+if(AGAR_GLOBAL_CFLAGS)
+	message(STATUS "AGAR_GLOBAL_CFLAGS: ${AGAR_GLOBAL_CFLAGS}")
+endif()
+if(AGAR_CORE_CFLAGS)
+	message(STATUS "AGAR_CORE_CFLAGS:   ${AGAR_CORE_CFLAGS}")
+endif()
+if(AGAR_CORE_LIBS)
+	message(STATUS "AGAR_CORE_LIBS:     ${AGAR_CORE_LIBS}")
+endif()
+if(AGAR_GUI_CFLAGS)
+	message(STATUS "AGAR_GUI_CFLAGS:    ${AGAR_GUI_CFLAGS}")
+endif()
+if(AGAR_GUI_LIBS)
+	message(STATUS "AGAR_GUI_LIBS:      ${AGAR_GUI_LIBS}")
+endif()
+if(AGAR_AU_CFLAGS)
+	message(STATUS "AGAR_AU_CFLAGS:     ${AGAR_AU_CFLAGS}")
+endif()
+if(AGAR_AU_LIBS)
+	message(STATUS "AGAR_AU_LIBS:       ${AGAR_AU_LIBS}")
+endif()
+if(AGAR_MAP_CFLAGS)
+	message(STATUS "AGAR_MAP_CFLAGS:    ${AGAR_MAP_CFLAGS}")
+endif()
+if(AGAR_MAP_LIBS)
+	message(STATUS "AGAR_MAP_LIBS:      ${AGAR_MAP_LIBS}")
+endif()
+if(AGAR_MATH_CFLAGS)
+	message(STATUS "AGAR_MATH_CFLAGS:   ${AGAR_MATH_CFLAGS}")
+endif()
+if(AGAR_MATH_LIBS)
+	message(STATUS "AGAR_MATH_LIBS:     ${AGAR_MATH_LIBS}")
+endif()
+if(AGAR_NET_CFLAGS)
+	message(STATUS "AGAR_NET_CFLAGS:    ${AGAR_NET_CFLAGS}")
+endif()
+if(AGAR_NET_LIBS)
+	message(STATUS "AGAR_NET_LIBS:      ${AGAR_NET_LIBS}")
+endif()
+if(AGAR_SG_CFLAGS)
+	message(STATUS "AGAR_SG_CFLAGS:     ${AGAR_SG_CFLAGS}")
+endif()
+if(AGAR_SG_LIBS)
+	message(STATUS "AGAR_SG_LIBS:       ${AGAR_SG_LIBS}")
+endif()
+if(AGAR_SK_CFLAGS)
+	message(STATUS "AGAR_SK_CFLAGS:     ${AGAR_SK_CFLAGS}")
+endif()
+if(AGAR_SK_LIBS)
+	message(STATUS "AGAR_SK_LIBS:       ${AGAR_SK_LIBS}")
+endif()
+if(AGAR_VG_CFLAGS)
+	message(STATUS "AGAR_VG_CFLAGS:     ${AGAR_VG_CFLAGS}")
+endif()
+if(AGAR_VG_LIBS)
+	message(STATUS "AGAR_VG_LIBS:       ${AGAR_VG_LIBS}")
+endif()
 message(STATUS "")
-message(STATUS "Shared Library: ${AGAR_SHARED}")
-message(STATUS "Static Library: ${AGAR_STATIC} (Static PIC: ${AGAR_STATIC_PIC})")
-message(STATUS "")
-message(STATUS "AGAR_GLOBAL_CFLAGS: ${AGAR_GLOBAL_CFLAGS}")
-message(STATUS "AGAR_CORE_CFLAGS:   ${AGAR_CORE_CFLAGS}")
-message(STATUS "AGAR_CORE_LIBS:     ${AGAR_CORE_LIBS}")
-message(STATUS "AGAR_GUI_CFLAGS:    ${AGAR_GUI_CFLAGS}")
-message(STATUS "AGAR_GUI_LIBS:      ${AGAR_GUI_LIBS}")
-message(STATUS "AGAR_AU_CFLAGS:     ${AGAR_AU_CFLAGS}")
-message(STATUS "AGAR_AU_LIBS:       ${AGAR_AU_LIBS}")
-message(STATUS "AGAR_MAP_CFLAGS:    ${AGAR_MAP_CFLAGS}")
-message(STATUS "AGAR_MAP_LIBS:      ${AGAR_MAP_LIBS}")
-message(STATUS "AGAR_MATH_CFLAGS:   ${AGAR_MATH_CFLAGS}")
-message(STATUS "AGAR_MATH_LIBS:     ${AGAR_MATH_LIBS}")
-message(STATUS "AGAR_NET_CFLAGS:    ${AGAR_NET_CFLAGS}")
-message(STATUS "AGAR_NET_LIBS:      ${AGAR_NET_LIBS}")
-message(STATUS "AGAR_SG_CFLAGS:     ${AGAR_SG_CFLAGS}")
-message(STATUS "AGAR_SG_LIBS:       ${AGAR_SG_LIBS}")
-message(STATUS "AGAR_SK_CFLAGS:     ${AGAR_SK_CFLAGS}")
-message(STATUS "AGAR_SK_LIBS:       ${AGAR_SK_LIBS}")
-message(STATUS "AGAR_VG_CFLAGS:     ${AGAR_VG_CFLAGS}")
-message(STATUS "AGAR_VG_LIBS:       ${AGAR_VG_LIBS}")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${AGAR_GLOBAL_CFLAGS} ${EXTRA_CFLAGS}")
 
@@ -1713,16 +1748,6 @@ if(AGAR_STATIC)
 		set_target_properties(ag_vg-static PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
 	endif()
 endif()
-
-#
-# Test suite
-#
-#if(AGAR_TESTS)
-#  include_directories(BEFORE "${AGAR_SOURCE_DIR}/include")
-#  include_directories(AFTER "${AGAR_SOURCE_DIR}/include")
-#  file(GLOB TEST_SOURCES ${AGAR_SOURCE_DIR}/tests/*.c)
-#  add_subdirectory(tests)
-#endif()
 
 #
 # Install: Shared and Static Libraries.
@@ -2195,64 +2220,103 @@ endif()
 #
 if(AGAR_GUI)
 	set(AGAR_DATA_FILES
-	    ${AGAR_SOURCE_DIR}/gui/style.css
-	    ${AGAR_SOURCE_DIR}/gui/license.txt)
+		${AGAR_SOURCE_DIR}/gui/style.css
+		${AGAR_SOURCE_DIR}/gui/license.txt)
 
 	set(AGAR_FONT_FILES
-	    ${AGAR_SOURCE_DIR}/gui/fonts/OFL11.txt
-	    ${AGAR_SOURCE_DIR}/gui/fonts/OFL-FAQ.txt
-	    ${AGAR_SOURCE_DIR}/gui/fonts/Charter-LICENSE.txt
-	    ${AGAR_SOURCE_DIR}/gui/fonts/Vera-Copyright.txt
-	    ${AGAR_SOURCE_DIR}/gui/fonts/League-Gothic-LICENSE.md
-	    ${AGAR_SOURCE_DIR}/gui/fonts/League-Spartan-LICENSE.md
-	    ${AGAR_SOURCE_DIR}/gui/fonts/Mukta-OFL.txt
-	    ${AGAR_SOURCE_DIR}/gui/fonts/agar-minimal.agbf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/agar-minimal-12.png
-	    ${AGAR_SOURCE_DIR}/gui/fonts/agar-ideograms.agbf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/agar-ideograms-12.png
-	    ${AGAR_SOURCE_DIR}/gui/fonts/agar-ideograms-14.png
-	    ${AGAR_SOURCE_DIR}/gui/fonts/agar-ideograms-16.png
-	    ${AGAR_SOURCE_DIR}/gui/fonts/algue.ttf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/algue-bold.ttf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/algue-italic.ttf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/algue-bold-italic.ttf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/charter-bold-italic.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/charter-bold.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/charter-italic.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/charter.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-bold-italic.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-bold.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-condensed-bold-italic.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-condensed-bold.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-condensed-italic.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-condensed-light-italic.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-condensed-light.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-condensed.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-italic.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-light-italic.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-light.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/fira-sans.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/fraktur-LICENSE.txt
-	    ${AGAR_SOURCE_DIR}/gui/fonts/fraktur.ttf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/league-gothic.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/league-gothic-italic.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/league-gothic-condensed.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/league-gothic-condensed-italic.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/league-spartan.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/league-spartan-black.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/league-spartan-bold.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/league-spartan-extrabold.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/league-spartan-extralight.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/league-spartan-light.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/league-spartan-semibold.otf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/monoalgue.ttf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/monoalgue-bold.ttf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/monoalgue-italic.ttf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/monoalgue-bold-italic.ttf
-	    ${AGAR_SOURCE_DIR}/gui/fonts/unialgue.ttf)
-
+		${AGAR_SOURCE_DIR}/gui/fonts/OFL11.txt
+		${AGAR_SOURCE_DIR}/gui/fonts/OFL-FAQ.txt
+		${AGAR_SOURCE_DIR}/gui/fonts/Charter-LICENSE.txt
+		${AGAR_SOURCE_DIR}/gui/fonts/Vera-Copyright.txt
+		${AGAR_SOURCE_DIR}/gui/fonts/League-Gothic-LICENSE.md
+		${AGAR_SOURCE_DIR}/gui/fonts/League-Spartan-LICENSE.md
+		${AGAR_SOURCE_DIR}/gui/fonts/Mukta-OFL.txt
+		${AGAR_SOURCE_DIR}/gui/fonts/agar-minimal.agbf
+		${AGAR_SOURCE_DIR}/gui/fonts/agar-minimal-12.png
+		${AGAR_SOURCE_DIR}/gui/fonts/agar-ideograms.agbf
+		${AGAR_SOURCE_DIR}/gui/fonts/agar-ideograms-12.png
+		${AGAR_SOURCE_DIR}/gui/fonts/agar-ideograms-14.png
+		${AGAR_SOURCE_DIR}/gui/fonts/agar-ideograms-16.png
+		${AGAR_SOURCE_DIR}/gui/fonts/algue.ttf
+		${AGAR_SOURCE_DIR}/gui/fonts/algue-bold.ttf
+		${AGAR_SOURCE_DIR}/gui/fonts/algue-italic.ttf
+		${AGAR_SOURCE_DIR}/gui/fonts/algue-bold-italic.ttf
+		${AGAR_SOURCE_DIR}/gui/fonts/charter-bold-italic.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/charter-bold.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/charter-italic.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/charter.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-bold-italic.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-bold.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-condensed-bold-italic.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-condensed-bold.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-condensed-italic.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-condensed-light-italic.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-condensed-light.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-condensed.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-italic.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-light-italic.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/fira-sans-light.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/fira-sans.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/fraktur-LICENSE.txt
+		${AGAR_SOURCE_DIR}/gui/fonts/fraktur.ttf
+		${AGAR_SOURCE_DIR}/gui/fonts/league-gothic.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/league-gothic-italic.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/league-gothic-condensed.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/league-gothic-condensed-italic.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/league-spartan.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/league-spartan-black.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/league-spartan-bold.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/league-spartan-extrabold.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/league-spartan-extralight.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/league-spartan-light.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/league-spartan-semibold.otf
+		${AGAR_SOURCE_DIR}/gui/fonts/monoalgue.ttf
+		${AGAR_SOURCE_DIR}/gui/fonts/monoalgue-bold.ttf
+		${AGAR_SOURCE_DIR}/gui/fonts/monoalgue-italic.ttf
+		${AGAR_SOURCE_DIR}/gui/fonts/monoalgue-bold-italic.ttf
+		${AGAR_SOURCE_DIR}/gui/fonts/unialgue.ttf)
+	
 	install(FILES ${AGAR_FONT_FILES} DESTINATION ${AGAR_TTFDIR})
 	install(FILES ${AGAR_DATA_FILES} DESTINATION ${AGAR_DATADIR})
+endif()
+
+#
+# Install: Manual Pages.
+#
+file(GLOB AGAR_CORE_MAN3 ${AGAR_SOURCE_DIR}/core/*.3)
+install(FILES ${AGAR_CORE_MAN3} DESTINATION "${CMAKE_INSTALL_MANDIR}/man3")
+
+if(AGAR_GUI)
+	file(GLOB AGAR_GUI_MAN3 ${AGAR_SOURCE_DIR}/gui/*.3)
+	install(FILES ${AGAR_GUI_MAN3} DESTINATION "${CMAKE_INSTALL_MANDIR}/man3")
+endif()
+if(AGAR_AU)
+	file(GLOB AGAR_AU_MAN3 ${AGAR_SOURCE_DIR}/au/*.3)
+	install(FILES ${AGAR_AU_MAN3} DESTINATION "${CMAKE_INSTALL_MANDIR}/man3")
+endif()
+if(AGAR_MAP)
+	file(GLOB AGAR_MAP_MAN3 ${AGAR_SOURCE_DIR}/map/*.3)
+	install(FILES ${AGAR_MAP_MAN3} DESTINATION "${CMAKE_INSTALL_MANDIR}/man3")
+endif()
+if(AGAR_MATH)
+	file(GLOB AGAR_MATH_MAN3 ${AGAR_SOURCE_DIR}/math/*.3)
+	install(FILES ${AGAR_MATH_MAN3} DESTINATION "${CMAKE_INSTALL_MANDIR}/man3")
+endif()
+if(AGAR_NET)
+	file(GLOB AGAR_NET_MAN3 ${AGAR_SOURCE_DIR}/net/*.3)
+	install(FILES ${AGAR_NET_MAN3} DESTINATION "${CMAKE_INSTALL_MANDIR}/man3")
+endif()
+if(AGAR_SG)
+	file(GLOB AGAR_SG_MAN3 ${AGAR_SOURCE_DIR}/sg/*.3)
+	install(FILES ${AGAR_SG_MAN3} DESTINATION "${CMAKE_INSTALL_MANDIR}/man3")
+endif()
+if(AGAR_SK)
+	file(GLOB AGAR_SK_MAN3 ${AGAR_SOURCE_DIR}/sk/*.3)
+	install(FILES ${AGAR_SK_MAN3} DESTINATION "${CMAKE_INSTALL_MANDIR}/man3")
+endif()
+if(AGAR_VG)
+	file(GLOB AGAR_VG_MAN3 ${AGAR_SOURCE_DIR}/vg/*.3)
+	install(FILES ${AGAR_VG_MAN3} DESTINATION "${CMAKE_INSTALL_MANDIR}/man3")
 endif()
 
 #
