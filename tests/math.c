@@ -10,7 +10,6 @@
 #include <agar/math/m_gui.h>
 
 #include <agar/config/have_altivec.h>
-#include <agar/config/have_altivec_h.h>
 #include <agar/config/inline_altivec.h>
 #include <agar/config/have_sse.h>
 #include <agar/config/have_sse2.h>
