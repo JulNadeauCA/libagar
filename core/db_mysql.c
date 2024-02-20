@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2018 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2012-2024 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
 #include <agar/core/core.h>
 
 #include <ctype.h>
-#include <mysql.h>
+#include <mysql/mysql.h>
 
 typedef struct ag_db_mysql {
 	struct ag_db _inherit;
@@ -51,8 +51,6 @@ Init(void *_Nonnull obj)
 	AG_SetInt(db,    "compress",		0);
 	AG_SetInt(db,    "local-files",		-1);
 	AG_SetInt(db,    "ssl",			-1);
-	AG_SetInt(db,    "ssl-verify-cert",	-1);
-	AG_SetInt(db,    "secure-auth",		-1);
 	AG_SetString(db, "cnf-file",		NULL);
 	AG_SetString(db, "cnf-group",		NULL);
 	AG_SetString(db, "protocol",		"default");
@@ -77,7 +75,6 @@ Open(void *_Nonnull obj, const char *_Nonnull path, Uint flags)
 	unsigned long myFlags = CLIENT_REMEMBER_OPTIONS;
 	char *s;
 	Uint i;
-	my_bool b = 1;
 	
 	if ((my = mysql_init(NULL)) == NULL) {
 		AG_SetError("mysql_init failed");
@@ -92,8 +89,6 @@ Open(void *_Nonnull obj, const char *_Nonnull path, Uint flags)
 	if (AG_GetInt(db,"local-files") == 1)	{ myFlags |= CLIENT_LOCAL_FILES; }
 	if (AG_GetInt(db,"ssl") == 1)		{ myFlags |= CLIENT_SSL; }
 
-	if (AG_GetUint(db,"ssl-verify-cert") == 1)	 { mysql_options(my, MYSQL_OPT_SSL_VERIFY_SERVER_CERT, &b); }
-	if (AG_GetUint(db,"secure-auth") == 1)		 { mysql_options(my, MYSQL_SECURE_AUTH, &b); }
 	if ((s = AG_GetStringP(db,"init-cmd")) != NULL)	 { mysql_options(my, MYSQL_INIT_COMMAND, s); }
 	if ((s = AG_GetStringP(db,"cnf-file")) != NULL)	 { mysql_options(my, MYSQL_READ_DEFAULT_FILE, s); }
 	if ((s = AG_GetStringP(db,"cnf-group")) != NULL) { mysql_options(my, MYSQL_READ_DEFAULT_GROUP, s); }
@@ -110,7 +105,7 @@ Open(void *_Nonnull obj, const char *_Nonnull path, Uint flags)
 	}
 	if ((i = AG_GetUint(db,"read-timeout")) != 0)	 { mysql_options(my, MYSQL_OPT_READ_TIMEOUT, (const char *)&i); }
 	if ((i = AG_GetUint(db,"write-timeout")) != 0)	 { mysql_options(my, MYSQL_OPT_WRITE_TIMEOUT, (const char *)&i); }
-	if (AG_GetUint(db,"reconnect") == 1)		 { mysql_options(my, MYSQL_OPT_RECONNECT, (const char *)&b); }
+	if (AG_GetUint(db,"reconnect") == 1)		 { Uint bYes = 1; mysql_options(my, MYSQL_OPT_RECONNECT, (const char *)&bYes); }
 
 	if ((s = AG_GetStringP(db,"charset")) != NULL)	 { mysql_options(my, MYSQL_SET_CHARSET_NAME, s); }
 	if ((s = AG_GetStringP(db,"charset-dir")) != NULL) { mysql_options(my, MYSQL_SET_CHARSET_DIR, s); }
@@ -152,7 +147,7 @@ Exists(void *_Nonnull obj, const AG_Dbt *_Nonnull key)
 {
 	char q[64];
 	AG_DbMySQL *db = obj;
-	char *ks, *q;
+	char *ks;
 
 	ks = EncodeKey(key);
 	Snprintf(q, sizeof(q), AG_GetStringP(db,"get-cmd"), ks);
@@ -162,7 +157,6 @@ Exists(void *_Nonnull obj, const AG_Dbt *_Nonnull key)
 		AG_SetError("Get: %s", mysql_error(db->my));
 		return (-1);
 	}
-	free(q);
 	return (mysql_field_count(db->my) > 0) ? 1 : 0;
 }
 

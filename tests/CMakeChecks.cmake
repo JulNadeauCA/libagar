@@ -323,6 +323,67 @@ int main(int argc, char *argv[])
 endmacro()
 
 #
+# From BSDBuild/portaudio.pm:
+#
+macro(Check_Portaudio)
+	set(PORTAUDIO_CFLAGS "")
+	set(PORTAUDIO_LIBS "")
+
+	set(ORIG_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+	set(ORIG_CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
+	set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -I/usr/local/include")
+	set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} -L/usr/local/lib -lm -lpthread -lportaudio")
+
+	CHECK_INCLUDE_FILE(portaudio.h HAVE_PORTAUDIO_H)
+	if(HAVE_PORTAUDIO_H)
+		check_c_source_compiles("
+#include <stdio.h>
+#include <portaudio.h>
+
+int
+main(int argc, char *argv[])
+{
+	int rv;
+
+	if ((rv = Pa_Initialize()) != paNoError) {
+		if (Pa_IsFormatSupported(NULL, NULL, 48000.0) != 0) {
+			return (0);
+		} else {
+			return (rv);
+		}
+	} else {
+		Pa_Terminate();
+		return (0);
+	}
+}
+" HAVE_PORTAUDIO)
+		if(HAVE_PORTAUDIO)
+			set(PORTAUDIO_CFLAGS "-I/usr/local/include")
+			set(PORTAUDIO_LIBS "-L/usr/local/lib" "-lm" "-lpthread" "-lportaudio")
+			BB_Save_Define(HAVE_PORTAUDIO)
+		else()
+			BB_Save_Undef(HAVE_PORTAUDIO)
+		endif()
+	else()
+		set(HAVE_PORTAUDIO OFF)
+		BB_Save_Undef(HAVE_PORTAUDIO)
+	endif()
+
+	set(CMAKE_REQUIRED_FLAGS ${ORIG_CMAKE_REQUIRED_FLAGS})
+	set(CMAKE_REQUIRED_LIBRARIES ${ORIG_CMAKE_REQUIRED_LIBRARIES})
+
+	BB_Save_MakeVar(PORTAUDIO_CFLAGS "${PORTAUDIO_CFLAGS}")
+	BB_Save_MakeVar(PORTAUDIO_LIBS "${PORTAUDIO_LIBS}")
+endmacro()
+
+macro(Disable_Portaudio)
+	set(HAVE_PORTAUDIO OFF)
+	BB_Save_MakeVar(PORTAUDIO_CFLAGS "")
+	BB_Save_MakeVar(PORTAUDIO_LIBS "")
+	BB_Save_Undef(HAVE_PORTAUDIO)
+endmacro()
+
+#
 # From BSDBuild/unistd_h.pm:
 #
 macro(Check_Unistd_h)
@@ -1615,18 +1676,34 @@ endmacro()
 macro(Check_Agar)
 	set(AGAR_CFLAGS "")
 	set(AGAR_LIBS "")
+	set(AGAR_CORE_CFLAGS "")
+	set(AGAR_CORE_LIBS "")
+	set(AGAR_GUI_CFLAGS "")
+	set(AGAR_GUI_LIBS "")
+	set(AGAR_AU_CFLAGS "")
+	set(AGAR_AU_LIBS "")
+	set(AGAR_MAP_CFLAGS "")
+	set(AGAR_MAP_LIBS "")
+	set(AGAR_MATH_CFLAGS "")
+	set(AGAR_MATH_LIBS "")
 
 	find_package(agar)
 	if(agar_FOUND)
 		set(HAVE_AGAR ON)
 		foreach(agarincdir ${AGAR_INCLUDE_DIRS})
 			list(APPEND AGAR_CFLAGS "-I${agarincdir}")
+			list(APPEND AGAR_CORE_CFLAGS "-I${agarincdir}")
+		endforeach()
+		foreach(agarlib ${AGAR_CORE_LIBRARIES})
+			list(APPEND AGAR_CORE_LIBS "${agarlib}")
 		endforeach()
 		foreach(agarlib ${AGAR_GUI_LIBRARIES} ${AGAR_CORE_LIBRARIES})
 			list(APPEND AGAR_LIBS "${agarlib}")
 		endforeach()
 		list(REMOVE_DUPLICATES AGAR_CFLAGS)
 		list(REMOVE_DUPLICATES AGAR_LIBS)
+		list(REMOVE_DUPLICATES AGAR_CORE_CFLAGS)
+		list(REMOVE_DUPLICATES AGAR_CORE_LIBS)
 		list(REMOVE_DUPLICATES AGAR_INCLUDE_DIRS)
 		BB_Save_Define(HAVE_AGAR)
 	else()
@@ -1634,8 +1711,55 @@ macro(Check_Agar)
 		BB_Save_Undef(HAVE_AGAR)
 	endif()
 
+	if(HAVE_AGAR_GUI)
+		BB_Save_Define(HAVE_AGAR_GUI)
+		set(AGAR_GUI_CFLAGS ${AGAR_CFLAGS})
+		foreach(agarlib ${AGAR_GUI_LIBRARIES})
+			list(APPEND AGAR_GUI_LIBS "${agarlib}")
+		endforeach()
+	else()
+		BB_Save_Undef(HAVE_AGAR_GUI)
+	endif()
+	if(HAVE_AGAR_AU)
+		BB_Save_Define(HAVE_AGAR_AU)
+		set(AGAR_AU_CFLAGS ${AGAR_CFLAGS})
+		foreach(agarlib ${AGAR_AU_LIBRARIES})
+			list(APPEND AGAR_AU_LIBS "${agarlib}")
+		endforeach()
+	else()
+		BB_Save_Undef(HAVE_AGAR_AU)
+	endif()
+	if(HAVE_AGAR_MAP)
+		BB_Save_Define(HAVE_AGAR_MAP)
+		set(AGAR_MAP_CFLAGS ${AGAR_CFLAGS})
+		foreach(agarlib ${AGAR_MAP_LIBRARIES})
+			list(APPEND AGAR_MAP_LIBS "${agarlib}")
+		endforeach()
+	else()
+		BB_Save_Undef(HAVE_AGAR_MAP)
+	endif()
+	if(HAVE_AGAR_MATH)
+		BB_Save_Define(HAVE_AGAR_MATH)
+		set(AGAR_MATH_CFLAGS ${AGAR_CFLAGS})
+		foreach(agarlib ${AGAR_MATH_LIBRARIES})
+			list(APPEND AGAR_MATH_LIBS "${agarlib}")
+		endforeach()
+	else()
+		BB_Save_Undef(HAVE_AGAR_MATH)
+	endif()
+
 	BB_Save_MakeVar(AGAR_CFLAGS "${AGAR_CFLAGS}")
 	BB_Save_MakeVar(AGAR_LIBS "${AGAR_LIBS}")
+	BB_Save_MakeVar(AGAR_CORE_CFLAGS "${AGAR_CORE_CFLAGS}")
+	BB_Save_MakeVar(AGAR_CORE_LIBS "${AGAR_CORE_LIBS}")
+	BB_Save_MakeVar(AGAR_GUI_CFLAGS "${AGAR_GUI_CFLAGS}")
+	BB_Save_MakeVar(AGAR_GUI_LIBS "${AGAR_GUI_LIBS}")
+	BB_Save_MakeVar(AGAR_AU_CFLAGS "${AGAR_AU_CFLAGS}")
+	BB_Save_MakeVar(AGAR_AU_LIBS "${AGAR_AU_LIBS}")
+	BB_Save_MakeVar(AGAR_MAP_CFLAGS "${AGAR_MAP_CFLAGS}")
+	BB_Save_MakeVar(AGAR_MAP_LIBS "${AGAR_MAP_LIBS}")
+	BB_Save_MakeVar(AGAR_MATH_CFLAGS "${AGAR_MATH_CFLAGS}")
+	BB_Save_MakeVar(AGAR_MATH_LIBS "${AGAR_MATH_LIBS}")
 endmacro()
 
 macro(Disable_Agar)
@@ -1753,6 +1877,60 @@ endmacro()
 macro(Disable_Dlopen)
 	BB_Save_Undef(HAVE_DLOPEN)
 	BB_Save_Undef(HAVE_DLFCN_H)
+endmacro()
+
+#
+# From BSDBuild/sndfile.pm:
+#
+macro(Check_Sndfile)
+	set(SNDFILE_CFLAGS "")
+	set(SNDFILE_LIBS "")
+
+	set(ORIG_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+	set(ORIG_CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
+	set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -I/usr/local/include")
+	set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} -L/usr/local/lib -lsndfile")
+
+	CHECK_INCLUDE_FILE(sndfile.h HAVE_SNDFILE_H)
+	if(HAVE_SNDFILE_H)
+		check_c_source_compiles("
+#include <stdio.h>
+#include <sndfile.h>
+
+int main(int argc, char *argv[]) {
+	SNDFILE *sf;
+	SF_INFO sfi;
+
+	sfi.format = 0;
+	sf = sf_open(\"foo\", 0, &sfi);
+	sf_close(sf);
+	return (0);
+}
+" HAVE_SNDFILE)
+		if(HAVE_SNDFILE)
+			set(SNDFILE_CFLAGS "-I/usr/local/include")
+			set(SNDFILE_LIBS "-L/usr/local/lib" "-lsndfile")
+			BB_Save_Define(HAVE_SNDFILE)
+		else()
+			BB_Save_Undef(HAVE_SNDFILE)
+		endif()
+	else()
+		set(HAVE_SNDFILE OFF)
+		BB_Save_Undef(HAVE_SNDFILE)
+	endif()
+
+	set(CMAKE_REQUIRED_FLAGS ${ORIG_CMAKE_REQUIRED_FLAGS})
+	set(CMAKE_REQUIRED_LIBRARIES ${ORIG_CMAKE_REQUIRED_LIBRARIES})
+
+	BB_Save_MakeVar(SNDFILE_CFLAGS "${SNDFILE_CFLAGS}")
+	BB_Save_MakeVar(SNDFILE_LIBS "${SNDFILE_LIBS}")
+endmacro()
+
+macro(Disable_Sndfile)
+	set(HAVE_SNDFILE OFF)
+	BB_Save_MakeVar(SNDFILE_CFLAGS "")
+	BB_Save_MakeVar(SNDFILE_LIBS "")
+	BB_Save_Undef(HAVE_SNDFILE)
 endmacro()
 
 #
@@ -2218,49 +2396,73 @@ macro(Disable_Math_C99)
 endmacro()
 
 #
-# From BSDBuild/agar-core.pm:
-#
-macro(Check_Agar_Core)
-	set(AGAR_CORE_CFLAGS "")
-	set(AGAR_CORE_LIBS "")
-
-	find_package(agarCore)
-	if(agarCore_FOUND)
-		set(HAVE_AGAR_CORE ON)
-		foreach(agarincdir ${AGAR_CORE_INCLUDE_DIRS})
-			list(APPEND AGAR_CORE_CFLAGS "-I${agarincdir}")
-		endforeach()
-		foreach(agarlib ${AGAR_CORE_LIBRARIES})
-			list(APPEND AGAR_CORE_LIBS "${agarlib}")
-		endforeach()
-		list(REMOVE_DUPLICATES AGAR_CORE_CFLAGS)
-		list(REMOVE_DUPLICATES AGAR_CORE_LIBS)
-		list(REMOVE_DUPLICATES AGAR_CORE_INCLUDE_DIRS)
-		BB_Save_Define(HAVE_AGAR_CORE)
-	else()
-		set(HAVE_AGAR_CORE OFF)
-		BB_Save_Undef(HAVE_AGAR_CORE)
-	endif()
-
-	BB_Save_MakeVar(AGAR_CORE_CFLAGS "${AGAR_CORE_CFLAGS}")
-	BB_Save_MakeVar(AGAR_CORE_LIBS "${AGAR_CORE_LIBS}")
-endmacro()
-
-macro(Disable_Agar_Core)
-	set(HAVE_AGAR_CORE OFF)
-	BB_Save_Undef(HAVE_AGAR_CORE)
-	BB_Save_MakeVar(AGAR_CORE_CFLAGS "")
-	BB_Save_MakeVar(AGAR_CORE_LIBS "")
-endmacro()
-
-#
 # From BSDBuild/db4.pm:
 #
 macro(Check_Db4)
-	# TODO
+	set(DB4_CFLAGS "")
+	set(DB4_LIBS "")
+	if(FREEBSD)
+		set(ORIG_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+		set(ORIG_CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
+		set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -I/usr/local/include")
+		set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} -L/usr/local/lib -ldb-18")
+
+		CHECK_INCLUDE_FILE(db18/db.h HAVE_DB18_DB_H)
+		if(HAVE_DB18_DB_H)
+			check_c_source_compiles("
+#ifdef __FreeBSD__
+# include <db18/db.h>
+#else
+# include <db.h>
+#endif
+
+int main(int argc, char *argv[]) {
+	DB *db;
+	db_create(&db, NULL, 0);
+	return (0);
+}
+" HAVE_DB4)
+			if(HAVE_DB4)
+				set(DB4_CFLAGS "-I/usr/local/include")
+				set(DB4_LIBS "-L/usr/local/lib" "-ldb-18")
+				BB_Save_Define(HAVE_DB4)
+			else()
+				BB_Save_Undef(HAVE_DB4)
+			endif()
+		else()
+			set(HAVE_DB4 OFF)
+			BB_Save_Undef(HAVE_DB4)
+		endif()
+
+		set(CMAKE_REQUIRED_FLAGS ${ORIG_CMAKE_REQUIRED_FLAGS})
+		set(CMAKE_REQUIRED_LIBRARIES ${ORIG_CMAKE_REQUIRED_LIBRARIES})
+	else()
+		check_c_source_compiles("
+#ifdef __FreeBSD__
+# include <db18/db.h>
+#else
+# include <db.h>
+#endif
+
+int main(int argc, char *argv[]) {
+	DB *db;
+	db_create(&db, NULL, 0);
+	return (0);
+}
+" HAVE_DB4)
+		if(HAVE_DB4)
+			BB_Save_Define(HAVE_DB4)
+		else()
+			BB_Save_Undef(HAVE_DB4)
+		endif()
+	endif()
+
+	BB_Save_MakeVar(DB4_CFLAGS "${DB4_CFLAGS}")
+	BB_Save_MakeVar(DB4_LIBS "${DB4_LIBS}")
 endmacro()
 
 macro(Disable_Db4)
+	set(HAVE_DB4 OFF)
 	BB_Save_MakeVar(DB4_CFLAGS "")
 	BB_Save_MakeVar(DB4_LIBS "")
 	BB_Save_Undef(HAVE_DB4)
@@ -2376,10 +2578,49 @@ endmacro()
 # From BSDBuild/mysql.pm:
 #
 macro(Check_Mysql)
-	# TODO
+	set(MYSQL_CFLAGS "")
+	set(MYSQL_LIBS "")
+
+	set(ORIG_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+	set(ORIG_CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
+	set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -I/usr/local/include/mysql")
+	set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} -L/usr/local/lib/mysql -lmysqlclient_r")
+
+	CHECK_INCLUDE_FILE(mysql.h HAVE_MYSQL_H)
+	if(HAVE_MYSQL_H)
+		check_c_source_compiles("
+#include <mysql.h>
+#include <string.h>
+
+int
+main(int argc, char *argv[])
+{
+	MYSQL *my = mysql_init(NULL);
+	if (my != NULL) { mysql_close(my); }
+	return (0);
+}
+" HAVE_MYSQL)
+		if(HAVE_MYSQL)
+			set(MYSQL_CFLAGS "-I/usr/local/include")
+			set(MYSQL_LIBS "-L/usr/local/lib/mysql" "-lmysqlclient_r")
+			BB_Save_Define(HAVE_MYSQL)
+		else()
+			BB_Save_Undef(HAVE_MYSQL)
+		endif()
+	else()
+		set(HAVE_MYSQL OFF)
+		BB_Save_Undef(HAVE_MYSQL)
+	endif()
+
+	set(CMAKE_REQUIRED_FLAGS ${ORIG_CMAKE_REQUIRED_FLAGS})
+	set(CMAKE_REQUIRED_LIBRARIES ${ORIG_CMAKE_REQUIRED_LIBRARIES})
+
+	BB_Save_MakeVar(MYSQL_CFLAGS "${MYSQL_CFLAGS}")
+	BB_Save_MakeVar(MYSQL_LIBS "${MYSQL_LIBS}")
 endmacro()
 
 macro(Disable_Mysql)
+	set(HAVE_MYSQL OFF)
 	BB_Save_MakeVar(MYSQL_CFLAGS "")
 	BB_Save_MakeVar(MYSQL_LIBS "")
 	BB_Save_Undef(HAVE_MYSQL)

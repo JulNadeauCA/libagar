@@ -654,14 +654,13 @@ else
 	hundef(AG_WEB)
 fi
 
-# Enable Berkeley DB 4.x module for AG_Db if requested
+# Enable Berkeley DB module for AG_Db if requested
 if [ "${with_db4}" = 'yes' ]; then
 	check(db4, 0, ${prefix_db4})
 	if [ "${HAVE_DB4}" != 'yes' ]; then
 		if [ "${with_db4}" = 'yes' ]; then
 			echo "*"
 			echo "* --with-db4 requested and DB4 was not found"
-			echo "* (did you mean --with-db5?)"
 			echo "*"
 			exit 1
 		else
@@ -670,24 +669,6 @@ if [ "${with_db4}" = 'yes' ]; then
 	fi
 else
 	disable(db4)
-fi
-
-# Enable Berkeley DB 5.x module for AG_Db if requested
-if [ "${with_db5}" = 'yes' ]; then
-	check(db5, 0, ${prefix_db5})
-	if [ "${HAVE_DB5}" != 'yes' ]; then
-		if [ "${with_db5}" = 'yes' ]; then
-			echo "*"
-			echo "* --with-db5 requested and DB5 was not found"
-			echo "* (did you mean --with-db4?)"
-			echo "*"
-			exit 1
-		else
-			disable(db5)
-		fi
-	fi
-else
-	disable(db5)
 fi
 
 # Enable MySQL module for AG_Db if requested.
@@ -971,7 +952,7 @@ if [ "${HAVE_GETTIMEOFDAY}" = 'yes' ]; then
 		mappend(SRCS_CORE, "time_gettimeofday.c")
 	fi
 fi
-if [ "${HAVE_DB4}" = 'yes' -o "${HAVE_DB5}" = 'yes' ]; then
+if [ "${HAVE_DB4}" = 'yes' ]; then
 	mappend(SRCS_CORE, "db_bdb.c")
 fi
 if [ "${HAVE_MYSQL}" = 'yes' ]; then
@@ -1063,16 +1044,16 @@ config_script(agar-core-config,\
 	"-I${INCLDIR} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \
 	 ${CLOCK_CFLAGS} ${ICONV_CFLAGS}",\
 	"-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} \
-	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
+	 ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
 	 ${CLOCK_LIBS} ${ICONV_LIBS}")
 
 pkgconfig_mod(agar-core, "Agar object system and utility library", "", "", \
 	"-I\${includedir}/agar ${PTHREADS_XOPEN_CFLAGS} ${ALTIVEC_CHECK_CFLAGS} \
-	 ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} \
+	 ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${DB4_CFLAGS} \
 	 ${MYSQL_CFLAGS} ${CLOCK_CFLAGS}", \
 	"-L\${libdir} -lag_core", \
 	"-lag_core ${PTHREADS_XOPEN_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
-	 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${CLOCK_LIBS} ${WINSOCK1_LIBS} \
+	 ${DB4_LIBS} ${MYSQL_LIBS} ${CLOCK_LIBS} ${WINSOCK1_LIBS} \
 	 ${WINSOCK2_LIBS}")
 
 if [ "${enable_gui}" != 'no' ]; then
@@ -1080,13 +1061,13 @@ if [ "${enable_gui}" != 'no' ]; then
 		"-I${INCLDIR} ${SDL_CFLAGS} ${SDL2_CFLAGS} ${FREETYPE_CFLAGS} \
 		 ${FONTCONFIG_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} \
 		 ${XINERAMA_CFLAGS} ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} \
-		 ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} \
+		 ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} \
 		 ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} \
 		 ${UIM_CFLAGS} ${ICONV_CFLAGS}",\
 		"-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${SDL2_LIBS} \
 		 ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} \
 		 ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} \
-		 ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} \
+		 ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} \
 		 ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} \
 		 ${UIM_LIBS} ${ICONV_LIBS}")
 	
@@ -1095,11 +1076,11 @@ if [ "${enable_gui}" != 'no' ]; then
 		 ${OPENGL_PC} ${XINERAMA_PC} ${JPEG_PC} ${PNG_PC} ${UIM_PC}", \
 		"", \
 		"-I\${includedir}/agar ${COCOA_CFLAGS} ${MATH_CFLAGS} \
-		 ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} \
+		 ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} \
 		 ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}", \
 		"-L\${libdir} -lag_gui -lag_core", \
 		"-lag_gui -lag_core ${COCOA_LIBS} ${MATH_LIBS} ${PTHREADS_LIBS} \
-		 ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
+		 ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} \
 		 ${CLOCK_LIBS} ${ICONV_LIBS}")
 fi
 

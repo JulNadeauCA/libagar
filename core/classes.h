@@ -26,6 +26,7 @@ typedef enum ag_class {
 	AGC_DB              = 0x03000001,  /* AG_Db */
 	AGC_DB_HASH         = 0x03010001,      /* AG_DbHash */
 	AGC_DB_BTREE        = 0x03020001,      /* AG_DbBtree */
+	AGC_DB_MYSQL        = 0x03040001,      /* AG_DbMySQL */
 	AGC_DB_OBJECT       = 0x04000001,  /* AG_DbObject */
 	/* Agar-GUI */
 	AGC_DRIVER          = 0x05000001,  /* AG_Driver (non-instantiatable) */

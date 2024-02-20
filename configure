@@ -13371,9 +13371,6 @@ $ECHO_N '# checking whether DB4 works...' >>config.log
 MK_COMPILE_STATUS=OK
 cat << EOT >conftest$$.c
 #include <db.h>
-#if DB_VERSION_MAJOR != 4
-#error version
-#endif
 int main(int argc, char *argv[]) {
 	DB *db;
 	db_create(&db, NULL, 0);
@@ -13430,7 +13427,6 @@ fi
  then
 			echo "*"
 			echo "* --with-db4 requested and DB4 was not found"
-			echo "* (did you mean --with-db5?)"
 			echo "*"
 			exit 1
 		else
@@ -13447,141 +13443,6 @@ DB4_CFLAGS=""
 DB4_LIBS=""
 echo '#undef HAVE_DB4' >$bb_incdir/have_db4.h
 echo 'hdefs["HAVE_DB4"] = nil' >>configure.lua
-fi
-if [ "${with_db5}" = 'yes' ]
- then
-$ECHO_N 'checking for Berkeley DB 5.x...'
-$ECHO_N '# checking for Berkeley DB 5.x...' >>config.log
-# BEGIN db5(0 ${prefix_db5})
-DB5_CFLAGS=""
-DB5_LIBS=""
-DB5_VERSION=""
-DB5_VERSION_J=""
-for path in ${prefix_db5} /usr/local /usr /opt; do
-for dbver in 5.0 5.1 5.2 5.3 5; do
-DB5_VERSION_J=`echo "${dbver}" | sed "s/\.//"`
-if [ -e "${path}/lib/db5/libdb-$dbver.so" ]; then
-if [ -e "${path}/include/db${DB5_VERSION_J}" ]; then
-DB5_CFLAGS="-I${path}/include/db${DB5_VERSION_J} -I${path}/include"
-else
-DB5_CFLAGS="-I${path}/include/db5 -I${path}/include"
-fi
-DB5_LIBS="-L${path}/lib/db5 -ldb-$dbver"
-DB5_VERSION="${dbver}"
-break
-fi
-done
-done
-if [ "${DB5_VERSION}" != "" ]; then
-if [ "${prefix_db5}" != "" ]; then
-echo "yes ($DB5_VERSION in ${prefix_db5})"
-echo "# yes ($DB5_VERSION in ${prefix_db5})" >>config.log
-else
-echo "yes ($DB5_VERSION)"
-echo "# yes ($DB5_VERSION)" >>config.log
-fi
-if [ "${MK_VERSION_OK}" = "no" ]; then
-echo '*'
-echo '# *' >>config.log
-echo "* Minimum required version is 0 (found $DB5_VERSION)"
-echo "# * Minimum required version is 0 (found $DB5_VERSION)" >>config.log
-echo '*'
-echo '# *' >>config.log
-fi
-else
-if [ "${prefix_db5}" != "" ]; then
-echo "no (not in ${prefix_db5})"
-echo "# no (not in ${prefix_db5})" >>config.log
-else
-echo 'no'
-echo '# no' >>config.log
-fi
-MK_VERSION_OK="no"
-fi
-if [ "${MK_VERSION_OK}" = "yes" ]; then
-$ECHO_N 'checking whether DB5 works...'
-$ECHO_N '# checking whether DB5 works...' >>config.log
-MK_COMPILE_STATUS=OK
-cat << EOT >conftest$$.c
-#include <db5/db.h>
-#if DB_VERSION_MAJOR != 5
-#error version
-#endif
-int main(int argc, char *argv[]) {
-	DB *db;
-	db_create(&db, NULL, 0);
-	return (0);
-}
-EOT
-echo >>config.log
-echo '# C: HAVE_DB5' >>config.log
-echo "cat << EOT >conftest$$.c" >>config.log
-cat conftest$$.c>>config.log
-echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${DB5_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${DB5_LIBS} 1>/dev/null 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${DB5_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${DB5_LIBS} 1>/dev/null 2>>config.log
-if [ "$?" != "0" ]; then
-echo "# failed $?" >>config.log
-MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo 'yes'
-echo '# yes' >>config.log
-HAVE_DB5=yes
-bb_o=$bb_incdir/have_db5.h
-echo '#ifndef HAVE_DB5' >$bb_o
-echo "#define HAVE_DB5 \"$HAVE_DB5\"" >>$bb_o
-echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_DB5\"] = \"$HAVE_DB5\"" >>configure.lua
-else
-echo 'no'
-echo '# no' >>config.log
-HAVE_DB5=no
-echo '#undef HAVE_DB5' >$bb_incdir/have_db5.h
-echo 'hdefs["HAVE_DB5"] = nil' >>configure.lua
-fi
-if [ "${keep_conftest}" != "yes" ]; then
-rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_DB5}" = "no" ]; then
-DB5_CFLAGS=""
-DB5_LIBS=""
-echo '#undef HAVE_DB5' >$bb_incdir/have_db5.h
-echo 'hdefs["HAVE_DB5"] = nil' >>configure.lua
-fi
-else
-echo "no"
-echo "# no" >>config.log
-HAVE_DB5="no"
-DB5_CFLAGS=""
-DB5_LIBS=""
-echo '#undef HAVE_DB5' >$bb_incdir/have_db5.h
-echo 'hdefs["HAVE_DB5"] = nil' >>configure.lua
-fi
-# END db5
-	if [ "${HAVE_DB5}" != 'yes' ]
- then
-		if [ "${with_db5}" = 'yes' ]
- then
-			echo "*"
-			echo "* --with-db5 requested and DB5 was not found"
-			echo "* (did you mean --with-db4?)"
-			echo "*"
-			exit 1
-		else
-HAVE_DB5="no"
-DB5_CFLAGS=""
-DB5_LIBS=""
-echo '#undef HAVE_DB5' >$bb_incdir/have_db5.h
-echo 'hdefs["HAVE_DB5"] = nil' >>configure.lua
-		fi
-	fi
-else
-HAVE_DB5="no"
-DB5_CFLAGS=""
-DB5_LIBS=""
-echo '#undef HAVE_DB5' >$bb_incdir/have_db5.h
-echo 'hdefs["HAVE_DB5"] = nil' >>configure.lua
 fi
 if [ "${with_mysql}" = 'yes' ]
  then
@@ -16098,7 +15959,7 @@ if [ "${HAVE_GETTIMEOFDAY}" = 'yes' ]
 SRCS_CORE="${SRCS_CORE} time_gettimeofday.c"
 	fi
 fi
-if [ "${HAVE_DB4}" = 'yes' -o "${HAVE_DB5}" = 'yes' ]
+if [ "${HAVE_DB4}" = 'yes' ]
  then
 SRCS_CORE="${SRCS_CORE} db_bdb.c"
 fi
@@ -16227,7 +16088,7 @@ CXXFLAGS="$CXXFLAGS -I$BLD/include"
 config_script_out="agar-core-config"
 config_script_cflags="-I${INCLDIR} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ICONV_CFLAGS}"
 if [ "${HAVE_CC65}" = "yes" ]; then
-config_script_libs="-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}"
+config_script_libs="-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}"
 config_libs_cc65=""
 bb_save_IFS=$IFS
 IFS=" "
@@ -16242,7 +16103,7 @@ done
 IFS=$bb_save_IFS
 config_script_libs="$config_libs_cc65"
 else
-config_script_libs="-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}"
+config_script_libs="-L${LIBDIR} -lag_core ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}"
 fi
 cat << EOT > $config_script_out
 #!/bin/sh
@@ -16319,9 +16180,9 @@ pkgconfig_module_out="agar-core"
 pkgconfig_module_desc="Agar object system and utility library"
 pkgconfig_module_requires=""
 pkgconfig_module_conflicts=""
-pkgconfig_module_cflags="-I\${includedir}/agar ${PTHREADS_XOPEN_CFLAGS} ${ALTIVEC_CHECK_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} ${CLOCK_CFLAGS}"
+pkgconfig_module_cflags="-I\${includedir}/agar ${PTHREADS_XOPEN_CFLAGS} ${ALTIVEC_CHECK_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${CLOCK_CFLAGS}"
 pkgconfig_module_libs="-L\${libdir} -lag_core"
-pkgconfig_module_libs_pvt="-lag_core ${PTHREADS_XOPEN_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${CLOCK_LIBS} ${WINSOCK1_LIBS} ${WINSOCK2_LIBS}"
+pkgconfig_module_libs_pvt="-lag_core ${PTHREADS_XOPEN_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${CLOCK_LIBS} ${WINSOCK1_LIBS} ${WINSOCK2_LIBS}"
 cat << EOT > $pkgconfig_module_out.pc
 # ${PACKAGE} pkg-config source file.
 #
@@ -16346,9 +16207,9 @@ AVAIL_PCMODULES="$AVAIL_PCMODULES agar-core.pc"
 if [ "${enable_gui}" != 'no' ]
  then
 config_script_out="agar-config"
-config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${SDL2_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS}"
+config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${SDL2_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS}"
 if [ "${HAVE_CC65}" = "yes" ]; then
-config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${SDL2_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS}"
+config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${SDL2_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS}"
 config_libs_cc65=""
 bb_save_IFS=$IFS
 IFS=" "
@@ -16363,7 +16224,7 @@ done
 IFS=$bb_save_IFS
 config_script_libs="$config_libs_cc65"
 else
-config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${SDL2_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS}"
+config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${SDL2_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS}"
 fi
 cat << EOT > $config_script_out
 #!/bin/sh
@@ -16441,9 +16302,9 @@ pkgconfig_module_out="agar"
 pkgconfig_module_desc="Agar cross-platform GUI toolkit"
 pkgconfig_module_requires="${X11_PC} ${SDL_PC} ${SDL2_PC} ${FREETYPE_PC} ${FONTCONFIG_PC} ${OPENGL_PC} ${XINERAMA_PC} ${JPEG_PC} ${PNG_PC} ${UIM_PC}"
 pkgconfig_module_conflicts=""
-pkgconfig_module_cflags="-I\${includedir}/agar ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${DB5_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}"
+pkgconfig_module_cflags="-I\${includedir}/agar ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}"
 pkgconfig_module_libs="-L\${libdir} -lag_gui -lag_core"
-pkgconfig_module_libs_pvt="-lag_gui -lag_core ${COCOA_LIBS} ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${DB5_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}"
+pkgconfig_module_libs_pvt="-lag_gui -lag_core ${COCOA_LIBS} ${MATH_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${ICONV_LIBS}"
 cat << EOT > $pkgconfig_module_out.pc
 # ${PACKAGE} pkg-config source file.
 #
@@ -17450,10 +17311,6 @@ echo "DB4_CFLAGS=$DB4_CFLAGS" >>Makefile.config
 echo "mdefs[\"DB4_CFLAGS\"] = \"$DB4_CFLAGS\"" >>configure.lua
 echo "DB4_LIBS=$DB4_LIBS" >>Makefile.config
 echo "mdefs[\"DB4_LIBS\"] = \"$DB4_LIBS\"" >>configure.lua
-echo "DB5_CFLAGS=$DB5_CFLAGS" >>Makefile.config
-echo "mdefs[\"DB5_CFLAGS\"] = \"$DB5_CFLAGS\"" >>configure.lua
-echo "DB5_LIBS=$DB5_LIBS" >>Makefile.config
-echo "mdefs[\"DB5_LIBS\"] = \"$DB5_LIBS\"" >>configure.lua
 echo "DEVKITPRO=$DEVKITPRO" >>Makefile.config
 echo "mdefs[\"DEVKITPRO\"] = \"$DEVKITPRO\"" >>configure.lua
 echo "DSO_CFLAGS=$DSO_CFLAGS" >>Makefile.config
@@ -17524,8 +17381,6 @@ echo "HAVE_CYGWIN=$HAVE_CYGWIN" >>Makefile.config
 echo "mdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
 echo "HAVE_DB4=$HAVE_DB4" >>Makefile.config
 echo "mdefs[\"HAVE_DB4\"] = \"$HAVE_DB4\"" >>configure.lua
-echo "HAVE_DB5=$HAVE_DB5" >>Makefile.config
-echo "mdefs[\"HAVE_DB5\"] = \"$HAVE_DB5\"" >>configure.lua
 echo "HAVE_DEPRECATED_ATTRIBUTE=$HAVE_DEPRECATED_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_DEPRECATED_ATTRIBUTE\"] = \"$HAVE_DEPRECATED_ATTRIBUTE\"" >>configure.lua
 echo "HAVE_DLOPEN=$HAVE_DLOPEN" >>Makefile.config

@@ -142,14 +142,11 @@ if(NOT HAVE_AGAR)
 	message(FATAL_ERROR "The Agar library was not found.")
 endif()
 
-# XXX TODO
-#Check_Agar_Math()
-#Check_Agar_AU()
-set(HAVE_AGAR_MATH OFF)
-set(HAVE_AGAR_AU OFF)
-BB_Save_Undef(HAVE_PORTAUDIO)
-BB_Save_Undef(HAVE_AGAR_MATH)
-BB_Save_Undef(HAVE_AGAR_AU)
+if(NOT HAVE_AGAR_AU)
+	BB_Save_Undef(HAVE_PORTAUDIO)
+endif()
+
+# TODO
 BB_Save_Undef(HAVE_RAND48)
 
 if(AGARTEST_NLS)
@@ -183,7 +180,6 @@ message(STATUS "agartest build successfully configured with the following option
 message(STATUS "")
 message(STATUS "Platform:     ${CMAKE_SYSTEM}")
 message(STATUS "Compiler:     ${CMAKE_C_COMPILER}")
-message(STATUS "Agar Version: ${AGAR_VERSION} (Library Version: ${AGAR_LIBRARY_VERSION})")
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 	message(STATUS "Build Type:   DEBUG")

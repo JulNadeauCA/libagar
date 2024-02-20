@@ -52,10 +52,10 @@ while test $# -gt 0; do
 		echo '-I@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@/agar @AGAR_CONFIG_CFLAGS@'
 		;;
 	--libs)
-		echo '-L@AGAR_LIBDIR@ -lag_sk @AGAR_CONFIG_LIBS@'
+		echo '-L@AGAR_LIBDIR@ @AGAR_CONFIG_LIBS@ @AGAR_CONFIG_DEPLIBS@'
 		;;
 	--static-libs)
-		echo '-L@AGAR_LIBDIR@ @AGAR_LIBDIR@/libag_sk.a @AGAR_LIBDIR@/libag_math.a @AGAR_LIBDIR@/libag_gui.a @AGAR_LIBDIR@/libag_core.a @AGAR_CONFIG_LIBS@'
+		echo '-L@AGAR_LIBDIR@ @AGAR_CONFIG_LIBS_STATIC@ @AGAR_CONFIG_DEPLIBS@'
 		;;
 	*)
 		echo "${usage}" 1>&2

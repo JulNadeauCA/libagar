@@ -37,7 +37,6 @@
 #include <agar/config/have_gettimeofday.h>
 #include <agar/config/have_select.h>
 #include <agar/config/have_db4.h>
-#include <agar/config/have_db5.h>
 #include <agar/config/have_getpwuid.h>
 #include <agar/config/have_getuid.h>
 #include <agar/config/have_csidl.h>
@@ -159,7 +158,7 @@ AG_InitCore(const char *progname, Uint flags)
 #ifdef AG_SERIALIZATION
 	AG_RegisterClass(&agConfigClass);
 	AG_RegisterClass(&agDbClass);
-# if defined(HAVE_DB4) || defined(HAVE_DB5)
+# if defined(HAVE_DB4)
 	AG_RegisterClass(&agDbHashClass);
 	AG_RegisterClass(&agDbBtreeClass);
 # endif

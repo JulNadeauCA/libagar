@@ -1,12 +1,6 @@
 #
 # CMake Buildsystem for Agar.
 #
-# Limitations when building with Cmake (as opposed to Agar's ./configure and make):
-# - No support for linking against external libraries in alternate installation
-#   prefixes (e.g., --with-png=/some/alternate/prefix).
-# - No built-in support for cross-compiling to devkitARM / devkitPPC / devkitA64.
-# - No support for cc65 and cross-compiling to 8-bit targets (e.g., --host=c64).
-#
 if(${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_BINARY_DIR})
 	message(FATAL_ERROR "Prevented in-tree build. Please create a build directory outside of the Agar source code and run \"cmake -S ${CMAKE_SOURCE_DIR} -B .\" from there")
 endif()
@@ -22,11 +16,7 @@ set(AGAR_RELEASE_NAME "Ancient Egypt")
 set(AGAR_LIBRARY_VERSION_MAJOR 8)
 set(AGAR_LIBRARY_VERSION "${AGAR_LIBRARY_VERSION_MAJOR}.0.0")
 
-#
-# Global build options (pseudo-package).
-#
 add_library(agar-build-options INTERFACE)
-
 target_compile_definitions(agar-build-options INTERFACE _AGAR_INTERNAL)
 target_compile_definitions(agar-build-options INTERFACE _DEFAULT_SOURCE)
 target_compile_definitions(agar-build-options INTERFACE _BSD_SOURCE)
@@ -35,7 +25,6 @@ if(WINDOWS_STORE)
 	target_compile_definitions(agar-build-options INTERFACE AGAR_BUILDING_WINRT=1)
 	target_compile_options(agar-build-options INTERFACE "-ZW")
 endif()
-
 if(MSVC)
 	target_compile_definitions(agar-build-options INTERFACE _CRT_SECURE_NO_WARNINGS)
 	target_compile_definitions(agar-build-options INTERFACE _CRT_SECURE_NO_DEPRECATE)
@@ -102,7 +91,7 @@ set(AGAR_STATIC_ENABLED_BY_DEFAULT ON)
 set(AGAR_THREADS_ENABLED_BY_DEFAULT ON)
 
 set(AGAR_GUI_ENABLED_BY_DEFAULT ON)
-set(AGAR_AU_ENABLED_BY_DEFAULT OFF)
+set(AGAR_AU_ENABLED_BY_DEFAULT ON)
 set(AGAR_MAP_ENABLED_BY_DEFAULT ON)
 set(AGAR_MATH_ENABLED_BY_DEFAULT ON)
 set(AGAR_NET_ENABLED_BY_DEFAULT ON)
@@ -184,6 +173,8 @@ option(AGAR_NLS "Enable internationalization and localization" OFF)
 #
 # Options specific to Agar-Core.
 #
+option(AGAR_DB_BDB "Berkeley DB (hash and btree) support in AG_Db(3)" OFF)
+option(AGAR_DB_MYSQL "MySQL client support in AG_Db(3)" OFF)
 option(AGAR_ENABLE_ANSI_COLOR "Support for ANSI color output" ON)
 option(AGAR_ENABLE_DSO "Dynamically-loaded modules and object classes" ON)
 option(AGAR_ENABLE_EXEC "The AG_Execute(3) interface" ON)
@@ -558,6 +549,14 @@ set(SOURCE_FILES_GUI
 	${AGAR_SOURCE_DIR}/gui/window.c)
 
 #
+# Agar-AU Sources.
+#
+set(SOURCE_FILES_AU
+	${AGAR_SOURCE_DIR}/au/au.c
+	${AGAR_SOURCE_DIR}/au/au_wave.c
+	${AGAR_SOURCE_DIR}/au/au_dev_out.c)
+
+#
 # Agar-Map Sources.
 #
 set(SOURCE_FILES_MAP
@@ -811,14 +810,31 @@ if(NOT AGAR_FLOAT)
 	BB_Save_Undef(HAVE_LONG_DOUBLE)
 endif()
 
-# Disable AG_Db modules (TODO?)
-Disable_Db4()
-Disable_Db5()
-Disable_Mysql()
-
 ##
 ## Agar-Core Library.
 ##
+
+# Check for Berkeley DB (for AG_Db "hash" and "btree" support).
+if(AGAR_DB_BDB)
+	Check_Db4()
+	if(HAVE_DB4)
+		list(APPEND AGAR_CORE_CFLAGS ${DB4_CFLAGS})
+		list(APPEND AGAR_CORE_LIBS ${DB4_LIBS})
+	endif()
+else()
+	Disable_Db4()
+endif()
+
+# Check for MySQL (for AG_Db "mysql" support).
+if(AGAR_DB_MYSQL)
+	Check_Mysql()
+	if(HAVE_MYSQL)
+		list(APPEND AGAR_CORE_CFLAGS ${MYSQL_CFLAGS})
+		list(APPEND AGAR_CORE_LIBS ${MYSQL_LIBS})
+	endif()
+else()
+	Disable_Mysql()
+endif()
 
 # Check for threads support.
 if(AGAR_THREADS)
@@ -843,17 +859,19 @@ else()
 	BB_Save_Undef(AG_THREADS)
 endif()
 
+# Check for libiconv.
+Check_Iconv()
+if(HAVE_ICONV)
+	if(ICONV_CFLAGS)
+		list(APPEND AGAR_CORE_CFLAGS ${ICONV_CFLAGS})
+	endif()
+	if(ICONV_LIBS)
+		list(APPEND AGAR_CORE_LIBS ${ICONV_LIBS})
+	endif()
+endif()
+
 # Check for libintl / gettext.
 if(AGAR_NLS)
-	Check_Iconv()
-	if(HAVE_ICONV)
-		if(ICONV_CFLAGS)
-			list(APPEND AGAR_CORE_CFLAGS ${ICONV_CFLAGS})
-		endif()
-		if(ICONV_LIBS)
-			list(APPEND AGAR_CORE_LIBS ${ICONV_LIBS})
-		endif()
-	endif()
 	Check_Gettext()
 	if(HAVE_GETTEXT)
 		BB_Save_Define(ENABLE_NLS)
@@ -867,7 +885,6 @@ if(AGAR_NLS)
 		BB_Save_Undef(ENABLE_NLS)
 	endif()
 else()
-	Disable_Iconv()
 	Disable_Gettext()
 	BB_Save_Undef(ENABLE_NLS)
 endif()
@@ -1026,15 +1043,24 @@ endif()
 ##
 if(AGAR_AU)
 	BB_Save_Define(ENABLE_AU)
-	# Check_Sndfile()
-	# Check_Portaudio()
+
+	Check_Sndfile()
+	if(HAVE_SNDFILE)
+		list(APPEND AGAR_AU_CFLAGS ${SNDFILE_CFLAGS})
+		list(APPEND AGAR_AU_LIBS ${SNDFILE_LIBS})
+	endif()
+
+	Check_Portaudio()
+	if(HAVE_PORTAUDIO)
+		list(APPEND AGAR_AU_CFLAGS ${PORTAUDIO_CFLAGS})
+		list(APPEND AGAR_AU_LIBS ${PORTAUDIO_LIBS})
+	endif()
 else()
 	BB_Save_Undef(ENABLE_AU)
-	# Disable_Sndfile()
-	# Disable_Portaudio()
+
+	Disable_Sndfile()
+	Disable_Portaudio()
 endif()
-BB_Save_Undef(HAVE_PORTAUDIO)
-BB_Save_Undef(HAVE_SNDFILE)
 
 ##
 ## Agar-Map Library.
@@ -1224,19 +1250,15 @@ if(HAVE_CLOCK_GETTIME)
 		set(SOURCE_FILES_CORE ${SOURCE_FILES_CORE} ${AGAR_SOURCE_DIR}/core/time_renderer.c)
 	endif()
 endif()
-
 if(HAVE_GETTIMEOFDAY AND HAVE_SELECT)
 	set(SOURCE_FILES_CORE ${SOURCE_FILES_CORE} ${AGAR_SOURCE_DIR}/core/time_gettimeofday.c)
 endif()
-
-# TODO
-#if(HAVE_DB4 OR HAVE_DB5)
-#	set(SOURCE_FILES_CORE ${SOURCE_FILES_CORE} ${AGAR_SOURCE_DIR}/core/db_bdb.c)
-#endif()
-#if(HAVE_MYSQL)
-#	set(SOURCE_FILES_CORE ${SOURCE_FILES_CORE} ${AGAR_SOURCE_DIR}/core/db_mysql.c)
-#endif()
-
+if(HAVE_DB4)
+	set(SOURCE_FILES_CORE ${SOURCE_FILES_CORE} ${AGAR_SOURCE_DIR}/core/db_bdb.c)
+endif()
+if(HAVE_MYSQL)
+	set(SOURCE_FILES_CORE ${SOURCE_FILES_CORE} ${AGAR_SOURCE_DIR}/core/db_mysql.c)
+endif()
 if(HAVE_GETPWUID)
 	set(SOURCE_FILES_CORE ${SOURCE_FILES_CORE} ${AGAR_SOURCE_DIR}/core/user_posix.c)
 endif()
@@ -1255,7 +1277,6 @@ if(AGAR_GUI)
 	if(HAVE_FREETYPE)
 		set(SOURCE_FILES_GUI ${SOURCE_FILES_GUI} ${AGAR_SOURCE_DIR}/gui/font_ft.c)
 	endif()
-
 	if(HAVE_SDL)
 		set(SOURCE_FILES_GUI ${SOURCE_FILES_GUI} ${AGAR_SOURCE_DIR}/gui/drv_sdl_common.c)
 		set(SOURCE_FILES_GUI ${SOURCE_FILES_GUI} ${AGAR_SOURCE_DIR}/gui/drv_sdlfb.c)
@@ -1263,7 +1284,6 @@ if(AGAR_GUI)
 			set(SOURCE_FILES_GUI ${SOURCE_FILES_GUI} ${AGAR_SOURCE_DIR}/gui/drv_sdlgl.c)
 		endif()
 	endif()
-
 	if(HAVE_SDL2)
 		set(SOURCE_FILES_GUI ${SOURCE_FILES_GUI} ${AGAR_SOURCE_DIR}/gui/drv_sdl2_common.c)
 		set(SOURCE_FILES_GUI ${SOURCE_FILES_GUI} ${AGAR_SOURCE_DIR}/gui/drv_sdl_keysyms.c)
@@ -1273,11 +1293,9 @@ if(AGAR_GUI)
 			set(SOURCE_FILES_GUI ${SOURCE_FILES_GUI} ${AGAR_SOURCE_DIR}/gui/drv_sdl2mw.c)
 		endif()
 	endif()
-
 	if(HAVE_COCOA)
 		set(SOURCE_FILES_GUI ${SOURCE_FILES_GUI} ${AGAR_SOURCE_DIR}/gui/drv_cocoa.m)
 	endif()
-	
 	if(HAVE_OPENGL)
 		if(HAVE_GLX)
 			set(SOURCE_FILES_GUI ${SOURCE_FILES_GUI} ${AGAR_SOURCE_DIR}/gui/drv_glx.c)
@@ -1526,15 +1544,6 @@ if(AGAR_SHARED)
 	target_link_libraries(ag_core PRIVATE $<BUILD_INTERFACE:agar-build-options>)
 	set_target_properties(ag_core PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
 
-	if(HAVE_ICONV)
-		target_include_directories(ag_core PUBLIC ${Iconv_INCLUDE_DIRS})
-		target_link_libraries(ag_core PUBLIC ${Iconv_LIBRARIES})
-	endif()
-	if(HAVE_GETTEXT)
-		target_include_directories(ag_core PUBLIC ${Intl_INCLUDE_DIRS})
-		target_link_libraries(ag_core PUBLIC ${Intl_LIBRARIES})
-	endif()
-
 	if(AGAR_GUI)
 		add_library(ag_gui SHARED ${SOURCE_FILES_GUI})
 		add_library(ag_gui::ag_gui ALIAS ag_gui)
@@ -1546,6 +1555,19 @@ if(AGAR_SHARED)
 		target_include_directories(ag_gui PUBLIC "$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>;$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>;$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/agar>")
 		target_link_libraries(ag_gui PRIVATE $<BUILD_INTERFACE:agar-build-options>)
 		set_target_properties(ag_gui PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
+	endif()
+
+	if(AGAR_AU)
+		add_library(ag_au SHARED ${SOURCE_FILES_AU})
+		add_library(ag_au::ag_au ALIAS ag_au)
+		target_compile_options(ag_au PUBLIC ${AGAR_CORE_CFLAGS} ${AGAR_GUI_CFLAGS} ${AGAR_AU_CFLAGS})
+		target_compile_definitions(ag_au PUBLIC _AGAR_AU_INTERNAL)
+		Agar_SetPlatformSpecificShared(ag_au "ag_au")
+		target_link_libraries(ag_au PUBLIC ${AGAR_AU_LIBS} ${AGAR_GUI_LIBS} ${AGAR_CORE_LIBS} ${EXTRA_LIBS} ${EXTRA_LDFLAGS})
+		target_include_directories(ag_au BEFORE PRIVATE "${AGAR_BINARY_DIR}/include")
+		target_include_directories(ag_au PUBLIC "$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>;$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>;$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/agar>")
+		target_link_libraries(ag_au PRIVATE $<BUILD_INTERFACE:agar-build-options>)
+		set_target_properties(ag_au PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
 	endif()
 
 	if(AGAR_MAP)
@@ -1651,15 +1673,6 @@ if(AGAR_STATIC)
 	target_link_libraries(ag_core-static PRIVATE $<BUILD_INTERFACE:agar-build-options>)
 	set_target_properties(ag_core-static PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
 
-	if(HAVE_ICONV)
-		target_include_directories(ag_core-static PUBLIC ${Iconv_INCLUDE_DIRS})
-		target_link_libraries(ag_core-static PUBLIC ${Iconv_LIBRARIES})
-	endif()
-	if(HAVE_GETTEXT)
-		target_include_directories(ag_core-static PUBLIC ${Intl_INCLUDE_DIRS})
-		target_link_libraries(ag_core-static PUBLIC ${Intl_LIBRARIES})
-	endif()
-
 	if(AGAR_GUI)
 		add_library(ag_gui-static STATIC ${SOURCE_FILES_GUI})
 		target_compile_options(ag_gui-static PUBLIC ${AGAR_CORE_CFLAGS} ${AGAR_GUI_CFLAGS})
@@ -1670,6 +1683,18 @@ if(AGAR_STATIC)
 		target_include_directories(ag_gui-static PUBLIC "$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>" $<INSTALL_INTERFACE:include> $<INSTALL_INTERFACE:include/agar>)
 		target_link_libraries(ag_gui-static PRIVATE $<BUILD_INTERFACE:agar-build-options>)
 		set_target_properties(ag_gui-static PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
+	endif()
+
+	if(AGAR_AU)
+		add_library(ag_au-static STATIC ${SOURCE_FILES_AU})
+		target_compile_options(ag_au-static PUBLIC ${AGAR_CORE_CFLAGS} ${AGAR_GUI_CFLAGS} ${AGAR_MATH_CFLAGS} ${AGAR_AU_CFLAGS})
+		target_compile_definitions(ag_au-static PUBLIC _AGAR_AU_INTERNAL)
+		Agar_SetPlatformSpecificStatic(ag_au-static "ag_au")
+		target_link_libraries(ag_au-static PUBLIC ${AGAR_AU_LIBS} ${AGAR_MATH_LIBS} ${AGAR_GUI_LIBS} ${AGAR_CORE_LIBS} ${EXTRA_LIBS} ${EXTRA_LDFLAGS})
+		target_include_directories(ag_au-static BEFORE PRIVATE "${AGAR_BINARY_DIR}/include")
+		target_include_directories(ag_au-static PUBLIC "$<BUILD_INTERFACE:${AGAR_BINARY_DIR}/include>" $<INSTALL_INTERFACE:include> $<INSTALL_INTERFACE:include/agar>)
+		target_link_libraries(ag_au-static PRIVATE $<BUILD_INTERFACE:agar-build-options>)
+		set_target_properties(ag_au-static PROPERTIES DEBUG_POSTFIX "${AGAR_CMAKE_DEBUG_POSTFIX}")
 	endif()
 
 	if(AGAR_MAP)
@@ -1763,6 +1788,12 @@ if(AGAR_SHARED)
 			ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
 			RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 	endif()
+	if(AGAR_AU)
+		install(TARGETS ag_au EXPORT ag_auTargets
+			LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+			ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+			RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+	endif()
 	if(AGAR_MAP)
 		install(TARGETS ag_map EXPORT ag_mapTargets
 			LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
@@ -1808,6 +1839,12 @@ if(AGAR_STATIC)
 		RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 	if(AGAR_GUI)
 		install(TARGETS ag_gui-static EXPORT ag_guiStaticTargets
+			LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+			ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+			RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+	endif()
+	if(AGAR_AU)
+		install(TARGETS ag_au-static EXPORT ag_auStaticTargets
 			LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
 			ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
 			RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
@@ -1869,6 +1906,9 @@ if(AGAR_SHARED)
 	if(AGAR_GUI)
 		install(EXPORT ag_guiTargets FILE ag_guiTargets.cmake NAMESPACE ag_gui:: DESTINATION ${PKG_PREFIX})
 	endif()
+	if(AGAR_AU)
+		install(EXPORT ag_auTargets FILE ag_auTargets.cmake NAMESPACE ag_au:: DESTINATION ${PKG_PREFIX})
+	endif()
 	if(AGAR_MAP)
 		install(EXPORT ag_mapTargets FILE ag_mapTargets.cmake NAMESPACE ag_map:: DESTINATION ${PKG_PREFIX})
 	endif()
@@ -1884,11 +1924,18 @@ if(AGAR_SHARED)
 	if(AGAR_SK)
 		install(EXPORT ag_skTargets FILE ag_skTargets.cmake NAMESPACE ag_sk:: DESTINATION ${PKG_PREFIX})
 	endif()
+	if(AGAR_VG)
+		install(EXPORT ag_vgTargets FILE ag_vgTargets.cmake NAMESPACE ag_vg:: DESTINATION ${PKG_PREFIX})
+	endif()
 endif()
+
 if(AGAR_STATIC)
 	install(EXPORT ag_coreStaticTargets FILE ag_coreStaticTargets.cmake NAMESPACE ag_core:: DESTINATION ${PKG_PREFIX})
 	if(AGAR_GUI)
 		install(EXPORT ag_guiStaticTargets FILE ag_guiStaticTargets.cmake NAMESPACE ag_gui:: DESTINATION ${PKG_PREFIX})
+	endif()
+	if(AGAR_AU)
+		install(EXPORT ag_auStaticTargets FILE ag_auStaticTargets.cmake NAMESPACE ag_au:: DESTINATION ${PKG_PREFIX})
 	endif()
 	if(AGAR_MAP)
 		install(EXPORT ag_mapStaticTargets FILE ag_mapStaticTargets.cmake NAMESPACE ag_map:: DESTINATION ${PKG_PREFIX})
@@ -1912,7 +1959,6 @@ endif()
 
 install(FILES
     ${AGAR_SOURCE_DIR}/agarConfig.cmake
-    ${AGAR_SOURCE_DIR}/agarCoreConfig.cmake
     ${AGAR_BINARY_DIR}/agarConfigVersion.cmake
     DESTINATION ${PKG_PREFIX}
     COMPONENT Devel)
@@ -1957,6 +2003,15 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 \"lib${SONAME}${SOPOSTFIX}${SOEXT}.${AGAR_LIBRARY_VERSION}\" \"libag_gui${SOPOSTFIX}${SOEXT}\"
  WORKING_DIRECTORY \"${AGAR_BINARY_DIR}\")")
 			install(FILES ${AGAR_BINARY_DIR}/libag_gui${SOPOSTFIX}${SOEXT}
+			    DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+		endif()
+		if(AGAR_AU)
+			get_target_property(SONAME ag_au OUTPUT_NAME)
+			install(CODE "
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+\"lib${SONAME}${SOPOSTFIX}${SOEXT}.${AGAR_LIBRARY_VERSION}\" \"libag_au${SOPOSTFIX}${SOEXT}\"
+ WORKING_DIRECTORY \"${AGAR_BINARY_DIR}\")")
+			install(FILES ${AGAR_BINARY_DIR}/libag_au${SOPOSTFIX}${SOEXT}
 			    DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 		endif()
 		if(AGAR_MAP)
@@ -2026,11 +2081,27 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 #		    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 #	endif()
 
+	set(propsRelease
+		IMPORTED_IMPLIB_RELEASE IMPORTED_IMPLIB_NOCONFIG IMPORTED_IMPLIB IMPORTED_IMPLIB_MINSIZEREL
+		IMPORTED_IMPLIB_RELWITHDEBINFO IMPORTED_LOCATION_RELEASE IMPORTED_LOCATION_NOCONFIG
+		IMPORTED_LOCATION IMPORTED_LOCATION_MINSIZEREL IMPORTED_LOCATION_RELWITHDEBINFO)
+
+	set(propsDebug IMPORTED_IMPLIB_DEBUG IMPORTED_LOCATION_DEBUG)
+
 	# agar-core-config
 	set(AGAR_CONFIG_CFLAGS "")
 	set(AGAR_CONFIG_LIBS "")
+	set(AGAR_CONFIG_LIBS_STATIC "")
+	set(AGAR_CONFIG_DEPLIBS "")
 	list(JOIN AGAR_CORE_CFLAGS " " AGAR_CONFIG_CFLAGS)
-	list(JOIN AGAR_CORE_LIBS " " AGAR_CONFIG_LIBS)
+	list(JOIN AGAR_CORE_LIBS " " AGAR_CONFIG_DEPLIBS)
+	if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+		set(AGAR_CONFIG_LIBS "-lag_cored")
+		set(AGAR_CONFIG_LIBS_STATIC "${AGAR_LIBDIR}/libag_cored.a")
+	else()
+		set(AGAR_CONFIG_LIBS "-lag_core")
+		set(AGAR_CONFIG_LIBS_STATIC "${AGAR_LIBDIR}/libag_core.a")
+	endif()
 	configure_file(
 		"${AGAR_SOURCE_DIR}/mk/cmake-agar-core-config.in"
 		"${AGAR_BINARY_DIR}/agar-core-config"
@@ -2041,6 +2112,8 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 	if(AGAR_GUI)
 		set(AGAR_CONFIG_CFLAGS "")
 		set(AGAR_CONFIG_LIBS "")
+		set(AGAR_CONFIG_LIBS_STATIC "")
+		set(AGAR_CONFIG_DEPLIBS "")
 		foreach(agarcflag ${AGAR_CORE_CFLAGS} ${AGAR_GUI_CFLAGS})
 			if(AGAR_CONFIG_CFLAGS STREQUAL "")
 				set(AGAR_CONFIG_CFLAGS "${agarcflag}")
@@ -2049,12 +2122,19 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 			endif()
 		endforeach()
 		foreach(agarlib ${AGAR_GUI_LIBS} ${AGAR_CORE_LIBS})
-			if(AGAR_CONFIG_LIBS STREQUAL "")
-				set(AGAR_CONFIG_LIBS "${agarlib}")
+			if(AGAR_CONFIG_DEPLIBS STREQUAL "")
+				set(AGAR_CONFIG_DEPLIBS "${agarlib}")
 			else()
-				set(AGAR_CONFIG_LIBS "${AGAR_CONFIG_LIBS} ${agarlib}")
+				set(AGAR_CONFIG_DEPLIBS "${AGAR_CONFIG_DEPLIBS} ${agarlib}")
 			endif()
 		endforeach()
+		if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+			set(AGAR_CONFIG_LIBS "-lag_guid -lag_cored")
+			set(AGAR_CONFIG_LIBS_STATIC "${AGAR_LIBDIR}/libag_guid.a ${AGAR_LIBDIR}/libag_cored.a")
+		else()
+			set(AGAR_CONFIG_LIBS "-lag_gui -lag_core")
+			set(AGAR_CONFIG_LIBS_STATIC "${AGAR_LIBDIR}/libag_gui.a ${AGAR_LIBDIR}/libag_core.a")
+		endif()
 		configure_file(
 			"${AGAR_SOURCE_DIR}/mk/cmake-agar-config.in"
 			"${AGAR_BINARY_DIR}/agar-config"
@@ -2062,10 +2142,46 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 		install(PROGRAMS ${AGAR_BINARY_DIR}/agar-config DESTINATION "${CMAKE_INSTALL_BINDIR}")
 	endif()
 
+	# agar-au-config
+	if(AGAR_AU)
+		set(AGAR_CONFIG_CFLAGS "")
+		set(AGAR_CONFIG_LIBS "")
+		set(AGAR_CONFIG_LIBS_STATIC "")
+		set(AGAR_CONFIG_DEPLIBS "")
+		foreach(agarcflag ${AGAR_CORE_CFLAGS} ${AGAR_GUI_CFLAGS} ${AGAR_AU_CFLAGS})
+			if(AGAR_CONFIG_CFLAGS STREQUAL "")
+				set(AGAR_CONFIG_CFLAGS "${agarcflag}")
+			else()
+				set(AGAR_CONFIG_CFLAGS "${AGAR_CONFIG_CFLAGS} ${agarcflag}")
+			endif()
+		endforeach()
+		foreach(agarlib ${AGAR_AU_LIBS} ${AGAR_GUI_LIBS} ${AGAR_CORE_LIBS})
+			if(AGAR_CONFIG_DEPLIBS STREQUAL "")
+				set(AGAR_CONFIG_DEPLIBS "${agarlib}")
+			else()
+				set(AGAR_CONFIG_DEPLIBS "${AGAR_CONFIG_DEPLIBS} ${agarlib}")
+			endif()
+		endforeach()
+		if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+			set(AGAR_CONFIG_LIBS "-lag_aud -lag_guid -lag_cored")
+			set(AGAR_CONFIG_LIBS_STATIC "${AGAR_LIBDIR}/libag_aud.a ${AGAR_LIBDIR}/libag_guid.a ${AGAR_LIBDIR}/libag_cored.a")
+		else()
+			set(AGAR_CONFIG_LIBS "-lag_au -lag_gui -lag_core")
+			set(AGAR_CONFIG_LIBS_STATIC "${AGAR_LIBDIR}/libag_au.a ${AGAR_LIBDIR}/libag_gui.a ${AGAR_LIBDIR}/libag_core.a")
+		endif()
+		configure_file(
+			"${AGAR_SOURCE_DIR}/mk/cmake-agar-au-config.in"
+			"${AGAR_BINARY_DIR}/agar-au-config"
+			IMMEDIATE @ONLY)
+		install(PROGRAMS ${AGAR_BINARY_DIR}/agar-au-config DESTINATION "${CMAKE_INSTALL_BINDIR}")
+	endif()
+
 	# agar-map-config
 	if(AGAR_MAP)
 		set(AGAR_CONFIG_CFLAGS "")
 		set(AGAR_CONFIG_LIBS "")
+		set(AGAR_CONFIG_LIBS_STATIC "")
+		set(AGAR_CONFIG_DEPLIBS "")
 		foreach(agarcflag ${AGAR_CORE_CFLAGS} ${AGAR_GUI_CFLAGS} ${AGAR_MAP_CFLAGS})
 			if(AGAR_CONFIG_CFLAGS STREQUAL "")
 				set(AGAR_CONFIG_CFLAGS "${agarcflag}")
@@ -2074,12 +2190,19 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 			endif()
 		endforeach()
 		foreach(agarlib ${AGAR_MAP_LIBS} ${AGAR_GUI_LIBS} ${AGAR_CORE_LIBS})
-			if(AGAR_CONFIG_LIBS STREQUAL "")
-				set(AGAR_CONFIG_LIBS "${agarlib}")
+			if(AGAR_CONFIG_DEPLIBS STREQUAL "")
+				set(AGAR_CONFIG_DEPLIBS "${agarlib}")
 			else()
-				set(AGAR_CONFIG_LIBS "${AGAR_CONFIG_LIBS} ${agarlib}")
+				set(AGAR_CONFIG_DEPLIBS "${AGAR_CONFIG_DEPLIBS} ${agarlib}")
 			endif()
 		endforeach()
+		if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+			set(AGAR_CONFIG_LIBS "-lag_mapd -lag_guid -lag_cored")
+			set(AGAR_CONFIG_LIBS_STATIC "${AGAR_LIBDIR}/libag_mapd.a ${AGAR_LIBDIR}/libag_guid.a ${AGAR_LIBDIR}/libag_cored.a")
+		else()
+			set(AGAR_CONFIG_LIBS "-lag_map -lag_gui -lag_core")
+			set(AGAR_CONFIG_LIBS_STATIC "${AGAR_LIBDIR}/libag_map.a ${AGAR_LIBDIR}/libag_gui.a ${AGAR_LIBDIR}/libag_core.a")
+		endif()
 		configure_file(
 			"${AGAR_SOURCE_DIR}/mk/cmake-agar-map-config.in"
 			"${AGAR_BINARY_DIR}/agar-map-config"
@@ -2091,6 +2214,8 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 	if(AGAR_MATH)
 		set(AGAR_CONFIG_CFLAGS "")
 		set(AGAR_CONFIG_LIBS "")
+		set(AGAR_CONFIG_LIBS_STATIC "")
+		set(AGAR_CONFIG_DEPLIBS "")
 		foreach(agarcflag ${AGAR_CORE_CFLAGS} ${AGAR_GUI_CFLAGS} ${AGAR_MATH_CFLAGS})
 			if(AGAR_CONFIG_CFLAGS STREQUAL "")
 				set(AGAR_CONFIG_CFLAGS "${agarcflag}")
@@ -2099,12 +2224,19 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 			endif()
 		endforeach()
 		foreach(agarlib ${AGAR_MATH_LIBS} ${AGAR_GUI_LIBS} ${AGAR_CORE_LIBS})
-			if(AGAR_CONFIG_LIBS STREQUAL "")
-				set(AGAR_CONFIG_LIBS "${agarlib}")
+			if(AGAR_CONFIG_DEPLIBS STREQUAL "")
+				set(AGAR_CONFIG_DEPLIBS "${agarlib}")
 			else()
-				set(AGAR_CONFIG_LIBS "${AGAR_CONFIG_LIBS} ${agarlib}")
+				set(AGAR_CONFIG_DEPLIBS "${AGAR_CONFIG_DEPLIBS} ${agarlib}")
 			endif()
 		endforeach()
+		if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+			set(AGAR_CONFIG_LIBS "-lag_mathd -lag_guid -lag_cored")
+			set(AGAR_CONFIG_LIBS_STATIC "${AGAR_LIBDIR}/libag_mathd.a ${AGAR_LIBDIR}/libag_guid.a ${AGAR_LIBDIR}/libag_cored.a")
+		else()
+			set(AGAR_CONFIG_LIBS "-lag_math -lag_gui -lag_core")
+			set(AGAR_CONFIG_LIBS_STATIC "${AGAR_LIBDIR}/libag_math.a ${AGAR_LIBDIR}/libag_gui.a ${AGAR_LIBDIR}/libag_core.a")
+		endif()
 		configure_file(
 			"${AGAR_SOURCE_DIR}/mk/cmake-agar-math-config.in"
 			"${AGAR_BINARY_DIR}/agar-math-config"
@@ -2116,6 +2248,8 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 	if(AGAR_NET)
 		set(AGAR_CONFIG_CFLAGS "")
 		set(AGAR_CONFIG_LIBS "")
+		set(AGAR_CONFIG_LIBS_STATIC "")
+		set(AGAR_CONFIG_DEPLIBS "")
 		foreach(agarcflag ${AGAR_CORE_CFLAGS} ${AGAR_NET_CFLAGS})
 			if(AGAR_CONFIG_CFLAGS STREQUAL "")
 				set(AGAR_CONFIG_CFLAGS "${agarcflag}")
@@ -2124,12 +2258,19 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 			endif()
 		endforeach()
 		foreach(agarlib ${AGAR_NET_LIBS} ${AGAR_CORE_LIBS})
-			if(AGAR_CONFIG_LIBS STREQUAL "")
-				set(AGAR_CONFIG_LIBS "${agarlib}")
+			if(AGAR_CONFIG_DEPLIBS STREQUAL "")
+				set(AGAR_CONFIG_DEPLIBS "${agarlib}")
 			else()
-				set(AGAR_CONFIG_LIBS "${AGAR_CONFIG_LIBS} ${agarlib}")
+				set(AGAR_CONFIG_DEPLIBS "${AGAR_CONFIG_DEPLIBS} ${agarlib}")
 			endif()
 		endforeach()
+		if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+			set(AGAR_CONFIG_LIBS "-lag_netd -lag_cored")
+			set(AGAR_CONFIG_LIBS_STATIC "${AGAR_LIBDIR}/libag_netd.a ${AGAR_LIBDIR}/libag_cored.a")
+		else()
+			set(AGAR_CONFIG_LIBS "-lag_net -lag_core")
+			set(AGAR_CONFIG_LIBS_STATIC "${AGAR_LIBDIR}/libag_net.a ${AGAR_LIBDIR}/libag_core.a")
+		endif()
 		configure_file(
 			"${AGAR_SOURCE_DIR}/mk/cmake-agar-net-config.in"
 			"${AGAR_BINARY_DIR}/agar-net-config"
@@ -2141,6 +2282,8 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 	if(AGAR_SG)
 		set(AGAR_CONFIG_CFLAGS "")
 		set(AGAR_CONFIG_LIBS "")
+		set(AGAR_CONFIG_LIBS_STATIC "")
+		set(AGAR_CONFIG_DEPLIBS "")
 		foreach(agarcflag ${AGAR_CORE_CFLAGS} ${AGAR_GUI_CFLAGS} ${AGAR_MATH_CFLAGS} ${AGAR_SG_CFLAGS})
 			if(AGAR_CONFIG_CFLAGS STREQUAL "")
 				set(AGAR_CONFIG_CFLAGS "${agarcflag}")
@@ -2149,12 +2292,19 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 			endif()
 		endforeach()
 		foreach(agarlib ${AGAR_SG_LIBS} ${AGAR_MATH_LIBS} ${AGAR_GUI_LIBS} ${AGAR_CORE_LIBS})
-			if(AGAR_CONFIG_LIBS STREQUAL "")
-				set(AGAR_CONFIG_LIBS "${agarlib}")
+			if(AGAR_CONFIG_DEPLIBS STREQUAL "")
+				set(AGAR_CONFIG_DEPLIBS "${agarlib}")
 			else()
-				set(AGAR_CONFIG_LIBS "${AGAR_CONFIG_LIBS} ${agarlib}")
+				set(AGAR_CONFIG_DEPLIBS "${AGAR_CONFIG_DEPLIBS} ${agarlib}")
 			endif()
 		endforeach()
+		if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+			set(AGAR_CONFIG_LIBS "-lag_sgd -lag_mathd -lag_guid -lag_cored")
+			set(AGAR_CONFIG_LIBS_STATIC "${AGAR_LIBDIR}/libag_sgd.a ${AGAR_LIBDIR}/libag_mathd.a ${AGAR_LIBDIR}/libag_guid.a ${AGAR_LIBDIR}/libag_cored.a")
+		else()
+			set(AGAR_CONFIG_LIBS "-lag_sg -lag_math -lag_gui -lag_core")
+			set(AGAR_CONFIG_LIBS_STATIC "${AGAR_LIBDIR}/libag_sg.a ${AGAR_LIBDIR}/libag_math.a ${AGAR_LIBDIR}/libag_gui.a ${AGAR_LIBDIR}/libag_core.a")
+		endif()
 		configure_file(
 			"${AGAR_SOURCE_DIR}/mk/cmake-agar-sg-config.in"
 			"${AGAR_BINARY_DIR}/agar-sg-config"
@@ -2166,6 +2316,8 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 	if(AGAR_SK)
 		set(AGAR_CONFIG_CFLAGS "")
 		set(AGAR_CONFIG_LIBS "")
+		set(AGAR_CONFIG_LIBS_STATIC "")
+		set(AGAR_CONFIG_DEPLIBS "")
 		foreach(agarcflag ${AGAR_CORE_CFLAGS} ${AGAR_GUI_CFLAGS} ${AGAR_MATH_CFLAGS} ${AGAR_SK_CFLAGS})
 			if(AGAR_CONFIG_CFLAGS STREQUAL "")
 				set(AGAR_CONFIG_CFLAGS "${agarcflag}")
@@ -2174,12 +2326,19 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 			endif()
 		endforeach()
 		foreach(agarlib ${AGAR_SK_LIBS} ${AGAR_MATH_LIBS} ${AGAR_GUI_LIBS} ${AGAR_CORE_LIBS})
-			if(AGAR_CONFIG_LIBS STREQUAL "")
-				set(AGAR_CONFIG_LIBS "${agarlib}")
+			if(AGAR_CONFIG_DEPLIBS STREQUAL "")
+				set(AGAR_CONFIG_DEPLIBS "${agarlib}")
 			else()
-				set(AGAR_CONFIG_LIBS "${AGAR_CONFIG_LIBS} ${agarlib}")
+				set(AGAR_CONFIG_DEPLIBS "${AGAR_CONFIG_DEPLIBS} ${agarlib}")
 			endif()
 		endforeach()
+		if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+			set(AGAR_CONFIG_LIBS "-lag_skd -lag_mathd -lag_guid -lag_cored")
+			set(AGAR_CONFIG_LIBS_STATIC "${AGAR_LIBDIR}/libag_skd.a ${AGAR_LIBDIR}/libag_mathd.a ${AGAR_LIBDIR}/libag_guid.a ${AGAR_LIBDIR}/libag_cored.a")
+		else()
+			set(AGAR_CONFIG_LIBS "-lag_sk -lag_math -lag_gui -lag_core")
+			set(AGAR_CONFIG_LIBS_STATIC "${AGAR_LIBDIR}/libag_sk.a ${AGAR_LIBDIR}/libag_math.a ${AGAR_LIBDIR}/libag_gui.a ${AGAR_LIBDIR}/libag_core.a")
+		endif()
 		configure_file(
 			"${AGAR_SOURCE_DIR}/mk/cmake-agar-sk-config.in"
 			"${AGAR_BINARY_DIR}/agar-sk-config"
@@ -2191,26 +2350,38 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 	if(AGAR_VG)
 		set(AGAR_CONFIG_CFLAGS "")
 		set(AGAR_CONFIG_LIBS "")
-		foreach(agarcflag ${AGAR_CORE_CFLAGS} ${AGAR_GUI_CFLAGS} ${AGAR_MATH_CFLAGS} ${AGAR_VG_CFLAGS})
+		set(AGAR_CONFIG_LIBS_STATIC "")
+		set(AGAR_CONFIG_DEPLIBS "")
+		foreach(agarcflag ${AGAR_CORE_CFLAGS} ${AGAR_GUI_CFLAGS} ${AGAR_VG_CFLAGS})
 			if(AGAR_CONFIG_CFLAGS STREQUAL "")
 				set(AGAR_CONFIG_CFLAGS "${agarcflag}")
 			else()
 				set(AGAR_CONFIG_CFLAGS "${AGAR_CONFIG_CFLAGS} ${agarcflag}")
 			endif()
 		endforeach()
-		foreach(agarlib ${AGAR_VG_LIBS} ${AGAR_MATH_LIBS} ${AGAR_GUI_LIBS} ${AGAR_CORE_LIBS})
-			if(AGAR_CONFIG_LIBS STREQUAL "")
-				set(AGAR_CONFIG_LIBS "${agarlib}")
+		foreach(agarlib ${AGAR_VG_LIBS} ${AGAR_GUI_LIBS} ${AGAR_CORE_LIBS})
+			if(AGAR_CONFIG_DEPLIBS STREQUAL "")
+				set(AGAR_CONFIG_DEPLIBS "${agarlib}")
 			else()
-				set(AGAR_CONFIG_LIBS "${AGAR_CONFIG_LIBS} ${agarlib}")
+				set(AGAR_CONFIG_DEPLIBS "${AGAR_CONFIG_DEPLIBS} ${agarlib}")
 			endif()
 		endforeach()
+		if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+			set(AGAR_CONFIG_LIBS "-lag_vgd -lag_guid -lag_cored")
+			set(AGAR_CONFIG_LIBS_STATIC "${AGAR_LIBDIR}/libag_vgd.a ${AGAR_LIBDIR}/libag_guid.a ${AGAR_LIBDIR}/libag_cored.a")
+		else()
+			set(AGAR_CONFIG_LIBS "-lag_vg -lag_gui -lag_core")
+			set(AGAR_CONFIG_LIBS_STATIC "${AGAR_LIBDIR}/libag_vg.a ${AGAR_LIBDIR}/libag_gui.a ${AGAR_LIBDIR}/libag_core.a")
+		endif()
 		configure_file(
 			"${AGAR_SOURCE_DIR}/mk/cmake-agar-vg-config.in"
 			"${AGAR_BINARY_DIR}/agar-vg-config"
 			IMMEDIATE @ONLY)
 		install(PROGRAMS ${AGAR_BINARY_DIR}/agar-vg-config DESTINATION "${CMAKE_INSTALL_BINDIR}")
 	endif()
+
+	unset(propsRelease)
+	unset(propsDebug)
 
 	install(FILES "${AGAR_SOURCE_DIR}/mk/agar.m4" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/aclocal")
 endif()

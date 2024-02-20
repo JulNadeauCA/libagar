@@ -27,7 +27,11 @@
  * Berkeley DB database access.
  */
 
-#include <db5/db.h>
+#ifdef __FreeBSD__
+# include <db18/db.h>
+#else
+# include <db.h>
+#endif
 #include <agar/core/core.h>
 
 typedef struct ag_db_hash_bt {

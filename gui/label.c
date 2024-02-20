@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2024 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -610,10 +610,10 @@ static void *_Nullable
 Edit(void *_Nonnull p)
 {
 	static const AG_FlagDescr flagDescr[] = {
-	    { AG_LABEL_PARTIAL, _("Partially visible"), 0 },
-	    { AG_LABEL_REGEN,   _("Regenerate"),        0 },
-	    { AG_LABEL_FRAME,   _("Display a border"),  1 },
-	    { 0,                NULL,                   0 }
+	    { AG_LABEL_PARTIAL, N_("Partially visible"), 0 },
+	    { AG_LABEL_REGEN,   N_("Regenerate"),        0 },
+	    { AG_LABEL_FRAME,   N_("Display a border"),  1 },
+	    { 0,                NULL,                    0 }
 	};
 	AG_Label *lbl = p;
 	AG_Box *box;
