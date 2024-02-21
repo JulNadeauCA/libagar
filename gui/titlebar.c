@@ -75,7 +75,8 @@ AG_TitlebarNew(void *parent, Uint flags)
 {
 	AG_Titlebar *tbar;
 	AG_Button *btn;
-	const Uint btnFlags = (AG_BUTTON_VFILL | AG_BUTTON_NO_FOCUS);
+	const Uint btnFlags = (AG_BUTTON_VFILL | AG_BUTTON_NO_FOCUS |
+	                       AG_BUTTON_EXCL);
 
 	tbar = Malloc(sizeof(AG_Titlebar));
 	AG_ObjectInit(tbar, &agTitlebarClass);
