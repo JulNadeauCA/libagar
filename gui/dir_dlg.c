@@ -517,15 +517,18 @@ GlobExpansion(AG_DirDlg *_Nonnull dd, char *_Nonnull path, AG_Size path_len)
 {
 	char *pathOrig;
 	glob_t gl;
-	int glFlags = GLOB_TILDE;
+	int globFlags = 0;
 
+#if defined(GLOB_TILDE)
+	globFlags |= GLOB_TILDE;
+#endif
 #if defined(GLOB_ONLYDIR)
-	glFlags |= GLOB_ONLYDIR;
+	globFlags |= GLOB_ONLYDIR;
 #endif
 	if ((pathOrig = TryStrdup(path)) == NULL) {
 		return (0);
 	}
-	if (glob(path, glFlags, NULL, &gl) != 0) {
+	if (glob(path, globFlags, NULL, &gl) != 0) {
 		goto out;
 	}
 	if (gl.gl_pathc == 1) {

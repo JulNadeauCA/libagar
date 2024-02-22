@@ -912,11 +912,15 @@ GlobExpansion(AG_FileDlg *_Nonnull fd, char *_Nonnull path, AG_Size pathLen)
 {
 	char *pathOrig;
 	glob_t gl;
+	int globFlags = 0;
 
+#if defined(GLOB_TILDE)
+	globFlags |= GLOB_TILDE;
+#endif
 	if ((pathOrig = TryStrdup(path)) == NULL) {
 		return (0);
 	}
-	if (glob(path, GLOB_TILDE, NULL, &gl) != 0) {
+	if (glob(path, globFlags, NULL, &gl) != 0) {
 		goto out;
 	}
 	if (gl.gl_pathc == 1) {
