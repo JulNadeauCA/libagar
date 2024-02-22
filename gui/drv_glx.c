@@ -85,6 +85,8 @@
 #include <agar/gui/notebook.h>
 #endif
 
+#include <sys/time.h>
+
 /* #define DEBUG_DISPLAY */
 /* #define DEBUG_CLIPBOARD */
 /* #define DEBUG_MOTION_XEVENTS */
