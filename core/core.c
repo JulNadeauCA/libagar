@@ -175,7 +175,7 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_SetTimeOps(&agTimeOps_dummy);
 #endif
 
-#if defined(__FreeBSD__) && defined(HAVE_CLOCK_GETTIME)
+#if defined(__FreeBSD__) && defined(HAVE_CLOCK_GETTIME) && defined(CLOCK_SECOND)
 	{
 		struct timespec t;
 
