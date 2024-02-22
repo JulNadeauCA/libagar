@@ -1149,6 +1149,34 @@ macro(Disable_Dyld)
 endmacro()
 
 #
+# From BSDBuild/rand48.pm:
+#
+macro(Check_Rand48)
+	check_c_source_compiles("
+#include <stdlib.h>
+
+int
+main(int argc, char *argv[])
+{
+	double d1, d2;
+	unsigned short xbuf[3] = { 1,2,3 };
+	unsigned short p[7];
+	long l1, l2;
+	d1 = drand48(); d2 = erand48(xbuf);
+	l1 = lrand48(); l2 = nrand48(xbuf);
+	srand48(l1);
+	lcong48(p);
+	return (0);
+}
+" HAVE_RAND48)
+	if (HAVE_RAND48)
+		BB_Save_Define(HAVE_RAND48)
+	else()
+		BB_Save_Undef(HAVE_RAND48)
+	endif()
+endmacro()
+
+#
 # From BSDBuild/fontconfig.pm:
 #
 macro(Check_Fontconfig)
@@ -1686,6 +1714,14 @@ macro(Check_Agar)
 	set(AGAR_MAP_LIBS "")
 	set(AGAR_MATH_CFLAGS "")
 	set(AGAR_MATH_LIBS "")
+	set(AGAR_NET_CFLAGS "")
+	set(AGAR_NET_LIBS "")
+	set(AGAR_SG_CFLAGS "")
+	set(AGAR_SG_LIBS "")
+	set(AGAR_SK_CFLAGS "")
+	set(AGAR_SK_LIBS "")
+	set(AGAR_VG_CFLAGS "")
+	set(AGAR_VG_LIBS "")
 
 	find_package(agar)
 	if(agar_FOUND)
@@ -1720,6 +1756,7 @@ macro(Check_Agar)
 	else()
 		BB_Save_Undef(HAVE_AGAR_GUI)
 	endif()
+
 	if(HAVE_AGAR_AU)
 		BB_Save_Define(HAVE_AGAR_AU)
 		set(AGAR_AU_CFLAGS ${AGAR_CFLAGS})
@@ -1729,6 +1766,7 @@ macro(Check_Agar)
 	else()
 		BB_Save_Undef(HAVE_AGAR_AU)
 	endif()
+
 	if(HAVE_AGAR_MAP)
 		BB_Save_Define(HAVE_AGAR_MAP)
 		set(AGAR_MAP_CFLAGS ${AGAR_CFLAGS})
@@ -1738,6 +1776,7 @@ macro(Check_Agar)
 	else()
 		BB_Save_Undef(HAVE_AGAR_MAP)
 	endif()
+
 	if(HAVE_AGAR_MATH)
 		BB_Save_Define(HAVE_AGAR_MATH)
 		set(AGAR_MATH_CFLAGS ${AGAR_CFLAGS})
@@ -1746,6 +1785,46 @@ macro(Check_Agar)
 		endforeach()
 	else()
 		BB_Save_Undef(HAVE_AGAR_MATH)
+	endif()
+
+	if(HAVE_AGAR_NET)
+		BB_Save_Define(HAVE_AGAR_NET)
+		set(AGAR_NET_CFLAGS ${AGAR_CFLAGS})
+		foreach(agarlib ${AGAR_NET_LIBRARIES})
+			list(APPEND AGAR_NET_LIBS "${agarlib}")
+		endforeach()
+	else()
+		BB_Save_Undef(HAVE_AGAR_NET)
+	endif()
+
+	if(HAVE_AGAR_SG)
+		BB_Save_Define(HAVE_AGAR_SG)
+		set(AGAR_SG_CFLAGS ${AGAR_CFLAGS})
+		foreach(agarlib ${AGAR_SG_LIBRARIES})
+			list(APPEND AGAR_SG_LIBS "${agarlib}")
+		endforeach()
+	else()
+		BB_Save_Undef(HAVE_AGAR_SG)
+	endif()
+
+	if(HAVE_AGAR_SK)
+		BB_Save_Define(HAVE_AGAR_SK)
+		set(AGAR_SK_CFLAGS ${AGAR_CFLAGS})
+		foreach(agarlib ${AGAR_SK_LIBRARIES})
+			list(APPEND AGAR_SK_LIBS "${agarlib}")
+		endforeach()
+	else()
+		BB_Save_Undef(HAVE_AGAR_SK)
+	endif()
+
+	if(HAVE_AGAR_VG)
+		BB_Save_Define(HAVE_AGAR_VG)
+		set(AGAR_VG_CFLAGS ${AGAR_CFLAGS})
+		foreach(agarlib ${AGAR_VG_LIBRARIES})
+			list(APPEND AGAR_VG_LIBS "${agarlib}")
+		endforeach()
+	else()
+		BB_Save_Undef(HAVE_AGAR_VG)
 	endif()
 
 	BB_Save_MakeVar(AGAR_CFLAGS "${AGAR_CFLAGS}")
@@ -1760,13 +1839,35 @@ macro(Check_Agar)
 	BB_Save_MakeVar(AGAR_MAP_LIBS "${AGAR_MAP_LIBS}")
 	BB_Save_MakeVar(AGAR_MATH_CFLAGS "${AGAR_MATH_CFLAGS}")
 	BB_Save_MakeVar(AGAR_MATH_LIBS "${AGAR_MATH_LIBS}")
+	BB_Save_MakeVar(AGAR_NET_CFLAGS "${AGAR_NET_CFLAGS}")
+	BB_Save_MakeVar(AGAR_NET_LIBS "${AGAR_NET_LIBS}")
+	BB_Save_MakeVar(AGAR_SG_CFLAGS "${AGAR_SG_CFLAGS}")
+	BB_Save_MakeVar(AGAR_SG_LIBS "${AGAR_SG_LIBS}")
+	BB_Save_MakeVar(AGAR_SK_CFLAGS "${AGAR_SK_CFLAGS}")
+	BB_Save_MakeVar(AGAR_SK_LIBS "${AGAR_SK_LIBS}")
+	BB_Save_MakeVar(AGAR_VG_CFLAGS "${AGAR_VG_CFLAGS}")
+	BB_Save_MakeVar(AGAR_VG_LIBS "${AGAR_VG_LIBS}")
 endmacro()
 
 macro(Disable_Agar)
 	set(HAVE_AGAR OFF)
+	set(HAVE_AGAR_GUI OFF)
+	set(HAVE_AGAR_AU OFF)
+	set(HAVE_AGAR_MAP OFF)
+	set(HAVE_AGAR_MATH OFF)
+	set(HAVE_AGAR_NET OFF)
+	set(HAVE_AGAR_SG OFF)
+	set(HAVE_AGAR_SK OFF)
+	set(HAVE_AGAR_VG OFF)
 	BB_Save_Undef(HAVE_AGAR)
-	BB_Save_MakeVar(AGAR_CFLAGS "")
-	BB_Save_MakeVar(AGAR_LIBS "")
+	BB_Save_Undef(HAVE_AGAR_GUI)
+	BB_Save_Undef(HAVE_AGAR_AU)
+	BB_Save_Undef(HAVE_AGAR_MAP)
+	BB_Save_Undef(HAVE_AGAR_MATH)
+	BB_Save_Undef(HAVE_AGAR_NET)
+	BB_Save_Undef(HAVE_AGAR_SG)
+	BB_Save_Undef(HAVE_AGAR_SK)
+	BB_Save_Undef(HAVE_AGAR_VG)
 endmacro()
 
 #
