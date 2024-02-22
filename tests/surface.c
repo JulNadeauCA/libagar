@@ -61,13 +61,21 @@ ClearSurfaces(MyTestInstance *ti)
 static int
 Init(void *obj)
 {
+	char path[AG_FILENAME_MAX];
 	MyTestInstance *ti = obj;
 	const int w = 128;
 	const int h = 128;
 
-	if ((ti->Schampden = AG_SurfaceFromPNG("champden.png")) == NULL ||
-	    (ti->Sparrot = AG_SurfaceFromPNG("parrot.png")) == NULL)
+	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "champden.png", path, sizeof(path)) == -1 ||
+	    (ti->Schampden = AG_SurfaceFromPNG(path)) == NULL) {
 		TestMsgS(ti, AG_GetError());
+		return (-1);
+	}
+	if (AG_ConfigFind(AG_CONFIG_PATH_DATA, "parrot.png", path, sizeof(path)) == -1 ||
+	    (ti->Sparrot = AG_SurfaceFromPNG(path)) == NULL) {
+		TestMsgS(ti, AG_GetError());
+		return (-1);
+	}
 
 	ti->S[0]  = AG_SurfaceIndexed(w,h, 1, 0);       /* 1-bit Monochrome */
 	ti->S[1]  = AG_SurfaceIndexed(w,h, 2, 0);          /* 2-bit Indexed */

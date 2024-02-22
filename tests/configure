@@ -2644,6 +2644,7 @@ $ECHO_N '# checking for the rand48(3) family of functions...' >>config.log
 MK_COMPILE_STATUS=OK
 cat << EOT >conftest$$.c
 #include <stdlib.h>
+
 int
 main(int argc, char *argv[])
 {

@@ -120,7 +120,8 @@ set(DATA_FILES
 	${AGARTEST_SOURCE_DIR}/sword-socket.bmp
 	${AGARTEST_SOURCE_DIR}/sq-agar.bmp
 	${AGARTEST_SOURCE_DIR}/sq-agar.png
-	${AGARTEST_SOURCE_DIR}/champden.png)
+	${AGARTEST_SOURCE_DIR}/champden.png
+	${AGARTEST_SOURCE_DIR}/parrot.png)
 
 #
 # Specify the installation directories.
@@ -141,13 +142,12 @@ Check_Agar()
 if(NOT HAVE_AGAR)
 	message(FATAL_ERROR "The Agar library was not found.")
 endif()
-
 if(NOT HAVE_AGAR_AU)
 	BB_Save_Undef(HAVE_PORTAUDIO)
 endif()
 
-# TODO
-BB_Save_Undef(HAVE_RAND48)
+# Check for the rand48() function.
+Check_rand48()
 
 if(AGARTEST_NLS)
 	Check_Gettext()
