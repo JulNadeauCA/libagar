@@ -119,7 +119,7 @@ FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth)
 		break;
 	}
 
-	if (strncmp(name, "win", 3) == 0 && isdigit(name[4])) {
+	if (strncmp(name, "win", 3) == 0 && isdigit((int)name[4])) {
 		it = AG_TlistAddS(tl, NULL, win->caption[0] !='\0' ?
 		                            win->caption : _("Untitled"));
 	} else {
@@ -222,8 +222,8 @@ InputAttribute(AG_Event *_Nonnull event)
 	if (key == NULL || val == NULL)
 		return;
 
-	while (isspace(*key)) { key++; }
-	while (isspace(*val)) { val++; }
+	while (isspace((int)*key)) { key++; }
+	while (isspace((int)*val)) { val++; }
 
 	AG_SetStyle(tgt, key, (val[0] != '\0') ? val : NULL);
 

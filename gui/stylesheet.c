@@ -111,7 +111,7 @@ Strchr_NotInParens(const char *p, char ch)
 static void
 ParseCond(AG_StyleBlock *blk, char *cond, enum ag_style_condition_type condType)
 {
-	while (isspace(*cond))
+	while (isspace((int)*cond))
 		++cond;
 
 	blk->cond = condType;
@@ -288,13 +288,13 @@ AG_LoadStyleSheet(void *obj, const char *path)
 			if (f != NULL && f[1] != '\0') {
 				char *fPrev = (char *)&f[-1];
 
-				while (isspace(*fPrev)) {
+				while (isspace((int)*fPrev)) {
 					--fPrev;
 				}
 				fPrev++;
 				*fPrev = '\0';
 				f++;
-				while (isspace(*f)) {
+				while (isspace((int)*f)) {
 					f++;
 				}
 				if (*f == '"' && f[1] != '\0') {

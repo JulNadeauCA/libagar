@@ -430,7 +430,7 @@ AG_ColorFromString(AG_Color *cOut, const char *s, const AG_Color *pColor)
 		const char *ch;
 
 		for (ch = &c[1]; *ch != '\0'; ch++) {
-			if (!isdigit(*ch) &&
+			if (!isdigit((int)*ch) &&
 			    (*ch < 'a' || *ch > 'f') &&
 			    (*ch < 'A' || *ch > 'F'))
 				break;

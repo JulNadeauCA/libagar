@@ -104,7 +104,7 @@ FindWindows(AG_Tlist *_Nonnull tl, const AG_Window *_Nonnull win, int depth,
 	if (strcmp(name, "_agDbgr") == 0)			/* Unsafe */
 		return;
 
-	if (strncmp(name, "win", 3) == 0 && isdigit(name[4])) {
+	if (strncmp(name, "win", 3) == 0 && isdigit((int)name[4])) {
 		it = AG_TlistAddS(tl, NULL, win->caption[0] !='\0' ?
 		                            win->caption : _("Untitled"));
 	} else {
@@ -436,8 +436,8 @@ InputVariable(AG_Event *_Nonnull event)
 	if (key == NULL || val == NULL)
 		return;
 
-	while (isspace(*key)) { key++; }
-	while (isspace(*val)) { val++; }
+	while (isspace((int)*key)) { key++; }
+	while (isspace((int)*val)) { val++; }
 
 	/*
 	 * Try to infer type from the value.
@@ -449,7 +449,7 @@ InputVariable(AG_Event *_Nonnull event)
 			floatChars++;
 			continue;
 		}
-		if (!isdigit(*c) && *c != '-')
+		if (!isdigit((int)*c) && *c != '-')
 			break;
 	}
 	if (*c == '\0') {

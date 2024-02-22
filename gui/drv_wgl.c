@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2023 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2024 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -970,8 +970,6 @@ WGL_BeginRendering(void *_Nonnull obj)
 static void
 WGL_RenderWindow(AG_Window *_Nonnull win)
 {
-	AG_DriverWGL *wgl = (AG_DriverWGL *)WIDGET(win)->drv;
-	AG_GL_Context *gl = &wgl->gl;
 	const AG_Color *cBg = &WCOLOR(win, BG_COLOR);
 
 	AG_PushClipRect(win, &WIDGET(win)->r);

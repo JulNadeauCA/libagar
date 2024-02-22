@@ -161,7 +161,7 @@ IsValidElementName(const char *_Nonnull s)
 	const char *c;
 
 	for (c = &s[0]; *c != '\0'; c++) {
-		if (!isprint(*c)) {
+		if (!isprint((int)*c)) {
 			AG_SetError("Illegal PLY element name `%s'", s);
 			return (0);
 		}
