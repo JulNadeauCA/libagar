@@ -41,9 +41,8 @@ AG_Getopt(int argc, char * const argv[], const char *optstring, char **oa,
     int *oi)
 {
 #ifdef HAVE_GETOPT
-	extern char *optarg;
-	extern int optind;
 	int rv;
+
 	rv = getopt(argc, argv, optstring);
 	if (oa != NULL) { *oa = optarg; }
 	if (oi != NULL) { *oi = optind; }
