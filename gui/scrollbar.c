@@ -1015,7 +1015,7 @@ DrawHoriz(AG_Scrollbar *_Nonnull sb, int x, int len)
 	r.y = 0;
 	r.w = w;
 	r.h = h;
-	AG_DrawFrameSunk(sb, &r);
+	AG_DrawBoxSunk(sb, &r, &WCOLOR(sb, BG_COLOR));
 
 	r.w = sbThick;                                  /* Decrement button */
 	S = WSURFACE(sb, sb->lbl1);

@@ -99,8 +99,8 @@ AG_WidgetPalette agDefaultPalette = {{
 	{  0,  0,  0,  0},          /*  background-color */
 	{200,200,200,255},          /*        text-color */
 	{ 50, 50, 50,255},          /*        line-color */
-	{144,144,144,255},          /*        high-color */
-	{ 70, 70, 70,255},          /*         low-color */
+	{100,100,100,255},          /*        high-color */
+	{ 60, 60, 60,255},          /*         low-color */
 	{  0,  0, 80,255},          /*   selection-color */
 	{  0,  0,  0,  0}
 }, {
@@ -120,7 +120,7 @@ AG_WidgetPalette agDefaultPalette = {{
 	{240,240,240,255},          /*        text-color */
 	{ 50, 50, 70,255},          /*        line-color */
 	{110,110,110,255},          /*        high-color */
-	{ 70, 70, 70,255},          /*         low-color */
+	{ 60, 60, 60,255},          /*         low-color */
 	{  0,  0,120,255},          /*   selection-color */
 	{  0,  0,  0,  0}
 }, {
@@ -129,8 +129,8 @@ AG_WidgetPalette agDefaultPalette = {{
 	{  0,  0,  0,  0},            /*  background-color */
 	{240,240,240,255},            /*        text-color */
 	{ 50, 50, 50,255},            /*        line-color */
-	{110,110,110,255},            /*        high-color */
-	{ 70, 70, 70,255},            /*         low-color */
+	{120,120,120,255},            /*        high-color */
+	{ 60, 60, 60,255},            /*         low-color */
 	{  0,  0,120,255},            /*   selection-color */
 	{  0,  0,  0,  0}
 },
@@ -141,8 +141,8 @@ AG_WidgetPalette agDefaultPalette = {{
 	{0x0000,0x0000,0x0000,0x0000},    /*  background-color */
 	{0xc8c8,0xc8c8,0xc8c8,0xffff},    /*        text-color */
 	{0x3232,0x3232,0x3232,0xffff},    /*        line-color */
-	{0x9090,0x9090,0x9090,0xffff},    /*        high-color */
-	{0x4646,0x4646,0x4646,0xffff},    /*         low-color */
+	{0x7878,0x7878,0x7878,0xffff},    /*        high-color */
+	{0x3c3c,0x3c3c,0x3c3c,0xffff},    /*         low-color */
 	{0x0000,0x0000,0x7878,0xffff},    /*   selection-color */
 	{0x0000,0x0000,0x0000,0x0000}
 }, {
@@ -161,8 +161,8 @@ AG_WidgetPalette agDefaultPalette = {{
 	{0x0000,0x0000,0x0000,0x0000},    /*  background-color */
 	{0xf0f0,0xf0f0,0xf0f0,0xffff},    /*        text-color */
 	{0x3232,0x3232,0x4646,0xffff},    /*        line-color */
-	{0xaaaa,0xaaaa,0xaaaa,0xffff},    /*        high-color */
-	{0x4646,0x4646,0x4646,0xffff},    /*         low-color */
+	{0x6e6e,0x6e6e,0x6e6e,0xffff},    /*        high-color */
+	{0x3c3c,0x3c3c,0x3c3c,0xffff},    /*         low-color */
 	{0x0000,0x0000,0x7878,0xffff},    /*   selection-color */
 	{0x0000,0x0000,0x0000,0x0000}
 }, {
@@ -171,8 +171,8 @@ AG_WidgetPalette agDefaultPalette = {{
 	{0x0000,0x0000,0x0000,0x0000},    /*  background-color */
 	{0xf0f0,0xf0f0,0xf0f0,0xffff},    /*        text-color */
 	{0x3232,0x3232,0x3232,0xffff},    /*        line-color */
-	{0xaaaa,0xaaaa,0xaaaa,0xffff},    /*        high-color */
-	{0x4646,0x4646,0x4646,0xffff},    /*         low-color */
+	{0x7878,0x7878,0x7878,0xffff},    /*        high-color */
+	{0x3c3c,0x3c3c,0x3c3c,0xffff},    /*         low-color */
 	{0x0000,0x0000,0x7878,0xffff},    /*   selection-color */
 	{0x0000,0x0000,0x0000,0x0000}
 }

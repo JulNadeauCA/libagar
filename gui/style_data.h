@@ -149,6 +149,7 @@ const char *agStyleDefault_Data =
 	"AG_Textbox {\n"
 	"padding: 3;\n"
 	"spacing: 5;\n"
+	"background-color: rgb(80,80,80);\n"
 	"}\n"
 	"AG_Titlebar {\n"
 	"font-size: 90%;\n"
@@ -173,9 +174,10 @@ const char *agStyleDefault_Data =
 	"}\n"
 	"AG_Scrollbar {\n"
 	"font-size: 60%;\n"
-	"background-color: rgb(60,60,60);\n"
+	"background-color: rgb(65,65,65);\n"
 	"color: rgb(80,80,80);\n"
 	"color#hover: rgb(90,90,90);\n"
+	"high-color: rgb(120,120,120);\n"
 	"text-color: #bebebe;\n"
 	"}\n"
 	"AG_Separator {\n"
@@ -197,7 +199,7 @@ const char *agStyleDefault_Data =
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	3613,
+	3676,
 	&agStyleDefault_Data,
 	NULL
 };
