@@ -264,8 +264,9 @@ AG_DEV_ConfigWindow(AG_Config *_Nullable cfg)
 
 		AG_SeparatorNewHoriz(tab);
 
-		AG_CheckboxNewInt(tab, 0, _("Enable Clipboard Integration"),
+		cb = AG_CheckboxNewInt(tab, 0, _("Enable Clipboard Integration"),
 		    &agClipboardIntegration);
+		AG_WidgetFocus(cb);
 
 		if (AGDRIVER_CLASS(drv)->flags & AG_DRIVER_OPENGL) {
 			AG_CheckboxNewInt(tab, 0,
