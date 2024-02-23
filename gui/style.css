@@ -15,20 +15,30 @@
  * See: AG_StyleSheet(3) and "STYLE ATTRIBUTES" section of AG_Widget(3).
  */
 
+AG_Window {
+	padding: 0 3 4 3;
+	background-color: rgb(70,70,70);
+	text-color: rgb(200,200,200);
+	text-color#hover: rgb(240,240,240);
+}
+
 AG_Box {
 	padding: 2 3 2 3;    /* top right bottom left */
 	spacing: 3 2;        /* horiz vert */
 }
 AG_Button {
 	padding: 5 10 5 10;
-	color#focused: #808081;
-	color#hover: #868580;
+	text-color: rgb(255,255,255);
+	color: #787878;
+	color#focused: rgb(128,128,129);
+	color#hover: rgb(133,133,136);
 	selection-color#focused: #646496;
 	selection-color#hover: #969664;
 }
 AG_Checkbox {
 	spacing: 5;
-	background-color#hover: rgb(80,80,120);
+	background-color: rgb(80,80,120);
+	background-color#hover: rgb(100,100,140);
 }
 AG_Combo > "input" {
 	padding: 0 0 2 0;
@@ -163,8 +173,9 @@ AG_Toolbar {
 }
 AG_Scrollbar {
 	font-size: 60%;
-	color: #666;
-	color#hover: #777;
+	background-color: rgb(60,60,60);
+	color: rgb(80,80,80);
+	color#hover: rgb(90,90,90);
 	text-color: #bebebe;
 }
 AG_Separator {
@@ -181,8 +192,4 @@ AG_Tlist {
 }
 AG_UCombo > "trigger" {
 	padding: 3;
-}
-AG_Window {
-	padding: 0 3 4 3;
-	background-color: #575757;
 }

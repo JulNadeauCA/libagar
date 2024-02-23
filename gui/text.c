@@ -68,10 +68,10 @@
 /* #define DEBUG_ANSI */
 
 #ifndef AG_DEFAULT_FT_FONT_FACE
-#define AG_DEFAULT_FT_FONT_FACE "fira-sans"
+#define AG_DEFAULT_FT_FONT_FACE "algue"
 #endif
 #ifndef AG_DEFAULT_FT_FONT_SIZE
-#define AG_DEFAULT_FT_FONT_SIZE 16.0f
+#define AG_DEFAULT_FT_FONT_SIZE 14.0f
 #endif
 #ifndef AG_DEFAULT_BF_FONT_FACE
 #define AG_DEFAULT_BF_FONT_FACE "agar-minimal.agbf"

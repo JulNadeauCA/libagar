@@ -921,7 +921,7 @@ DrawVert(AG_Scrollbar *_Nonnull sb, int y, int len)
 	r.y = 0;
 	r.w = w - 1;
 	r.h = h;
-	AG_DrawFrameSunk(sb, &r);
+	AG_DrawBoxSunk(sb, &r, &WCOLOR(sb, BG_COLOR));
 
 	r.h = sbThick;                                  /* Decrement button */
 	S = WSURFACE(sb, sb->lbl1);

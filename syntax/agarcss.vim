@@ -34,6 +34,7 @@ syn keyword cssTagName AG_Box AG_DirDlg AG_Editable AG_FileDlg AG_Fixed
 syn keyword cssTagName AG_FixedPlotter AG_FontSelector AG_GLView AG_Graph
 syn keyword cssTagName AG_HSVPal AG_Icon AG_Label AG_Menu AG_MenuView
 syn keyword cssTagName AG_MFSpinButton AG_MPane AG_MSpinButton AG_Notebook
+syn keyword cssTagName AG_NotebookTab
 syn keyword cssTagName AG_Numerical AG_ObjectSelector AG_Pane AG_Pixmap
 syn keyword cssTagName AG_ProgressBar AG_Radio AG_Scrollbar AG_Scrollview
 syn keyword cssTagName AG_Separator AG_Slider AG_Socket AG_Statusbar

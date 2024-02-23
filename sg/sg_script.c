@@ -1484,7 +1484,7 @@ Render(AG_Event *_Nonnull event)
 					continue;
 				}
 				for (c = &dent[0]; *c != '.' && *c != '\0'; c++) {
-					if (!isdigit(*c))
+					if (!isdigit((int)*c))
 						break;
 				}
 				if (*c == '.' || *c == '\0') {

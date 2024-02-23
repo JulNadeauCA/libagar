@@ -16,20 +16,29 @@ const char *agStyleDefault_Data =
 	" *\n"
 	" * See: AG_StyleSheet(3) and \"STYLE ATTRIBUTES\" section of AG_Widget(3).\n"
 	" */\n"
+	"AG_Window {\n"
+	"padding: 0 3 4 3;\n"
+	"background-color: rgb(70,70,70);\n"
+	"text-color: rgb(200,200,200);\n"
+	"text-color#hover: rgb(240,240,240);\n"
+	"}\n"
 	"AG_Box {\n"
 	"padding: 2 3 2 3;    /* top right bottom left */\n"
 	"spacing: 3 2;        /* horiz vert */\n"
 	"}\n"
 	"AG_Button {\n"
 	"padding: 5 10 5 10;\n"
-	"color#focused: #808081;\n"
-	"color#hover: #868580;\n"
+	"text-color: rgb(255,255,255);\n"
+	"color: #787878;\n"
+	"color#focused: rgb(128,128,129);\n"
+	"color#hover: rgb(133,133,136);\n"
 	"selection-color#focused: #646496;\n"
 	"selection-color#hover: #969664;\n"
 	"}\n"
 	"AG_Checkbox {\n"
 	"spacing: 5;\n"
-	"background-color#hover: rgb(80,80,120);\n"
+	"background-color: rgb(80,80,120);\n"
+	"background-color#hover: rgb(100,100,140);\n"
 	"}\n"
 	"AG_Combo > \"input\" {\n"
 	"padding: 0 0 2 0;\n"
@@ -164,8 +173,9 @@ const char *agStyleDefault_Data =
 	"}\n"
 	"AG_Scrollbar {\n"
 	"font-size: 60%;\n"
-	"color: #666;\n"
-	"color#hover: #777;\n"
+	"background-color: rgb(60,60,60);\n"
+	"color: rgb(80,80,80);\n"
+	"color#hover: rgb(90,90,90);\n"
 	"text-color: #bebebe;\n"
 	"}\n"
 	"AG_Separator {\n"
@@ -183,15 +193,11 @@ const char *agStyleDefault_Data =
 	"AG_UCombo > \"trigger\" {\n"
 	"padding: 3;\n"
 	"}\n"
-	"AG_Window {\n"
-	"padding: 0 3 4 3;\n"
-	"background-color: #575757;\n"
-	"}\n"
 	"";
 
 AG_StaticCSS agStyleDefault = {
 	"agStyleDefault",
-	3390,
+	3613,
 	&agStyleDefault_Data,
 	NULL
 };
