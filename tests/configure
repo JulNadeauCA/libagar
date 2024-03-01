@@ -771,7 +771,6 @@ bb_o=$bb_incdir/enable_nls.h
 echo '#ifndef ENABLE_NLS' >$bb_o
 echo "#define ENABLE_NLS \"$ENABLE_NLS\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"ENABLE_NLS\"] = \"$ENABLE_NLS\"" >>configure.lua
 msgfmt=''
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -795,12 +794,10 @@ bb_o=$bb_incdir/enable_nls.h
 echo '#ifndef ENABLE_NLS' >$bb_o
 echo "#define ENABLE_NLS \"$ENABLE_NLS\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"ENABLE_NLS\"] = \"$ENABLE_NLS\"" >>configure.lua
 else
 ENABLE_NLS="no"
 HAVE_GETTEXT="no"
 echo '#undef ENABLE_NLS' >$bb_incdir/enable_nls.h
-echo 'hdefs["ENABLE_NLS"] = nil' >>configure.lua
 fi
 CTAGS=''
 bb_save_IFS=$IFS
@@ -860,7 +857,6 @@ bb_o=$bb_incdir/prefix.h
 echo '#ifndef PREFIX' >$bb_o
 echo "#define PREFIX \"$PREFIX\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"PREFIX\"] = \"$PREFIX\"" >>configure.lua
 if [ "${bindir}" != '' ]; then
 	BINDIR="${bindir}"
 	BINDIR_SPECIFIED='yes'
@@ -871,7 +867,6 @@ bb_o=$bb_incdir/bindir.h
 echo '#ifndef BINDIR' >$bb_o
 echo "#define BINDIR \"$BINDIR\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"BINDIR\"] = \"$BINDIR\"" >>configure.lua
 if [ "${libdir}" != '' ]; then
 	LIBDIR="${libdir}"
 	LIBDIR_SPECIFIED='yes'
@@ -882,7 +877,6 @@ bb_o=$bb_incdir/libdir.h
 echo '#ifndef LIBDIR' >$bb_o
 echo "#define LIBDIR \"$LIBDIR\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"LIBDIR\"] = \"$LIBDIR\"" >>configure.lua
 if [ "${moduledir}" != '' ]; then
 	MODULEDIR="${moduledir}"
 	MODULEDIR_SPECIFIED='yes'
@@ -893,7 +887,6 @@ bb_o=$bb_incdir/moduledir.h
 echo '#ifndef MODULEDIR' >$bb_o
 echo "#define MODULEDIR \"$MODULEDIR\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"MODULEDIR\"] = \"$MODULEDIR\"" >>configure.lua
 if [ "${libexecdir}" != '' ]; then
 	LIBEXECDIR="${libexecdir}"
 	LIBEXECDIR_SPECIFIED='yes'
@@ -904,7 +897,6 @@ bb_o=$bb_incdir/libexecdir.h
 echo '#ifndef LIBEXECDIR' >$bb_o
 echo "#define LIBEXECDIR \"$LIBEXECDIR\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"LIBEXECDIR\"] = \"$LIBEXECDIR\"" >>configure.lua
 if [ "${datadir}" != '' ]; then
 	DATADIR="${datadir}"
 	DATADIR_SPECIFIED='yes'
@@ -915,7 +907,6 @@ bb_o=$bb_incdir/datadir.h
 echo '#ifndef DATADIR' >$bb_o
 echo "#define DATADIR \"$DATADIR\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"DATADIR\"] = \"$DATADIR\"" >>configure.lua
 if [ "${statedir}" != '' ]; then
 	STATEDIR="${statedir}"
 	STATEDIR_SPECIFIED='yes'
@@ -926,7 +917,6 @@ bb_o=$bb_incdir/statedir.h
 echo '#ifndef STATEDIR' >$bb_o
 echo "#define STATEDIR \"$STATEDIR\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"STATEDIR\"] = \"$STATEDIR\"" >>configure.lua
 if [ "${sysconfdir}" != '' ]; then
 	SYSCONFDIR="${sysconfdir}"
 	SYSCONFDIR_SPECIFIED='yes'
@@ -937,7 +927,6 @@ bb_o=$bb_incdir/sysconfdir.h
 echo '#ifndef SYSCONFDIR' >$bb_o
 echo "#define SYSCONFDIR \"$SYSCONFDIR\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"SYSCONFDIR\"] = \"$SYSCONFDIR\"" >>configure.lua
 if [ "${localedir}" != '' ]; then
 	LOCALEDIR="${localedir}"
 	LOCALEDIR_SPECIFIED='yes'
@@ -948,7 +937,6 @@ bb_o=$bb_incdir/localedir.h
 echo '#ifndef LOCALEDIR' >$bb_o
 echo "#define LOCALEDIR \"$LOCALEDIR\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"LOCALEDIR\"] = \"$LOCALEDIR\"" >>configure.lua
 if [ "${mandir}" != '' ]; then
 	MANDIR="${mandir}"
 	MANDIR_SPECIFIED='yes'
@@ -966,26 +954,22 @@ bb_o=$bb_incdir/mandir.h
 echo '#ifndef MANDIR' >$bb_o
 echo "#define MANDIR \"$MANDIR\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"MANDIR\"] = \"$MANDIR\"" >>configure.lua
 PACKAGE="agartest"
 bb_o=$bb_incdir/package.h
 echo '#ifndef PACKAGE' >$bb_o
 echo "#define PACKAGE \"$PACKAGE\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
 VERSION="1.0"
 bb_o=$bb_incdir/version.h
 echo '#ifndef VERSION' >$bb_o
 echo "#define VERSION \"$VERSION\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"VERSION\"] = \"$VERSION\"" >>configure.lua
 if [ "${DATADIR_SPECIFIED}" != 'yes' ]; then
 DATADIR="${PREFIX}/share/agartest"
 bb_o=$bb_incdir/datadir.h
 echo '#ifndef DATADIR' >$bb_o
 echo "#define DATADIR \"$DATADIR\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"DATADIR\"] = \"$DATADIR\"" >>configure.lua
 fi
 if [ "${LOCALEDIR_SPECIFIED}" != 'yes' ]; then
 LOCALEDIR="${DATADIR}/locale"
@@ -993,7 +977,6 @@ bb_o=$bb_incdir/localedir.h
 echo '#ifndef LOCALEDIR' >$bb_o
 echo "#define LOCALEDIR \"$LOCALEDIR\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"LOCALEDIR\"] = \"$LOCALEDIR\"" >>configure.lua
 fi
 $ECHO_N 'checking for a C compiler...'
 $ECHO_N '# checking for a C compiler...' >>config.log
@@ -1183,17 +1166,14 @@ bb_o=$bb_incdir/have_emcc.h
 echo '#ifndef HAVE_EMCC' >$bb_o
 echo "#define HAVE_EMCC \"$HAVE_EMCC\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_EMCC\"] = \"$HAVE_EMCC\"" >>configure.lua
 bb_o=$bb_incdir/have_cc65.h
 echo '#ifndef HAVE_CC65' >$bb_o
 echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
 bb_o=$bb_incdir/execsuffix.h
 echo '#ifndef EXECSUFFIX' >$bb_o
 echo "#define EXECSUFFIX \"$EXECSUFFIX\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
 		else
 			echo "yes"
 			echo "yes" >>config.log
@@ -1233,13 +1213,11 @@ bb_o=$bb_incdir/have_cc_clang.h
 echo '#ifndef HAVE_CC_CLANG' >$bb_o
 echo "#define HAVE_CC_CLANG \"$HAVE_CC_CLANG\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CC_CLANG\"] = \"$HAVE_CC_CLANG\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_CC_CLANG=no
 echo '#undef HAVE_CC_CLANG' >$bb_incdir/have_cc_clang.h
-echo 'hdefs["HAVE_CC_CLANG"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
@@ -1257,13 +1235,11 @@ bb_o=$bb_incdir/have_cc65.h
 echo '#ifndef HAVE_CC65' >$bb_o
 echo "#define HAVE_CC65 \"$HAVE_CC65\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
 else
 echo "no"
 echo "# no" >>config.log
 CC_COMPILE="-c"
 echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
-echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
 fi
 $ECHO_N 'cc: checking whether compiler is emcc...'
 $ECHO_N '# cc: checking whether compiler is emcc...' >>config.log
@@ -1274,12 +1250,10 @@ bb_o=$bb_incdir/have_emcc.h
 echo '#ifndef HAVE_EMCC' >$bb_o
 echo "#define HAVE_EMCC \"$HAVE_EMCC\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_EMCC\"] = \"$HAVE_EMCC\"" >>configure.lua
 else
 echo "no"
 echo "# no" >>config.log
 echo '#undef HAVE_EMCC' >$bb_incdir/have_emcc.h
-echo 'hdefs["HAVE_EMCC"] = nil' >>configure.lua
 fi
 $ECHO_N 'cc: checking for compiler warning options...'
 $ECHO_N '# cc: checking for compiler warning options...' >>config.log
@@ -1306,13 +1280,11 @@ bb_o=$bb_incdir/have_cc_warnings.h
 echo '#ifndef HAVE_CC_WARNINGS' >$bb_o
 echo "#define HAVE_CC_WARNINGS \"$HAVE_CC_WARNINGS\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_CC_WARNINGS=no
 echo '#undef HAVE_CC_WARNINGS' >$bb_incdir/have_cc_warnings.h
-echo 'hdefs["HAVE_CC_WARNINGS"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
@@ -1348,13 +1320,11 @@ bb_o=$bb_incdir/have_cc_gcc.h
 echo '#ifndef HAVE_CC_GCC' >$bb_o
 echo "#define HAVE_CC_GCC \"$HAVE_CC_GCC\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CC_GCC\"] = \"$HAVE_CC_GCC\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_CC_GCC=no
 echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
-echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
@@ -1396,13 +1366,11 @@ bb_o=$bb_incdir/have_float.h
 echo '#ifndef HAVE_FLOAT' >$bb_o
 echo "#define HAVE_FLOAT \"$HAVE_FLOAT\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_FLOAT\"] = \"$HAVE_FLOAT\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_FLOAT=no
 echo '#undef HAVE_FLOAT' >$bb_incdir/have_float.h
-echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
@@ -1440,13 +1408,11 @@ bb_o=$bb_incdir/have_long_double.h
 echo '#ifndef HAVE_LONG_DOUBLE' >$bb_o
 echo "#define HAVE_LONG_DOUBLE \"$HAVE_LONG_DOUBLE\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_LONG_DOUBLE\"] = \"$HAVE_LONG_DOUBLE\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_LONG_DOUBLE=no
 echo '#undef HAVE_LONG_DOUBLE' >$bb_incdir/have_long_double.h
-echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
@@ -1483,13 +1449,11 @@ bb_o=$bb_incdir/have_long_long.h
 echo '#ifndef HAVE_LONG_LONG' >$bb_o
 echo "#define HAVE_LONG_LONG \"$HAVE_LONG_LONG\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_LONG_LONG\"] = \"$HAVE_LONG_LONG\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_LONG_LONG=no
 echo '#undef HAVE_LONG_LONG' >$bb_incdir/have_long_long.h
-echo 'hdefs["HAVE_LONG_LONG"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
@@ -1522,13 +1486,11 @@ bb_o=$bb_incdir/have_ld_no_undefined.h
 echo '#ifndef HAVE_LD_NO_UNDEFINED' >$bb_o
 echo "#define HAVE_LD_NO_UNDEFINED \"$HAVE_LD_NO_UNDEFINED\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_LD_NO_UNDEFINED\"] = \"$HAVE_LD_NO_UNDEFINED\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_LD_NO_UNDEFINED=no
 echo '#undef HAVE_LD_NO_UNDEFINED' >$bb_incdir/have_ld_no_undefined.h
-echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
@@ -1561,13 +1523,11 @@ bb_o=$bb_incdir/have_ld_static_libgcc.h
 echo '#ifndef HAVE_LD_STATIC_LIBGCC' >$bb_o
 echo "#define HAVE_LD_STATIC_LIBGCC \"$HAVE_LD_STATIC_LIBGCC\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_LD_STATIC_LIBGCC\"] = \"$HAVE_LD_STATIC_LIBGCC\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_LD_STATIC_LIBGCC=no
 echo '#undef HAVE_LD_STATIC_LIBGCC' >$bb_incdir/have_ld_static_libgcc.h
-echo 'hdefs["HAVE_LD_STATIC_LIBGCC"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
@@ -1610,13 +1570,11 @@ bb_o=$bb_incdir/have_cygwin.h
 echo '#ifndef HAVE_CYGWIN' >$bb_o
 echo "#define HAVE_CYGWIN \"$HAVE_CYGWIN\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_CYGWIN=no
 echo '#undef HAVE_CYGWIN' >$bb_incdir/have_cygwin.h
-echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
@@ -1626,7 +1584,6 @@ fi
 PICFLAGS="-fPIC"
 HAVE_CYGWIN="no"
 echo '#undef HAVE_CYGWIN' >$bb_incdir/have_cygwin.h
-echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
 PROG_GUI_FLAGS=""
 PROG_CLI_FLAGS=""
 ;;
@@ -1635,7 +1592,6 @@ bb_o=$bb_incdir/have_cc.h
 echo '#ifndef HAVE_CC' >$bb_o
 echo "#define HAVE_CC \"$HAVE_CC\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
 else
 HAVE_CC65="no"
 HAVE_EMCC="no"
@@ -1645,46 +1601,30 @@ PROG_GUI_FLAGS=""
 PROG_CLI_FLAGS=""
 TEST_CFLAGS=""
 echo '#undef HAVE_CC' >$bb_incdir/have_cc.h
-echo 'hdefs["HAVE_CC"] = nil' >>configure.lua
 echo '#undef HAVE_CC_WARNINGS' >$bb_incdir/have_cc_warnings.h
-echo 'hdefs["HAVE_CC_WARNINGS"] = nil' >>configure.lua
 echo '#undef HAVE_CC_ASM' >$bb_incdir/have_cc_asm.h
-echo 'hdefs["HAVE_CC_ASM"] = nil' >>configure.lua
 echo '#undef HAVE_CC_CLANG' >$bb_incdir/have_cc_clang.h
-echo 'hdefs["HAVE_CC_CLANG"] = nil' >>configure.lua
 echo '#undef HAVE_CC_GCC' >$bb_incdir/have_cc_gcc.h
-echo 'hdefs["HAVE_CC_GCC"] = nil' >>configure.lua
 echo '#undef HAVE_CC65' >$bb_incdir/have_cc65.h
-echo 'hdefs["HAVE_CC65"] = nil' >>configure.lua
 echo '#undef HAVE_EMCC' >$bb_incdir/have_emcc.h
-echo 'hdefs["HAVE_EMCC"] = nil' >>configure.lua
 echo '#undef HAVE_FLOAT' >$bb_incdir/have_float.h
-echo 'hdefs["HAVE_FLOAT"] = nil' >>configure.lua
 echo '#undef HAVE_LONG_DOUBLE' >$bb_incdir/have_long_double.h
-echo 'hdefs["HAVE_LONG_DOUBLE"] = nil' >>configure.lua
 echo '#undef HAVE_LONG_LONG' >$bb_incdir/have_long_long.h
-echo 'hdefs["HAVE_LONG_LONG"] = nil' >>configure.lua
 echo '#undef HAVE_CYGWIN' >$bb_incdir/have_cygwin.h
-echo 'hdefs["HAVE_CYGWIN"] = nil' >>configure.lua
 echo '#undef HAVE_LD_NO_UNDEFINED' >$bb_incdir/have_ld_no_undefined.h
-echo 'hdefs["HAVE_LD_NO_UNDEFINED"] = nil' >>configure.lua
 echo '#undef HAVE_LD_STATIC_LIBGCC' >$bb_incdir/have_ld_static_libgcc.h
-echo 'hdefs["HAVE_LD_STATIC_LIBGCC"] = nil' >>configure.lua
 fi
 bb_o=$bb_incdir/have_cc_asm.h
 echo '#ifndef HAVE_CC_ASM' >$bb_o
 echo "#define HAVE_CC_ASM \"$HAVE_CC_ASM\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CC_ASM\"] = \"$HAVE_CC_ASM\"" >>configure.lua
 if [ "${HAVE_CC_ASM}" = "yes" ]; then
 bb_o=$bb_incdir/have_cc_asm.h
 echo '#ifndef HAVE_CC_ASM' >$bb_o
 echo "#define HAVE_CC_ASM \"$HAVE_CC_ASM\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_CC_ASM\"] = \"$HAVE_CC_ASM\"" >>configure.lua
 else
 echo '#undef HAVE_CC_ASM' >$bb_incdir/have_cc_asm.h
-echo 'hdefs["HAVE_CC_ASM"] = nil' >>configure.lua
 fi
 # END cc
 if [ "${HAVE_CC}" != "yes" ]; then
@@ -1866,13 +1806,11 @@ bb_o=$bb_incdir/have_agar.h
 echo '#ifndef HAVE_AGAR' >$bb_o
 echo "#define HAVE_AGAR \"$HAVE_AGAR\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_AGAR\"] = \"$HAVE_AGAR\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_AGAR=no
 echo '#undef HAVE_AGAR' >$bb_incdir/have_agar.h
-echo 'hdefs["HAVE_AGAR"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
@@ -1881,14 +1819,12 @@ if [ "${HAVE_AGAR}" = "no" ]; then
 AGAR_CFLAGS=""
 AGAR_LIBS=""
 echo '#undef HAVE_AGAR' >$bb_incdir/have_agar.h
-echo 'hdefs["HAVE_AGAR"] = nil' >>configure.lua
 fi
 else
 HAVE_AGAR="no"
 AGAR_CFLAGS=""
 AGAR_LIBS=""
 echo '#undef HAVE_AGAR' >$bb_incdir/have_agar.h
-echo 'hdefs["HAVE_AGAR"] = nil' >>configure.lua
 fi
 # END agar
 if [ "${HAVE_AGAR}" != "yes" ]; then
@@ -2137,13 +2073,11 @@ bb_o=$bb_incdir/have_agar_math.h
 echo '#ifndef HAVE_AGAR_MATH' >$bb_o
 echo "#define HAVE_AGAR_MATH \"$HAVE_AGAR_MATH\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_AGAR_MATH\"] = \"$HAVE_AGAR_MATH\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_AGAR_MATH=no
 echo '#undef HAVE_AGAR_MATH' >$bb_incdir/have_agar_math.h
-echo 'hdefs["HAVE_AGAR_MATH"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
@@ -2152,14 +2086,12 @@ if [ "${HAVE_AGAR_MATH}" = "no" ]; then
 AGAR_MATH_CFLAGS=""
 AGAR_MATH_LIBS=""
 echo '#undef HAVE_AGAR_MATH' >$bb_incdir/have_agar_math.h
-echo 'hdefs["HAVE_AGAR_MATH"] = nil' >>configure.lua
 fi
 else
 HAVE_AGAR_MATH="no"
 AGAR_MATH_CFLAGS=""
 AGAR_MATH_LIBS=""
 echo '#undef HAVE_AGAR_MATH' >$bb_incdir/have_agar_math.h
-echo 'hdefs["HAVE_AGAR_MATH"] = nil' >>configure.lua
 fi
 # END agar-math
 $ECHO_N 'checking for Agar-VG...'
@@ -2378,13 +2310,11 @@ bb_o=$bb_incdir/have_agar_vg.h
 echo '#ifndef HAVE_AGAR_VG' >$bb_o
 echo "#define HAVE_AGAR_VG \"$HAVE_AGAR_VG\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_AGAR_VG\"] = \"$HAVE_AGAR_VG\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_AGAR_VG=no
 echo '#undef HAVE_AGAR_VG' >$bb_incdir/have_agar_vg.h
-echo 'hdefs["HAVE_AGAR_VG"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
@@ -2393,14 +2323,12 @@ if [ "${HAVE_AGAR_VG}" = "no" ]; then
 AGAR_VG_CFLAGS=""
 AGAR_VG_LIBS=""
 echo '#undef HAVE_AGAR_VG' >$bb_incdir/have_agar_vg.h
-echo 'hdefs["HAVE_AGAR_VG"] = nil' >>configure.lua
 fi
 else
 HAVE_AGAR_VG="no"
 AGAR_VG_CFLAGS=""
 AGAR_VG_LIBS=""
 echo '#undef HAVE_AGAR_VG' >$bb_incdir/have_agar_vg.h
-echo 'hdefs["HAVE_AGAR_VG"] = nil' >>configure.lua
 fi
 # END agar-vg
 $ECHO_N 'checking for Agar-AU...'
@@ -2613,13 +2541,11 @@ bb_o=$bb_incdir/have_agar_au.h
 echo '#ifndef HAVE_AGAR_AU' >$bb_o
 echo "#define HAVE_AGAR_AU \"$HAVE_AGAR_AU\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_AGAR_AU\"] = \"$HAVE_AGAR_AU\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_AGAR_AU=no
 echo '#undef HAVE_AGAR_AU' >$bb_incdir/have_agar_au.h
-echo 'hdefs["HAVE_AGAR_AU"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
@@ -2628,14 +2554,12 @@ if [ "${HAVE_AGAR_AU}" = "no" ]; then
 AGAR_AU_CFLAGS=""
 AGAR_AU_LIBS=""
 echo '#undef HAVE_AGAR_AU' >$bb_incdir/have_agar_au.h
-echo 'hdefs["HAVE_AGAR_AU"] = nil' >>configure.lua
 fi
 else
 HAVE_AGAR_AU="no"
 AGAR_AU_CFLAGS=""
 AGAR_AU_LIBS=""
 echo '#undef HAVE_AGAR_AU' >$bb_incdir/have_agar_au.h
-echo 'hdefs["HAVE_AGAR_AU"] = nil' >>configure.lua
 fi
 # END agar-au
 $ECHO_N 'checking for the rand48(3) family of functions...'
@@ -2678,13 +2602,11 @@ bb_o=$bb_incdir/have_rand48.h
 echo '#ifndef HAVE_RAND48' >$bb_o
 echo "#define HAVE_RAND48 \"$HAVE_RAND48\"" >>$bb_o
 echo '#endif' >>$bb_o
-echo "hdefs[\"HAVE_RAND48\"] = \"$HAVE_RAND48\"" >>configure.lua
 else
 echo 'no'
 echo '# no' >>config.log
 HAVE_RAND48=no
 echo '#undef HAVE_RAND48' >$bb_incdir/have_rand48.h
-echo 'hdefs["HAVE_RAND48"] = nil' >>configure.lua
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
@@ -2731,113 +2653,59 @@ fi
 CFLAGS="$CFLAGS -I$BLD"
 CXXFLAGS="$CXXFLAGS -I$BLD"
 echo "AGAR_AU_CFLAGS=$AGAR_AU_CFLAGS" >>Makefile.config
-echo "mdefs[\"AGAR_AU_CFLAGS\"] = \"$AGAR_AU_CFLAGS\"" >>configure.lua
 echo "AGAR_AU_LIBS=$AGAR_AU_LIBS" >>Makefile.config
-echo "mdefs[\"AGAR_AU_LIBS\"] = \"$AGAR_AU_LIBS\"" >>configure.lua
 echo "AGAR_CFLAGS=$AGAR_CFLAGS" >>Makefile.config
-echo "mdefs[\"AGAR_CFLAGS\"] = \"$AGAR_CFLAGS\"" >>configure.lua
 echo "AGAR_LIBS=$AGAR_LIBS" >>Makefile.config
-echo "mdefs[\"AGAR_LIBS\"] = \"$AGAR_LIBS\"" >>configure.lua
 echo "AGAR_MATH_CFLAGS=$AGAR_MATH_CFLAGS" >>Makefile.config
-echo "mdefs[\"AGAR_MATH_CFLAGS\"] = \"$AGAR_MATH_CFLAGS\"" >>configure.lua
 echo "AGAR_MATH_LIBS=$AGAR_MATH_LIBS" >>Makefile.config
-echo "mdefs[\"AGAR_MATH_LIBS\"] = \"$AGAR_MATH_LIBS\"" >>configure.lua
 echo "AGAR_VG_CFLAGS=$AGAR_VG_CFLAGS" >>Makefile.config
-echo "mdefs[\"AGAR_VG_CFLAGS\"] = \"$AGAR_VG_CFLAGS\"" >>configure.lua
 echo "AGAR_VG_LIBS=$AGAR_VG_LIBS" >>Makefile.config
-echo "mdefs[\"AGAR_VG_LIBS\"] = \"$AGAR_VG_LIBS\"" >>configure.lua
 echo "BINDIR=$BINDIR" >>Makefile.config
-echo "mdefs[\"BINDIR\"] = \"$BINDIR\"" >>configure.lua
 echo "CC=$CC" >>Makefile.config
-echo "mdefs[\"CC\"] = \"$CC\"" >>configure.lua
 echo "CC_COMPILE=$CC_COMPILE" >>Makefile.config
-echo "mdefs[\"CC_COMPILE\"] = \"$CC_COMPILE\"" >>configure.lua
 echo "CFLAGS=$CFLAGS" >>Makefile.config
-echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
 echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
-echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
 echo "DATADIR=$DATADIR" >>Makefile.config
-echo "mdefs[\"DATADIR\"] = \"$DATADIR\"" >>configure.lua
 echo "ENABLE_NLS=$ENABLE_NLS" >>Makefile.config
-echo "mdefs[\"ENABLE_NLS\"] = \"$ENABLE_NLS\"" >>configure.lua
 echo "EXECSUFFIX=$EXECSUFFIX" >>Makefile.config
-echo "mdefs[\"EXECSUFFIX\"] = \"$EXECSUFFIX\"" >>configure.lua
 echo "HAVE_AGAR=$HAVE_AGAR" >>Makefile.config
-echo "mdefs[\"HAVE_AGAR\"] = \"$HAVE_AGAR\"" >>configure.lua
 echo "HAVE_AGAR_AU=$HAVE_AGAR_AU" >>Makefile.config
-echo "mdefs[\"HAVE_AGAR_AU\"] = \"$HAVE_AGAR_AU\"" >>configure.lua
 echo "HAVE_AGAR_MATH=$HAVE_AGAR_MATH" >>Makefile.config
-echo "mdefs[\"HAVE_AGAR_MATH\"] = \"$HAVE_AGAR_MATH\"" >>configure.lua
 echo "HAVE_AGAR_VG=$HAVE_AGAR_VG" >>Makefile.config
-echo "mdefs[\"HAVE_AGAR_VG\"] = \"$HAVE_AGAR_VG\"" >>configure.lua
 echo "HAVE_CC=$HAVE_CC" >>Makefile.config
-echo "mdefs[\"HAVE_CC\"] = \"$HAVE_CC\"" >>configure.lua
 echo "HAVE_CC65=$HAVE_CC65" >>Makefile.config
-echo "mdefs[\"HAVE_CC65\"] = \"$HAVE_CC65\"" >>configure.lua
 echo "HAVE_CC_ASM=$HAVE_CC_ASM" >>Makefile.config
-echo "mdefs[\"HAVE_CC_ASM\"] = \"$HAVE_CC_ASM\"" >>configure.lua
 echo "HAVE_CC_CLANG=$HAVE_CC_CLANG" >>Makefile.config
-echo "mdefs[\"HAVE_CC_CLANG\"] = \"$HAVE_CC_CLANG\"" >>configure.lua
 echo "HAVE_CC_GCC=$HAVE_CC_GCC" >>Makefile.config
-echo "mdefs[\"HAVE_CC_GCC\"] = \"$HAVE_CC_GCC\"" >>configure.lua
 echo "HAVE_CC_WARNINGS=$HAVE_CC_WARNINGS" >>Makefile.config
-echo "mdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
 echo "HAVE_CYGWIN=$HAVE_CYGWIN" >>Makefile.config
-echo "mdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
 echo "HAVE_EMCC=$HAVE_EMCC" >>Makefile.config
-echo "mdefs[\"HAVE_EMCC\"] = \"$HAVE_EMCC\"" >>configure.lua
 echo "HAVE_GETTEXT=$HAVE_GETTEXT" >>Makefile.config
-echo "mdefs[\"HAVE_GETTEXT\"] = \"$HAVE_GETTEXT\"" >>configure.lua
 echo "HAVE_LD_NO_UNDEFINED=$HAVE_LD_NO_UNDEFINED" >>Makefile.config
-echo "mdefs[\"HAVE_LD_NO_UNDEFINED\"] = \"$HAVE_LD_NO_UNDEFINED\"" >>configure.lua
 echo "HAVE_LD_STATIC_LIBGCC=$HAVE_LD_STATIC_LIBGCC" >>Makefile.config
-echo "mdefs[\"HAVE_LD_STATIC_LIBGCC\"] = \"$HAVE_LD_STATIC_LIBGCC\"" >>configure.lua
 echo "LIBDIR=$LIBDIR" >>Makefile.config
-echo "mdefs[\"LIBDIR\"] = \"$LIBDIR\"" >>configure.lua
 echo "LIBEXECDIR=$LIBEXECDIR" >>Makefile.config
-echo "mdefs[\"LIBEXECDIR\"] = \"$LIBEXECDIR\"" >>configure.lua
 echo "LIBTOOLOPTS_SHARED=$LIBTOOLOPTS_SHARED" >>Makefile.config
-echo "mdefs[\"LIBTOOLOPTS_SHARED\"] = \"$LIBTOOLOPTS_SHARED\"" >>configure.lua
 echo "LOCALEDIR=$LOCALEDIR" >>Makefile.config
-echo "mdefs[\"LOCALEDIR\"] = \"$LOCALEDIR\"" >>configure.lua
 echo "MANDIR=$MANDIR" >>Makefile.config
-echo "mdefs[\"MANDIR\"] = \"$MANDIR\"" >>configure.lua
 echo "MODULEDIR=$MODULEDIR" >>Makefile.config
-echo "mdefs[\"MODULEDIR\"] = \"$MODULEDIR\"" >>configure.lua
 echo "PACKAGE=$PACKAGE" >>Makefile.config
-echo "mdefs[\"PACKAGE\"] = \"$PACKAGE\"" >>configure.lua
 echo "PATH_SEPARATOR=$PATH_SEPARATOR" >>Makefile.config
-echo "mdefs[\"PATH_SEPARATOR\"] = \"$PATH_SEPARATOR\"" >>configure.lua
 echo "PICFLAGS=$PICFLAGS" >>Makefile.config
-echo "mdefs[\"PICFLAGS\"] = \"$PICFLAGS\"" >>configure.lua
 echo "PKGCONFIG=$PKGCONFIG" >>Makefile.config
-echo "mdefs[\"PKGCONFIG\"] = \"$PKGCONFIG\"" >>configure.lua
 echo "PKGCONFIG_LIBDIR=$PKGCONFIG_LIBDIR" >>Makefile.config
-echo "mdefs[\"PKGCONFIG_LIBDIR\"] = \"$PKGCONFIG_LIBDIR\"" >>configure.lua
 echo "PROG_BUNDLE=$PROG_BUNDLE" >>Makefile.config
-echo "mdefs[\"PROG_BUNDLE\"] = \"$PROG_BUNDLE\"" >>configure.lua
 echo "PROG_CLI_FLAGS=$PROG_CLI_FLAGS" >>Makefile.config
-echo "mdefs[\"PROG_CLI_FLAGS\"] = \"$PROG_CLI_FLAGS\"" >>configure.lua
 echo "PROG_GUI_FLAGS=$PROG_GUI_FLAGS" >>Makefile.config
-echo "mdefs[\"PROG_GUI_FLAGS\"] = \"$PROG_GUI_FLAGS\"" >>configure.lua
 echo "PROG_PREFIX=$PROG_PREFIX" >>Makefile.config
-echo "mdefs[\"PROG_PREFIX\"] = \"$PROG_PREFIX\"" >>configure.lua
 echo "PROG_SUFFIX=$PROG_SUFFIX" >>Makefile.config
-echo "mdefs[\"PROG_SUFFIX\"] = \"$PROG_SUFFIX\"" >>configure.lua
 echo "PROG_TRANSFORM=$PROG_TRANSFORM" >>Makefile.config
-echo "mdefs[\"PROG_TRANSFORM\"] = \"$PROG_TRANSFORM\"" >>configure.lua
 echo "SRCS_AUDIO=$SRCS_AUDIO" >>Makefile.config
-echo "mdefs[\"SRCS_AUDIO\"] = \"$SRCS_AUDIO\"" >>configure.lua
 echo "SRCS_MATH=$SRCS_MATH" >>Makefile.config
-echo "mdefs[\"SRCS_MATH\"] = \"$SRCS_MATH\"" >>configure.lua
 echo "STATEDIR=$STATEDIR" >>Makefile.config
-echo "mdefs[\"STATEDIR\"] = \"$STATEDIR\"" >>configure.lua
 echo "SYSCONFDIR=$SYSCONFDIR" >>Makefile.config
-echo "mdefs[\"SYSCONFDIR\"] = \"$SYSCONFDIR\"" >>configure.lua
 echo "VERSION=$VERSION" >>Makefile.config
-echo "mdefs[\"VERSION\"] = \"$VERSION\"" >>configure.lua
 echo "WNO_UNINITIALIZED=$WNO_UNINITIALIZED" >>Makefile.config
-echo "mdefs[\"WNO_UNINITIALIZED\"] = \"$WNO_UNINITIALIZED\"" >>configure.lua
 if [ "${srcdir}" != '' ]; then
 	$ECHO_N "preparing build environment (source in ${srcdir})..."
 	${PERL} ${SRC}/mk/mkconcurrent.pl ${SRC}
