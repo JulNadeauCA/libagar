@@ -10,7 +10,6 @@
 #include <agar/math/m.h>
 #include <agar/math/m_gui.h>
 
-#include <agar/rg.h>
 #include <agar/vg.h>
 
 #include <iostream>

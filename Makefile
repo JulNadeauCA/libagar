@@ -40,7 +40,7 @@ includes:
 
 cleandir-config:
 	rm -fR include config 
-	rm -f Makefile.config config.log configure.lua .projfiles.out .projfiles2.out
+	rm -f Makefile.config config.log .projfiles.out .projfiles2.out
 	touch Makefile.config
 	-(cd tools && ${MAKE} cleandir)
 	find . -name premake.lua -exec rm -f {} \;
@@ -99,8 +99,6 @@ install-config:
 	@${SUDO} ${INSTALL_DATA} ${SRCDIR}/mk/agar.m4 ${DESTDIR}${PREFIX}/share/aclocal
 	@echo "${INSTALL_DATA} Makefile.config ${DATADIR}/agar.mk"
 	@${SUDO} ${INSTALL_DATA} Makefile.config ${DESTDIR}${DATADIR}/agar.mk
-	@echo "${INSTALL_DATA} configure.lua ${DATADIR}/agar.lua"
-	@${SUDO} ${INSTALL_DATA} configure.lua ${DESTDIR}${DATADIR}/agar.lua
 
 deinstall-config:
 	@for F in ${AVAIL_CONFIGSCRIPTS}; do \
@@ -115,7 +113,7 @@ deinstall-config:
 	fi
 	@echo "${DEINSTALL_DATA} ${PREFIX}/share/aclocal/agar.m4"
 	@${SUDO} ${DEINSTALL_DATA} ${DESTDIR}${PREFIX}/share/aclocal/agar.m4
-	@for F in agar.mk agar.lua; do \
+	@for F in agar.mk; do \
 		echo "${DEINSTALL_DATA} ${DATADIR}/$$F"; \
 		${SUDO} ${DEINSTALL_DATA} ${DESTDIR}${DATADIR}/$$F; \
 	done
