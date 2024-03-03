@@ -66,7 +66,5 @@ DATAFILES= agar.png agar64.png agar-index.png agar.bmp agar-1.bmp agar-2.bmp \
 
 CLEANFILES+=	agar-index-save.png agar-save.png axe-save.png pepe-save.jpg
 
-MKCONFIGURE_FLAGS=	--output-cmake=CMakeChecks.cmake
-
 include ${TOP}/mk/build.prog.mk
 include ${TOP}/mk/build.man.mk

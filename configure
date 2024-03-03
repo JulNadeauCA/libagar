@@ -8447,25 +8447,17 @@ rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 # END mprotect
 CFLAGS="$CFLAGS -D_AGAR_INTERNAL"
-CXXFLAGS="$CXXFLAGS -D_AGAR_INTERNAL"
 CFLAGS="$CFLAGS -D_DEFAULT_SOURCE"
-CXXFLAGS="$CXXFLAGS -D_DEFAULT_SOURCE"
 CFLAGS="$CFLAGS -D_BSD_SOURCE"
-CXXFLAGS="$CXXFLAGS -D_BSD_SOURCE"
 if [ "${enable_warnings}" = 'yes' ]
  then
 CFLAGS="$CFLAGS -Wall"
-CXXFLAGS="$CXXFLAGS -Wall"
 CFLAGS="$CFLAGS -Werror"
-CXXFLAGS="$CXXFLAGS -Werror"
 CFLAGS="$CFLAGS -Wmissing-prototypes"
-CXXFLAGS="$CXXFLAGS -Wmissing-prototypes"
 CFLAGS="$CFLAGS -Wno-switch"
-CXXFLAGS="$CXXFLAGS -Wno-switch"
 	case "${host}" in
 	*-*-darwin*)
 CFLAGS="$CFLAGS -Wno-deprecated-declarations"
-CXXFLAGS="$CXXFLAGS -Wno-deprecated-declarations"
 		;;
 	esac
 fi
@@ -13689,7 +13681,6 @@ echo '#undef AG_THREADS' >$bb_incdir/ag_threads.h
 	if [ "${enable_warnings}" = 'yes' ]
  then
 CFLAGS="$CFLAGS -Wno-unused"
-CXXFLAGS="$CXXFLAGS -Wno-unused"
 	fi
 fi
 if [ "${enable_nls}" = 'yes' ]
@@ -15266,7 +15257,6 @@ else
 	echo 'done'
 fi
 CFLAGS="$CFLAGS -I$BLD/include"
-CXXFLAGS="$CXXFLAGS -I$BLD/include"
 config_script_out="agar-core-config"
 config_script_cflags="-I${INCLDIR} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${ICONV_CFLAGS}"
 if [ "${HAVE_CC65}" = "yes" ]; then
@@ -16474,7 +16464,6 @@ echo "CLOCK_CFLAGS=$CLOCK_CFLAGS" >>Makefile.config
 echo "CLOCK_LIBS=$CLOCK_LIBS" >>Makefile.config
 echo "COCOA_CFLAGS=$COCOA_CFLAGS" >>Makefile.config
 echo "COCOA_LIBS=$COCOA_LIBS" >>Makefile.config
-echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
 echo "DATADIR=$DATADIR" >>Makefile.config
 echo "DB4_CFLAGS=$DB4_CFLAGS" >>Makefile.config
 echo "DB4_LIBS=$DB4_LIBS" >>Makefile.config

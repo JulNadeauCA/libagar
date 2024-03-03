@@ -451,20 +451,10 @@ echo '    --enable-warnings           Suggested compiler warnings [no]'
 echo '    --enable-debug              General debugging [no]'
 echo ''
 echo 'Some influential environment variables:'
-echo '    ADA          Ada compiler command'
-echo '    ADABFLAGS    Ada binder flags'
-echo '    ADABIND      Ada binder command'
-echo '    ADAFLAGS     Ada compiler flags'
-echo '    ADALFLAGS    Ada linker flags'
-echo '    ADALINK      Ada linker command'
-echo '    ADAMKDEP     Ada dependency output command'
 echo '    CC           C compiler command'
 echo '    CFLAGS       C compiler flags'
 echo '    CPP          C preprocessor'
 echo '    CPPFLAGS     C preprocessor flags'
-echo '    CXX          C++ compiler command'
-echo '    CXXCPP       C++ preprocessor'
-echo '    CXXFLAGS     C++ compiler flags'
 echo '    LDFLAGS      C linker flags'
 echo '    LIBS         Libraries to link against'
 exit 1
@@ -539,62 +529,6 @@ fi
 
 $ECHO_N 'env ' >>config.log
 $ECHO_N 'env ' >>config.status
-if [ "$ADA" != "" ]; then
-$ECHO_N 'ADA="' >> config.log
-$ECHO_N 'ADA="' >> config.status
-$ECHO_N "${ADA}" >> config.log
-$ECHO_N "${ADA}" >> config.status
-$ECHO_N '" ' >> config.log
-$ECHO_N '" ' >> config.status
-fi
-if [ "$ADABFLAGS" != "" ]; then
-$ECHO_N 'ADABFLAGS="' >> config.log
-$ECHO_N 'ADABFLAGS="' >> config.status
-$ECHO_N "${ADABFLAGS}" >> config.log
-$ECHO_N "${ADABFLAGS}" >> config.status
-$ECHO_N '" ' >> config.log
-$ECHO_N '" ' >> config.status
-fi
-if [ "$ADABIND" != "" ]; then
-$ECHO_N 'ADABIND="' >> config.log
-$ECHO_N 'ADABIND="' >> config.status
-$ECHO_N "${ADABIND}" >> config.log
-$ECHO_N "${ADABIND}" >> config.status
-$ECHO_N '" ' >> config.log
-$ECHO_N '" ' >> config.status
-fi
-if [ "$ADAFLAGS" != "" ]; then
-$ECHO_N 'ADAFLAGS="' >> config.log
-$ECHO_N 'ADAFLAGS="' >> config.status
-$ECHO_N "${ADAFLAGS}" >> config.log
-$ECHO_N "${ADAFLAGS}" >> config.status
-$ECHO_N '" ' >> config.log
-$ECHO_N '" ' >> config.status
-fi
-if [ "$ADALFLAGS" != "" ]; then
-$ECHO_N 'ADALFLAGS="' >> config.log
-$ECHO_N 'ADALFLAGS="' >> config.status
-$ECHO_N "${ADALFLAGS}" >> config.log
-$ECHO_N "${ADALFLAGS}" >> config.status
-$ECHO_N '" ' >> config.log
-$ECHO_N '" ' >> config.status
-fi
-if [ "$ADALINK" != "" ]; then
-$ECHO_N 'ADALINK="' >> config.log
-$ECHO_N 'ADALINK="' >> config.status
-$ECHO_N "${ADALINK}" >> config.log
-$ECHO_N "${ADALINK}" >> config.status
-$ECHO_N '" ' >> config.log
-$ECHO_N '" ' >> config.status
-fi
-if [ "$ADAMKDEP" != "" ]; then
-$ECHO_N 'ADAMKDEP="' >> config.log
-$ECHO_N 'ADAMKDEP="' >> config.status
-$ECHO_N "${ADAMKDEP}" >> config.log
-$ECHO_N "${ADAMKDEP}" >> config.status
-$ECHO_N '" ' >> config.log
-$ECHO_N '" ' >> config.status
-fi
 if [ "$CC" != "" ]; then
 $ECHO_N 'CC="' >> config.log
 $ECHO_N 'CC="' >> config.status
@@ -624,30 +558,6 @@ $ECHO_N 'CPPFLAGS="' >> config.log
 $ECHO_N 'CPPFLAGS="' >> config.status
 $ECHO_N "${CPPFLAGS}" >> config.log
 $ECHO_N "${CPPFLAGS}" >> config.status
-$ECHO_N '" ' >> config.log
-$ECHO_N '" ' >> config.status
-fi
-if [ "$CXX" != "" ]; then
-$ECHO_N 'CXX="' >> config.log
-$ECHO_N 'CXX="' >> config.status
-$ECHO_N "${CXX}" >> config.log
-$ECHO_N "${CXX}" >> config.status
-$ECHO_N '" ' >> config.log
-$ECHO_N '" ' >> config.status
-fi
-if [ "$CXXCPP" != "" ]; then
-$ECHO_N 'CXXCPP="' >> config.log
-$ECHO_N 'CXXCPP="' >> config.status
-$ECHO_N "${CXXCPP}" >> config.log
-$ECHO_N "${CXXCPP}" >> config.status
-$ECHO_N '" ' >> config.log
-$ECHO_N '" ' >> config.status
-fi
-if [ "$CXXFLAGS" != "" ]; then
-$ECHO_N 'CXXFLAGS="' >> config.log
-$ECHO_N 'CXXFLAGS="' >> config.status
-$ECHO_N "${CXXFLAGS}" >> config.log
-$ECHO_N "${CXXFLAGS}" >> config.status
 $ECHO_N '" ' >> config.log
 $ECHO_N '" ' >> config.status
 fi
@@ -2613,25 +2523,16 @@ rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
 fi
 # END rand48
 CFLAGS="$CFLAGS -I$SRC"
-CXXFLAGS="$CXXFLAGS -I$SRC"
 CFLAGS="$CFLAGS -D_USE_AGAR_STD"
-CXXFLAGS="$CXXFLAGS -D_USE_AGAR_STD"
 CFLAGS="$CFLAGS -D_USE_AGAR_QUEUE"
-CXXFLAGS="$CXXFLAGS -D_USE_AGAR_QUEUE"
 CFLAGS="$CFLAGS -D_USE_AGAR_TYPES"
-CXXFLAGS="$CXXFLAGS -D_USE_AGAR_TYPES"
 CFLAGS="$CFLAGS -D_USE_AGAR_ATTRIBUTES"
-CXXFLAGS="$CXXFLAGS -D_USE_AGAR_ATTRIBUTES"
 CFLAGS="$CFLAGS -D_USE_AGAR_NULLABILITY"
-CXXFLAGS="$CXXFLAGS -D_USE_AGAR_NULLABILITY"
 if [ "${enable_warnings}" = "yes" ]
  then
 CFLAGS="$CFLAGS -Wall"
-CXXFLAGS="$CXXFLAGS -Wall"
 CFLAGS="$CFLAGS -Werror"
-CXXFLAGS="$CXXFLAGS -Werror"
 CFLAGS="$CFLAGS -Wmissing-prototypes"
-CXXFLAGS="$CXXFLAGS -Wmissing-prototypes"
 WNO_UNINITIALIZED="-Wno-uninitialized"
 else
 WNO_UNINITIALIZED=""
@@ -2651,7 +2552,6 @@ if [ "${HAVE_AGAR_MATH}" = "yes" ]
 SRCS_MATH="${SRCS_MATH} bezier.c bezier_widget.c math.c plotting.c string.c"
 fi
 CFLAGS="$CFLAGS -I$BLD"
-CXXFLAGS="$CXXFLAGS -I$BLD"
 echo "AGAR_AU_CFLAGS=$AGAR_AU_CFLAGS" >>Makefile.config
 echo "AGAR_AU_LIBS=$AGAR_AU_LIBS" >>Makefile.config
 echo "AGAR_CFLAGS=$AGAR_CFLAGS" >>Makefile.config
@@ -2664,7 +2564,6 @@ echo "BINDIR=$BINDIR" >>Makefile.config
 echo "CC=$CC" >>Makefile.config
 echo "CC_COMPILE=$CC_COMPILE" >>Makefile.config
 echo "CFLAGS=$CFLAGS" >>Makefile.config
-echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
 echo "DATADIR=$DATADIR" >>Makefile.config
 echo "ENABLE_NLS=$ENABLE_NLS" >>Makefile.config
 echo "EXECSUFFIX=$EXECSUFFIX" >>Makefile.config
