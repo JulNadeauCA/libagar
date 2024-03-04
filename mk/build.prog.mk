@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2023 Julien Nadeau Carriere <vedge@csoft.net>
+# Copyright (c) 2001-2024 Julien Nadeau Carriere <vedge@csoft.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -59,7 +59,8 @@ CPPFLAGS?=
 CXXFLAGS?=
 LFLAGS?=
 LIBL?=		-ll
-MKDEP=		sh ${TOP}/mk/mkdep
+MKDEP_CC?=	sh ${TOP}/mk/mkdep
+MKDEP_CXX?=	sh ${TOP}/mk/mkdep-cxx
 MKDEP_ADA?=	gnatmake
 MKDEP_ADAFLAGS?=-M -u -v
 OBJCFLAGS?=
@@ -199,6 +200,7 @@ depend:	prog-tags depend-subdir
 	if [ "$$_srcs" != "" -a "$$_srcs" != "none" ]; then \
 	    _srcs_ada=""; \
 	    _srcs_c=""; \
+	    _srcs_cxx=""; \
             for F in $$_srcs; do \
 	        if echo $$F | grep -q '.ad[bs]$$'; then \
 		    FB=`echo "$$F" | sed 's/.ad[bs]$$//'`; \
@@ -211,21 +213,33 @@ depend:	prog-tags depend-subdir
 			fi; \
 	            fi; \
 		    _srcs_ada="$$_srcs_ada $$F"; \
+	        elif echo $$F | grep -q '.cpp$$'; then \
+		    _srcs_cxx="$$_srcs_cxx $$F"; \
 	        else \
 		    _srcs_c="$$_srcs_c $$F"; \
 		fi; \
 	    done; \
 	    if [ "${BUILD}" != "" ]; then \
 	        export _mkdep_cflags="${CFLAGS} -I${BUILD}"; \
+	        export _mkdep_cxxflags="${CXXFLAGS} -I${BUILD}"; \
 	    else \
 	        export _mkdep_cflags="${CFLAGS}"; \
+	        export _mkdep_cxxflags="${CXXFLAGS}"; \
 	    fi; \
 	    if [ "$$_srcs_c" != "" ]; then \
-	        echo "${MKDEP} $$_mkdep_cflags $$_srcs_c"; \
-	        env CC=${CC} ${MKDEP} $$_mkdep_cflags $$_srcs_c; \
+	        echo "${MKDEP_CC} $$_mkdep_cflags $$_srcs_c"; \
+	        env CC=${CC} ${MKDEP_CC} $$_mkdep_cflags $$_srcs_c; \
 	        if [ "${USE_LIBTOOL}" = "Yes" ]; then \
-	            echo "${MKDEP} -a -l $$_mkdep_cflags $$_srcs_c"; \
-	            env CC=${CC} ${MKDEP} -a -l $$_mkdep_cflags $$_srcs_c; \
+	            echo "${MKDEP_CC} -a -l $$_mkdep_cflags $$_srcs_c"; \
+	            env CC=${CC} ${MKDEP_CC} -a -l $$_mkdep_cflags $$_srcs_c; \
+	        fi; \
+	    fi; \
+	    if [ "$$_srcs_cxx" != "" ]; then \
+	        echo "${MKDEP_CXX} $$_mkdep_cxxflags $$_srcs_cxx"; \
+	        env CXX=${CXX} ${MKDEP_CXX} $$_mkdep_cxxflags $$_srcs_cxx; \
+	        if [ "${USE_LIBTOOL}" = "Yes" ]; then \
+	            echo "${MKDEP_CXX} -a -l $$_mkdep_cxxflags $$_srcs_cxx"; \
+	            env CXX=${CXX} ${MKDEP_CXX} -a -l $$_mkdep_cxxflags $$_srcs_cxx; \
 	        fi; \
 	    fi; \
 	    if [ "$$_srcs_ada" != "" ]; then \
@@ -291,6 +305,14 @@ ${PROG}: ${SRCS_GENERATED} _prog_objs ${OBJS}
 	                    break; \
 			fi; \
 	            done; \
+		    if [ "$$_linker_type" != "ADA" ]; then \
+                        for F in ${SRCS}; do \
+	                    if echo "$$F" | grep -q '.cpp$$'; then \
+		                _linker_type="CXX"; \
+	                        break; \
+			    fi; \
+	                done; \
+	            fi; \
 	        fi; \
 	    fi; \
 	    _objs="${OBJS}"; \
@@ -332,6 +354,10 @@ ${PROG}: ${SRCS_GENERATED} _prog_objs ${OBJS}
 	    CL65) \
 	        echo "cl65 ${LDFLAGS} $$_prog_ldflags -Ln ${PROG}.lbl -m ${PROG}.map -o ${PROG} $$_objs ${LIBS}"; \
 	        cl65 ${LDFLAGS} $$_prog_ldflags -Ln ${PROG}.lbl -m ${PROG}.map -o ${PROG} $$_objs ${LIBS}; \
+	        ;; \
+	    CXX) \
+	        echo "${CXX} ${CXXFLAGS} ${LDFLAGS} $$_prog_ldflags -o ${PROG} $$_objs ${LIBS}"; \
+	        ${CXX} ${CXXFLAGS} ${LDFLAGS} $$_prog_ldflags -o ${PROG} $$_objs ${LIBS} 1>/dev/null; \
 	        ;; \
 	    *) \
 	        echo "${CC} ${CFLAGS} ${LDFLAGS} $$_prog_ldflags -o ${PROG} $$_objs ${LIBS}"; \
@@ -414,7 +440,7 @@ clean-prog:
 	fi
 
 cleandir-prog:
-	rm -f *.core config.log config.status configure.lua tags
+	rm -f *.core config.log config.status tags
 	if [ -e "./config/prefix.h" ]; then rm -fr ./config; fi
 	if [ -e "Makefile.config" ]; then echo >Makefile.config; fi
 	@if [ "${CONFIGSCRIPTS}" != "" ]; then \
@@ -619,6 +645,5 @@ configure-prog:
 .PHONY: configure-prog _prog_objs prog-tags none
 
 include ${TOP}/mk/build.common.mk
-include ${TOP}/mk/build.proj.mk
 include ${TOP}/mk/build.subdir.mk
 include .depend

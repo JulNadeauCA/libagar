@@ -1547,6 +1547,7 @@ $ECHO_N 'checking for Agar...'
 $ECHO_N '# checking for Agar...' >>config.log
 # BEGIN agar(1.6.0 ${prefix_agar})
 AGAR_VERSION=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar}" != "" ]; then
 if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_VERSION=`${prefix_agar}/bin/agar-config --version`
@@ -1624,6 +1625,7 @@ if [ "${MK_VERSION_OK}" = "yes" ]; then
 $ECHO_N 'checking whether Agar works...'
 $ECHO_N '# checking whether Agar works...' >>config.log
 AGAR_CFLAGS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar}" != "" ]; then
 if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
@@ -1649,6 +1651,7 @@ done
 IFS=$bb_save_IFS
 fi
 AGAR_LIBS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar}" != "" ]; then
 if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
@@ -1766,6 +1769,7 @@ $ECHO_N 'checking for Agar-VG...'
 $ECHO_N '# checking for Agar-VG...' >>config.log
 # BEGIN agar-vg(1.6.0 ${prefix_agar_vg})
 AGAR_VG_VERSION=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar_vg}" != "" ]; then
 if [ -x "${prefix_agar_vg}/bin/agar-vg-config" -a ! -d "${prefix_agar_vg}/bin/agar-vg-config" ]; then
 AGAR_VG_VERSION=`${prefix_agar_vg}/bin/agar-vg-config --version`
@@ -1843,6 +1847,7 @@ if [ "${MK_VERSION_OK}" = "yes" ]; then
 $ECHO_N 'checking whether agar-vg works...'
 $ECHO_N '# checking whether agar-vg works...' >>config.log
 AGAR_CFLAGS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar_vg}" != "" ]; then
 if [ -x "${prefix_agar_vg}/bin/agar-config" -a ! -d "${prefix_agar_vg}/bin/agar-config" ]; then
 AGAR_CFLAGS=`${prefix_agar_vg}/bin/agar-config --cflags`
@@ -1868,6 +1873,7 @@ done
 IFS=$bb_save_IFS
 fi
 AGAR_LIBS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar_vg}" != "" ]; then
 if [ -x "${prefix_agar_vg}/bin/agar-config" -a ! -d "${prefix_agar_vg}/bin/agar-config" ]; then
 AGAR_LIBS=`${prefix_agar_vg}/bin/agar-config --libs`
@@ -1893,6 +1899,7 @@ done
 IFS=$bb_save_IFS
 fi
 AGAR_VG_CFLAGS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar_vg}" != "" ]; then
 if [ -x "${prefix_agar_vg}/bin/agar-vg-config" -a ! -d "${prefix_agar_vg}/bin/agar-vg-config" ]; then
 AGAR_VG_CFLAGS=`${prefix_agar_vg}/bin/agar-vg-config --cflags`
@@ -1918,6 +1925,7 @@ done
 IFS=$bb_save_IFS
 fi
 AGAR_VG_LIBS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar_vg}" != "" ]; then
 if [ -x "${prefix_agar_vg}/bin/agar-vg-config" -a ! -d "${prefix_agar_vg}/bin/agar-vg-config" ]; then
 AGAR_VG_LIBS=`${prefix_agar_vg}/bin/agar-vg-config --libs`
@@ -2252,13 +2260,9 @@ exit 1
 fi
 fi
 CFLAGS="$CFLAGS -D_USE_AGAR_QUEUE"
-CXXFLAGS="$CXXFLAGS -D_USE_AGAR_QUEUE"
 CFLAGS="$CFLAGS -D_USE_AGAR_STD"
-CXXFLAGS="$CXXFLAGS -D_USE_AGAR_STD"
 CFLAGS="$CFLAGS -D_USE_AGAR_TYPES"
-CXXFLAGS="$CXXFLAGS -D_USE_AGAR_TYPES"
 CFLAGS="$CFLAGS -I$BLD"
-CXXFLAGS="$CXXFLAGS -I$BLD"
 echo "AGAR_CFLAGS=$AGAR_CFLAGS" >>Makefile.config
 echo "AGAR_LIBS=$AGAR_LIBS" >>Makefile.config
 echo "AGAR_VG_CFLAGS=$AGAR_VG_CFLAGS" >>Makefile.config
@@ -2267,7 +2271,6 @@ echo "BINDIR=$BINDIR" >>Makefile.config
 echo "CC=$CC" >>Makefile.config
 echo "CC_COMPILE=$CC_COMPILE" >>Makefile.config
 echo "CFLAGS=$CFLAGS" >>Makefile.config
-echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
 echo "DATADIR=$DATADIR" >>Makefile.config
 echo "ENABLE_NLS=$ENABLE_NLS" >>Makefile.config
 echo "EXECSUFFIX=$EXECSUFFIX" >>Makefile.config

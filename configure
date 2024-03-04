@@ -8641,6 +8641,7 @@ $ECHO_N '# checking for SDL 2.0...' >>config.log
 # BEGIN sdl2(2.0.0 ${prefix_sdl2})
 if [ "${prefix_sdl2}" != "" ]; then
 SDL2_PREFIX=
+MK_EXEC_FOUND=No
 if [ "${prefix_sdl2}" != "" ]; then
 if [ -x "${prefix_sdl2}/bin/sdl2-config" -a ! -d "${prefix_sdl2}/bin/sdl2-config" ]; then
 SDL2_PREFIX=`${prefix_sdl2}/bin/sdl2-config --prefix`
@@ -8666,6 +8667,7 @@ done
 IFS=$bb_save_IFS
 fi
 SDL2_VERSION=
+MK_EXEC_FOUND=No
 if [ "${prefix_sdl2}" != "" ]; then
 if [ -x "${prefix_sdl2}/bin/sdl2-config" -a ! -d "${prefix_sdl2}/bin/sdl2-config" ]; then
 SDL2_VERSION=`${prefix_sdl2}/bin/sdl2-config --version`
@@ -8691,6 +8693,7 @@ done
 IFS=$bb_save_IFS
 fi
 SDL2_CFLAGS=
+MK_EXEC_FOUND=No
 if [ "${prefix_sdl2}" != "" ]; then
 if [ -x "${prefix_sdl2}/bin/sdl2-config" -a ! -d "${prefix_sdl2}/bin/sdl2-config" ]; then
 SDL2_CFLAGS=`${prefix_sdl2}/bin/sdl2-config --cflags`
@@ -8716,6 +8719,7 @@ done
 IFS=$bb_save_IFS
 fi
 SDL2_LIBS=
+MK_EXEC_FOUND=No
 if [ "${prefix_sdl2}" != "" ]; then
 if [ -x "${prefix_sdl2}/bin/sdl2-config" -a ! -d "${prefix_sdl2}/bin/sdl2-config" ]; then
 SDL2_LIBS=`${prefix_sdl2}/bin/sdl2-config --libs`
@@ -8743,6 +8747,7 @@ fi
 else
 case "${host}" in
 *-*-darwin*)
+MK_EXEC_FOUND=No
 SDL2_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -8759,6 +8764,7 @@ fi
 done
 IFS=$bb_save_IFS
 if [ "${SDL2_VERSION}" != "" ]; then
+MK_EXEC_FOUND=No
 SDL2_PREFIX=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -8774,6 +8780,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL2_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -8789,6 +8796,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL2_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -8813,6 +8821,7 @@ SDL2_LIBS="-framework SDL2"
 fi
 ;;
 *)
+MK_EXEC_FOUND=No
 SDL2_PREFIX=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -8828,6 +8837,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL2_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -8843,6 +8853,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL2_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -8858,6 +8869,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL2_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -9104,6 +9116,7 @@ $ECHO_N '# checking for SDL 1.2...' >>config.log
 # BEGIN sdl(1.2.0 ${prefix_sdl})
 if [ "${prefix_sdl}" != "" ]; then
 SDL_PREFIX=
+MK_EXEC_FOUND=No
 if [ "${prefix_sdl}" != "" ]; then
 if [ -x "${prefix_sdl}/bin/sdl-config" -a ! -d "${prefix_sdl}/bin/sdl-config" ]; then
 SDL_PREFIX=`${prefix_sdl}/bin/sdl-config --prefix`
@@ -9129,6 +9142,7 @@ done
 IFS=$bb_save_IFS
 fi
 SDL_VERSION=
+MK_EXEC_FOUND=No
 if [ "${prefix_sdl}" != "" ]; then
 if [ -x "${prefix_sdl}/bin/sdl-config" -a ! -d "${prefix_sdl}/bin/sdl-config" ]; then
 SDL_VERSION=`${prefix_sdl}/bin/sdl-config --version`
@@ -9154,6 +9168,7 @@ done
 IFS=$bb_save_IFS
 fi
 SDL_CFLAGS=
+MK_EXEC_FOUND=No
 if [ "${prefix_sdl}" != "" ]; then
 if [ -x "${prefix_sdl}/bin/sdl-config" -a ! -d "${prefix_sdl}/bin/sdl-config" ]; then
 SDL_CFLAGS=`${prefix_sdl}/bin/sdl-config --cflags`
@@ -9179,6 +9194,7 @@ done
 IFS=$bb_save_IFS
 fi
 SDL_LIBS=
+MK_EXEC_FOUND=No
 if [ "${prefix_sdl}" != "" ]; then
 if [ -x "${prefix_sdl}/bin/sdl-config" -a ! -d "${prefix_sdl}/bin/sdl-config" ]; then
 SDL_LIBS=`${prefix_sdl}/bin/sdl-config --libs`
@@ -9206,6 +9222,7 @@ fi
 else
 case "${host}" in
 *-*-darwin*)
+MK_EXEC_FOUND=No
 SDL_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -9222,6 +9239,7 @@ fi
 done
 IFS=$bb_save_IFS
 if [ "${SDL_VERSION}" != "" ]; then
+MK_EXEC_FOUND=No
 SDL_PREFIX=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -9237,6 +9255,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -9252,6 +9271,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -9276,6 +9296,7 @@ SDL_LIBS="-framework SDL"
 fi
 ;;
 *-*-freebsd*)
+MK_EXEC_FOUND=No
 SDL_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -9292,6 +9313,7 @@ fi
 done
 IFS=$bb_save_IFS
 if [ "${SDL_VERSION}" != "" ]; then
+MK_EXEC_FOUND=No
 SDL_PREFIX=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -9307,6 +9329,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -9322,6 +9345,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -9338,6 +9362,7 @@ fi
 done
 IFS=$bb_save_IFS
 else
+MK_EXEC_FOUND=No
 SDL_PREFIX=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -9353,6 +9378,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -9368,6 +9394,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -9383,6 +9410,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -9401,6 +9429,7 @@ IFS=$bb_save_IFS
 fi
 ;;
 *)
+MK_EXEC_FOUND=No
 SDL_PREFIX=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -9416,6 +9445,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -9431,6 +9461,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -9446,6 +9477,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -11047,6 +11079,7 @@ fi
 FREETYPE_LIBS=`$PKGCONFIG freetype2 --libs 2>/dev/null`
 else
 FREETYPE_VERSION=
+MK_EXEC_FOUND=No
 if [ "${prefix_freetype}" != "" ]; then
 if [ -x "${prefix_freetype}/bin/freetype-config" -a ! -d "${prefix_freetype}/bin/freetype-config" ]; then
 FREETYPE_VERSION=`${prefix_freetype}/bin/freetype-config --version`
@@ -11072,6 +11105,7 @@ done
 IFS=$bb_save_IFS
 fi
 FREETYPE_CFLAGS=
+MK_EXEC_FOUND=No
 if [ "${prefix_freetype}" != "" ]; then
 if [ -x "${prefix_freetype}/bin/freetype-config" -a ! -d "${prefix_freetype}/bin/freetype-config" ]; then
 FREETYPE_CFLAGS=`${prefix_freetype}/bin/freetype-config --cflags`
@@ -11097,6 +11131,7 @@ done
 IFS=$bb_save_IFS
 fi
 FREETYPE_LIBS=
+MK_EXEC_FOUND=No
 if [ "${prefix_freetype}" != "" ]; then
 if [ -x "${prefix_freetype}/bin/freetype-config" -a ! -d "${prefix_freetype}/bin/freetype-config" ]; then
 FREETYPE_LIBS=`${prefix_freetype}/bin/freetype-config --libs`
@@ -11603,6 +11638,7 @@ $ECHO_N 'checking for libpng...'
 $ECHO_N '# checking for libpng...' >>config.log
 # BEGIN png(1.2.49 ${prefix_png})
 PNG_VERSION=
+MK_EXEC_FOUND=No
 if [ "${prefix_png}" != "" ]; then
 if [ -x "${prefix_png}/bin/libpng-config" -a ! -d "${prefix_png}/bin/libpng-config" ]; then
 PNG_VERSION=`${prefix_png}/bin/libpng-config --version`
@@ -11628,6 +11664,7 @@ done
 IFS=$bb_save_IFS
 fi
 PNG_CFLAGS=
+MK_EXEC_FOUND=No
 if [ "${prefix_png}" != "" ]; then
 if [ -x "${prefix_png}/bin/libpng-config" -a ! -d "${prefix_png}/bin/libpng-config" ]; then
 PNG_CFLAGS=`${prefix_png}/bin/libpng-config --cflags`
@@ -11653,6 +11690,7 @@ done
 IFS=$bb_save_IFS
 fi
 PNG_LOPTS=
+MK_EXEC_FOUND=No
 if [ "${prefix_png}" != "" ]; then
 if [ -x "${prefix_png}/bin/libpng-config" -a ! -d "${prefix_png}/bin/libpng-config" ]; then
 PNG_LOPTS=`${prefix_png}/bin/libpng-config --L_opts`
@@ -11678,6 +11716,7 @@ done
 IFS=$bb_save_IFS
 fi
 PNG_LIBS=
+MK_EXEC_FOUND=No
 if [ "${prefix_png}" != "" ]; then
 if [ -x "${prefix_png}/bin/libpng-config" -a ! -d "${prefix_png}/bin/libpng-config" ]; then
 PNG_LIBS=`${prefix_png}/bin/libpng-config --libs`
@@ -12846,6 +12885,7 @@ fi
 if [ "${MK_VERSION_OK}" = "yes" ]; then
 $ECHO_N 'checking whether MySQL works...'
 $ECHO_N '# checking whether MySQL works...' >>config.log
+MK_EXEC_FOUND=No
 MYSQL_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -12861,6 +12901,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 MYSQL_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR

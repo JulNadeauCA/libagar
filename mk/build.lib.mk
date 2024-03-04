@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2023 Julien Nadeau Carriere <vedge@csoft.net>
+# Copyright (c) 2001-2024 Julien Nadeau Carriere <vedge@csoft.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -63,7 +63,8 @@ CPPFLAGS?=
 CXXFLAGS?=
 LFLAGS?=
 LIBL?=		-ll
-MKDEP=		sh ${TOP}/mk/mkdep
+MKDEP_CC?=	sh ${TOP}/mk/mkdep
+MKDEP_CXX?=	sh ${TOP}/mk/mkdep-cxx
 MKDEP_ADA?=	gnatmake
 MKDEP_ADAFLAGS?=-M -u -v
 OBJCFLAGS?=
@@ -227,6 +228,7 @@ depend:	${SRCS_GENERATED} check-libtool lib-tags depend-subdir
 	if [ "$$_srcs" != "" -a "$$_srcs" != "none" ]; then \
 	    _srcs_ada=""; \
 	    _srcs_c=""; \
+	    _srcs_cxx=""; \
             for F in $$_srcs; do \
 	        if echo $$F | grep -q '.ad[bs]$$'; then \
 		    FB=`echo "$$F" | sed 's/.ad[bs]$$//'`; \
@@ -239,21 +241,33 @@ depend:	${SRCS_GENERATED} check-libtool lib-tags depend-subdir
 			fi; \
 	            fi; \
 		    _srcs_ada="$$_srcs_ada $$F"; \
+	        elif echo $$F | grep -q '.cpp$$'; then \
+		    _srcs_cxx="$$_srcs_cxx $$F"; \
 	        else \
 		    _srcs_c="$$_srcs_c $$F"; \
 		fi; \
 	    done; \
 	    if [ "${BUILD}" != "" ]; then \
 	        export _mkdep_cflags="${CFLAGS} -I${BUILD}"; \
+	        export _mkdep_cxxflags="${CXXFLAGS} -I${BUILD}"; \
 	    else \
 	        export _mkdep_cflags="${CFLAGS}"; \
+	        export _mkdep_cxxflags="${CXXFLAGS}"; \
 	    fi; \
 	    if [ "$$_srcs_c" != "" ]; then \
-	        echo "${MKDEP} $$_mkdep_cflags $$_srcs_c"; \
-	        env CC=${CC} ${MKDEP} $$_mkdep_cflags $$_srcs_c; \
+	        echo "${MKDEP_CC} $$_mkdep_cflags $$_srcs_c"; \
+	        env CC=${CC} ${MKDEP_CC} $$_mkdep_cflags $$_srcs_c; \
 	        if [ "${USE_LIBTOOL}" = "Yes" ]; then \
-	            echo "${MKDEP} -a -l $$_mkdep_cflags $$_srcs_c"; \
-	            env CC=${CC} ${MKDEP} -a -l $$_mkdep_cflags $$_srcs_c; \
+	            echo "${MKDEP_CC} -a -l $$_mkdep_cflags $$_srcs_c"; \
+	            env CC=${CC} ${MKDEP_CC} -a -l $$_mkdep_cflags $$_srcs_c; \
+	        fi; \
+	    fi; \
+	    if [ "$$_srcs_cxx" != "" ]; then \
+	        echo "${MKDEP_CXX} $$_mkdep_cxxflags $$_srcs_cxx"; \
+	        env CXX=${CXX} ${MKDEP_CXX} $$_mkdep_cxxflags $$_srcs_cxx; \
+	        if [ "${USE_LIBTOOL}" = "Yes" ]; then \
+	            echo "${MKDEP_CXX} -a -l $$_mkdep_cxxflags $$_srcs_cxx"; \
+	            env CXX=${CXX} ${MKDEP_CXX} -a -l $$_mkdep_cxxflags $$_srcs_cxx; \
 	        fi; \
 	    fi; \
 	    if [ "$$_srcs_ada" != "" ]; then \
@@ -358,7 +372,7 @@ lib${LIB}.so: ${SRCS_GENERATED} _lib_objs ${OBJS}
 	        _libout="lib${LIB}.${LIB_CURRENT}.dylib"; \
 	        _libnames="lib${LIB}.dylib"; \
 		;; \
-	    *-mingw*) \
+	    *-mingw* | *-cygwin*) \
 	        _libout="${LIB}.dll"; \
 	        _libnames=""; \
 		;; \
@@ -368,6 +382,27 @@ lib${LIB}.so: ${SRCS_GENERATED} _lib_objs ${OBJS}
 	        ;; \
 	    esac; \
 	    \
+	    _linker_type="${LINKER_TYPE}"; \
+	    if [ "$$_linker_type" = "" ]; then \
+	    	if [ "${HAVE_CC65}" = "yes" ]; then \
+		    _linker_type="CL65"; \
+		else \
+                    for F in ${SRCS}; do \
+	                if echo "$$F" | grep -q '.ad[bs]$$'; then \
+		            _linker_type="ADA"; \
+	                    break; \
+			fi; \
+	            done; \
+		    if [ "$$_linker_type" != "ADA" ]; then \
+                        for F in ${SRCS}; do \
+	                    if echo "$$F" | grep -q '.cpp$$'; then \
+		                _linker_type="CXX"; \
+	                        break; \
+			    fi; \
+	                done; \
+	            fi; \
+	        fi; \
+	    fi; \
 	    _objs="${OBJS}"; \
 	    if [ "$$_objs" = "" ]; then \
 	        for F in ${SRCS}; do \
@@ -380,28 +415,53 @@ lib${LIB}.so: ${SRCS_GENERATED} _lib_objs ${OBJS}
                 done; \
 	    fi; \
 	    \
-	    case "${HOST}" in \
-	    *-darwin*) \
-	        echo "${CC} -shared -o $$_libout -Wl,-rpath,${LIBDIR} ${LDFLAGS} -dynamiclib -install_name lib${LIB}.dylib $$_objs ${LIBS}"; \
-	        ${CC} -shared -o $$_libout -Wl,-rpath ${LIBDIR} ${LDFLAGS} -dynamiclib -install_name lib${LIB}.dylib $$_objs ${LIBS}; \
-	        ;; \
-	    *-mingw*) \
-	        echo "${CC} -shared -o $$_libout -Wl,--out-implib,lib${LIB}_dll.lib -Wl,-rpath ${LIBDIR} ${LDFLAGS} $$_objs ${LIBS}"; \
-	        ${CC} -shared -o $$_libout -Wl,--out-implib,lib${LIB}_dll.lib -Wl,-rpath ${LIBDIR} ${LDFLAGS} $$_objs ${LIBS}; \
-	        ;; \
-	    *-freebsd*) \
-	        echo "${CC} -shared -o $$_libout -Wl,-soname,lib${LIB}.so.${LIB_CURRENT} -Wl,-rpath,${LIBDIR} ${LDFLAGS} $$_objs"; \
-	        ${CC} -shared -o $$_libout -Wl,-soname,lib${LIB}.so.${LIB_CURRENT} -Wl,-rpath ${LIBDIR} ${LDFLAGS} $$_objs; \
-	        ;; \
-	    *-linux*) \
-	        echo "${CC} -shared -o $$_libout -Wl,-soname,lib${LIB}.so.${LIB_CURRENT} ${LDFLAGS} $$_objs ${LIBS}"; \
-	        ${CC} -shared -o $$_libout -Wl,-soname,lib${LIB}.so.${LIB_CURRENT} ${LDFLAGS} $$_objs ${LIBS}; \
-	        ;; \
-	    *) \
-	        echo "${CC} -shared -o $$_libout -Wl,-rpath,${LIBDIR} ${LDFLAGS} $$_objs"; \
-	        ${CC} -shared -o $$_libout -Wl,-rpath ${LIBDIR} ${LDFLAGS} $$_objs; \
-	        ;; \
-	    esac; \
+	    if [ "$$_linker_type" = "CXX" ]; then \
+	        case "${HOST}" in \
+	        *-darwin*) \
+	            echo "${CXX} -shared -o $$_libout -Wl,-rpath,${LIBDIR} ${LDFLAGS} -dynamiclib -install_name lib${LIB}.dylib $$_objs ${LIBS}"; \
+	            ${CXX} -shared -o $$_libout -Wl,-rpath ${LIBDIR} ${LDFLAGS} -dynamiclib -install_name lib${LIB}.dylib $$_objs ${LIBS}; \
+	            ;; \
+	        *-mingw* | *-cygwin*) \
+	            echo "${CXX} -shared -o $$_libout -Wl,--out-implib,lib${LIB}_dll.lib -Wl,-rpath ${LIBDIR} ${LDFLAGS} $$_objs ${LIBS}"; \
+	            ${CXX} -shared -o $$_libout -Wl,--out-implib,lib${LIB}_dll.lib -Wl,-rpath ${LIBDIR} ${LDFLAGS} $$_objs ${LIBS}; \
+	            ;; \
+	        *-freebsd*) \
+	            echo "${CXX} -shared -o $$_libout -Wl,-soname,lib${LIB}.so.${LIB_CURRENT} -Wl,-rpath,${LIBDIR} ${LDFLAGS} $$_objs"; \
+	            ${CXX} -shared -o $$_libout -Wl,-soname,lib${LIB}.so.${LIB_CURRENT} -Wl,-rpath ${LIBDIR} ${LDFLAGS} $$_objs; \
+	            ;; \
+	        *-linux*) \
+	            echo "${CXX} -shared -o $$_libout -Wl,-soname,lib${LIB}.so.${LIB_CURRENT} ${LDFLAGS} $$_objs ${LIBS}"; \
+	            ${CXX} -shared -o $$_libout -Wl,-soname,lib${LIB}.so.${LIB_CURRENT} ${LDFLAGS} $$_objs ${LIBS}; \
+	            ;; \
+	        *) \
+	            echo "${CXX} -shared -o $$_libout -Wl,-rpath,${LIBDIR} ${LDFLAGS} $$_objs"; \
+	            ${CXX} -shared -o $$_libout -Wl,-rpath ${LIBDIR} ${LDFLAGS} $$_objs; \
+	            ;; \
+	        esac; \
+	    else \
+	        case "${HOST}" in \
+	        *-darwin*) \
+	            echo "${CC} -shared -o $$_libout -Wl,-rpath,${LIBDIR} ${LDFLAGS} -dynamiclib -install_name lib${LIB}.dylib $$_objs ${LIBS}"; \
+	            ${CC} -shared -o $$_libout -Wl,-rpath ${LIBDIR} ${LDFLAGS} -dynamiclib -install_name lib${LIB}.dylib $$_objs ${LIBS}; \
+	            ;; \
+	        *-mingw* | *-cygwin*) \
+	            echo "${CC} -shared -o $$_libout -Wl,--out-implib,lib${LIB}_dll.lib -Wl,-rpath ${LIBDIR} ${LDFLAGS} $$_objs ${LIBS}"; \
+	            ${CC} -shared -o $$_libout -Wl,--out-implib,lib${LIB}_dll.lib -Wl,-rpath ${LIBDIR} ${LDFLAGS} $$_objs ${LIBS}; \
+	            ;; \
+	        *-freebsd*) \
+	            echo "${CC} -shared -o $$_libout -Wl,-soname,lib${LIB}.so.${LIB_CURRENT} -Wl,-rpath,${LIBDIR} ${LDFLAGS} $$_objs"; \
+	            ${CC} -shared -o $$_libout -Wl,-soname,lib${LIB}.so.${LIB_CURRENT} -Wl,-rpath ${LIBDIR} ${LDFLAGS} $$_objs; \
+	            ;; \
+	        *-linux*) \
+	            echo "${CC} -shared -o $$_libout -Wl,-soname,lib${LIB}.so.${LIB_CURRENT} ${LDFLAGS} $$_objs ${LIBS}"; \
+	            ${CC} -shared -o $$_libout -Wl,-soname,lib${LIB}.so.${LIB_CURRENT} ${LDFLAGS} $$_objs ${LIBS}; \
+	            ;; \
+	        *) \
+	            echo "${CC} -shared -o $$_libout -Wl,-rpath,${LIBDIR} ${LDFLAGS} $$_objs"; \
+	            ${CC} -shared -o $$_libout -Wl,-rpath ${LIBDIR} ${LDFLAGS} $$_objs; \
+	            ;; \
+	        esac; \
+	    fi; \
 	    \
 	    for LIBNAME in $$_libnames; do \
 	        echo "${LN} -fs $$_libout $$LIBNAME"; \
@@ -468,6 +528,27 @@ lib${LIB}.la: check-libtool ${SRCS_GENERATED} _lib_ltobjs ${SHOBJS}
 	      "${SRCS}" != "" -a "${.TARGETS}" != "install" ]; then \
 	    _ltobjs="${SHOBJS}"; \
 	    _moduleopts=""; \
+	    _linker_type="${LINKER_TYPE}"; \
+	    if [ "$$_linker_type" = "" ]; then \
+	    	if [ "${HAVE_CC65}" = "yes" ]; then \
+		    _linker_type="CL65"; \
+		else \
+                    for F in ${SRCS}; do \
+	                if echo "$$F" | grep -q '.ad[bs]$$'; then \
+		            _linker_type="ADA"; \
+	                    break; \
+			fi; \
+	            done; \
+		    if [ "$$_linker_type" != "ADA" ]; then \
+                        for F in ${SRCS}; do \
+	                    if echo "$$F" | grep -q '.cpp$$'; then \
+		                _linker_type="CXX"; \
+	                        break; \
+			    fi; \
+	                done; \
+	            fi; \
+	        fi; \
+	    fi; \
 	    if [ "$$_ltobjs" = "" ]; then \
 	        for F in ${SRCS}; do \
 	    	    F=`echo $$F | sed 's/.ad[bs]$$/.lo/'`; \
@@ -482,17 +563,33 @@ lib${LIB}.la: check-libtool ${SRCS_GENERATED} _lib_ltobjs ${SHOBJS}
 	        _moduleopts="-module";  \
 	    fi; \
 	    if [ "${LIB_SHARED}" = "Yes" ]; then \
-	        echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link ${CC} -o lib${LIB}.la ${LIBTOOLOPTS_SHARED} -rpath ${LIBDIR} $$_moduleopts -version-info ${LIB_CURRENT}:${LIB_REVISION}:${LIB_AGE} ${LDFLAGS} $$_ltobjs ${LIBS}"; \
-	        ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
-		    ${CC} -o lib${LIB}.la ${LIBTOOLOPTS_SHARED} \
-		    -rpath ${LIBDIR} $$_moduleopts \
-		    -version-info ${LIB_CURRENT}:${LIB_REVISION}:${LIB_AGE} \
-		    ${LDFLAGS} $$_ltobjs ${LIBS}; \
+	        if [ "$$_linker_type" = "CXX" ]; then \
+	            echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link ${CXX} -o lib${LIB}.la ${LIBTOOLOPTS_SHARED} -rpath ${LIBDIR} $$_moduleopts -version-info ${LIB_CURRENT}:${LIB_REVISION}:${LIB_AGE} ${LDFLAGS} $$_ltobjs ${LIBS}"; \
+	            ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+		        ${CXX} -o lib${LIB}.la ${LIBTOOLOPTS_SHARED} \
+		        -rpath ${LIBDIR} $$_moduleopts \
+		        -version-info ${LIB_CURRENT}:${LIB_REVISION}:${LIB_AGE} \
+		        ${LDFLAGS} $$_ltobjs ${LIBS}; \
+	        else \
+	            echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link ${CC} -o lib${LIB}.la ${LIBTOOLOPTS_SHARED} -rpath ${LIBDIR} $$_moduleopts -version-info ${LIB_CURRENT}:${LIB_REVISION}:${LIB_AGE} ${LDFLAGS} $$_ltobjs ${LIBS}"; \
+	            ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+		        ${CC} -o lib${LIB}.la ${LIBTOOLOPTS_SHARED} \
+		        -rpath ${LIBDIR} $$_moduleopts \
+		        -version-info ${LIB_CURRENT}:${LIB_REVISION}:${LIB_AGE} \
+		        ${LDFLAGS} $$_ltobjs ${LIBS}; \
+	        fi; \
 	    else \
-	        echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link ${CC} -o lib${LIB}.la -static ${LIBTOOLOPTS_STATIC} ${LDFLAGS} $$_ltobjs ${LIBS}"; \
-	        ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
-		    ${CC} -o lib${LIB}.la -static ${LIBTOOLOPTS_STATIC} \
-		    ${LDFLAGS} $$_ltobjs ${LIBS}; \
+	        if [ "$$_linker_type" = "CXX" ]; then \
+	            echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link ${CXX} -o lib${LIB}.la -static ${LIBTOOLOPTS_STATIC} ${LDFLAGS} $$_ltobjs ${LIBS}"; \
+	            ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+		        ${CXX} -o lib${LIB}.la -static ${LIBTOOLOPTS_STATIC} \
+		        ${LDFLAGS} $$_ltobjs ${LIBS}; \
+	        else \
+	            echo "${LIBTOOL} ${LIBTOOLOPTS} --mode=link ${CC} -o lib${LIB}.la -static ${LIBTOOLOPTS_STATIC} ${LDFLAGS} $$_ltobjs ${LIBS}"; \
+	            ${LIBTOOL} ${LIBTOOLOPTS} --mode=link \
+		        ${CC} -o lib${LIB}.la -static ${LIBTOOLOPTS_STATIC} \
+		        ${LDFLAGS} $$_ltobjs ${LIBS}; \
+	        fi; \
 	    fi; \
 	    if [ "${LIB_BUNDLE}" != "" ]; then \
 	        echo "perl ${TOP}/mk/gen-bundle.pl lib ${LIB_BUNDLE}"; \
@@ -559,7 +656,7 @@ clean-lib:
 	   	    rm -f lib${LIB}.a lib${LIB}.${LIB_CURRENT}.dylib \
 		          lib${LIB}.dylib lib${LIB}.la; \
 		    ;; \
-		*-mingw*) \
+		*-mingw* | *-cygwin*) \
 	   	    echo "rm -f lib${LIB}.a lib${LIB}_dll.lib ${LIB}.dll lib${LIB}.la"; \
 	   	    rm -f lib${LIB}.a lib${LIB}_dll.lib ${LIB}.dll lib${LIB}.la; \
 		    ;; \
@@ -661,7 +758,7 @@ install-lib: check-libtool
 			echo "(cd ${LIBDIR} && ${LN} -fs $$_libout lib${LIB}.dylib)"; \
 			(cd ${DESTDIR}${LIBDIR} && ${SUDO} ${LN} -fs $$_libout lib${LIB}.dylib); \
 		    	;; \
-		    *-mingw*) \
+		    *-mingw* | *-cygwin*) \
 		        _libout="${LIB}.dll"; \
 	    	        echo "${INSTALL_PROG} $$_libout ${BINDIR}"; \
 	                ${SUDO} ${INSTALL_PROG} $$_libout ${DESTDIR}${BINDIR}; \
@@ -811,7 +908,7 @@ deinstall-lib: check-libtool
 	                _libout="lib${LIB}.${LIB_CURRENT}.dylib"; \
 	                _libnames="$$_libout lib${LIB}.dylib"; \
 		        ;; \
-	            *-mingw*) \
+	            *-mingw* | *-cygwin*) \
 	                _libout="${LIB}.dll"; \
 	                _libnames="$$_libout"; \
 		        ;; \
@@ -948,6 +1045,5 @@ configure-lib:
 .PHONY: _lib_objs _lib_ltobjs lib-tags check-libtool none
 
 include ${TOP}/mk/build.common.mk
-include ${TOP}/mk/build.proj.mk
 include ${TOP}/mk/build.subdir.mk
 include .depend

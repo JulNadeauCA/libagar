@@ -2014,6 +2014,7 @@ $ECHO_N '# checking for SDL 1.2...' >>config.log
 # BEGIN sdl
 if [ "" != "" ]; then
 SDL_PREFIX=
+MK_EXEC_FOUND=No
 if [ "" != "" ]; then
 if [ -x "/bin/sdl-config" -a ! -d "/bin/sdl-config" ]; then
 SDL_PREFIX=`/bin/sdl-config --prefix`
@@ -2039,6 +2040,7 @@ done
 IFS=$bb_save_IFS
 fi
 SDL_VERSION=
+MK_EXEC_FOUND=No
 if [ "" != "" ]; then
 if [ -x "/bin/sdl-config" -a ! -d "/bin/sdl-config" ]; then
 SDL_VERSION=`/bin/sdl-config --version`
@@ -2064,6 +2066,7 @@ done
 IFS=$bb_save_IFS
 fi
 SDL_CFLAGS=
+MK_EXEC_FOUND=No
 if [ "" != "" ]; then
 if [ -x "/bin/sdl-config" -a ! -d "/bin/sdl-config" ]; then
 SDL_CFLAGS=`/bin/sdl-config --cflags`
@@ -2089,6 +2092,7 @@ done
 IFS=$bb_save_IFS
 fi
 SDL_LIBS=
+MK_EXEC_FOUND=No
 if [ "" != "" ]; then
 if [ -x "/bin/sdl-config" -a ! -d "/bin/sdl-config" ]; then
 SDL_LIBS=`/bin/sdl-config --libs`
@@ -2116,6 +2120,7 @@ fi
 else
 case "${host}" in
 *-*-darwin*)
+MK_EXEC_FOUND=No
 SDL_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -2132,6 +2137,7 @@ fi
 done
 IFS=$bb_save_IFS
 if [ "${SDL_VERSION}" != "" ]; then
+MK_EXEC_FOUND=No
 SDL_PREFIX=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -2147,6 +2153,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -2162,6 +2169,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -2186,6 +2194,7 @@ SDL_LIBS="-framework SDL"
 fi
 ;;
 *-*-freebsd*)
+MK_EXEC_FOUND=No
 SDL_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -2202,6 +2211,7 @@ fi
 done
 IFS=$bb_save_IFS
 if [ "${SDL_VERSION}" != "" ]; then
+MK_EXEC_FOUND=No
 SDL_PREFIX=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -2217,6 +2227,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -2232,6 +2243,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -2248,6 +2260,7 @@ fi
 done
 IFS=$bb_save_IFS
 else
+MK_EXEC_FOUND=No
 SDL_PREFIX=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -2263,6 +2276,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -2278,6 +2292,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -2293,6 +2308,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -2311,6 +2327,7 @@ IFS=$bb_save_IFS
 fi
 ;;
 *)
+MK_EXEC_FOUND=No
 SDL_PREFIX=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -2326,6 +2343,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL_VERSION=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -2341,6 +2359,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL_CFLAGS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -2356,6 +2375,7 @@ break
 fi
 done
 IFS=$bb_save_IFS
+MK_EXEC_FOUND=No
 SDL_LIBS=
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
@@ -2911,6 +2931,7 @@ fi
 FREETYPE_LIBS=`$PKGCONFIG freetype2 --libs 2>/dev/null`
 else
 FREETYPE_VERSION=
+MK_EXEC_FOUND=No
 if [ "" != "" ]; then
 if [ -x "/bin/freetype-config" -a ! -d "/bin/freetype-config" ]; then
 FREETYPE_VERSION=`/bin/freetype-config --version`
@@ -2936,6 +2957,7 @@ done
 IFS=$bb_save_IFS
 fi
 FREETYPE_CFLAGS=
+MK_EXEC_FOUND=No
 if [ "" != "" ]; then
 if [ -x "/bin/freetype-config" -a ! -d "/bin/freetype-config" ]; then
 FREETYPE_CFLAGS=`/bin/freetype-config --cflags`
@@ -2961,6 +2983,7 @@ done
 IFS=$bb_save_IFS
 fi
 FREETYPE_LIBS=
+MK_EXEC_FOUND=No
 if [ "" != "" ]; then
 if [ -x "/bin/freetype-config" -a ! -d "/bin/freetype-config" ]; then
 FREETYPE_LIBS=`/bin/freetype-config --libs`
@@ -3070,6 +3093,7 @@ $ECHO_N 'checking for Agar...'
 $ECHO_N '# checking for Agar...' >>config.log
 # BEGIN agar(1.4.1)
 AGAR_VERSION=
+MK_EXEC_FOUND=No
 if [ "" != "" ]; then
 if [ -x "/bin/agar-config" -a ! -d "/bin/agar-config" ]; then
 AGAR_VERSION=`/bin/agar-config --version`
@@ -3147,6 +3171,7 @@ if [ "${MK_VERSION_OK}" = "yes" ]; then
 $ECHO_N 'checking whether Agar works...'
 $ECHO_N '# checking whether Agar works...' >>config.log
 AGAR_CFLAGS=
+MK_EXEC_FOUND=No
 if [ "" != "" ]; then
 if [ -x "/bin/agar-config" -a ! -d "/bin/agar-config" ]; then
 AGAR_CFLAGS=`/bin/agar-config --cflags`
@@ -3172,6 +3197,7 @@ done
 IFS=$bb_save_IFS
 fi
 AGAR_LIBS=
+MK_EXEC_FOUND=No
 if [ "" != "" ]; then
 if [ -x "/bin/agar-config" -a ! -d "/bin/agar-config" ]; then
 AGAR_LIBS=`/bin/agar-config --libs`
@@ -3279,18 +3305,14 @@ echo "***"
 exit 1
 fi
 CFLAGS="$CFLAGS -D_USE_AGAR_QUEUE"
-CXXFLAGS="$CXXFLAGS -D_USE_AGAR_QUEUE"
 CFLAGS="$CFLAGS -D_USE_AGAR_STD"
-CXXFLAGS="$CXXFLAGS -D_USE_AGAR_STD"
 CFLAGS="$CFLAGS -I$SRC"
-CXXFLAGS="$CXXFLAGS -I$SRC"
 echo "AGAR_CFLAGS=$AGAR_CFLAGS" >>Makefile.config
 echo "AGAR_LIBS=$AGAR_LIBS" >>Makefile.config
 echo "BINDIR=$BINDIR" >>Makefile.config
 echo "CC=$CC" >>Makefile.config
 echo "CC_COMPILE=$CC_COMPILE" >>Makefile.config
 echo "CFLAGS=$CFLAGS" >>Makefile.config
-echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
 echo "DATADIR=$DATADIR" >>Makefile.config
 echo "ENABLE_NLS=$ENABLE_NLS" >>Makefile.config
 echo "EXECSUFFIX=$EXECSUFFIX" >>Makefile.config

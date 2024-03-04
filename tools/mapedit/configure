@@ -1553,6 +1553,7 @@ $ECHO_N 'checking for Agar...'
 $ECHO_N '# checking for Agar...' >>config.log
 # BEGIN agar(1.6.0 ${prefix_agar})
 AGAR_VERSION=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar}" != "" ]; then
 if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_VERSION=`${prefix_agar}/bin/agar-config --version`
@@ -1630,6 +1631,7 @@ if [ "${MK_VERSION_OK}" = "yes" ]; then
 $ECHO_N 'checking whether Agar works...'
 $ECHO_N '# checking whether Agar works...' >>config.log
 AGAR_CFLAGS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar}" != "" ]; then
 if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
@@ -1655,6 +1657,7 @@ done
 IFS=$bb_save_IFS
 fi
 AGAR_LIBS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar}" != "" ]; then
 if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
@@ -1772,6 +1775,7 @@ $ECHO_N 'checking for Agar-MAP...'
 $ECHO_N '# checking for Agar-MAP...' >>config.log
 # BEGIN agar-map(1.6.0 ${prefix_agar_map})
 AGAR_MAP_VERSION=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar_map}" != "" ]; then
 if [ -x "${prefix_agar_map}/bin/agar-map-config" -a ! -d "${prefix_agar_map}/bin/agar-map-config" ]; then
 AGAR_MAP_VERSION=`${prefix_agar_map}/bin/agar-map-config --version`
@@ -1849,6 +1853,7 @@ if [ "${MK_VERSION_OK}" = "yes" ]; then
 $ECHO_N 'checking whether Agar-MAP works...'
 $ECHO_N '# checking whether Agar-MAP works...' >>config.log
 AGAR_CFLAGS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar_map}" != "" ]; then
 if [ -x "${prefix_agar_map}/bin/agar-config" -a ! -d "${prefix_agar_map}/bin/agar-config" ]; then
 AGAR_CFLAGS=`${prefix_agar_map}/bin/agar-config --cflags`
@@ -1874,6 +1879,7 @@ done
 IFS=$bb_save_IFS
 fi
 AGAR_LIBS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar_map}" != "" ]; then
 if [ -x "${prefix_agar_map}/bin/agar-config" -a ! -d "${prefix_agar_map}/bin/agar-config" ]; then
 AGAR_LIBS=`${prefix_agar_map}/bin/agar-config --libs`
@@ -1899,6 +1905,7 @@ done
 IFS=$bb_save_IFS
 fi
 AGAR_MAP_CFLAGS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar_map}" != "" ]; then
 if [ -x "${prefix_agar_map}/bin/agar-map-config" -a ! -d "${prefix_agar_map}/bin/agar-map-config" ]; then
 AGAR_MAP_CFLAGS=`${prefix_agar_map}/bin/agar-map-config --cflags`
@@ -1924,6 +1931,7 @@ done
 IFS=$bb_save_IFS
 fi
 AGAR_MAP_LIBS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar_map}" != "" ]; then
 if [ -x "${prefix_agar_map}/bin/agar-map-config" -a ! -d "${prefix_agar_map}/bin/agar-map-config" ]; then
 AGAR_MAP_LIBS=`${prefix_agar_map}/bin/agar-map-config --libs`
@@ -2256,17 +2264,11 @@ exit 1
 fi
 fi
 CFLAGS="$CFLAGS -D_USE_AGAR_STD"
-CXXFLAGS="$CXXFLAGS -D_USE_AGAR_STD"
 CFLAGS="$CFLAGS -D_USE_AGAR_QUEUE"
-CXXFLAGS="$CXXFLAGS -D_USE_AGAR_QUEUE"
 CFLAGS="$CFLAGS -D_USE_AGAR_TYPES"
-CXXFLAGS="$CXXFLAGS -D_USE_AGAR_TYPES"
 CFLAGS="$CFLAGS -D_USE_AGAR_ATTRIBUTES"
-CXXFLAGS="$CXXFLAGS -D_USE_AGAR_ATTRIBUTES"
 CFLAGS="$CFLAGS -D_USE_AGAR_NULLABILITY"
-CXXFLAGS="$CXXFLAGS -D_USE_AGAR_NULLABILITY"
 CFLAGS="$CFLAGS -I$BLD"
-CXXFLAGS="$CXXFLAGS -I$BLD"
 echo "AGAR_CFLAGS=$AGAR_CFLAGS" >>Makefile.config
 echo "AGAR_LIBS=$AGAR_LIBS" >>Makefile.config
 echo "AGAR_MAP_CFLAGS=$AGAR_MAP_CFLAGS" >>Makefile.config
@@ -2275,7 +2277,6 @@ echo "BINDIR=$BINDIR" >>Makefile.config
 echo "CC=$CC" >>Makefile.config
 echo "CC_COMPILE=$CC_COMPILE" >>Makefile.config
 echo "CFLAGS=$CFLAGS" >>Makefile.config
-echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
 echo "DATADIR=$DATADIR" >>Makefile.config
 echo "ENABLE_NLS=$ENABLE_NLS" >>Makefile.config
 echo "EXECSUFFIX=$EXECSUFFIX" >>Makefile.config

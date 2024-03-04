@@ -1547,6 +1547,7 @@ $ECHO_N 'checking for Agar...'
 $ECHO_N '# checking for Agar...' >>config.log
 # BEGIN agar(1.6.0 ${prefix_agar})
 AGAR_VERSION=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar}" != "" ]; then
 if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_VERSION=`${prefix_agar}/bin/agar-config --version`
@@ -1624,6 +1625,7 @@ if [ "${MK_VERSION_OK}" = "yes" ]; then
 $ECHO_N 'checking whether Agar works...'
 $ECHO_N '# checking whether Agar works...' >>config.log
 AGAR_CFLAGS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar}" != "" ]; then
 if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
@@ -1649,6 +1651,7 @@ done
 IFS=$bb_save_IFS
 fi
 AGAR_LIBS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar}" != "" ]; then
 if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
 AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
@@ -1766,6 +1769,7 @@ $ECHO_N 'checking for Agar-Math...'
 $ECHO_N '# checking for Agar-Math...' >>config.log
 # BEGIN agar-math(1.6.0 ${prefix_agar_math})
 AGAR_MATH_VERSION=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar_math}" != "" ]; then
 if [ -x "${prefix_agar_math}/bin/agar-math-config" -a ! -d "${prefix_agar_math}/bin/agar-math-config" ]; then
 AGAR_MATH_VERSION=`${prefix_agar_math}/bin/agar-math-config --version`
@@ -1843,6 +1847,7 @@ if [ "${MK_VERSION_OK}" = "yes" ]; then
 $ECHO_N 'checking whether Agar-Math works...'
 $ECHO_N '# checking whether Agar-Math works...' >>config.log
 AGAR_CFLAGS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar_math}" != "" ]; then
 if [ -x "${prefix_agar_math}/bin/agar-config" -a ! -d "${prefix_agar_math}/bin/agar-config" ]; then
 AGAR_CFLAGS=`${prefix_agar_math}/bin/agar-config --cflags`
@@ -1868,6 +1873,7 @@ done
 IFS=$bb_save_IFS
 fi
 AGAR_LIBS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar_math}" != "" ]; then
 if [ -x "${prefix_agar_math}/bin/agar-config" -a ! -d "${prefix_agar_math}/bin/agar-config" ]; then
 AGAR_LIBS=`${prefix_agar_math}/bin/agar-config --libs`
@@ -1893,6 +1899,7 @@ done
 IFS=$bb_save_IFS
 fi
 AGAR_MATH_CFLAGS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar_math}" != "" ]; then
 if [ -x "${prefix_agar_math}/bin/agar-math-config" -a ! -d "${prefix_agar_math}/bin/agar-math-config" ]; then
 AGAR_MATH_CFLAGS=`${prefix_agar_math}/bin/agar-math-config --cflags`
@@ -1918,6 +1925,7 @@ done
 IFS=$bb_save_IFS
 fi
 AGAR_MATH_LIBS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar_math}" != "" ]; then
 if [ -x "${prefix_agar_math}/bin/agar-math-config" -a ! -d "${prefix_agar_math}/bin/agar-math-config" ]; then
 AGAR_MATH_LIBS=`${prefix_agar_math}/bin/agar-math-config --libs`
@@ -2033,6 +2041,7 @@ $ECHO_N 'checking for Agar-SG...'
 $ECHO_N '# checking for Agar-SG...' >>config.log
 # BEGIN agar-sg(1.6.0 ${prefix_agar_sg})
 AGAR_SG_VERSION=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar_sg}" != "" ]; then
 if [ -x "${prefix_agar_sg}/bin/agar-sg-config" -a ! -d "${prefix_agar_sg}/bin/agar-sg-config" ]; then
 AGAR_SG_VERSION=`${prefix_agar_sg}/bin/agar-sg-config --version`
@@ -2110,6 +2119,7 @@ if [ "${MK_VERSION_OK}" = "yes" ]; then
 $ECHO_N 'checking whether Agar-SG works...'
 $ECHO_N '# checking whether Agar-SG works...' >>config.log
 AGAR_CFLAGS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar_sg}" != "" ]; then
 if [ -x "${prefix_agar_sg}/bin/agar-config" -a ! -d "${prefix_agar_sg}/bin/agar-config" ]; then
 AGAR_CFLAGS=`${prefix_agar_sg}/bin/agar-config --cflags`
@@ -2135,6 +2145,7 @@ done
 IFS=$bb_save_IFS
 fi
 AGAR_LIBS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar_sg}" != "" ]; then
 if [ -x "${prefix_agar_sg}/bin/agar-config" -a ! -d "${prefix_agar_sg}/bin/agar-config" ]; then
 AGAR_LIBS=`${prefix_agar_sg}/bin/agar-config --libs`
@@ -2160,6 +2171,7 @@ done
 IFS=$bb_save_IFS
 fi
 AGAR_SG_CFLAGS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar_sg}" != "" ]; then
 if [ -x "${prefix_agar_sg}/bin/agar-sg-config" -a ! -d "${prefix_agar_sg}/bin/agar-sg-config" ]; then
 AGAR_SG_CFLAGS=`${prefix_agar_sg}/bin/agar-sg-config --cflags`
@@ -2185,6 +2197,7 @@ done
 IFS=$bb_save_IFS
 fi
 AGAR_SG_LIBS=
+MK_EXEC_FOUND=No
 if [ "${prefix_agar_sg}" != "" ]; then
 if [ -x "${prefix_agar_sg}/bin/agar-sg-config" -a ! -d "${prefix_agar_sg}/bin/agar-sg-config" ]; then
 AGAR_SG_LIBS=`${prefix_agar_sg}/bin/agar-sg-config --libs`
@@ -2515,17 +2528,11 @@ exit 1
 fi
 fi
 CFLAGS="$CFLAGS -D_USE_SG_MATH"
-CXXFLAGS="$CXXFLAGS -D_USE_SG_MATH"
 CFLAGS="$CFLAGS -D_USE_AGAR_QUEUE"
-CXXFLAGS="$CXXFLAGS -D_USE_AGAR_QUEUE"
 CFLAGS="$CFLAGS -D_USE_AGAR_STD"
-CXXFLAGS="$CXXFLAGS -D_USE_AGAR_STD"
 CFLAGS="$CFLAGS -D_USE_AGAR_TYPES"
-CXXFLAGS="$CXXFLAGS -D_USE_AGAR_TYPES"
 CFLAGS="$CFLAGS -D_USE_AGAR_NULLABILITY"
-CXXFLAGS="$CXXFLAGS -D_USE_AGAR_NULLABILITY"
 CFLAGS="$CFLAGS -I$BLD"
-CXXFLAGS="$CXXFLAGS -I$BLD"
 echo "AGAR_CFLAGS=$AGAR_CFLAGS" >>Makefile.config
 echo "AGAR_LIBS=$AGAR_LIBS" >>Makefile.config
 echo "AGAR_MATH_CFLAGS=$AGAR_MATH_CFLAGS" >>Makefile.config
@@ -2536,7 +2543,6 @@ echo "BINDIR=$BINDIR" >>Makefile.config
 echo "CC=$CC" >>Makefile.config
 echo "CC_COMPILE=$CC_COMPILE" >>Makefile.config
 echo "CFLAGS=$CFLAGS" >>Makefile.config
-echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
 echo "DATADIR=$DATADIR" >>Makefile.config
 echo "ENABLE_NLS=$ENABLE_NLS" >>Makefile.config
 echo "EXECSUFFIX=$EXECSUFFIX" >>Makefile.config
