@@ -1579,225 +1579,6 @@ echo "*** Failed! See ./config.log for more details."
 echo "***"
 exit 1
 fi
-$ECHO_N 'checking for Agar...'
-$ECHO_N '# checking for Agar...' >>config.log
-# BEGIN agar(1.6.0 ${prefix_agar})
-AGAR_VERSION=
-if [ "${prefix_agar}" != "" ]; then
-if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
-AGAR_VERSION=`${prefix_agar}/bin/agar-config --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
-AGAR_VERSION=`${path}/agar-config --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-config"
-break
-elif [ -e "${path}/agar-config.exe" ]; then
-AGAR_VERSION=`${path}/agar-config.exe --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-config.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-if [ "${AGAR_VERSION}" != "" ]; then
-if [ "${prefix_agar}" != "" ]; then
-echo "yes ($AGAR_VERSION in ${prefix_agar})"
-echo "# yes ($AGAR_VERSION in ${prefix_agar})" >>config.log
-else
-echo "yes ($AGAR_VERSION)"
-echo "# yes ($AGAR_VERSION)" >>config.log
-fi
-MK_VERSION_MAJOR=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
-MK_VERSION_MINOR=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
-MK_VERSION_MICRO=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
-MK_VERSION_OK=no
-if [ $MK_VERSION_MAJOR -gt 1 ]; then
-MK_VERSION_OK=yes
-elif [ $MK_VERSION_MAJOR -eq 1 ]; then
-if [ "$MK_VERSION_MINOR" = '' ]; then
-MK_VERSION_OK=yes
-else
-if [ $MK_VERSION_MINOR -gt 6 ]; then
-MK_VERSION_OK=yes
-elif [ $MK_VERSION_MINOR -eq 6 ]; then
-if [ "$MK_VERSION_MICRO" = '' ]; then
-MK_VERSION_OK=yes
-else
-if [ $MK_VERSION_MICRO -ge 0 ]; then
-MK_VERSION_OK=yes
-fi
-fi
-fi
-fi
-fi
-if [ "${MK_VERSION_OK}" = "no" ]; then
-echo '*'
-echo '# *' >>config.log
-echo "* Minimum required version is 1.6.0 (found $AGAR_VERSION)"
-echo "# * Minimum required version is 1.6.0 (found $AGAR_VERSION)" >>config.log
-echo '*'
-echo '# *' >>config.log
-fi
-else
-if [ "${prefix_agar}" != "" ]; then
-echo "no (not in ${prefix_agar})"
-echo "# no (not in ${prefix_agar})" >>config.log
-else
-echo 'no'
-echo '# no' >>config.log
-fi
-MK_VERSION_OK="no"
-fi
-if [ "${MK_VERSION_OK}" = "yes" ]; then
-$ECHO_N 'checking whether Agar works...'
-$ECHO_N '# checking whether Agar works...' >>config.log
-AGAR_CFLAGS=
-if [ "${prefix_agar}" != "" ]; then
-if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
-AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
-AGAR_CFLAGS=`${path}/agar-config --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-config"
-break
-elif [ -e "${path}/agar-config.exe" ]; then
-AGAR_CFLAGS=`${path}/agar-config.exe --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-config.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-AGAR_LIBS=
-if [ "${prefix_agar}" != "" ]; then
-if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
-AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
-AGAR_LIBS=`${path}/agar-config --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-config"
-break
-elif [ -e "${path}/agar-config.exe" ]; then
-AGAR_LIBS=`${path}/agar-config.exe --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/agar-config.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-MK_COMPILE_STATUS=OK
-cat << EOT >conftest$$.c
-#include <agar/core.h>
-#include <agar/gui.h>
-
-int
-main(int argc, char *argv[])
-{
-	AG_InitCore("conf-test", 0);
-	AG_InitGraphics(AG_NULL);
-#ifdef AG_EVENT_LOOP
-	AG_EventLoop();
-#endif
-	AG_Quit();
-	return (0);
-}
-EOT
-echo >>config.log
-echo '# C: HAVE_AGAR' >>config.log
-echo "cat << EOT >conftest$$.c" >>config.log
-cat conftest$$.c>>config.log
-echo EOT >>config.log
-echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_LIBS} 1>/dev/null 2>>config.log">>config.log
-$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_LIBS} 1>/dev/null 2>>config.log
-if [ "$?" != "0" ]; then
-echo "# failed $?" >>config.log
-MK_COMPILE_STATUS="FAIL $?"
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo 'yes'
-echo '# yes' >>config.log
-HAVE_AGAR=yes
-bb_o=$bb_incdir/have_agar.h
-echo '#ifndef HAVE_AGAR' >$bb_o
-echo "#define HAVE_AGAR \"$HAVE_AGAR\"" >>$bb_o
-echo '#endif' >>$bb_o
-else
-echo 'no'
-echo '# no' >>config.log
-HAVE_AGAR=no
-echo '#undef HAVE_AGAR' >$bb_incdir/have_agar.h
-fi
-if [ "${keep_conftest}" != "yes" ]; then
-rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
-fi
-if [ "${HAVE_AGAR}" = "no" ]; then
-AGAR_CFLAGS=""
-AGAR_LIBS=""
-echo '#undef HAVE_AGAR' >$bb_incdir/have_agar.h
-fi
-else
-HAVE_AGAR="no"
-AGAR_CFLAGS=""
-AGAR_LIBS=""
-echo '#undef HAVE_AGAR' >$bb_incdir/have_agar.h
-fi
-# END agar
-if [ "${HAVE_AGAR}" != "yes" ]; then
-echo '* '
-echo '# * ' >>config.log
-echo "* $PACKAGE requires Agar (version 1.6.0 or newer)."
-echo "# * $PACKAGE requires Agar (version 1.6.0 or newer)." >>config.log
-echo '* WWW: https://libagar.org'
-echo '# * WWW: https://libagar.org' >>config.log
-echo '* '
-echo '# * ' >>config.log
-echo "***"
-echo "*** ERROR: Required dependency agar not found"
-echo "*** Failed! See ./config.log for more details."
-echo "***"
-exit 1
-fi
-if [ "${MK_VERSION_OK}" != "yes" ]; then
-echo '* '
-echo '# * ' >>config.log
-echo '* This software requires agar version >= 1.6.0,'
-echo '# * This software requires agar version >= 1.6.0,' >>config.log
-echo '* please update that package and try again.'
-echo '# * please update that package and try again.' >>config.log
-echo '* WWW: https://libagar.org'
-echo '# * WWW: https://libagar.org' >>config.log
-echo '* '
-echo '# * ' >>config.log
-echo "***"
-echo "*** ERROR: Required dependency agar version mismatch"
-echo "*** Failed! See ./config.log for more details."
-echo "***"
-exit 1
-fi
 $ECHO_N 'checking for a C++ compiler...'
 $ECHO_N '# checking for a C++ compiler...' >>config.log
 # BEGIN cxx
@@ -1993,544 +1774,366 @@ echo "*** Failed! See ./config.log for more details."
 echo "***"
 exit 1
 fi
+$ECHO_N 'checking for Agar...'
+$ECHO_N '# checking for Agar...' >>config.log
+# BEGIN agar(1.6.0 ${prefix_agar})
+AGAR_VERSION=
+MK_EXEC_FOUND=No
+if [ "${prefix_agar}" != "" ]; then
+if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
+AGAR_VERSION=`${prefix_agar}/bin/agar-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
+AGAR_VERSION=`${path}/agar-config --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-config"
+break
+elif [ -e "${path}/agar-config.exe" ]; then
+AGAR_VERSION=`${path}/agar-config.exe --version`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+if [ "${AGAR_VERSION}" != "" ]; then
+if [ "${prefix_agar}" != "" ]; then
+echo "yes ($AGAR_VERSION in ${prefix_agar})"
+echo "# yes ($AGAR_VERSION in ${prefix_agar})" >>config.log
+else
+echo "yes ($AGAR_VERSION)"
+echo "# yes ($AGAR_VERSION)" >>config.log
+fi
+MK_VERSION_MAJOR=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_MINOR=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
+MK_VERSION_MICRO=`echo "$AGAR_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
+MK_VERSION_OK=no
+if [ $MK_VERSION_MAJOR -gt 1 ]; then
+MK_VERSION_OK=yes
+elif [ $MK_VERSION_MAJOR -eq 1 ]; then
+if [ "$MK_VERSION_MINOR" = '' ]; then
+MK_VERSION_OK=yes
+else
+if [ $MK_VERSION_MINOR -gt 6 ]; then
+MK_VERSION_OK=yes
+elif [ $MK_VERSION_MINOR -eq 6 ]; then
+if [ "$MK_VERSION_MICRO" = '' ]; then
+MK_VERSION_OK=yes
+else
+if [ $MK_VERSION_MICRO -ge 0 ]; then
+MK_VERSION_OK=yes
+fi
+fi
+fi
+fi
+fi
+if [ "${MK_VERSION_OK}" = "no" ]; then
+echo '*'
+echo '# *' >>config.log
+echo "* Minimum required version is 1.6.0 (found $AGAR_VERSION)"
+echo "# * Minimum required version is 1.6.0 (found $AGAR_VERSION)" >>config.log
+echo '*'
+echo '# *' >>config.log
+fi
+else
+if [ "${prefix_agar}" != "" ]; then
+echo "no (not in ${prefix_agar})"
+echo "# no (not in ${prefix_agar})" >>config.log
+else
+echo 'no'
+echo '# no' >>config.log
+fi
+MK_VERSION_OK="no"
+fi
+if [ "${MK_VERSION_OK}" = "yes" ]; then
+$ECHO_N 'checking whether Agar works...'
+$ECHO_N '# checking whether Agar works...' >>config.log
+AGAR_CFLAGS=
+MK_EXEC_FOUND=No
+if [ "${prefix_agar}" != "" ]; then
+if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
+AGAR_CFLAGS=`${prefix_agar}/bin/agar-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
+AGAR_CFLAGS=`${path}/agar-config --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-config"
+break
+elif [ -e "${path}/agar-config.exe" ]; then
+AGAR_CFLAGS=`${path}/agar-config.exe --cflags`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+AGAR_LIBS=
+MK_EXEC_FOUND=No
+if [ "${prefix_agar}" != "" ]; then
+if [ -x "${prefix_agar}/bin/agar-config" -a ! -d "${prefix_agar}/bin/agar-config" ]; then
+AGAR_LIBS=`${prefix_agar}/bin/agar-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${prefix_agar}/bin/agar-config"
+fi
+else
+bb_save_IFS=$IFS
+IFS=$PATH_SEPARATOR
+for path in $PATH; do
+if [ -x "${path}/agar-config" -a ! -d "${path}/agar-config" ]; then
+AGAR_LIBS=`${path}/agar-config --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-config"
+break
+elif [ -e "${path}/agar-config.exe" ]; then
+AGAR_LIBS=`${path}/agar-config.exe --libs`
+MK_EXEC_FOUND=Yes
+MK_EXEC_PATH="${path}/agar-config.exe"
+break
+fi
+done
+IFS=$bb_save_IFS
+fi
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <agar/core.h>
+#include <agar/gui.h>
+
+int
+main(int argc, char *argv[])
+{
+	AG_InitCore("conf-test", 0);
+	AG_InitGraphics(AG_NULL);
+#ifdef AG_EVENT_LOOP
+	AG_EventLoop();
+#endif
+	AG_Quit();
+	return (0);
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_AGAR' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${AGAR_LIBS} 1>/dev/null 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_AGAR=yes
+bb_o=$bb_incdir/have_agar.h
+echo '#ifndef HAVE_AGAR' >$bb_o
+echo "#define HAVE_AGAR \"$HAVE_AGAR\"" >>$bb_o
+echo '#endif' >>$bb_o
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_AGAR=no
+echo '#undef HAVE_AGAR' >$bb_incdir/have_agar.h
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_AGAR}" = "no" ]; then
+AGAR_CFLAGS=""
+AGAR_LIBS=""
+echo '#undef HAVE_AGAR' >$bb_incdir/have_agar.h
+fi
+else
+HAVE_AGAR="no"
+AGAR_CFLAGS=""
+AGAR_LIBS=""
+echo '#undef HAVE_AGAR' >$bb_incdir/have_agar.h
+fi
+# END agar
+if [ "${HAVE_AGAR}" != "yes" ]; then
+echo '* '
+echo '# * ' >>config.log
+echo "* $PACKAGE requires Agar (version 1.6.0 or newer)."
+echo "# * $PACKAGE requires Agar (version 1.6.0 or newer)." >>config.log
+echo '* WWW: https://libagar.org'
+echo '# * WWW: https://libagar.org' >>config.log
+echo '* '
+echo '# * ' >>config.log
+echo "***"
+echo "*** ERROR: Required dependency agar not found"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
+exit 1
+fi
+if [ "${MK_VERSION_OK}" != "yes" ]; then
+echo '* '
+echo '# * ' >>config.log
+echo '* This software requires agar version >= 1.6.0,'
+echo '# * This software requires agar version >= 1.6.0,' >>config.log
+echo '* please update that package and try again.'
+echo '# * please update that package and try again.' >>config.log
+echo '* WWW: https://libagar.org'
+echo '# * WWW: https://libagar.org' >>config.log
+echo '* '
+echo '# * ' >>config.log
+echo "***"
+echo "*** ERROR: Required dependency agar version mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
+exit 1
+fi
 $ECHO_N 'checking for the LLDB debugger...'
 $ECHO_N '# checking for the LLDB debugger...' >>config.log
 # BEGIN lldb(8.0.0 ${prefix_llvm})
+for llvmconfig in llvm-config llvm-config15 llvm-config10 llvm-config80 llvm-config70 llvm-config60; do
 LLDB_PREFIX=
+MK_EXEC_FOUND=No
 if [ "${prefix_llvm}" != "" ]; then
-if [ -x "${prefix_llvm}/bin/llvm-config80" -a ! -d "${prefix_llvm}/bin/llvm-config80" ]; then
-LLDB_PREFIX=`${prefix_llvm}/bin/llvm-config80 --prefix`
+if [ -x "${prefix_llvm}/bin/${llvmconfig}" -a ! -d "${prefix_llvm}/bin/${llvmconfig}" ]; then
+LLDB_PREFIX=`${prefix_llvm}/bin/${llvmconfig} --prefix`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_llvm}/bin/llvm-config80"
+MK_EXEC_PATH="${prefix_llvm}/bin/${llvmconfig}"
 fi
 else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -x "${path}/llvm-config80" -a ! -d "${path}/llvm-config80" ]; then
-LLDB_PREFIX=`${path}/llvm-config80 --prefix`
+if [ -x "${path}/${llvmconfig}" -a ! -d "${path}/${llvmconfig}" ]; then
+LLDB_PREFIX=`${path}/${llvmconfig} --prefix`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config80"
+MK_EXEC_PATH="${path}/${llvmconfig}"
 break
-elif [ -e "${path}/llvm-config80.exe" ]; then
-LLDB_PREFIX=`${path}/llvm-config80.exe --prefix`
+elif [ -e "${path}/${llvmconfig}.exe" ]; then
+LLDB_PREFIX=`${path}/${llvmconfig}.exe --prefix`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config80.exe"
+MK_EXEC_PATH="${path}/${llvmconfig}.exe"
 break
 fi
 done
 IFS=$bb_save_IFS
 fi
+if [ "${MK_EXEC_FOUND}" = "Yes" ]; then
 LLDB_VERSION=
-if [ "" != "" ]; then
-if [ -x "/bin/llvm-config80" -a ! -d "/bin/llvm-config80" ]; then
-LLDB_VERSION=`/bin/llvm-config80 --version`
+MK_EXEC_FOUND=No
+if [ "${prefix_llvm}" != "" ]; then
+if [ -x "${prefix_llvm}/bin/${llvmconfig}" -a ! -d "${prefix_llvm}/bin/${llvmconfig}" ]; then
+LLDB_VERSION=`${prefix_llvm}/bin/${llvmconfig} --version`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="/bin/llvm-config80"
+MK_EXEC_PATH="${prefix_llvm}/bin/${llvmconfig}"
 fi
 else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -x "${path}/llvm-config80" -a ! -d "${path}/llvm-config80" ]; then
-LLDB_VERSION=`${path}/llvm-config80 --version`
+if [ -x "${path}/${llvmconfig}" -a ! -d "${path}/${llvmconfig}" ]; then
+LLDB_VERSION=`${path}/${llvmconfig} --version`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config80"
+MK_EXEC_PATH="${path}/${llvmconfig}"
 break
-elif [ -e "${path}/llvm-config80.exe" ]; then
-LLDB_VERSION=`${path}/llvm-config80.exe --version`
+elif [ -e "${path}/${llvmconfig}.exe" ]; then
+LLDB_VERSION=`${path}/${llvmconfig}.exe --version`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config80.exe"
+MK_EXEC_PATH="${path}/${llvmconfig}.exe"
 break
 fi
 done
 IFS=$bb_save_IFS
 fi
 LLDB_CFLAGS=
-if [ "" != "" ]; then
-if [ -x "/bin/llvm-config80" -a ! -d "/bin/llvm-config80" ]; then
-LLDB_CFLAGS=`/bin/llvm-config80 --cflags`
+MK_EXEC_FOUND=No
+if [ "${prefix_llvm}" != "" ]; then
+if [ -x "${prefix_llvm}/bin/${llvmconfig}" -a ! -d "${prefix_llvm}/bin/${llvmconfig}" ]; then
+LLDB_CFLAGS=`${prefix_llvm}/bin/${llvmconfig} --cflags`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="/bin/llvm-config80"
+MK_EXEC_PATH="${prefix_llvm}/bin/${llvmconfig}"
 fi
 else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -x "${path}/llvm-config80" -a ! -d "${path}/llvm-config80" ]; then
-LLDB_CFLAGS=`${path}/llvm-config80 --cflags`
+if [ -x "${path}/${llvmconfig}" -a ! -d "${path}/${llvmconfig}" ]; then
+LLDB_CFLAGS=`${path}/${llvmconfig} --cflags`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config80"
+MK_EXEC_PATH="${path}/${llvmconfig}"
 break
-elif [ -e "${path}/llvm-config80.exe" ]; then
-LLDB_CFLAGS=`${path}/llvm-config80.exe --cflags`
+elif [ -e "${path}/${llvmconfig}.exe" ]; then
+LLDB_CFLAGS=`${path}/${llvmconfig}.exe --cflags`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config80.exe"
+MK_EXEC_PATH="${path}/${llvmconfig}.exe"
 break
 fi
 done
 IFS=$bb_save_IFS
 fi
 LLDB_LDFLAGS=
-if [ "" != "" ]; then
-if [ -x "/bin/llvm-config80" -a ! -d "/bin/llvm-config80" ]; then
-LLDB_LDFLAGS=`/bin/llvm-config80 --ldflags`
+MK_EXEC_FOUND=No
+if [ "${prefix_llvm}" != "" ]; then
+if [ -x "${prefix_llvm}/bin/${llvmconfig}" -a ! -d "${prefix_llvm}/bin/${llvmconfig}" ]; then
+LLDB_LDFLAGS=`${prefix_llvm}/bin/${llvmconfig} --ldflags`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="/bin/llvm-config80"
+MK_EXEC_PATH="${prefix_llvm}/bin/${llvmconfig}"
 fi
 else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -x "${path}/llvm-config80" -a ! -d "${path}/llvm-config80" ]; then
-LLDB_LDFLAGS=`${path}/llvm-config80 --ldflags`
+if [ -x "${path}/${llvmconfig}" -a ! -d "${path}/${llvmconfig}" ]; then
+LLDB_LDFLAGS=`${path}/${llvmconfig} --ldflags`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config80"
+MK_EXEC_PATH="${path}/${llvmconfig}"
 break
-elif [ -e "${path}/llvm-config80.exe" ]; then
-LLDB_LDFLAGS=`${path}/llvm-config80.exe --ldflags`
+elif [ -e "${path}/${llvmconfig}.exe" ]; then
+LLDB_LDFLAGS=`${path}/${llvmconfig}.exe --ldflags`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config80.exe"
+MK_EXEC_PATH="${path}/${llvmconfig}.exe"
 break
 fi
 done
 IFS=$bb_save_IFS
 fi
 LLDB_LIBS=
-if [ "" != "" ]; then
-if [ -x "/bin/llvm-config80" -a ! -d "/bin/llvm-config80" ]; then
-LLDB_LIBS=`/bin/llvm-config80 --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="/bin/llvm-config80"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -x "${path}/llvm-config80" -a ! -d "${path}/llvm-config80" ]; then
-LLDB_LIBS=`${path}/llvm-config80 --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config80"
-break
-elif [ -e "${path}/llvm-config80.exe" ]; then
-LLDB_LIBS=`${path}/llvm-config80.exe --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config80.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-if [ "LLDB_PREFIX" = "" ]; then
-LLDB_PREFIX=
+MK_EXEC_FOUND=No
 if [ "${prefix_llvm}" != "" ]; then
-if [ -x "${prefix_llvm}/bin/llvm-config70" -a ! -d "${prefix_llvm}/bin/llvm-config70" ]; then
-LLDB_PREFIX=`${prefix_llvm}/bin/llvm-config70 --prefix`
+if [ -x "${prefix_llvm}/bin/${llvmconfig}" -a ! -d "${prefix_llvm}/bin/${llvmconfig}" ]; then
+LLDB_LIBS=`${prefix_llvm}/bin/${llvmconfig} --libs`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_llvm}/bin/llvm-config70"
+MK_EXEC_PATH="${prefix_llvm}/bin/${llvmconfig}"
 fi
 else
 bb_save_IFS=$IFS
 IFS=$PATH_SEPARATOR
 for path in $PATH; do
-if [ -x "${path}/llvm-config70" -a ! -d "${path}/llvm-config70" ]; then
-LLDB_PREFIX=`${path}/llvm-config70 --prefix`
+if [ -x "${path}/${llvmconfig}" -a ! -d "${path}/${llvmconfig}" ]; then
+LLDB_LIBS=`${path}/${llvmconfig} --libs`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config70"
+MK_EXEC_PATH="${path}/${llvmconfig}"
 break
-elif [ -e "${path}/llvm-config70.exe" ]; then
-LLDB_PREFIX=`${path}/llvm-config70.exe --prefix`
+elif [ -e "${path}/${llvmconfig}.exe" ]; then
+LLDB_LIBS=`${path}/${llvmconfig}.exe --libs`
 MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config70.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-if [ "LLDB_PREFIX" = "" ]; then
-LLDB_PREFIX=
-if [ "${prefix_llvm}" != "" ]; then
-if [ -x "${prefix_llvm}/bin/llvm-config" -a ! -d "${prefix_llvm}/bin/llvm-config" ]; then
-LLDB_PREFIX=`${prefix_llvm}/bin/llvm-config --prefix`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_llvm}/bin/llvm-config"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -x "${path}/llvm-config" -a ! -d "${path}/llvm-config" ]; then
-LLDB_PREFIX=`${path}/llvm-config --prefix`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config"
-break
-elif [ -e "${path}/llvm-config.exe" ]; then
-LLDB_PREFIX=`${path}/llvm-config.exe --prefix`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config.exe"
+MK_EXEC_PATH="${path}/${llvmconfig}.exe"
 break
 fi
 done
 IFS=$bb_save_IFS
 fi
-if [ "LLDB_PREFIX" = "" ]; then
-LLDB_PREFIX=
-if [ "${prefix_llvm}" != "" ]; then
-if [ -x "${prefix_llvm}/bin/llvm-config60" -a ! -d "${prefix_llvm}/bin/llvm-config60" ]; then
-LLDB_PREFIX=`${prefix_llvm}/bin/llvm-config60 --prefix`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_llvm}/bin/llvm-config60"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -x "${path}/llvm-config60" -a ! -d "${path}/llvm-config60" ]; then
-LLDB_PREFIX=`${path}/llvm-config60 --prefix`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config60"
-break
-elif [ -e "${path}/llvm-config60.exe" ]; then
-LLDB_PREFIX=`${path}/llvm-config60.exe --prefix`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config60.exe"
 break
 fi
 done
-IFS=$bb_save_IFS
-fi
-if [ "LLDB_PREFIX" = "" ]; then
-LLDB_PREFIX=
-if [ "${prefix_llvm}" != "" ]; then
-if [ -x "${prefix_llvm}/bin/llvm-config10" -a ! -d "${prefix_llvm}/bin/llvm-config10" ]; then
-LLDB_PREFIX=`${prefix_llvm}/bin/llvm-config10 --prefix`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${prefix_llvm}/bin/llvm-config10"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -x "${path}/llvm-config10" -a ! -d "${path}/llvm-config10" ]; then
-LLDB_PREFIX=`${path}/llvm-config10 --prefix`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config10"
-break
-elif [ -e "${path}/llvm-config10.exe" ]; then
-LLDB_PREFIX=`${path}/llvm-config10.exe --prefix`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config10.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-LLDB_VERSION=
-if [ "" != "" ]; then
-if [ -x "/bin/llvm-config10" -a ! -d "/bin/llvm-config10" ]; then
-LLDB_VERSION=`/bin/llvm-config10 --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="/bin/llvm-config10"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -x "${path}/llvm-config10" -a ! -d "${path}/llvm-config10" ]; then
-LLDB_VERSION=`${path}/llvm-config10 --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config10"
-break
-elif [ -e "${path}/llvm-config10.exe" ]; then
-LLDB_VERSION=`${path}/llvm-config10.exe --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config10.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-LLDB_CFLAGS=
-if [ "" != "" ]; then
-if [ -x "/bin/llvm-config10" -a ! -d "/bin/llvm-config10" ]; then
-LLDB_CFLAGS=`/bin/llvm-config10 --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="/bin/llvm-config10"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -x "${path}/llvm-config10" -a ! -d "${path}/llvm-config10" ]; then
-LLDB_CFLAGS=`${path}/llvm-config10 --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config10"
-break
-elif [ -e "${path}/llvm-config10.exe" ]; then
-LLDB_CFLAGS=`${path}/llvm-config10.exe --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config10.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-LLDB_LDFLAGS=
-if [ "" != "" ]; then
-if [ -x "/bin/llvm-config10" -a ! -d "/bin/llvm-config10" ]; then
-LLDB_LDFLAGS=`/bin/llvm-config10 --ldflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="/bin/llvm-config10"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -x "${path}/llvm-config10" -a ! -d "${path}/llvm-config10" ]; then
-LLDB_LDFLAGS=`${path}/llvm-config10 --ldflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config10"
-break
-elif [ -e "${path}/llvm-config10.exe" ]; then
-LLDB_LDFLAGS=`${path}/llvm-config10.exe --ldflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config10.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-LLDB_LIBS=
-if [ "" != "" ]; then
-if [ -x "/bin/llvm-config10" -a ! -d "/bin/llvm-config10" ]; then
-LLDB_LIBS=`/bin/llvm-config10 --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="/bin/llvm-config10"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -x "${path}/llvm-config10" -a ! -d "${path}/llvm-config10" ]; then
-LLDB_LIBS=`${path}/llvm-config10 --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config10"
-break
-elif [ -e "${path}/llvm-config10.exe" ]; then
-LLDB_LIBS=`${path}/llvm-config10.exe --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config10.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-fi
-else
-LLDB_VERSION=
-if [ "" != "" ]; then
-if [ -x "/bin/llvm-config" -a ! -d "/bin/llvm-config" ]; then
-LLDB_VERSION=`/bin/llvm-config --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="/bin/llvm-config"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -x "${path}/llvm-config" -a ! -d "${path}/llvm-config" ]; then
-LLDB_VERSION=`${path}/llvm-config --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config"
-break
-elif [ -e "${path}/llvm-config.exe" ]; then
-LLDB_VERSION=`${path}/llvm-config.exe --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-LLDB_CFLAGS=
-if [ "" != "" ]; then
-if [ -x "/bin/llvm-config" -a ! -d "/bin/llvm-config" ]; then
-LLDB_CFLAGS=`/bin/llvm-config --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="/bin/llvm-config"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -x "${path}/llvm-config" -a ! -d "${path}/llvm-config" ]; then
-LLDB_CFLAGS=`${path}/llvm-config --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config"
-break
-elif [ -e "${path}/llvm-config.exe" ]; then
-LLDB_CFLAGS=`${path}/llvm-config.exe --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-LLDB_LDFLAGS=
-if [ "" != "" ]; then
-if [ -x "/bin/llvm-config" -a ! -d "/bin/llvm-config" ]; then
-LLDB_LDFLAGS=`/bin/llvm-config --ldflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="/bin/llvm-config"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -x "${path}/llvm-config" -a ! -d "${path}/llvm-config" ]; then
-LLDB_LDFLAGS=`${path}/llvm-config --ldflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config"
-break
-elif [ -e "${path}/llvm-config.exe" ]; then
-LLDB_LDFLAGS=`${path}/llvm-config.exe --ldflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-LLDB_LIBS=
-if [ "" != "" ]; then
-if [ -x "/bin/llvm-config" -a ! -d "/bin/llvm-config" ]; then
-LLDB_LIBS=`/bin/llvm-config --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="/bin/llvm-config"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -x "${path}/llvm-config" -a ! -d "${path}/llvm-config" ]; then
-LLDB_LIBS=`${path}/llvm-config --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config"
-break
-elif [ -e "${path}/llvm-config.exe" ]; then
-LLDB_LIBS=`${path}/llvm-config.exe --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-fi
-else
-LLDB_VERSION=
-if [ "" != "" ]; then
-if [ -x "/bin/llvm-config70" -a ! -d "/bin/llvm-config70" ]; then
-LLDB_VERSION=`/bin/llvm-config70 --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="/bin/llvm-config70"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -x "${path}/llvm-config70" -a ! -d "${path}/llvm-config70" ]; then
-LLDB_VERSION=`${path}/llvm-config70 --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config70"
-break
-elif [ -e "${path}/llvm-config70.exe" ]; then
-LLDB_VERSION=`${path}/llvm-config70.exe --version`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config70.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-LLDB_CFLAGS=
-if [ "" != "" ]; then
-if [ -x "/bin/llvm-config70" -a ! -d "/bin/llvm-config70" ]; then
-LLDB_CFLAGS=`/bin/llvm-config70 --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="/bin/llvm-config70"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -x "${path}/llvm-config70" -a ! -d "${path}/llvm-config70" ]; then
-LLDB_CFLAGS=`${path}/llvm-config70 --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config70"
-break
-elif [ -e "${path}/llvm-config70.exe" ]; then
-LLDB_CFLAGS=`${path}/llvm-config70.exe --cflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config70.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-LLDB_LDFLAGS=
-if [ "" != "" ]; then
-if [ -x "/bin/llvm-config70" -a ! -d "/bin/llvm-config70" ]; then
-LLDB_LDFLAGS=`/bin/llvm-config70 --ldflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="/bin/llvm-config70"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -x "${path}/llvm-config70" -a ! -d "${path}/llvm-config70" ]; then
-LLDB_LDFLAGS=`${path}/llvm-config70 --ldflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config70"
-break
-elif [ -e "${path}/llvm-config70.exe" ]; then
-LLDB_LDFLAGS=`${path}/llvm-config70.exe --ldflags`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config70.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-LLDB_LIBS=
-if [ "" != "" ]; then
-if [ -x "/bin/llvm-config70" -a ! -d "/bin/llvm-config70" ]; then
-LLDB_LIBS=`/bin/llvm-config70 --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="/bin/llvm-config70"
-fi
-else
-bb_save_IFS=$IFS
-IFS=$PATH_SEPARATOR
-for path in $PATH; do
-if [ -x "${path}/llvm-config70" -a ! -d "${path}/llvm-config70" ]; then
-LLDB_LIBS=`${path}/llvm-config70 --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config70"
-break
-elif [ -e "${path}/llvm-config70.exe" ]; then
-LLDB_LIBS=`${path}/llvm-config70.exe --libs`
-MK_EXEC_FOUND=Yes
-MK_EXEC_PATH="${path}/llvm-config70.exe"
-break
-fi
-done
-IFS=$bb_save_IFS
-fi
-fi
-fi
 case "${host}" in
 *-*-darwin*)
 if [ "LLDB_BUILD_DIR" = "" ]; then
@@ -2668,19 +2271,23 @@ rm -f conftest$$.cpp $testdir/conftest$$$EXECSUFFIX
 fi
 if [ "${HAVE_LLDB}" = "yes" ]; then
 LLDB_LIBS="${LLDB_LDFLAGS} ${LLDB_LIBS}"
+bb_o=$bb_incdir/have_lldb.h
+echo '#ifndef HAVE_LLDB' >$bb_o
+echo "#define HAVE_LLDB \"$HAVE_LLDB\"" >>$bb_o
+echo '#endif' >>$bb_o
 $ECHO_N 'checking for LLDB Utility library...'
 $ECHO_N '# checking for LLDB Utility library...' >>config.log
 case "${host}" in
 *-*-darwin*)
 echo 'no'
 echo '# no' >>config.log
+echo '#undef HAVE_LLDB_UTILITY' >$bb_incdir/have_lldb_utility.h
 HAVE_LLDB_UTILITY="no"
 LLDB_UTILITY_CFLAGS=""
 LLDB_UTILITY_LIBS=""
 ;;
 *)
 LLDB_UTILITY_CFLAGS=""
-LLDB_UTILITY_LIBS="-llldbUtility"
 MK_COMPILE_STATUS=OK
 cat << EOT >conftest$$.cpp
 #include <stdlib.h>
@@ -2741,8 +2348,8 @@ echo '# C++: HAVE_LLDB_UTILITY' >>config.log
 echo "cat << EOT >conftest$$.cpp" >>config.log
 cat conftest$$.cpp>>config.log
 echo EOT >>config.log
-echo "$CXX $CXXFLAGS $TEST_CXXFLAGS ${LLDB_CFLAGS} ${LLDB_UTILITY_CFLAGS} -o $testdir/conftest$$ conftest$$.cpp ${LLDB_LDFLAGS} ${LLDB_LIBS} ${LLDB_UTILITY_LIBS} 1>/dev/null 2>>config.log">>config.log
-$CXX $CXXFLAGS $TEST_CXXFLAGS ${LLDB_CFLAGS} ${LLDB_UTILITY_CFLAGS} -o $testdir/conftest$$ conftest$$.cpp ${LLDB_LDFLAGS} ${LLDB_LIBS} ${LLDB_UTILITY_LIBS} 1>/dev/null 2>>config.log
+echo "$CXX $CXXFLAGS $TEST_CXXFLAGS ${LLDB_CFLAGS} ${LLDB_UTILITY_CFLAGS} -o $testdir/conftest$$ conftest$$.cpp ${LLDB_LDFLAGS} ${LLDB_LIBS} -llldbUtility 1>/dev/null 2>>config.log">>config.log
+$CXX $CXXFLAGS $TEST_CXXFLAGS ${LLDB_CFLAGS} ${LLDB_UTILITY_CFLAGS} -o $testdir/conftest$$ conftest$$.cpp ${LLDB_LDFLAGS} ${LLDB_LIBS} -llldbUtility 1>/dev/null 2>>config.log
 if [ "$?" != "0" ]; then
 echo "# failed $?" >>config.log
 MK_COMPILE_STATUS="FAIL $?"
@@ -2763,6 +2370,15 @@ echo '#undef HAVE_LLDB_UTILITY' >$bb_incdir/have_lldb_utility.h
 fi
 if [ "${keep_conftest}" != "yes" ]; then
 rm -f conftest$$.cpp $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_LLDB_UTILITY}" = "yes" ]; then
+LLDB_UTILITY_LIBS="-llldbUtility"
+bb_o=$bb_incdir/have_lldb_utility.h
+echo '#ifndef HAVE_LLDB_UTILITY' >$bb_o
+echo "#define HAVE_LLDB_UTILITY \"$HAVE_LLDB_UTILITY\"" >>$bb_o
+echo '#endif' >>$bb_o
+else
+echo '#undef HAVE_LLDB_UTILITY' >$bb_incdir/have_lldb_utility.h
 fi
 ;;
 esac
@@ -3045,29 +2661,18 @@ echo "***"
 exit 1
 fi
 fi
-CFLAGS="$CFLAGS -D_USE_AGAR_STD"
 CXXFLAGS="$CXXFLAGS -D_USE_AGAR_STD"
-CFLAGS="$CFLAGS -D_USE_AGAR_QUEUE"
 CXXFLAGS="$CXXFLAGS -D_USE_AGAR_QUEUE"
-CFLAGS="$CFLAGS -D_USE_AGAR_TYPES"
 CXXFLAGS="$CXXFLAGS -D_USE_AGAR_TYPES"
-CFLAGS="$CFLAGS -D_USE_AGAR_ATTRIBUTES"
 CXXFLAGS="$CXXFLAGS -D_USE_AGAR_ATTRIBUTES"
-CFLAGS="$CFLAGS -D_USE_AGAR_NULLABILITY"
 CXXFLAGS="$CXXFLAGS -D_USE_AGAR_NULLABILITY"
 if [ "${enable_warnings}" = 'yes' ]
  then
-CFLAGS="$CFLAGS -Wall"
 CXXFLAGS="$CXXFLAGS -Wall"
-CFLAGS="$CFLAGS -Werror"
 CXXFLAGS="$CXXFLAGS -Werror"
-CFLAGS="$CFLAGS -Wmissing-prototypes"
 CXXFLAGS="$CXXFLAGS -Wmissing-prototypes"
-CFLAGS="$CFLAGS -Wno-switch"
 CXXFLAGS="$CXXFLAGS -Wno-switch"
-CFLAGS="$CFLAGS -Wno-gnu-anonymous-struct"
 CXXFLAGS="$CXXFLAGS -Wno-gnu-anonymous-struct"
-CFLAGS="$CFLAGS -Wno-nested-anon-types"
 CXXFLAGS="$CXXFLAGS -Wno-nested-anon-types"
 fi
 if [ "${enable_debug}" = 'yes' ]
@@ -3090,7 +2695,6 @@ else
 echo '#undef AG_TYPE_SAFETY' >$bb_incdir/ag_type_safety.h
 fi
 fi
-CFLAGS="$CFLAGS -I$BLD"
 CXXFLAGS="$CXXFLAGS -I$BLD"
 echo "AGAR_CFLAGS=$AGAR_CFLAGS" >>Makefile.config
 echo "AGAR_LIBS=$AGAR_LIBS" >>Makefile.config

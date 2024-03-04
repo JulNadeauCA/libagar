@@ -22,8 +22,9 @@ default_dir(DATADIR, "${PREFIX}/share/agar")
 default_dir(LOCALEDIR, "${DATADIR}/locale")
 
 require(cc)
-require(agar, 1.6.0, ${prefix_agar})
 require(cxx)
+
+require(agar, 1.6.0, ${prefix_agar})
 require(lldb, 8.0.0, ${prefix_llvm})
 if [ "${enable_lldb_utility}" = "no" ]; then
 	mdefine(HAVE_LLDB_UTILITY, no);
@@ -36,20 +37,19 @@ if [ "${enable_nls}" = "yes" ]; then
 	require(gettext)
 fi
 
-c_define(_USE_AGAR_STD)
-c_define(_USE_AGAR_QUEUE)
-c_define(_USE_AGAR_TYPES)
-c_define(_USE_AGAR_ATTRIBUTES)
-c_define(_USE_AGAR_NULLABILITY)
-c_no_secure_warnings()
+cxx_define(_USE_AGAR_STD)
+cxx_define(_USE_AGAR_QUEUE)
+cxx_define(_USE_AGAR_TYPES)
+cxx_define(_USE_AGAR_ATTRIBUTES)
+cxx_define(_USE_AGAR_NULLABILITY)
 
 if [ "${enable_warnings}" = 'yes' ]; then
-	c_option(-Wall)
-	c_option(-Werror)
-	c_option(-Wmissing-prototypes)
-	c_option(-Wno-switch)
-	c_option(-Wno-gnu-anonymous-struct)
-	c_option(-Wno-nested-anon-types)
+	cxx_option(-Wall)
+	cxx_option(-Werror)
+	cxx_option(-Wmissing-prototypes)
+	cxx_option(-Wno-switch)
+	cxx_option(-Wno-gnu-anonymous-struct)
+	cxx_option(-Wno-nested-anon-types)
 fi
 if [ "${enable_debug}" = 'yes' ]; then
 	hdefine(AGARDB_DEBUG, "yes")
@@ -59,5 +59,6 @@ else
 	hdefine_if("${enable_type_safety}" = 'yes', AG_TYPE_SAFETY)
 fi
 
-c_incdir($BLD)
+cxx_incdir($BLD)
+
 c_incdir_config($BLD/config)

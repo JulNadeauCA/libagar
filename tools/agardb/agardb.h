@@ -3,8 +3,8 @@
 #ifndef _AGARDB_H_
 #define _AGARDB_H_
 
-#include <config/have_lldb.h>
-#include <config/have_lldb_utility.h>
+#include "config/have_lldb.h"
+#include "config/have_lldb_utility.h"
 
 #include <bitset>
 #include <set>
@@ -17,6 +17,7 @@
 #else
 # include "lldb/API/SBBreakpoint.h"
 # include "lldb/API/SBCommandInterpreter.h"
+# include "lldb/API/SBCommandInterpreterRunOptions.h"
 # include "lldb/API/SBCommandReturnObject.h"
 # include "lldb/API/SBCommunication.h"
 # include "lldb/API/SBBroadcaster.h"
