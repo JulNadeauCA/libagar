@@ -8449,6 +8449,11 @@ fi
 CFLAGS="$CFLAGS -D_AGAR_INTERNAL"
 CFLAGS="$CFLAGS -D_DEFAULT_SOURCE"
 CFLAGS="$CFLAGS -D_BSD_SOURCE"
+case "${host}" in
+*-*-darwin*)
+CFLAGS="$CFLAGS -D_DARWIN_C_SOURCE"
+	;;
+esac
 if [ "${enable_warnings}" = 'yes' ]
  then
 CFLAGS="$CFLAGS -Wall"
