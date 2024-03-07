@@ -508,7 +508,7 @@ AG_SurfaceExportSDL(const AG_Surface *ss)
 		SDL_SetAlpha(ds, SDL_SRCALPHA, AG_Hto8(ss->alpha));
 	}
 	if (ss->flags & AG_SURFACE_COLORKEY) {
-		SDL_SetColorKey(ss, SDL_SRCCOLORKEY, ss->colorkey);
+		SDL_SetColorKey(ds, SDL_SRCCOLORKEY, ss->colorkey);
 	}
 	return (void *)ds;
 }
