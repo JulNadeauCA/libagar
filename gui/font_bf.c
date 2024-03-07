@@ -122,7 +122,7 @@ ScanImage(AG_FontBf *fontBf)
 	Uint8 *p, *pScanBegin;
 	AG_Pixel px, pxBB;
 	Uint nGlyph=0, nRow=0;
-	int x = 0, y, yRef, yBeg, yEnd;
+	int x = 0, y, yRef, yBeg = 0, yEnd = S->h;
 
 	pxBB = AG_MapPixel_RGBA8(&S->format, 0,0,0, 255);
 
@@ -263,7 +263,7 @@ Open(void *_Nonnull obj, const char *_Nonnull path)
 	AG_Size size;
 	char *buf, *sBuf, *line;
 	int nLine=1, inUnicodeBlock=0, inMatchingSize=0, inMatchingFlags=0;
-	int maxUnicode;
+	int maxUnicode = 0;
 
 	if (spec->sourceType == AG_FONT_SOURCE_FILE) {
 		AG_DataSource *ds;

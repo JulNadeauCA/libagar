@@ -1005,7 +1005,7 @@ AG_Font *
 AG_FetchFontFromList(const char *faceList, float fontSize, Uint flags)
 {
 	char *buf, *pBuf, *face;
-	AG_Font *font;
+	AG_Font *font = NULL;
 
 	if ((buf = TryStrdup(faceList)) == NULL) {
 		return (NULL);

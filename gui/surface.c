@@ -1609,7 +1609,7 @@ AG_SurfaceBlend8(AG_Surface *S, int x, int y, const AG_Color *c)
 	                       (x >> S->format.PixelsPerByteShift);
 	AG_Color pc;
 	AG_Component a;
-	Uint8 px;
+	Uint8 px = 0;
 
 #ifdef DEBUG_SURFACE_PUT
 	if (x < 0 || y < 0 || x >= S->w || y >= S->h)

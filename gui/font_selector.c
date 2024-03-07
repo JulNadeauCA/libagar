@@ -225,6 +225,7 @@ UpdatePreview(AG_FontSelector *_Nonnull fs, AG_Font *_Nullable fontNew)
 	}
 
 	if (fontNew != NULL) {
+		Vfont = NULL;
 		font = fontNew;
 	} else {
 		Vfont = AG_GetVariable(fs, "font", (void *)&pFont);
@@ -270,7 +271,7 @@ UpdatePreview(AG_FontSelector *_Nonnull fs, AG_Font *_Nullable fontNew)
 		     font->typoLineGap);
 	}
 
-	if (fontNew == NULL)
+	if (Vfont != NULL)
 		AG_UnlockVariable(Vfont);
 }
 
