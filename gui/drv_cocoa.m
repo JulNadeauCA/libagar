@@ -846,7 +846,7 @@ COCOA_ProcessEvent(void *_Nullable drvCaller, AG_DriverEvent *_Nonnull dev)
 	switch (dev->type) {
 	case AG_DRIVER_MOUSE_MOTION:
 		AG_ProcessMouseMotion(win, dev->motion.x, dev->motion.y,
-		    drv->mouse->xRel, drv->mouse->yRel, drv->mouse->btnState);
+		    drv->mouse->xRel, drv->mouse->yRel);
 		AG_MouseCursorUpdate(win, dev->motion.x, dev->motion.y);
 		break;
 	case AG_DRIVER_MOUSE_BUTTON_DOWN:
