@@ -15,6 +15,6 @@ void M_VectorFreeZ(M_VectorZ *_Nonnull);
 void M_VectorAddZv(M_VectorZ *_Nonnull, const M_VectorZ *_Nonnull);
 void M_VectorSubZv(M_VectorZ *_Nonnull, const M_VectorZ *_Nonnull);
 void M_VectorScaleZv(M_VectorZ *_Nonnull, M_Real);
-void M_VectorResizeV(M_VectorZ *_Nonnull, Uint);
+void M_VectorResizeZ(M_VectorZ *_Nonnull, Uint);
 void M_VectorPrintZ(const M_VectorZ *_Nonnull);
 __END_DECLS

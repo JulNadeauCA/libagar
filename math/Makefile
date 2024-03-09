@@ -16,7 +16,7 @@ LIB_LINKS=	${CORE_LINKS_STATIC} ${GUI_LINKS_STATIC} ${AGMATH_LIBS}
 MAN3=	M_Matrix.3 M_Circle.3 M_Color.3 M_Complex.3 M_Geometry.3 M_Line.3 \
 	M_Plane.3 M_Polygon.3 M_Rectangle.3 M_Sphere.3 M_Triangle.3 \
 	M_Matview.3 M_Real.3 M_Plotter.3 M_Quaternion.3 M_Vector.3 \
-	M_String.3 M_PointSet.3
+	M_VectorZ.3 M_String.3 M_PointSet.3
 
 SRCS=	m_math.c m_complex.c m_quaternion.c \
 	m_vector.c m_vectorz.c m_vector_fpu.c \

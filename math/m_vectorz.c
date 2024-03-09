@@ -101,7 +101,7 @@ M_VectorScaleZv(M_VectorZ *v, M_Real c)
 }
 
 void
-M_VectorResizeV(M_VectorZ *v, Uint n)
+M_VectorResizeZ(M_VectorZ *v, Uint n)
 {
 	v->v = Realloc(v->v, n*sizeof(int));
 	v->n = n;

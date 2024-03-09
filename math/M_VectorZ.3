@@ -1,0 +1,140 @@
+.\"
+.\" Copyright (c) 2024 Julien Nadeau Carriere <vedge@csoft.net>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd March 8, 2024
+.Dt M_VECTORZ 3
+.Os Agar 1.7
+.Sh NAME
+.Nm M_VectorZ
+.Nd Agar-Math signed integer vectors
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+#include <agar/math/m.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+functions implement basic operations on signed-integer-valued
+.Va n
+dimensional vectors.
+.Sh VECTORS IN Z^N
+The following routines operate on dynamically-allocated vectors in Z^n.
+Vectors entries are directly accessible through the
+.Va v
+array.
+The
+.Ft M_VectorZ
+structure is defined as:
+.Bd -literal
+.\" SYNTAX(c)
+typedef struct m_vector {
+	Uint n;                 /* Size */
+	Uint32 _pad;
+	int *_Nonnull v;        /* Elements */
+} M_VectorZ;
+.Ed
+.Sh VECTORS IN Z^N: INITIALIZATION
+.nr nS 1
+.Ft "M_VectorZ *"
+.Fn M_VectorNewZ "Uint m"
+.Pp
+.Ft "void"
+.Fn M_VectorFreeZ "M_VectorZ *v"
+.Pp
+.Ft int
+.Fn M_VectorResizeZ "M_VectorZ *v" "Uint m"
+.Pp
+.nr nS 0
+The
+.Fn M_VectorNewZ
+function allocates a new vector in Z^n.
+.Fn M_VectorFreeZ
+releases all resources allocated for the specified vector.
+.Pp
+.Fn M_VectorResizeZ
+resizes the vector
+.Fa v
+to
+.Fa m .
+Existing entries are preserved, but new entries are left uninitialized.
+If insufficient memory is available, -1 is returned and an error message
+is set.
+On success, the function returns 0.
+.Sh VECTORS IN Z^N: BASIC OPERATIONS
+.nr nS 1
+.Ft void
+.Fn M_VectorCopyZ "const M_VectorZ *vDst" "const M_VectorZ *vSrc"
+.Pp
+.Ft "M_VectorZ *"
+.Fn M_VectorScaleZv "const M_VectorZ *v" "M_Real c"
+.Pp
+.Ft "void"
+.Fn M_VectorAddZv "M_VectorZ *a" "const M_VectorZ *b"
+.Pp
+.Ft "void"
+.Fn M_VectorSubZv "M_VectorZ *a" "const M_VectorZ *b"
+.Pp
+.nr nS 0
+.Fn M_VectorCopyZ
+copies the contents of vector
+.Fa vSrc
+into
+.Fa vDst .
+Both vectors must have the same size.
+.Pp
+.Fn M_VectorScaleZv
+scales each component of vector
+.Fa v
+by a scaling factor
+.Fa c .
+.Pp
+.Fn M_VectorAddZv
+returns the sum of vectors
+.Fa a
+and
+.Fa b
+into
+.Fa a .
+Both vectors must be of the same size.
+.Pp
+.Fn M_VectorSubZv
+returns the difference of vectors
+.Fa a
+and
+.Fa b
+into
+.Fa a .
+Both vectors must be of the same size.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr M_Matrix 3 ,
+.Xr M_Vector 3 ,
+.Xr M_Real 3
+.Sh HISTORY
+The
+.Nm
+interface appeared in Agar 1.3.4.
+It was first documented in Agar 1.7.1.
