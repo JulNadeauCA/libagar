@@ -38,6 +38,10 @@
 # include <exec/exec.h>
 # include <interfaces/exec.h>
 # include <proto/exec.h>
+#elif defined(__OpenBSD__) && defined(__ppc__)
+# include <machine/cpu.h>
+# include <sys/types.h>
+# include <sys/sysctl.h>
 #endif
 
 struct cpuid_regs {
@@ -294,8 +298,15 @@ AG_GetCPUInfo(AG_CPUInfo *_Nonnull cpu)
 
 #if (defined(__APPLE__) || defined(__MACOSX__)) && defined(__ppc__) && \
     !defined(MAC_OS_X_VERSION_10_4)
+	int selectors[2] = { CTL_HW, HW_VECTORUNIT };
+#elif defined(__OpenBSD__) && defined(__ppc__)
+	int selectors[2] = { CTL_MACHDEP, CPU_ALTIVEC };
+#endif
+
+#if (defined(__APPLE__) || defined(__MACOSX__)) && defined(__ppc__) && \
+    !defined(MAC_OS_X_VERSION_10_4) || \
+    (defined(__OpenBSD__) && defined(__ppc__))
 	{
-		int selectors[2] = { CTL_HW, HW_VECTORUNIT };
 		int flag = 0;
 		size_t length = sizeof(flag);
 	
