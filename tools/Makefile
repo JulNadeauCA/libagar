@@ -2,6 +2,7 @@ TOP=	..
 include ${TOP}/Makefile.config
 
 SUBDIR=	agardb \
+	agarib \
 	agar-disasm \
 	mapedit \
 	rgedit \
