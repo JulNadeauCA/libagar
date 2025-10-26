@@ -18,6 +18,7 @@ with Agar.Widget;
 with Agar.Box; use Agar.Box;
 with Agar.Button; use Agar.Button;
 with Agar.Checkbox; use Agar.Checkbox;
+with Agar.Tlist; use Agar.Tlist;
 
 with Interfaces; use Interfaces;
 with Interfaces.C;
@@ -540,12 +541,21 @@ begin
          Text      => "Checkbox #2",
          Exclusive => True);
 
+      My_Tlist_1 : Tlist_Access := New_Tlist
+        (Parent    => Box_To_Widget(My_V_Box),
+         Expand    => True);
     begin
       T_IO.Put_Line ("Box created: " & AGO.Get_Name(Box_To_Object(My_V_Box)));
       T_IO.Put_Line ("Button #1 created: " & AGO.Get_Name(Button_To_Object(My_Button_1)));
       T_IO.Put_Line ("Button #2 created: " & AGO.Get_Name(Button_To_Object(My_Button_2)));
       T_IO.Put_Line ("Checkbox #1 created: " & AGO.Get_Name(Checkbox_To_Object(My_Checkbox_1)));
       T_IO.Put_Line ("Checkbox #2 created: " & AGO.Get_Name(Checkbox_To_Object(My_Checkbox_2)));
+      T_IO.Put_Line ("Tlist #1 created: " & AGO.Get_Name(Tlist_To_Object(My_Tlist_1)));
+
+      Tlist_Add(My_Tlist_1, "Bart");
+      Tlist_Add(My_Tlist_1, "Homer");
+      Tlist_Add(My_Tlist_1, "Lisa");
+      Tlist_Add(My_Tlist_1, "Marge");
     end;
 
     -- Adjust window borders (normally used in single-window mode) --

@@ -23,8 +23,9 @@ SRCS=		ag_drivers.c \
 		agar-init_gui.adb \
 		agar-input_device.ads \
 		agar-surface.adb \
-		agar-widget.adb \
-		agar-text.adb
+		agar-text.adb \
+		agar-tlist.adb \
+		agar-widget.adb
 
 CONFIGSCRIPTS=	agar-ada-config
 PCMODULES=	agar-ada.pc

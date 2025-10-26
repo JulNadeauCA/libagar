@@ -3,7 +3,7 @@
 --                           A G A R  . C O M B O                           --
 --                                 B o d y                                  --
 --                                                                          --
--- Copyright (c) 2024 Julien Nadeau Carriere (vedge@csoft.net)              --
+-- Copyright (c) 2025 Julien Nadeau Carriere (vedge@csoft.net)              --
 --                                                                          --
 -- Permission to use, copy, modify, and/or distribute this software for any --
 -- purpose with or without fee is hereby granted, provided that the above   --
@@ -149,7 +149,7 @@ package body Agar.Combo is
   --
   function Select_Item
     (Combo : in Combo_not_null_Access;
-     Text  : in String) return Agar.Tlist.Item_Access
+     Text  : in String) return Agar.Tlist.Tlist_Item_Access
   is
     Ch_Text : aliased C.char_array := C.To_C(Text);
   begin

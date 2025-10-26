@@ -11,6 +11,7 @@ with Agar.Event;
 with Agar.Surface; use Agar.Surface;
 with Agar.Widget;
 with Agar.Button;
+with Agar.Tlist;
 
 --
 -- Combo box widget. It embeds an AG_Textbox(3) and a button which activates
@@ -114,7 +115,7 @@ package Agar.Combo is
   --
   procedure Set_Combo_Button_Surface
     (Combo   : in Combo_not_null_Access;
-     Surface : in Surface_Access
+     Surface : in Surface_Access;
      No_Dup  : in Boolean := False);
 
   --
@@ -122,7 +123,7 @@ package Agar.Combo is
   --
   procedure Select_Item
     (Combo : in Combo_not_null_Access;
-    (Item  : in Agar.Tlist.Item_not_null_Access)
+     Item  : in Agar.Tlist.Tlist_Item_not_null_Access)
     with Import, Convention => C, Link_Name => "AG_ComboSelect"; 
 
   --
@@ -130,7 +131,7 @@ package Agar.Combo is
   --
   function Select_Item
     (Combo   : in Combo_not_null_Access;
-    (Pointer : in System.Address) return Agar.Tlist.Item_Access
+     Pointer : in System.Address) return Agar.Tlist.Tlist_Item_Access
     with Import, Convention => C, Link_Name => "AG_ComboSelectPointer"; 
 
   --
@@ -138,7 +139,7 @@ package Agar.Combo is
   --
   function Select_Item
     (Combo : in Combo_not_null_Access;
-    (Text  : in String) return Agar.Tlist.Item_Access;
+     Text  : in String) return Agar.Tlist.Tlist_Item_Access;
 
   private
 
@@ -161,7 +162,7 @@ package Agar.Combo is
 
   function AG_ComboSelectText
     (Combo : in Combo_not_null_Access;
-     Text  : in CS.chars_ptr) return Agar.Tlist.Item_Access
+     Text  : in CS.chars_ptr) return Agar.Tlist.Tlist_Item_Access
     with Import, Convention => C, Link_Name => "AG_ComboSelectText";
 
   procedure AG_ComboSetButtonText
