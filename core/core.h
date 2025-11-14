@@ -26,7 +26,7 @@
 # include <agar/core/threads.h>
 # include <agar/core/types.h>
 # include <agar/core/attributes.h>
-# include <agar/core/limits.h>
+# include <agar/core/ag_limits.h>
 # include <agar/core/queue.h>
 # include <agar/core/vec.h>
 # include <agar/core/cpuinfo.h>
@@ -54,9 +54,9 @@
 # include <agar/core/error.h>
 # include <agar/core/queue.h>
 # include <agar/core/vec.h>
-# include <agar/core/limits.h>
+# include <agar/core/ag_limits.h>
 # include <agar/core/threads.h>
-# include <agar/core/string.h>
+# include <agar/core/ag_string.h>
 # include <agar/core/agsi.h>
 # include <agar/core/snprintf.h>
 # include <agar/core/vsnprintf.h>
