@@ -938,7 +938,7 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AG_FILE_READABLE AG_FILE_WRITEABLE AG_FILE_EXECUTABLE
   syn keyword cConstant AG_FILE_SUID AG_FILE_SGID AG_FILE_ARCHIVE 
   syn keyword cConstant AG_FILE_HIDDEN AG_FILE_TEMPORARY AG_FILE_SYSTEM
-  " core/limits.h
+  " core/ag_limits.h
   syn keyword cConstant AG_FILENAME_MAX AG_PATHNAME_MAX AG_ARG_MAX AG_BUFFER_MIN 
   syn keyword cConstant AG_BUFFER_MAX AG_INT_MIN AG_INT_MAX AG_UINT_MIN
   syn keyword cConstant AG_UINT_MAX AG_FLT_MIN AG_FLT_MAX AG_DBL_MIN AG_DBL_MAX
@@ -979,7 +979,7 @@ if !exists("c_no_agar_core") || exists("c_agar_core_typedefs")
   syn keyword cConstant AG_NAMESPACES AG_SERIALIZATION AG_THREADS AG_TIMERS
   syn keyword cConstant AG_TYPE_SAFETY AG_UNICODE AG_USER AG_VERBOSITY
   syn keyword cConstant AG_WIDGETS AG_WM_HINTS
-  " core/string.h
+  " core/ag_string.h
   syn keyword cType AG_NewlineFormat AG_FmtString AG_FmtExtension
   syn keyword cConstant AG_STRING_BUFFERS_MAX AG_STRING_POINTERS_MAX
   syn keyword cConstant AG_FMTSTRING_BUFFER_INIT AG_FMTSTRING_BUFFER_GROW

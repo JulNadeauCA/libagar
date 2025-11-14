@@ -3,7 +3,7 @@
  * Basic mathematical structures, constants and functions.
  */
 
-#include <agar/core/limits.h>
+#include <agar/core/ag_limits.h>
 
 /* Standard math library */
 #include <agar/config/have_math.h>

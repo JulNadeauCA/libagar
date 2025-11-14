@@ -28,7 +28,7 @@
  */
 
 #include <agar/core/core.h>
-#include <agar/core/limits.h>
+#include <agar/core/ag_limits.h>
 #include <agar/gui/widget.h>
 #include <agar/gui/primitive.h>
 #include <agar/gui/iconmgr.h>
