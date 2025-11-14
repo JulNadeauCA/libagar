@@ -12,7 +12,6 @@ with Agar.Object;
 with Agar.Event;
 with Agar.Surface; use Agar.Surface;
 with Agar.Widget;
-with Agar.Button;
 with Agar.Text;
 with Agar.Timer;
 
