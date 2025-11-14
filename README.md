@@ -22,7 +22,7 @@ While Agar includes a standard library of [general-purpose widgets](https://liba
 
 To aid debugging, the Debug version performs type checking, object-validity and class-membership tests against object pointers passed to API calls at run-time. Agar is [thread-safe](https://libagar.org/man3/AG_Threads) when built with threads support. Public API calls are reentrant unless documented otherwise, although Agar does not rely on threads for its own operation.
 
-### Libraries included (stable)
+### Libraries included
 
 * [CORE](https://libagar.org/man3/AG_Intro#AGAR-CORE): Platform, I/O, object system (non graphical)
 * [GUI (Base)](https://libagar.org/man3/AG_Intro#AGAR-GUI:_BASE_SYSTEM): GUI base framework
@@ -30,8 +30,6 @@ To aid debugging, the Debug version performs type checking, object-validity and 
 * [MATH](https://libagar.org/man3/AG_Intro#AGAR-MATH): Matrices, vectors & advanced rendering methods
 * [NET](https://libagar.org/man3/AG_Intro#AGAR-NET): Network interface, HTTP application server
 * [VG](https://libagar.org/man3/AG_Intro#AGAR-VG): Vector graphics
-
-### Libraries included (beta)
 
 * [AU](https://libagar.org/man3/AG_Intro#AGAR-AU): Audio interface library
 * [SG](https://libagar.org/man3/AG_Intro#AGAR-SG): General-purpose 3D engine

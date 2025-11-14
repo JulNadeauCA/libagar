@@ -1,10 +1,11 @@
 # Changelog
 All notable changes to Agar will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.7.1] - 2025-07-30
+## [1.7.1] - 2025-11-14
 ### Added
-- An awesome new Agar logo by @eightbit (`img/agar-eightbit.png`). Thank you so much!
-- Added [cmake](https://cmake.org) support.
+- An awesome new Agar logo. Thanks [eightbit](https://8bitprodigy.github.io)!
+- Added support for the [Cmake](https://cmake.org) build system.
+- Added support for the [Meson](https://mesonbuild.com) build system. Thanks [coleman](https://git.sr.ht/~coleman/)!
 - New functions [**AG_InitVideoSDL2**](https://libagar.org/man3/AG_InitVideoSDL2) and [**AG_SetVideoSurfaceSDL2**](https://libagar.org/man3/AG_SetVideoSurfaceSDL2) for integrating with an existing SDL2 display context. Thanks Brigham Keys!
 - [**AG_FileDlg**](https://libagar.org/man3/AG_FileDlg): Add "Any File" type.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): New function `AG_TlistCopy()`. Copy all items from a source to a destination `AG_Tlist`.

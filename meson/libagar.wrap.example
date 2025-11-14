@@ -1,0 +1,55 @@
+# Example Meson wrap file for LibAgar
+#
+# To use LibAgar as a wrap dependency in your project:
+# 1. Copy this file to your_project/subprojects/libagar.wrap
+# 2. Remove the .example extension
+# 3. Update the URL and revision to match your needs
+# 4. Use dependency('agar') in your meson.build file
+#
+# For more information on Meson wraps, see:
+# https://mesonbuild.com/Wrap-dependency-system-manual.html
+
+[wrap-git]
+url = https://github.com/JulNadeauCA/libagar.git
+revision = meson-build
+depth = 1
+
+# Optional: specify a specific branch
+# revision = other-branch 
+
+# Optional: specify a specific tag
+# revision = v1.7.1
+
+# Optional: patch files (if needed for compatibility)
+# patch_filename = libagar_1.7.1-1_patch.zip
+# patch_url = https://wrapdb.mesonbuild.com/v2/libagar_1.7.1-1/get_patch
+# patch_hash = <hash>
+
+[provide]
+# LibAgar provides these dependencies
+# The main GUI library (most commonly used)
+agar = agar_dep
+agar-gui = agar-gui_dep
+
+# Core library (required by all other libraries)
+agar-core = agar-core_dep
+
+# Optional libraries (only available if enabled)
+agar-math = agar-math_dep
+agar-net = agar-net_dep
+agar-vg = agar-vg_dep
+agar-sg = agar-sg_dep
+agar-sk = agar-sk_dep
+
+# Note: The actual dependency names in your meson.build depend on which
+# LibAgar libraries you need. Common usage:
+#
+#   # For GUI applications:
+#   agar_dep = dependency('agar')
+#
+#   # For core-only (no GUI):
+#   agar_core_dep = dependency('agar-core')
+#
+#   # For math library:
+#   agar_math_dep = dependency('agar-math')
+

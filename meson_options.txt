@@ -1,0 +1,262 @@
+# Meson build options for LibAgar
+# Matches the options available in BSDBuild (configure.in) and CMake (CMakeLists.txt)
+
+# ============================================================================
+# Libraries to build
+# ============================================================================
+
+option('gui', type: 'boolean', value: true,
+  description: 'Build the Agar-GUI library (the Agar GUI system)')
+
+option('au', type: 'boolean', value: true,
+  description: 'Build the Agar-AU library (audio and sound toolkit)')
+
+option('map', type: 'boolean', value: true,
+  description: 'Build the Agar-MAP library (2D tile engine)')
+
+option('math', type: 'boolean', value: true,
+  description: 'Build the Agar-Math library (math library and advanced rendering)')
+
+option('net', type: 'boolean', value: true,
+  description: 'Build the Agar-Net library (network interface library)')
+
+option('sg', type: 'boolean', value: true,
+  description: 'Build the Agar-SG library (scene graph and 3D engine)')
+
+option('sk', type: 'boolean', value: true,
+  description: 'Build the Agar-SK library (sketch and constraint solver)')
+
+option('vg', type: 'boolean', value: true,
+  description: 'Build the Agar-VG library (simple 2D vector graphics)')
+
+# ============================================================================
+# Global Agar options
+# ============================================================================
+
+option('memory_model', type: 'combo',
+  choices: ['auto', 'small', 'medium', 'large'],
+  value: 'auto',
+  description: 'Select Agar memory model (auto=detect from architecture)')
+
+option('float', type: 'boolean', value: true,
+  description: 'Floating-point support')
+
+option('shared', type: 'boolean', value: true,
+  description: 'Build shared libraries')
+
+option('static', type: 'boolean', value: true,
+  description: 'Build static libraries')
+
+option('static_pic', type: 'boolean', value: false,
+  description: 'Build static libraries with PIC (needed if linking static libs into shared libs)')
+
+option('type_safety', type: 'boolean', value: false,
+  description: 'Run-time type safety checks (implied by debug build)')
+
+option('debug_surfaces', type: 'boolean', value: false,
+  description: 'Trace AG_Surface operations (expensive)')
+
+option('legacy', type: 'boolean', value: true,
+  description: 'Enable deprecated interfaces')
+
+option('threads', type: 'boolean', value: true,
+  description: 'Thread safety and multithreading support')
+
+option('warnings', type: 'boolean', value: false,
+  description: 'Use suggested compiler warnings')
+
+option('tests', type: 'boolean', value: false,
+  description: 'Build test suite (auto-enabled in debug builds)')
+
+option('attributes', type: 'boolean', value: true,
+  description: 'Compiler attributes and annotations')
+
+option('inline', type: 'boolean', value: true,
+  description: 'Inline functions as appropriate')
+
+option('nls', type: 'boolean', value: false,
+  description: 'Enable internationalization and localization (NLS)')
+
+# ============================================================================
+# Options specific to CORE library
+# ============================================================================
+
+option('ansi_color', type: 'boolean', value: true,
+  description: 'Produce colorized output')
+
+option('dso', type: 'boolean', value: true,
+  description: 'Dynamically loaded modules')
+
+option('exec', type: 'boolean', value: true,
+  description: 'The AG_Execute(3) interface')
+
+option('event_loop', type: 'boolean', value: true,
+  description: 'The standard AG_EventLoop(3)')
+
+option('namespaces', type: 'boolean', value: true,
+  description: 'Namespaces for object classes')
+
+option('named_args', type: 'boolean', value: true,
+  description: 'Named AG_Event arguments')
+
+option('serialization', type: 'boolean', value: true,
+  description: 'File I/O and serialization')
+
+option('string', type: 'boolean', value: true,
+  description: 'AG_Printf(3) formatting engine')
+
+option('timers', type: 'boolean', value: true,
+  description: 'The AG_Timer(3) interface')
+
+option('unicode', type: 'boolean', value: true,
+  description: 'Support for Unicode')
+
+option('user', type: 'boolean', value: true,
+  description: 'The AG_User(3) interface')
+
+option('verbosity', type: 'boolean', value: true,
+  description: 'Verbose error messages')
+
+option('db4', type: 'boolean', value: false,
+  description: 'AG_Db: Berkeley DB backend')
+
+option('mysql', type: 'boolean', value: false,
+  description: 'AG_Db: MySQL backend')
+
+option('iconv', type: 'boolean', value: true,
+  description: 'Character set conversion')
+
+# Inline function options
+option('inline_byteswap', type: 'boolean', value: true,
+  description: 'Inline endianness swaps')
+
+option('inline_error', type: 'boolean', value: true,
+  description: 'Inline malloc() wrappers')
+
+option('inline_event', type: 'boolean', value: true,
+  description: 'Inline event argument accessors')
+
+option('inline_io', type: 'boolean', value: true,
+  description: 'Inline serialization frontends')
+
+option('inline_object', type: 'boolean', value: true,
+  description: 'Inline some AG_Object calls')
+
+option('inline_string', type: 'boolean', value: true,
+  description: 'Inline some string functions')
+
+option('inline_tbl', type: 'boolean', value: true,
+  description: 'Inline some AG_Tbl functions')
+
+option('inline_threads', type: 'boolean', value: true,
+  description: 'Inline AG_Threads functions')
+
+option('inline_variable', type: 'boolean', value: true,
+  description: 'Inline some AG_Variable calls')
+
+# ============================================================================
+# Options specific to MATH library
+# ============================================================================
+
+option('math_precision', type: 'combo',
+  choices: ['single', 'double', 'quad'],
+  value: 'double',
+  description: 'Precision of M_Real type')
+
+option('altivec', type: 'boolean', value: true,
+  description: 'AltiVec-optimized routines')
+
+option('altivec_inline', type: 'boolean', value: false,
+  description: 'Inline AltiVec functions (requires AltiVec CPU)')
+
+option('sse', type: 'boolean', value: true,
+  description: 'SSE-optimized routines')
+
+option('sse_inline', type: 'boolean', value: false,
+  description: 'Inline SSE functions (requires SSE CPU)')
+
+option('sse2', type: 'boolean', value: true,
+  description: 'SSE2 optimizations (when SSE is enabled)')
+
+option('sse3', type: 'boolean', value: true,
+  description: 'SSE3 optimizations (when SSE is enabled)')
+
+# ============================================================================
+# Options specific to NET library
+# ============================================================================
+
+option('web', type: 'boolean', value: false,
+  description: 'HTTP/1.1 application server')
+
+option('zlib', type: 'feature', value: 'auto',
+  description: 'zlib compression library (for web support)')
+
+# ============================================================================
+# Options specific to GUI library
+# ============================================================================
+
+option('widgets', type: 'boolean', value: true,
+  description: 'The standard widget library')
+
+option('wm_hints', type: 'boolean', value: true,
+  description: 'Interface with window managers')
+
+option('freetype', type: 'boolean', value: true,
+  description: 'Enable FreeType support (recommended)')
+
+option('fontconfig', type: 'boolean', value: true,
+  description: 'Enable Fontconfig support')
+
+option('gl', type: 'boolean', value: true,
+  description: 'OpenGL rendering support')
+
+option('jpeg', type: 'boolean', value: true,
+  description: 'Built-in JPEG image support')
+
+option('png', type: 'boolean', value: true,
+  description: 'Built-in PNG image support')
+
+option('x11', type: 'boolean', value: true,
+  description: 'Build with X windows support')
+
+option('xinerama', type: 'boolean', value: true,
+  description: 'Build with Xinerama support')
+
+option('glx', type: 'boolean', value: true,
+  description: 'Enable accelerated X driver')
+
+option('sdl', type: 'boolean', value: false,
+  description: 'Enable SDL 1.2 driver')
+
+option('sdl2', type: 'boolean', value: true,
+  description: 'Enable SDL 2.0 driver')
+
+option('wgl', type: 'feature', value: 'auto',
+  description: 'Enable MS Windows driver')
+
+option('cocoa', type: 'feature', value: 'auto',
+  description: 'Enable MacOS X Cocoa driver')
+
+option('inline_surface', type: 'boolean', value: true,
+  description: 'Inline pixel access routines')
+
+option('inline_widget', type: 'boolean', value: true,
+  description: 'Inline some AG_Widget functions')
+
+# ============================================================================
+# Options specific to AU library
+# ============================================================================
+
+option('sndfile', type: 'boolean', value: true,
+  description: 'Enable sndfile support')
+
+option('portaudio', type: 'boolean', value: true,
+  description: 'Enable portaudio driver')
+
+# ============================================================================
+# Options specific to SG library
+# ============================================================================
+
+option('glu', type: 'boolean', value: true,
+  description: 'OpenGL Utility Library (GLU)')
+
