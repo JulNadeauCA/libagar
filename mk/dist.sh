@@ -53,10 +53,10 @@ echo "* Building zip: Preprocessing headers"
 (cd ${DISTNAME} && ${MAKE} includes)
 
 # ZIP: Prepare IDE "project files", README.txt and friends.
-echo "* Building zip: make proj"
-(cd ${DISTNAME} && ${MAKE} proj)
-echo "* Building zip: make proj (in tests)"
-(cd ${DISTNAME}/tests && ${MAKE} proj)
+#echo "* Building zip: make proj"
+#(cd ${DISTNAME} && ${MAKE} proj)
+#echo "* Building zip: make proj (in tests)"
+#(cd ${DISTNAME}/tests && ${MAKE} proj)
 echo "* Building zip: make pre-package"
 (cd ${DISTNAME} && env PKG_OS="windows" ${MAKE} pre-package)
 (cd ${DISTNAME} && rm -f README)

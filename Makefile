@@ -3,9 +3,6 @@ include ${TOP}/Makefile.config
 
 PROJECT=	"Agar"
 PROJECT_GUID=	"93733df2-c743-489e-bc9f-f22aee00d787"
-PROJCONFIGDIR=	include/agar/config
-
-include ${TOP}/Makefile.proj
 
 MKCONFIGURE_FLAGS=	--output-cmake=CMakeChecks.cmake
 
@@ -40,7 +37,7 @@ includes:
 
 cleandir-config:
 	rm -fR include config 
-	rm -f Makefile.config config.log .projfiles.out .projfiles2.out
+	rm -f Makefile.config config.log
 	touch Makefile.config
 	-(cd tools && ${MAKE} cleandir)
 	find . -name premake.lua -exec rm -f {} \;
@@ -124,18 +121,10 @@ pre-package:
 		cat CHANGELOG.md    |sed "s/$$/`echo -e \\\r`/" >CHANGELOG.txt; \
 		cat INSTALL.md      |sed "s/$$/`echo -e \\\r`/" >INSTALL.txt; \
 		cat gui/license.txt |sed "s/$$/`echo -e \\\r`/" >LICENSE.txt; \
-		cat OFL.txt         |sed "s/$$/`echo -e \\\r`/" >OFL.txt; \
+		cat OFL.txt         |sed "s/$$/`echo -e \\\r`/" >OFL.txt.tmp; mv -f OFL.txt.tmp OFL.txt; \
 		cat README.md       |sed "s/$$/`echo -e \\\r`/" >README.txt; \
-		cp -f mk/agar-logo.png Logo.png; \
+		cp -f img/agar-eightbit.png Logo.png; \
 		echo '<meta http-equiv="refresh" content="1;url=https://libagar.org/docs/compile-msvc.html" />' > VisualC.html; \
-		echo "install-sdk.exe" >> ${PROJFILELIST}; \
-		echo "CHANGELOG.txt"   >> ${PROJFILELIST}; \
-		echo "INSTALL.txt"     >> ${PROJFILELIST}; \
-		echo "LICENSE.txt"     >> ${PROJFILELIST}; \
-		echo "OFL.txt"         >> ${PROJFILELIST}; \
-		echo "README.txt"      >> ${PROJFILELIST}; \
-		echo "Logo.png"        >> ${PROJFILELIST}; \
-		echo "VisualC.html"    >> ${PROJFILELIST}; \
 		rm -f Makefile.config agar-*-config *.pc premake.lua */premake.lua; \
 	fi
 
@@ -155,4 +144,3 @@ function-list:
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.subdir.mk
 include ${TOP}/mk/build.man.mk
-include ${TOP}/mk/build.proj.mk
