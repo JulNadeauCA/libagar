@@ -1,0 +1,28 @@
+image: archlinux
+packages:
+  - meson
+  - ninja
+  - clang
+  - pkgconf
+  - freetype2
+  - fontconfig
+  - sdl2
+  - mesa
+  - glu
+  - libxinerama
+  - libjpeg-turbo
+  - libpng
+  - zlib
+
+sources:
+  - "https://github.com/JulNadeauCA/libagar"
+
+tasks:
+  - setup: |
+      cd libagar
+      meson setup buildDir --buildtype=release --reconfigure -Dtests=true
+
+  - build: |
+      cd libagar
+      meson compile -C buildDir
+
