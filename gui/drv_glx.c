@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2023 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2009-2025 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -2100,8 +2100,6 @@ GLX_PostResizeCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 	WIDGET(win)->x = a->x;
 	WIDGET(win)->y = a->y;
 
-	win->dirty = 1;
-
 	glXMakeCurrent(agDisplay, glx->w, glx->glxCtx);
 	rVP.x = 0;
 	rVP.y = 0;
@@ -2112,6 +2110,9 @@ GLX_PostResizeCallback(AG_Window *_Nonnull win, AG_SizeAlloc *_Nonnull a)
 #ifdef GLX_RECOVER_CONTEXT
 	RegenWidgetResources(WIDGET(win));
 #endif
+
+	AG_WidgetCompileStyle(win);
+	win->dirty = 1;
 }
 
 static void
