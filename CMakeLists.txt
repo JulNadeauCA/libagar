@@ -7,13 +7,13 @@ endif()
 cmake_minimum_required(VERSION 3.12.0)
 
 project(AGAR
-	VERSION 1.7.1
+	VERSION 1.8.0
 	DESCRIPTION "Agar GUI System"
 	HOMEPAGE_URL "https://libagar.org"
 	LANGUAGES C CXX OBJC)
 
-set(AGAR_RELEASE_NAME "Ancient Egypt")
-set(AGAR_LIBRARY_VERSION_MAJOR 8)
+set(AGAR_RELEASE_NAME "Pyramid Magic")
+set(AGAR_LIBRARY_VERSION_MAJOR 9)
 set(AGAR_LIBRARY_VERSION "${AGAR_LIBRARY_VERSION_MAJOR}.0.0")
 
 add_library(agar-build-options INTERFACE)
@@ -214,6 +214,7 @@ option(AGAR_GUI_FREETYPE "Use the FreeType font engine (recommended)" ON)
 option(AGAR_GUI_FONTCONFIG "Use fontconfig library to access system fonts" ON)
 option(AGAR_GUI_JPEG "Support for image files in JPEG format" ON)
 option(AGAR_GUI_PNG "Support for image files in PNG format" ON)
+option(AGAR_GUI_PLUTOSVG "Support for SVG images via PlutoSVG" ON)
 
 #
 # Options specific to Agar-Math.
@@ -1020,6 +1021,20 @@ if(AGAR_GUI)
 	else()
 		Disable_Jpeg()
 	endif()
+
+	# Check for PlutoSVG
+	if(AGAR_GUI_PLUTOSVG)
+		Check_PlutoSVG()
+		if(PLUTOSVG_CFLAGS)
+			list(APPEND AGAR_GUI_CFLAGS ${PLUTOSVG_CFLAGS})
+		endif()
+		if(PLUTOSVG_LIBS)
+			list(APPEND AGAR_GUI_LIBS ${PLUTOSVG_LIBS})
+		endif()
+	else()
+		Disable_PlutoSVG()
+	endif()
+
 
 	# Check for libpng.
 	if(AGAR_GUI_PNG)

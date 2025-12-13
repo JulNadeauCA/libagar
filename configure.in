@@ -8,13 +8,13 @@
 #
 
 package("Agar")
-version("1.7.1")
-release("Ancient Egypt")
+version("1.8.0")
+release("Pyramid Magic")
 
 register_section("Libraries to build:")
-register("--enable-au",    "AU: Audio and sound toolkit [no]")
+register("--enable-au",    "AU: Audio and sound toolkit [yes]")
 register("--enable-gui",   "GUI: The Agar GUI library [yes]")
-register("--enable-map",   "MAP: 2D tile engine [no]")
+register("--enable-map",   "MAP: 2D tile engine [yes]")
 register("--enable-math",  "MATH: Math library and advanced rendering [yes]")
 register("--enable-micro", "MA: Micro-Agar GUI library [no]")
 register("--enable-net",   "NET: Network interface library [yes]")
@@ -23,20 +23,29 @@ register("--enable-sk",    "SK: Sketch and constraint solver [yes]")
 register("--enable-vg",    "VG: Simple 2D vector graphics [yes]")
 
 register_section("Global Agar options:")
-register("--with-memory-model=(S|M|L)",	"Select Agar memory model [auto]")
+register("--with-attributes",		"Compiler attributes and annotations [yes]")
 register("--with-float",		"Floating-point support [auto]")
-register("--enable-shared",		"Build shared libraries [check]")
-register("--enable-type-safety",	"Run-time type safety checks [no]")
+register("--with-inline",		"Inline functions [yes]")
+register("--with-memory-model=(S|M|L)",	"Select Agar memory model [auto]")
+register("--with-pthreads[=PREFIX]",	"POSIX Threads support [check]")
 register("--enable-debug",		"Debug build (implies type-safety) [no]")
 register("--enable-debug-surfaces",	"Trace AG_Surface operations [no]")
 register("--enable-legacy",		"Deprecated interfaces [yes]")
+register("--enable-shared",		"Build shared libraries [check]")
 register("--enable-threads",		"Thread safety [check]")
+register("--enable-type-safety",	"Run-time type safety checks [no]")
 register("--enable-warnings",		"Suggested compiler warnings [no]")
-register("--with-pthreads[=PREFIX]",	"POSIX Threads support [check]")
-register("--with-attributes",		"Compiler attributes and annotations [yes]")
-register("--with-inline",		"Inline functions [yes]")
 
 register_section("Options specific to CORE library:")
+register("--with-inline-byteswap",	"Inline endianness swaps [yes]")
+register("--with-inline-error",		"Inline malloc() wrappers [yes]")
+register("--with-inline-event",		"Inline event argument accessors [yes]")
+register("--with-inline-io",		"Inline serialization frontends [yes]")
+register("--with-inline-object",	"Inline some AG_Object calls [yes]")
+register("--with-inline-string",	"Inline some string functions [yes]")
+register("--with-inline-tbl",		"Inline some AG_Tbl functions [yes]")
+register("--with-inline-threads",	"Inline AG_Threads functions [yes]")
+register("--with-inline-variable",	"Inline some AG_Variable calls [yes]")
 register("--enable-ansi-color",		"Produce colorized output [yes]")
 register("--enable-dso",		"Dynamically loaded modules [yes]")
 register("--enable-exec",		"The AG_Execute(3) interface [yes]")
@@ -50,17 +59,8 @@ register("--enable-unicode",		"Support for Unicode [yes]")
 register("--enable-user",		"The AG_User(3) interface [yes]")
 register("--enable-verbosity",		"Verbose error messages [yes]")
 register("--with-db[45][=PREFIX]",	"AG_Db: Berkeley DB backend [no]")
-register("--with-mysql[=PREFIX]",	"AG_Db: MySQL backend [no]")
 register("--with-iconv[=PREFIX]",	"Character set conversion [check]")
-register("--with-inline-byteswap",	"Inline endianness swaps [yes]")
-register("--with-inline-error",		"Inline malloc() wrappers [yes]")
-register("--with-inline-event",		"Inline event argument accessors [yes]")
-register("--with-inline-io",		"Inline serialization frontends [yes]")
-register("--with-inline-object",	"Inline some AG_Object calls [yes]")
-register("--with-inline-string",	"Inline some string functions [yes]")
-register("--with-inline-tbl",		"Inline some AG_Tbl functions [yes]")
-register("--with-inline-threads",	"Inline AG_Threads functions [yes]")
-register("--with-inline-variable",	"Inline some AG_Variable calls [yes]")
+register("--with-mysql[=PREFIX]",	"AG_Db: MySQL backend [no]")
 
 register_section("Options specific to MATH library:")
 register("--with-<mode>-fp",    	"Precision (single|double|quad) [double]")
@@ -73,26 +73,27 @@ register("--enable-web",		"HTTP/1.1 application server [no]")
 register("--with-z[=PREFIX]",		"zlib compression library [check]")
 
 register_section("Options specific to GUI library:")
+register("--with-inline-surface",	"Inline pixel access routines [yes]")
+register("--with-inline-widget",	"Inline some AG_Widget functions [yes]")
 register("--enable-widgets",		"The standard widget library [yes]")
 register("--enable-wm-hints",		"Interface with window managers [yes]")
-register("--with-freetype[=PREFIX]",	"Enable FreeType support [check]")
+register("--with-cocoa",		"Enable MacOS X Cocoa driver [check]")
 register("--with-fontconfig[=PREFIX]",	"Enable Fontconfig support [check]")
+register("--with-freetype[=PREFIX]",	"Enable FreeType support [check]")
 register("--with-gl[=PREFIX]",		"OpenGL rendering support [check]")
-register("--with-jpeg[=PREFIX]",	"Built-in JPEG image support [check]")
-register("--with-png[=PREFIX]",		"Built-in PNG image support [check]")
-register("--with-x[=PREFIX]",		"Build with X windows support [check]")
-register("--with-xinerama[=PREFIX]",	"Build with Xinerama support [check]")
 register("--with-glx[=PREFIX]",		"Enable accelerated X driver [check]")
+register("--with-jpeg[=PREFIX]",	"Built-in JPEG image support [check]")
+register("--with-plutosvg[=PREFIX]",	"SVG image support via PlutoSVG [check]")
+register("--with-png[=PREFIX]",		"Built-in PNG image support [check]")
 register("--with-sdl[=PREFIX]",		"Enable SDL 1.2 driver [check]")
 register("--with-sdl2[=PREFIX]",	"Enable SDL 2.0 driver [check]")
 register("--with-wgl",			"Enable MS Windows driver [check]")
-register("--with-cocoa",		"Enable MacOS X Cocoa driver [check]")
-register("--with-inline-surface",	"Inline pixel access routines [yes]")
-register("--with-inline-widget",	"Inline some AG_Widget functions [yes]")
+register("--with-x[=PREFIX]",		"Build with X windows support [check]")
+register("--with-xinerama[=PREFIX]",	"Build with Xinerama support [check]")
 
 register_section("Options specific to AU library:")
-register("--with-sndfile[=PREFIX]",	"Enable sndfile support [check]")
 register("--with-portaudio[=PREFIX]",	"Enable portaudio driver [check]")
+register("--with-sndfile[=PREFIX]",	"Enable sndfile support [check]")
 
 register_section("Options specific to SG library:")
 register("--with-glu[=PREFIX]",		"OpenGL Utility Library (GLU) [check]")
@@ -581,6 +582,23 @@ if [ "${enable_gui}" != 'no' ]; then
 	else
 		disable(jpeg)
 	fi
+
+	# Enable SVG image support if PlutoSVG is found.
+	if [ "${with_plutosvg}" != 'no' ]; then
+		check(plutosvg, 0.0.7, ${prefix_plutosvg})
+		if [ "${HAVE_PLUTOSVG}" != 'yes' ]; then
+			if [ "${with_plutosvg}" = 'yes' ]; then
+				echo "*"
+				echo "* --with-plutosvg was requested, but the PlutoSVG library "
+				echo "* was not found."
+				echo "*"
+				exit 1
+			fi
+			disable(plutosvg)
+		fi
+	else
+		disable(plutosvg)
+	fi
 	
 	# Enable PNG format support if libpng is found.
 	if [ "${with_png}" != 'no' ]; then
@@ -615,6 +633,7 @@ else
 	disable(freetype)
 	disable(fontconfig)
 	disable(jpeg)
+	disable(plutosvg)
 	disable(png)
 fi
 
@@ -869,7 +888,7 @@ fi
 #
 # AU: Enable the AU library (needs GUI).
 #
-if [ "${enable_au}" = 'yes' -a "${enable_gui}" != 'no' ]; then
+if [ "${enable_au}" != 'no' -a "${enable_gui}" != 'no' ]; then
 	hdefine(ENABLE_AU, "yes")
 	mdefine(SUBDIR_au, "au")
 
@@ -886,7 +905,7 @@ fi
 #
 # MAP: Enable the MAP library (needs GUI).
 #
-if [ "${enable_map}" = 'yes' -a "${enable_gui}" != 'no' ]; then
+if [ "${enable_map}" != 'no' -a "${enable_gui}" != 'no' ]; then
 	hdefine(ENABLE_MAP, "yes")
 	mdefine(SUBDIR_map, "map")
 else
@@ -1077,13 +1096,15 @@ if [ "${enable_gui}" != 'no' ]; then
 		"-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${SDL2_LIBS} \
 		 ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} \
 		 ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} \
-		 ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} \
+		 ${PNG_LIBS} ${PLUTOSVG_LIBS} ${PLUTOVG_LIBS} \
+		 ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} \
 		 ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} \
 		 ${UIM_LIBS} ${ICONV_LIBS}")
 	
 	pkgconfig_mod(agar, "Agar cross-platform GUI toolkit", \
 		"${X11_PC} ${SDL_PC} ${SDL2_PC} ${FREETYPE_PC} ${FONTCONFIG_PC} \
-		 ${OPENGL_PC} ${XINERAMA_PC} ${JPEG_PC} ${PNG_PC} ${UIM_PC}", \
+		 ${OPENGL_PC} ${XINERAMA_PC} ${JPEG_PC} ${PNG_PC} ${PLUTOSVG_PC} \
+		 ${PLUTOVG_PC} ${UIM_PC}", \
 		"", \
 		"-I\${includedir}/agar ${COCOA_CFLAGS} ${MATH_CFLAGS} \
 		 ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} \
@@ -1099,7 +1120,7 @@ if [ "${enable_micro}" = 'yes' ]; then
 		"-L${LIBDIR} -lag_micro_gui -lag_core")
 fi
 
-if [ "${enable_au}" = 'yes' ]; then
+if [ "${enable_au}" != 'no' ]; then
 	config_script(agar-au-config,\
 		"-I${INCLDIR} ${PORTAUDIO_CFLAGS} ${SNDFILE_CFLAGS}",\
 		"-L${LIBDIR} -lag_au ${PORTAUDIO_LIBS} ${SNDFILE_LIBS}")
@@ -1110,7 +1131,7 @@ if [ "${enable_au}" = 'yes' ]; then
 		"-lag_au ${PORTAUDIO_LIBS} ${SNDFILE_LIBS}")
 fi
 
-if [ "${enable_map}" = 'yes' -a "${enable_gui}" != 'no' ]; then
+if [ "${enable_map}" != 'no' -a "${enable_gui}" != 'no' ]; then
 	config_script(agar-map-config,"-I${INCLDIR}","-L${LIBDIR} -lag_map")
 	pkgconfig_mod(agar-map, "Agar 2D tile engine", \
 		"agar-rg agar-math agar", "", \

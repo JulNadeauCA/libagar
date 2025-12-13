@@ -1,6 +1,5 @@
 TOP=	..
 include Makefile.config
-include Makefile.proj
 include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
 include ${TOP}/math/Makefile.inc

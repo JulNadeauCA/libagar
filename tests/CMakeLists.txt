@@ -7,7 +7,7 @@ endif()
 cmake_minimum_required(VERSION 3.12.0)
 
 project(AGARTEST
-	VERSION 1.7.1
+	VERSION 1.8.0
 	DESCRIPTION "Test Suite for the Agar GUI System"
 	HOMEPAGE_URL "https://libagar.org"
 	LANGUAGES C CXX OBJC)

@@ -1,5 +1,5 @@
 project('agar', 'c', 'cpp', 'objc',
-  version: '1.7.1',
+  version: '1.8.0',
   license: 'BSD-2-Clause',
   meson_version: '>=0.60.0',
   default_options: [
@@ -14,9 +14,9 @@ project('agar', 'c', 'cpp', 'objc',
 # ============================================================================
 
 agar_version = meson.project_version()
-agar_release = 'Ancient Egypt'
-agar_soversion = '8.0.0'
-agar_soversion_major = '8'
+agar_release = 'Pyramid Magic'
+agar_soversion = '9.0.0'
+agar_soversion_major = '9'
 
 message('    _       _       _     ___')
 message('  / _ \\   / _ \\   / _ \\  |  _ \\')

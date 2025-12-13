@@ -446,9 +446,9 @@ echo '    --with-manlinks            Manual page entries for all functions [no]'
 echo '    --with-manpages            Generate manual pages [yes]'
 echo ''
 echo 'Libraries to build:'
-echo '    --enable-au                 AU: Audio and sound toolkit [no]'
+echo '    --enable-au                 AU: Audio and sound toolkit [yes]'
 echo '    --enable-gui                GUI: The Agar GUI library [yes]'
-echo '    --enable-map                MAP: 2D tile engine [no]'
+echo '    --enable-map                MAP: 2D tile engine [yes]'
 echo '    --enable-math               MATH: Math library and advanced rendering [yes]'
 echo '    --enable-micro              MA: Micro-Agar GUI library [no]'
 echo '    --enable-net                NET: Network interface library [yes]'
@@ -457,20 +457,29 @@ echo '    --enable-sk                 SK: Sketch and constraint solver [yes]'
 echo '    --enable-vg                 VG: Simple 2D vector graphics [yes]'
 echo ''
 echo 'Global Agar options:'
-echo '    --with-memory-model=(S|M|L) Select Agar memory model [auto]'
+echo '    --with-attributes           Compiler attributes and annotations [yes]'
 echo '    --with-float                Floating-point support [auto]'
-echo '    --enable-shared             Build shared libraries [check]'
-echo '    --enable-type-safety        Run-time type safety checks [no]'
+echo '    --with-inline               Inline functions [yes]'
+echo '    --with-memory-model=(S|M|L) Select Agar memory model [auto]'
+echo '    --with-pthreads[=PREFIX]    POSIX Threads support [check]'
 echo '    --enable-debug              Debug build (implies type-safety) [no]'
 echo '    --enable-debug-surfaces     Trace AG_Surface operations [no]'
 echo '    --enable-legacy             Deprecated interfaces [yes]'
+echo '    --enable-shared             Build shared libraries [check]'
 echo '    --enable-threads            Thread safety [check]'
+echo '    --enable-type-safety        Run-time type safety checks [no]'
 echo '    --enable-warnings           Suggested compiler warnings [no]'
-echo '    --with-pthreads[=PREFIX]    POSIX Threads support [check]'
-echo '    --with-attributes           Compiler attributes and annotations [yes]'
-echo '    --with-inline               Inline functions [yes]'
 echo ''
 echo 'Options specific to CORE library:'
+echo '    --with-inline-byteswap      Inline endianness swaps [yes]'
+echo '    --with-inline-error         Inline malloc() wrappers [yes]'
+echo '    --with-inline-event         Inline event argument accessors [yes]'
+echo '    --with-inline-io            Inline serialization frontends [yes]'
+echo '    --with-inline-object        Inline some AG_Object calls [yes]'
+echo '    --with-inline-string        Inline some string functions [yes]'
+echo '    --with-inline-tbl           Inline some AG_Tbl functions [yes]'
+echo '    --with-inline-threads       Inline AG_Threads functions [yes]'
+echo '    --with-inline-variable      Inline some AG_Variable calls [yes]'
 echo '    --enable-ansi-color         Produce colorized output [yes]'
 echo '    --enable-dso                Dynamically loaded modules [yes]'
 echo '    --enable-exec               The AG_Execute(3) interface [yes]'
@@ -484,17 +493,8 @@ echo '    --enable-unicode            Support for Unicode [yes]'
 echo '    --enable-user               The AG_User(3) interface [yes]'
 echo '    --enable-verbosity          Verbose error messages [yes]'
 echo '    --with-db[45][=PREFIX]      AG_Db: Berkeley DB backend [no]'
-echo '    --with-mysql[=PREFIX]       AG_Db: MySQL backend [no]'
 echo '    --with-iconv[=PREFIX]       Character set conversion [check]'
-echo '    --with-inline-byteswap      Inline endianness swaps [yes]'
-echo '    --with-inline-error         Inline malloc() wrappers [yes]'
-echo '    --with-inline-event         Inline event argument accessors [yes]'
-echo '    --with-inline-io            Inline serialization frontends [yes]'
-echo '    --with-inline-object        Inline some AG_Object calls [yes]'
-echo '    --with-inline-string        Inline some string functions [yes]'
-echo '    --with-inline-tbl           Inline some AG_Tbl functions [yes]'
-echo '    --with-inline-threads       Inline AG_Threads functions [yes]'
-echo '    --with-inline-variable      Inline some AG_Variable calls [yes]'
+echo '    --with-mysql[=PREFIX]       AG_Db: MySQL backend [no]'
 echo ''
 echo 'Options specific to MATH library:'
 echo '    --with-<mode>-fp            Precision (single|double|quad) [double]'
@@ -507,26 +507,27 @@ echo '    --enable-web                HTTP/1.1 application server [no]'
 echo '    --with-z[=PREFIX]           zlib compression library [check]'
 echo ''
 echo 'Options specific to GUI library:'
+echo '    --with-inline-surface       Inline pixel access routines [yes]'
+echo '    --with-inline-widget        Inline some AG_Widget functions [yes]'
 echo '    --enable-widgets            The standard widget library [yes]'
 echo '    --enable-wm-hints           Interface with window managers [yes]'
-echo '    --with-freetype[=PREFIX]    Enable FreeType support [check]'
+echo '    --with-cocoa                Enable MacOS X Cocoa driver [check]'
 echo '    --with-fontconfig[=PREFIX]  Enable Fontconfig support [check]'
+echo '    --with-freetype[=PREFIX]    Enable FreeType support [check]'
 echo '    --with-gl[=PREFIX]          OpenGL rendering support [check]'
-echo '    --with-jpeg[=PREFIX]        Built-in JPEG image support [check]'
-echo '    --with-png[=PREFIX]         Built-in PNG image support [check]'
-echo '    --with-x[=PREFIX]           Build with X windows support [check]'
-echo '    --with-xinerama[=PREFIX]    Build with Xinerama support [check]'
 echo '    --with-glx[=PREFIX]         Enable accelerated X driver [check]'
+echo '    --with-jpeg[=PREFIX]        Built-in JPEG image support [check]'
+echo '    --with-plutosvg[=PREFIX]    SVG image support via PlutoSVG [check]'
+echo '    --with-png[=PREFIX]         Built-in PNG image support [check]'
 echo '    --with-sdl[=PREFIX]         Enable SDL 1.2 driver [check]'
 echo '    --with-sdl2[=PREFIX]        Enable SDL 2.0 driver [check]'
 echo '    --with-wgl                  Enable MS Windows driver [check]'
-echo '    --with-cocoa                Enable MacOS X Cocoa driver [check]'
-echo '    --with-inline-surface       Inline pixel access routines [yes]'
-echo '    --with-inline-widget        Inline some AG_Widget functions [yes]'
+echo '    --with-x[=PREFIX]           Build with X windows support [check]'
+echo '    --with-xinerama[=PREFIX]    Build with Xinerama support [check]'
 echo ''
 echo 'Options specific to AU library:'
-echo '    --with-sndfile[=PREFIX]     Enable sndfile support [check]'
 echo '    --with-portaudio[=PREFIX]   Enable portaudio driver [check]'
+echo '    --with-sndfile[=PREFIX]     Enable sndfile support [check]'
 echo ''
 echo 'Options specific to SG library:'
 echo '    --with-glu[=PREFIX]         OpenGL Utility Library (GLU) [check]'
@@ -1040,12 +1041,12 @@ bb_o=$bb_incdir/package.h
 echo '#ifndef PACKAGE' >$bb_o
 echo "#define PACKAGE \"$PACKAGE\"" >>$bb_o
 echo '#endif' >>$bb_o
-VERSION="1.7.1"
+VERSION="1.8.0"
 bb_o=$bb_incdir/version.h
 echo '#ifndef VERSION' >$bb_o
 echo "#define VERSION \"$VERSION\"" >>$bb_o
 echo '#endif' >>$bb_o
-RELEASE="Ancient Egypt"
+RELEASE="Pyramid Magic"
 bb_o=$bb_incdir/release.h
 echo '#ifndef RELEASE' >$bb_o
 echo "#define RELEASE \"$RELEASE\"" >>$bb_o
@@ -11735,6 +11736,317 @@ JPEG_CFLAGS=""
 JPEG_LIBS=""
 echo '#undef HAVE_JPEG' >$bb_incdir/have_jpeg.h
 	fi
+	if [ "${with_plutosvg}" != 'no' ]
+ then
+$ECHO_N 'checking for PlutoSVG and PlutoVG...'
+$ECHO_N '# checking for PlutoSVG and PlutoVG...' >>config.log
+# BEGIN plutosvg(0.0.7 ${prefix_plutosvg})
+if [ "${prefix_plutosvg}" != "" ]; then
+MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix plutosvg 2>/dev/null`
+if [ "$MK_EXEC_PKGPREFIX" != "" ]; then
+if [ "$MK_EXEC_PKGPREFIX" != "${prefix_plutosvg}" ]; then
+echo ""
+echo "# " >>config.log
+echo "* "
+echo "# * " >>config.log
+echo "* ERROR: According to pkg-config, plutosvg is installed in $MK_EXEC_PKGPREFIX,"
+echo "# * ERROR: According to pkg-config, plutosvg is installed in $MK_EXEC_PKGPREFIX," >>config.log
+echo "* but the alternate prefix ${prefix_plutosvg} was passed to configure instead."
+echo "# * but the alternate prefix ${prefix_plutosvg} was passed to configure instead." >>config.log
+echo "* "
+echo "# * " >>config.log
+echo "* Please indicate correct plutosvg prefix (or simply omit to use $MK_EXEC_PKGPREFIX)."
+echo "# * Please indicate correct plutosvg prefix (or simply omit to use $MK_EXEC_PKGPREFIX)." >>config.log
+echo "* "
+echo "# * " >>config.log
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
+exit 1
+fi
+fi
+fi
+PLUTOSVG_VERSION=`$PKGCONFIG plutosvg --modversion 2>/dev/null`
+if [ "${prefix_plutosvg}" != "" ]; then
+MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix plutosvg 2>/dev/null`
+if [ "$MK_EXEC_PKGPREFIX" != "" ]; then
+if [ "$MK_EXEC_PKGPREFIX" != "${prefix_plutosvg}" ]; then
+echo ""
+echo "# " >>config.log
+echo "* "
+echo "# * " >>config.log
+echo "* ERROR: According to pkg-config, plutosvg is installed in $MK_EXEC_PKGPREFIX,"
+echo "# * ERROR: According to pkg-config, plutosvg is installed in $MK_EXEC_PKGPREFIX," >>config.log
+echo "* but the alternate prefix ${prefix_plutosvg} was passed to configure instead."
+echo "# * but the alternate prefix ${prefix_plutosvg} was passed to configure instead." >>config.log
+echo "* "
+echo "# * " >>config.log
+echo "* Please indicate correct plutosvg prefix (or simply omit to use $MK_EXEC_PKGPREFIX)."
+echo "# * Please indicate correct plutosvg prefix (or simply omit to use $MK_EXEC_PKGPREFIX)." >>config.log
+echo "* "
+echo "# * " >>config.log
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
+exit 1
+fi
+fi
+fi
+PLUTOSVG_CFLAGS=`$PKGCONFIG plutosvg --cflags 2>/dev/null`
+if [ "${prefix_plutosvg}" != "" ]; then
+MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix plutosvg 2>/dev/null`
+if [ "$MK_EXEC_PKGPREFIX" != "" ]; then
+if [ "$MK_EXEC_PKGPREFIX" != "${prefix_plutosvg}" ]; then
+echo ""
+echo "# " >>config.log
+echo "* "
+echo "# * " >>config.log
+echo "* ERROR: According to pkg-config, plutosvg is installed in $MK_EXEC_PKGPREFIX,"
+echo "# * ERROR: According to pkg-config, plutosvg is installed in $MK_EXEC_PKGPREFIX," >>config.log
+echo "* but the alternate prefix ${prefix_plutosvg} was passed to configure instead."
+echo "# * but the alternate prefix ${prefix_plutosvg} was passed to configure instead." >>config.log
+echo "* "
+echo "# * " >>config.log
+echo "* Please indicate correct plutosvg prefix (or simply omit to use $MK_EXEC_PKGPREFIX)."
+echo "# * Please indicate correct plutosvg prefix (or simply omit to use $MK_EXEC_PKGPREFIX)." >>config.log
+echo "* "
+echo "# * " >>config.log
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
+exit 1
+fi
+fi
+fi
+PLUTOSVG_LIBS=`$PKGCONFIG plutosvg --libs 2>/dev/null`
+if [ "${prefix_plutosvg}" != "" ]; then
+MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix plutovg 2>/dev/null`
+if [ "$MK_EXEC_PKGPREFIX" != "" ]; then
+if [ "$MK_EXEC_PKGPREFIX" != "${prefix_plutosvg}" ]; then
+echo ""
+echo "# " >>config.log
+echo "* "
+echo "# * " >>config.log
+echo "* ERROR: According to pkg-config, plutovg is installed in $MK_EXEC_PKGPREFIX,"
+echo "# * ERROR: According to pkg-config, plutovg is installed in $MK_EXEC_PKGPREFIX," >>config.log
+echo "* but the alternate prefix ${prefix_plutosvg} was passed to configure instead."
+echo "# * but the alternate prefix ${prefix_plutosvg} was passed to configure instead." >>config.log
+echo "* "
+echo "# * " >>config.log
+echo "* Please indicate correct plutovg prefix (or simply omit to use $MK_EXEC_PKGPREFIX)."
+echo "# * Please indicate correct plutovg prefix (or simply omit to use $MK_EXEC_PKGPREFIX)." >>config.log
+echo "* "
+echo "# * " >>config.log
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
+exit 1
+fi
+fi
+fi
+PLUTOVG_VERSION=`$PKGCONFIG plutovg --modversion 2>/dev/null`
+if [ "${prefix_plutosvg}" != "" ]; then
+MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix plutovg 2>/dev/null`
+if [ "$MK_EXEC_PKGPREFIX" != "" ]; then
+if [ "$MK_EXEC_PKGPREFIX" != "${prefix_plutosvg}" ]; then
+echo ""
+echo "# " >>config.log
+echo "* "
+echo "# * " >>config.log
+echo "* ERROR: According to pkg-config, plutovg is installed in $MK_EXEC_PKGPREFIX,"
+echo "# * ERROR: According to pkg-config, plutovg is installed in $MK_EXEC_PKGPREFIX," >>config.log
+echo "* but the alternate prefix ${prefix_plutosvg} was passed to configure instead."
+echo "# * but the alternate prefix ${prefix_plutosvg} was passed to configure instead." >>config.log
+echo "* "
+echo "# * " >>config.log
+echo "* Please indicate correct plutovg prefix (or simply omit to use $MK_EXEC_PKGPREFIX)."
+echo "# * Please indicate correct plutovg prefix (or simply omit to use $MK_EXEC_PKGPREFIX)." >>config.log
+echo "* "
+echo "# * " >>config.log
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
+exit 1
+fi
+fi
+fi
+PLUTOVG_CFLAGS=`$PKGCONFIG plutovg --cflags 2>/dev/null`
+if [ "${prefix_plutosvg}" != "" ]; then
+MK_EXEC_PKGPREFIX=`$PKGCONFIG --variable=prefix plutovg 2>/dev/null`
+if [ "$MK_EXEC_PKGPREFIX" != "" ]; then
+if [ "$MK_EXEC_PKGPREFIX" != "${prefix_plutosvg}" ]; then
+echo ""
+echo "# " >>config.log
+echo "* "
+echo "# * " >>config.log
+echo "* ERROR: According to pkg-config, plutovg is installed in $MK_EXEC_PKGPREFIX,"
+echo "# * ERROR: According to pkg-config, plutovg is installed in $MK_EXEC_PKGPREFIX," >>config.log
+echo "* but the alternate prefix ${prefix_plutosvg} was passed to configure instead."
+echo "# * but the alternate prefix ${prefix_plutosvg} was passed to configure instead." >>config.log
+echo "* "
+echo "# * " >>config.log
+echo "* Please indicate correct plutovg prefix (or simply omit to use $MK_EXEC_PKGPREFIX)."
+echo "# * Please indicate correct plutovg prefix (or simply omit to use $MK_EXEC_PKGPREFIX)." >>config.log
+echo "* "
+echo "# * " >>config.log
+echo "***"
+echo "*** ERROR: Package prefix mismatch"
+echo "*** Failed! See ./config.log for more details."
+echo "***"
+exit 1
+fi
+fi
+fi
+PLUTOVG_LIBS=`$PKGCONFIG plutovg --libs 2>/dev/null`
+if [ "${PLUTOSVG_VERSION}" != "" ]; then
+if [ "${prefix_plutosvg}" != "" ]; then
+echo "yes ($PLUTOSVG_VERSION in ${prefix_plutosvg})"
+echo "# yes ($PLUTOSVG_VERSION in ${prefix_plutosvg})" >>config.log
+else
+echo "yes ($PLUTOSVG_VERSION)"
+echo "# yes ($PLUTOSVG_VERSION)" >>config.log
+fi
+MK_VERSION_MAJOR=`echo "$PLUTOSVG_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_MINOR=`echo "$PLUTOSVG_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
+MK_VERSION_MICRO=`echo "$PLUTOSVG_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
+MK_VERSION_OK=no
+if [ $MK_VERSION_MAJOR -gt 0 ]; then
+MK_VERSION_OK=yes
+elif [ $MK_VERSION_MAJOR -eq 0 ]; then
+if [ "$MK_VERSION_MINOR" = '' ]; then
+MK_VERSION_OK=yes
+else
+if [ $MK_VERSION_MINOR -gt 0 ]; then
+MK_VERSION_OK=yes
+elif [ $MK_VERSION_MINOR -eq 0 ]; then
+if [ "$MK_VERSION_MICRO" = '' ]; then
+MK_VERSION_OK=yes
+else
+if [ $MK_VERSION_MICRO -ge 7 ]; then
+MK_VERSION_OK=yes
+fi
+fi
+fi
+fi
+fi
+if [ "${MK_VERSION_OK}" = "no" ]; then
+echo '*'
+echo '# *' >>config.log
+echo "* Minimum required version is 0.0.7 (found $PLUTOSVG_VERSION)"
+echo "# * Minimum required version is 0.0.7 (found $PLUTOSVG_VERSION)" >>config.log
+echo '*'
+echo '# *' >>config.log
+fi
+else
+if [ "${prefix_plutosvg}" != "" ]; then
+echo "no (not in ${prefix_plutosvg})"
+echo "# no (not in ${prefix_plutosvg})" >>config.log
+else
+echo 'no'
+echo '# no' >>config.log
+fi
+MK_VERSION_OK="no"
+fi
+if [ "${MK_VERSION_OK}" = "yes" ]; then
+$ECHO_N 'checking whether PlutoSVG and PlutoVG works...'
+$ECHO_N '# checking whether PlutoSVG and PlutoVG works...' >>config.log
+MK_COMPILE_STATUS=OK
+cat << EOT >conftest$$.c
+#include <plutosvg.h>
+#include <stdio.h>
+
+int main() {
+	plutosvg_document_t *doc = plutosvg_document_load_from_file("x.svg", -1, -1);
+	plutovg_surface_t *s = plutosvg_document_render_to_surface(doc, NULL, -1, -1, NULL, NULL, NULL);
+	plutovg_surface_write_to_png(s, "x.png");
+	plutosvg_document_destroy(doc);
+	plutovg_surface_destroy(s);
+	return 0;
+}
+EOT
+echo >>config.log
+echo '# C: HAVE_PLUTOSVG' >>config.log
+echo "cat << EOT >conftest$$.c" >>config.log
+cat conftest$$.c>>config.log
+echo EOT >>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PLUTOSVG_CFLAGS} ${PLUTOVG_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PLUTOSVG_LIBS} ${PLUTOVG_LIBS} 1>/dev/null 2>>config.log">>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PLUTOSVG_CFLAGS} ${PLUTOVG_CFLAGS} -o $testdir/conftest$$ conftest$$.c ${PLUTOSVG_LIBS} ${PLUTOVG_LIBS} 1>/dev/null 2>>config.log
+if [ "$?" != "0" ]; then
+echo "# failed $?" >>config.log
+MK_COMPILE_STATUS="FAIL $?"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo 'yes'
+echo '# yes' >>config.log
+HAVE_PLUTOSVG=yes
+bb_o=$bb_incdir/have_plutosvg.h
+echo '#ifndef HAVE_PLUTOSVG' >$bb_o
+echo "#define HAVE_PLUTOSVG \"$HAVE_PLUTOSVG\"" >>$bb_o
+echo '#endif' >>$bb_o
+else
+echo 'no'
+echo '# no' >>config.log
+HAVE_PLUTOSVG=no
+echo '#undef HAVE_PLUTOSVG' >$bb_incdir/have_plutosvg.h
+fi
+if [ "${keep_conftest}" != "yes" ]; then
+rm -f conftest$$.c $testdir/conftest$$$EXECSUFFIX
+fi
+if [ "${HAVE_PLUTOSVG}" = "yes" ]; then
+HAVE_PLUTOVG="yes"
+else
+PLUTOSVG_CFLAGS=""
+PLUTOSVG_LIBS=""
+PLUTOVG_CFLAGS=""
+PLUTOVG_LIBS=""
+echo '#undef HAVE_PLUTOSVG' >$bb_incdir/have_plutosvg.h
+echo '#undef HAVE_PLUTOVG' >$bb_incdir/have_plutovg.h
+fi
+else
+HAVE_PLUTOSVG="no"
+HAVE_PLUTOVG="no"
+PLUTOSVG_CFLAGS=""
+PLUTOSVG_LIBS=""
+PLUTOVG_CFLAGS=""
+PLUTOVG_LIBS=""
+echo '#undef HAVE_PLUTOSVG' >$bb_incdir/have_plutosvg.h
+echo '#undef HAVE_PLUTOVG' >$bb_incdir/have_plutovg.h
+fi
+# END plutosvg
+		if [ "${HAVE_PLUTOSVG}" != 'yes' ]
+ then
+			if [ "${with_plutosvg}" = 'yes' ]
+ then
+				echo "*"
+				echo "* --with-plutosvg was requested, but the PlutoSVG library "
+				echo "* was not found."
+				echo "*"
+				exit 1
+			fi
+HAVE_PLUTOSVG="no"
+HAVE_PLUTOVG="no"
+PLUTOSVG_CFLAGS=""
+PLUTOSVG_LIBS=""
+PLUTOVG_CFLAGS=""
+PLUTOVG_LIBS=""
+echo '#undef HAVE_PLUTOSVG' >$bb_incdir/have_plutosvg.h
+echo '#undef HAVE_PLUTOVG' >$bb_incdir/have_plutovg.h
+		fi
+	else
+HAVE_PLUTOSVG="no"
+HAVE_PLUTOVG="no"
+PLUTOSVG_CFLAGS=""
+PLUTOSVG_LIBS=""
+PLUTOVG_CFLAGS=""
+PLUTOVG_LIBS=""
+echo '#undef HAVE_PLUTOSVG' >$bb_incdir/have_plutosvg.h
+echo '#undef HAVE_PLUTOVG' >$bb_incdir/have_plutovg.h
+	fi
 	
 	if [ "${with_png}" != 'no' ]
  then
@@ -12071,6 +12383,14 @@ HAVE_JPEG="no"
 JPEG_CFLAGS=""
 JPEG_LIBS=""
 echo '#undef HAVE_JPEG' >$bb_incdir/have_jpeg.h
+HAVE_PLUTOSVG="no"
+HAVE_PLUTOVG="no"
+PLUTOSVG_CFLAGS=""
+PLUTOSVG_LIBS=""
+PLUTOVG_CFLAGS=""
+PLUTOVG_LIBS=""
+echo '#undef HAVE_PLUTOSVG' >$bb_incdir/have_plutosvg.h
+echo '#undef HAVE_PLUTOVG' >$bb_incdir/have_plutovg.h
 HAVE_PNG="no"
 HAVE_LIBPNG14="no"
 PNG_CFLAGS=""
@@ -14627,7 +14947,7 @@ else
 echo '#undef ENABLE_VG' >$bb_incdir/enable_vg.h
 SUBDIR_vg=""
 fi
-if [ "${enable_au}" = 'yes' -a "${enable_gui}" != 'no' ]
+if [ "${enable_au}" != 'no' -a "${enable_gui}" != 'no' ]
  then
 ENABLE_AU="yes"
 bb_o=$bb_incdir/enable_au.h
@@ -15090,7 +15410,7 @@ PORTAUDIO_CFLAGS=""
 PORTAUDIO_LIBS=""
 echo '#undef HAVE_PORTAUDIO' >$bb_incdir/have_portaudio.h
 fi
-if [ "${enable_map}" = 'yes' -a "${enable_gui}" != 'no' ]
+if [ "${enable_map}" != 'no' -a "${enable_gui}" != 'no' ]
  then
 ENABLE_MAP="yes"
 bb_o=$bb_incdir/enable_map.h
@@ -15550,7 +15870,7 @@ if [ "${enable_gui}" != 'no' ]
 config_script_out="agar-config"
 config_script_cflags="-I${INCLDIR} ${SDL_CFLAGS} ${SDL2_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS}"
 if [ "${HAVE_CC65}" = "yes" ]; then
-config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${SDL2_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS}"
+config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${SDL2_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PLUTOSVG_LIBS} ${PLUTOVG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS}"
 config_libs_cc65=""
 bb_save_IFS=$IFS
 IFS=" "
@@ -15565,7 +15885,7 @@ done
 IFS=$bb_save_IFS
 config_script_libs="$config_libs_cc65"
 else
-config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${SDL2_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS}"
+config_script_libs="-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${SDL2_LIBS} ${FREETYPE_LIBS} ${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} ${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PLUTOSVG_LIBS} ${PLUTOVG_LIBS} ${PTHREADS_LIBS} ${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} ${UIM_LIBS} ${ICONV_LIBS}"
 fi
 cat << EOT > $config_script_out
 #!/bin/sh
@@ -15641,7 +15961,7 @@ AVAIL_CONFIGSCRIPTS="$AVAIL_CONFIGSCRIPTS agar-config"
 	
 pkgconfig_module_out="agar"
 pkgconfig_module_desc="Agar cross-platform GUI toolkit"
-pkgconfig_module_requires="${X11_PC} ${SDL_PC} ${SDL2_PC} ${FREETYPE_PC} ${FONTCONFIG_PC} ${OPENGL_PC} ${XINERAMA_PC} ${JPEG_PC} ${PNG_PC} ${UIM_PC}"
+pkgconfig_module_requires="${X11_PC} ${SDL_PC} ${SDL2_PC} ${FREETYPE_PC} ${FONTCONFIG_PC} ${OPENGL_PC} ${XINERAMA_PC} ${JPEG_PC} ${PNG_PC} ${PLUTOSVG_PC} ${PLUTOVG_PC} ${UIM_PC}"
 pkgconfig_module_conflicts=""
 pkgconfig_module_cflags="-I\${includedir}/agar ${COCOA_CFLAGS} ${MATH_CFLAGS} ${PTHREADS_CFLAGS} ${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} ${CLOCK_CFLAGS}"
 pkgconfig_module_libs="-L\${libdir} -lag_gui -lag_core"
@@ -15762,7 +16082,7 @@ done
 EOT
 AVAIL_CONFIGSCRIPTS="$AVAIL_CONFIGSCRIPTS agar-micro-config"
 fi
-if [ "${enable_au}" = 'yes' ]
+if [ "${enable_au}" != 'no' ]
  then
 config_script_out="agar-au-config"
 config_script_cflags="-I${INCLDIR} ${PORTAUDIO_CFLAGS} ${SNDFILE_CFLAGS}"
@@ -15884,7 +16204,7 @@ Cflags: $pkgconfig_module_cflags
 EOT
 AVAIL_PCMODULES="$AVAIL_PCMODULES agar-au.pc"
 fi
-if [ "${enable_map}" = 'yes' -a "${enable_gui}" != 'no' ]
+if [ "${enable_map}" != 'no' -a "${enable_gui}" != 'no' ]
  then
 config_script_out="agar-map-config"
 config_script_cflags="-I${INCLDIR}"
@@ -16701,6 +17021,7 @@ echo "HAVE_OBJC=$HAVE_OBJC" >>Makefile.config
 echo "HAVE_OBJC_WARNINGS=$HAVE_OBJC_WARNINGS" >>Makefile.config
 echo "HAVE_OPENGL=$HAVE_OPENGL" >>Makefile.config
 echo "HAVE_PACKED_ATTRIBUTE=$HAVE_PACKED_ATTRIBUTE" >>Makefile.config
+echo "HAVE_PLUTOSVG=$HAVE_PLUTOSVG" >>Makefile.config
 echo "HAVE_PNG=$HAVE_PNG" >>Makefile.config
 echo "HAVE_PORTAUDIO=$HAVE_PORTAUDIO" >>Makefile.config
 echo "HAVE_PTHREADS=$HAVE_PTHREADS" >>Makefile.config
@@ -16760,6 +17081,10 @@ echo "PATH_SEPARATOR=$PATH_SEPARATOR" >>Makefile.config
 echo "PICFLAGS=$PICFLAGS" >>Makefile.config
 echo "PKGCONFIG=$PKGCONFIG" >>Makefile.config
 echo "PKGCONFIG_LIBDIR=$PKGCONFIG_LIBDIR" >>Makefile.config
+echo "PLUTOSVG_CFLAGS=$PLUTOSVG_CFLAGS" >>Makefile.config
+echo "PLUTOSVG_LIBS=$PLUTOSVG_LIBS" >>Makefile.config
+echo "PLUTOVG_CFLAGS=$PLUTOVG_CFLAGS" >>Makefile.config
+echo "PLUTOVG_LIBS=$PLUTOVG_LIBS" >>Makefile.config
 echo "PNG_CFLAGS=$PNG_CFLAGS" >>Makefile.config
 echo "PNG_LIBS=$PNG_LIBS" >>Makefile.config
 echo "PNG_PC=$PNG_PC" >>Makefile.config
