@@ -22,7 +22,7 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd December 21, 2022
+.Dd December 13, 2025
 .Dt AG_VARIABLE 3
 .Os Agar 1.7
 .Sh NAME
@@ -107,6 +107,9 @@ in an external
 .Fn AG_AccessVariable "AG_Object *obj" "const char *name"
 .Pp
 .Ft "AG_Variable *"
+.Fn AG_AccessVariable_NoLock "AG_Object *obj" "const char *name"
+.Pp
+.Ft "AG_Variable *"
 .Fn AG_FetchVariable "AG_Object *obj" "const char *name" "enum ag_variable_type type"
 .Pp
 .Ft "AG_Variable *"
@@ -173,11 +176,17 @@ in a locked condition.
 The caller must use
 .Fn AG_UnlockVariable
 when done accessing the data.
-Both
-.Fn AG_GetVariable
-and
+The
+.Fn AG_AccessVariable_NoLock
+variant assumes the caller has alreayd locked the object and returns the
+.Ft AG_Variable
+without locking.
+.Pp
+.Fn AG_GetVariable ,
 .Fn AG_AccessVariable
-return NULL if the named variable is undefined.
+and
+.Fn AG_AccessVariable_NoLock
+all return NULL if the named variable is undefined.
 .Pp
 The
 .Fn AG_FetchVariable

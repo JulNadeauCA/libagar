@@ -476,6 +476,9 @@ AG_Variable *_Nonnull ag_fetch_variable_of_type(void *_Nonnull,
 AG_Variable *_Nullable ag_access_variable(void *_Nonnull, const char *_Nonnull)
                                          _Pure_Attribute_If_Unthreaded
                                          _Warn_Unused_Result;
+AG_Variable *_Nullable ag_access_variable_nolock(void *_Nonnull, const char *_Nonnull)
+                                                 _Pure_Attribute
+                                                 _Warn_Unused_Result;
 
 #ifdef AG_THREADS
 void ag_object_lock(void *_Nonnull);
@@ -502,6 +505,7 @@ void ag_unlock_timers(void *_Nullable);
 # define AG_FetchVariable(o,n,t)       ag_fetch_variable((o),(n),(t))
 # define AG_FetchVariableOfType(o,n,t) ag_fetch_variable_of_type((o),(n),(t))
 # define AG_AccessVariable(o,n)        ag_access_variable((o),(n))
+# define AG_AccessVariable_NoLock(o,n) ag_access_variable_nolock((o),(n))
 # ifdef AG_THREADS
 #  define AG_ObjectLock(o)    ag_object_lock(o)
 #  define AG_ObjectUnlock(o)  ag_object_unlock(o)

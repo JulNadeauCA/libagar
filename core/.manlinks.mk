@@ -475,6 +475,7 @@ MANLINKS+=AG_User.3:AG_UserOps.3
 MANLINKS+=AG_Variable.3:AG_Defined.3
 MANLINKS+=AG_Variable.3:AG_GetVariable.3
 MANLINKS+=AG_Variable.3:AG_AccessVariable.3
+MANLINKS+=AG_Variable.3:AG_AccessVariable_NoLock.3
 MANLINKS+=AG_Variable.3:AG_FetchVariable.3
 MANLINKS+=AG_Variable.3:AG_FetchVariableOfType.3
 MANLINKS+=AG_Variable.3:AG_LockVariable.3
