@@ -5,8 +5,8 @@
 #include <agar/core/begin.h>
 
 #define AGAR_MAJOR_VERSION	1
-#define AGAR_MINOR_VERSION	7
-#define AGAR_PATCHLEVEL		1
+#define AGAR_MINOR_VERSION	8
+#define AGAR_PATCHLEVEL		0
 
 typedef struct ag_agar_version {
 	int major;			/* Major version number */

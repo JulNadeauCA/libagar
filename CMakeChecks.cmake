@@ -2153,6 +2153,61 @@ macro(Disable_Zstd)
 endmacro()
 
 #
+# From BSDBuild/plutosvg.pm:
+#
+macro(Check_PlutoSVG)
+	set(PLUTOSVG_CFLAGS "")
+	set(PLUTOSVG_LIBS "")
+	set(PLUTOVG_CFLAGS "")
+	set(PLUTOVG_LIBS "")
+
+	find_package(plutosvg)
+	find_package(plutovg)
+	if(plutosvg_FOUND AND plutovg_FOUND)
+		set(HAVE_PLUTOSVG ON)
+		set(HAVE_PLUTOVG ON)
+		foreach(plutosvgincdir ${PLUTOSVG_INCLUDE_DIRS})
+			list(APPEND PLUTOSVG_CFLAGS "-I${plutosvgincdir}")
+		endforeach()
+		foreach(plutovgincdir ${PLUTOVG_INCLUDE_DIRS})
+			list(APPEND PLUTOVG_CFLAGS "-I${plutovgincdir}")
+		endforeach()
+		foreach(plutosvglib ${PLUTOSVG_LIBRARIES})
+			list(APPEND PLUTOSVG_LIBS "${plutosvglib}")
+		endforeach()
+		foreach(plutovglib ${PLUTOVG_LIBRARIES})
+			list(APPEND PLUTOVG_LIBS "${plutovglib}")
+		endforeach()
+		list(REMOVE_DUPLICATES PLUTOSVG_CFLAGS)
+		list(REMOVE_DUPLICATES PLUTOSVG_LIBS)
+		list(REMOVE_DUPLICATES PLUTOSVG_INCLUDE_DIRS)
+		list(REMOVE_DUPLICATES PLUTOVG_CFLAGS)
+		list(REMOVE_DUPLICATES PLUTOVG_LIBS)
+		list(REMOVE_DUPLICATES PLUTOVG_INCLUDE_DIRS)
+		BB_Save_Define(HAVE_PLUTOSVG)
+		BB_Save_Define(HAVE_PLUTOVG)
+	else()
+		set(HAVE_PLUTOSVG OFF)
+		set(HAVE_PLUTOVG OFF)
+		BB_Save_Undef(HAVE_PLUTOSVG)
+		BB_Save_Undef(HAVE_PLUTOVG)
+	endif()
+
+	BB_Save_MakeVar(PLUTOSVG_CFLAGS "${PLUTOSVG_CFLAGS}")
+	BB_Save_MakeVar(PLUTOSVG_LIBS "${PLUTOSVG_LIBS}")
+
+	BB_Save_MakeVar(PLUTOVG_CFLAGS "${PLUTOVG_CFLAGS}")
+	BB_Save_MakeVar(PLUTOVG_LIBS "${PLUTOVG_LIBS}")
+endmacro()
+
+macro(Disable_PlutoSVG)
+	set(HAVE_PLUTOSVG OFF)
+	set(HAVE_PLUTOVG OFF)
+	BB_Save_Undef(HAVE_PLUTOSVG)
+	BB_Save_Undef(HAVE_PLUTOVG)
+endmacro()
+
+#
 # From BSDBuild/png.pm:
 #
 macro(Check_Png)
@@ -3481,6 +3536,40 @@ endmacro()
 macro(Disable_Winsock)
 	BB_Save_Undef(HAVE_WINSOCK1)
 	BB_Save_Undef(HAVE_WINSOCK2)
+endmacro()
+
+#
+# From BSDBuild/woa.pm:
+#
+macro(Check_WoA)
+	set(WOA_CFLAGS "")
+	set(WOA_LIBS "")
+
+	find_package(woa)
+	if(woa_FOUND)
+		set(HAVE_WOA ON)
+		foreach(woaincdir ${WOA_INCLUDE_DIRS})
+			list(APPEND WOA_CFLAGS "-I${woaincdir}")
+		endforeach()
+		foreach(woalib ${WOA_LIBRARIES})
+			list(APPEND WOA_LIBS "${woalib}")
+		endforeach()
+		list(REMOVE_DUPLICATES WOA_CFLAGS)
+		list(REMOVE_DUPLICATES WOA_LIBS)
+		list(REMOVE_DUPLICATES WOA_INCLUDE_DIRS)
+		BB_Save_Define(HAVE_WOA)
+	else()
+		set(HAVE_WOA OFF)
+		BB_Save_Undef(HAVE_WOA)
+	endif()
+
+	BB_Save_MakeVar(WOA_CFLAGS "${WOA_CFLAGS}")
+	BB_Save_MakeVar(WOA_LIBS "${WOA_LIBS}")
+endmacro()
+
+macro(Disable_WoA)
+	set(HAVE_WOA OFF)
+	BB_Save_Undef(HAVE_WOA)
 endmacro()
 
 #

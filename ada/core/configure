@@ -932,12 +932,12 @@ bb_o=$bb_incdir/package.h
 echo '#ifndef PACKAGE' >$bb_o
 echo "#define PACKAGE \"$PACKAGE\"" >>$bb_o
 echo '#endif' >>$bb_o
-VERSION="1.7.0"
+VERSION="1.8.0"
 bb_o=$bb_incdir/version.h
 echo '#ifndef VERSION' >$bb_o
 echo "#define VERSION \"$VERSION\"" >>$bb_o
 echo '#endif' >>$bb_o
-RELEASE="Ancient Egypt"
+RELEASE="Pyramid Magic"
 bb_o=$bb_incdir/release.h
 echo '#ifndef RELEASE' >$bb_o
 echo "#define RELEASE \"$RELEASE\"" >>$bb_o
@@ -2055,7 +2055,7 @@ exit 1
 fi
 $ECHO_N 'checking for Agar-Core...'
 $ECHO_N '# checking for Agar-Core...' >>config.log
-# BEGIN agar-core(1.6.0 ${prefix_agar})
+# BEGIN agar-core(1.8.0 ${prefix_agar})
 AGAR_CORE_VERSION=
 MK_EXEC_FOUND=No
 if [ "${prefix_agar}" != "" ]; then
@@ -2100,9 +2100,9 @@ elif [ $MK_VERSION_MAJOR -eq 1 ]; then
 if [ "$MK_VERSION_MINOR" = '' ]; then
 MK_VERSION_OK=yes
 else
-if [ $MK_VERSION_MINOR -gt 6 ]; then
+if [ $MK_VERSION_MINOR -gt 8 ]; then
 MK_VERSION_OK=yes
-elif [ $MK_VERSION_MINOR -eq 6 ]; then
+elif [ $MK_VERSION_MINOR -eq 8 ]; then
 if [ "$MK_VERSION_MICRO" = '' ]; then
 MK_VERSION_OK=yes
 else
@@ -2116,8 +2116,8 @@ fi
 if [ "${MK_VERSION_OK}" = "no" ]; then
 echo '*'
 echo '# *' >>config.log
-echo "* Minimum required version is 1.6.0 (found $AGAR_CORE_VERSION)"
-echo "# * Minimum required version is 1.6.0 (found $AGAR_CORE_VERSION)" >>config.log
+echo "* Minimum required version is 1.8.0 (found $AGAR_CORE_VERSION)"
+echo "# * Minimum required version is 1.8.0 (found $AGAR_CORE_VERSION)" >>config.log
 echo '*'
 echo '# *' >>config.log
 fi
@@ -2259,8 +2259,8 @@ fi
 if [ "${HAVE_AGAR_CORE}" != "yes" ]; then
 echo '* '
 echo '# * ' >>config.log
-echo "* $PACKAGE requires Agar-Core (version 1.6.0 or newer)."
-echo "# * $PACKAGE requires Agar-Core (version 1.6.0 or newer)." >>config.log
+echo "* $PACKAGE requires Agar-Core (version 1.8.0 or newer)."
+echo "# * $PACKAGE requires Agar-Core (version 1.8.0 or newer)." >>config.log
 echo '* WWW: https://libagar.org'
 echo '# * WWW: https://libagar.org' >>config.log
 echo '* '
@@ -2274,8 +2274,8 @@ fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
 echo '* '
 echo '# * ' >>config.log
-echo '* This software requires agar-core version >= 1.6.0,'
-echo '# * This software requires agar-core version >= 1.6.0,' >>config.log
+echo '* This software requires agar-core version >= 1.8.0,'
+echo '# * This software requires agar-core version >= 1.8.0,' >>config.log
 echo '* please update that package and try again.'
 echo '# * please update that package and try again.' >>config.log
 echo '* WWW: https://libagar.org'
@@ -2290,7 +2290,7 @@ exit 1
 fi
 $ECHO_N 'checking for Agar-Core definitions...'
 $ECHO_N '# checking for Agar-Core definitions...' >>config.log
-# BEGIN agar-core.defs(1.6.0 ${prefix_agar})
+# BEGIN agar-core.defs(1.8.0 ${prefix_agar})
 AGAR_VERSION=
 MK_EXEC_FOUND=No
 if [ "${prefix_agar}" != "" ]; then
@@ -2335,9 +2335,9 @@ elif [ $MK_VERSION_MAJOR -eq 1 ]; then
 if [ "$MK_VERSION_MINOR" = '' ]; then
 MK_VERSION_OK=yes
 else
-if [ $MK_VERSION_MINOR -gt 6 ]; then
+if [ $MK_VERSION_MINOR -gt 8 ]; then
 MK_VERSION_OK=yes
-elif [ $MK_VERSION_MINOR -eq 6 ]; then
+elif [ $MK_VERSION_MINOR -eq 8 ]; then
 if [ "$MK_VERSION_MICRO" = '' ]; then
 MK_VERSION_OK=yes
 else
@@ -2351,8 +2351,8 @@ fi
 if [ "${MK_VERSION_OK}" = "no" ]; then
 echo '*'
 echo '# *' >>config.log
-echo "* Minimum required version is 1.6.0 (found $AGAR_VERSION)"
-echo "# * Minimum required version is 1.6.0 (found $AGAR_VERSION)" >>config.log
+echo "* Minimum required version is 1.8.0 (found $AGAR_VERSION)"
+echo "# * Minimum required version is 1.8.0 (found $AGAR_VERSION)" >>config.log
 echo '*'
 echo '# *' >>config.log
 fi
@@ -2708,8 +2708,8 @@ fi
 if [ "${HAVE_AGAR_CORE_DEFS}" != "yes" ]; then
 echo '* '
 echo '# * ' >>config.log
-echo "* $PACKAGE requires Agar-Core definitions (version 1.6.0 or newer)."
-echo "# * $PACKAGE requires Agar-Core definitions (version 1.6.0 or newer)." >>config.log
+echo "* $PACKAGE requires Agar-Core definitions (version 1.8.0 or newer)."
+echo "# * $PACKAGE requires Agar-Core definitions (version 1.8.0 or newer)." >>config.log
 echo '* WWW: http://libagar.org'
 echo '# * WWW: http://libagar.org' >>config.log
 echo '* '
@@ -2723,8 +2723,8 @@ fi
 if [ "${MK_VERSION_OK}" != "yes" ]; then
 echo '* '
 echo '# * ' >>config.log
-echo '* This software requires agar-core.defs version >= 1.6.0,'
-echo '# * This software requires agar-core.defs version >= 1.6.0,' >>config.log
+echo '* This software requires agar-core.defs version >= 1.8.0,'
+echo '# * This software requires agar-core.defs version >= 1.8.0,' >>config.log
 echo '* please update that package and try again.'
 echo '# * please update that package and try again.' >>config.log
 echo '* WWW: http://libagar.org'

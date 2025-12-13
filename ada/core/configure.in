@@ -8,8 +8,8 @@
 #
 
 package("Agar-Ada-Core")
-version("1.7.0")
-release("Ancient Egypt")
+version("1.8.0")
+release("Pyramid Magic")
 
 config_guess("../../mk/config.guess")
 
@@ -23,8 +23,8 @@ default_dir(INCLDIR, "${PREFIX}/include/agar/ada")
 
 require(cc)
 require(ada)
-require(agar-core, 1.6.0, ${prefix_agar})
-require(agar-core.defs, 1.6.0, ${prefix_agar})
+require(agar-core, 1.8.0, ${prefix_agar})
+require(agar-core.defs, 1.8.0, ${prefix_agar})
 
 c_incdir($SRC)
 c_define(_USE_AGAR_STD)

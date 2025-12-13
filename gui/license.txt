@@ -1,7 +1,7 @@
 
 Agar GUI Library
 ----------------
-Copyright (c) 2001-2023 Julien Nadeau Carriere <vedge@csoft.net>
+Copyright (c) 2001-2025 Julien Nadeau Carriere <vedge@csoft.net>
 
 All rights reserved.
 
@@ -96,19 +96,19 @@ THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND ANY EXPR
 
 Agar Ideograms Fonts
 --------------------
-Copyright (c) 2023 Julien Nadeau Carriere (vedge@csoft.net).
+Copyright (c) 2023-2025 Julien Nadeau Carriere (vedge@csoft.net).
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is copied below, and is also available with a FAQ at: http://scripts.sil.org/OFL
 
 Agar Minimal Fonts
 ------------------
-Copyright (c) 2023 Julien Nadeau Carriere (vedge@csoft.net).
+Copyright (c) 2023-2025 Julien Nadeau Carriere (vedge@csoft.net).
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is copied below, and is also available with a FAQ at: http://scripts.sil.org/OFL
 
 Algue Fonts
 -----------
-Copyright (c) 2023 Julien Nadeau Carriere (vedge@csoft.net).
+Copyright (c) 2023-2025 Julien Nadeau Carriere (vedge@csoft.net).
 Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved. Bitstream Vera is a trademark of Bitstream, Inc.
 Copyright (c) 2006 by Tavmjong Bah. All Rights Reserved.
 
@@ -170,14 +170,14 @@ This Font Software is licensed under the SIL Open Font License, Version 1.1. Thi
 
 Monoalgue Fonts
 ---------------
-Copyright (c) 2023 Julien Nadeau Carriere (vedge@csoft.net).
+Copyright (c) 2023-2025 Julien Nadeau Carriere (vedge@csoft.net).
 Copyright (c) 2015 Quote-Unquote Apps (http://quoteunquoteapps.com).
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is copied below, and is also available with a FAQ at: http://scripts.sil.org/OFL
 
 Unialgue Fonts
 --------------
-Copyright (c) 2023 Julien Nadeau Carriere (vedge@csoft.net).
+Copyright (c) 2023-2025 Julien Nadeau Carriere (vedge@csoft.net).
 Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved. Bitstream Vera is a trademark of Bitstream, Inc.
 Copyright (c) 2008 by Lobsang monlam. All rights reserved.
 Copyright (c) 2006 by Tavmjong Bah. All Rights Reserved.
