@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2025 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -391,6 +391,41 @@ Ctrl(void *obj, void *inputDevice, const AG_DriverEvent *dev)
 			}
 			AG_UnlockVariable(V);
 		}
+	}
+}
+
+static void
+Style(void *obj, const char *key, const char *value)
+{
+	AG_Button *bu = obj;
+
+	switch (key[0]) {
+	case 't':
+		if (strcmp(key, "text-align") == 0) {
+			if (strcmp(value, "start") == 0) {
+				bu->justify = AG_TEXT_LEFT;
+			} else if (strcmp(value, "end") == 0) {
+				bu->justify = AG_TEXT_RIGHT;
+			} else if (strcmp(value, "justify") == 0) {
+				/* TODO */
+			} else {
+				bu->justify = AG_TEXT_CENTER;
+			}
+		}
+		break;
+	case 'v':
+		if (strcmp(key, "vertical-align") == 0) {
+			if (strcmp(value, "top") == 0) {
+				bu->valign = AG_TEXT_TOP;
+			} else if (strcmp(value, "bottom") == 0) {
+				bu->valign = AG_TEXT_BOTTOM;
+			} else {
+				bu->valign = AG_TEXT_MIDDLE;
+			}
+		}
+		break;
+	default:
+		break;
 	}
 }
 
@@ -874,7 +909,8 @@ AG_WidgetClass agButtonClass = {
 	KeyUp,
 	NULL,			/* touch */
 	Ctrl,
-	NULL			/* joy */
+	NULL,			/* joy */
+	Style
 };
 
 #endif /* AG_WIDGETS */

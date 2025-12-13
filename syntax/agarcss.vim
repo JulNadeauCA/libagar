@@ -8,7 +8,7 @@
 " URL:
 " https://github.com/JulNadeauCA/libagar/blob/master/syntax/agarcss.vim
 " Maintainer:   Julien Nadeau Carriere <vedge@csoft.net>
-" Last Change:  2023 May 1
+" Last Change:  2025 December 4
 
 " quit when a syntax file was already loaded
 if !exists("main_syntax")
@@ -113,7 +113,11 @@ syn match cssFunctionComma contained ","
 
 syn keyword cssCommonAttr contained auto none inherit all default normal font-height
 
+syn keyword cssButtonAttr contained center start end justify top bottom middle
+
 syn keyword cssBoxProp contained padding spacing margin width
+
+syn keyword cssButtonProp contained text-align vertical-align
 
 syn match cssColorProp contained "\<\(color\|background-color\|text-color\|line-color\|high-color\|low-color\|selection-color\)\(#disabled\|#focused\|#hover\|\)\>"
 
@@ -201,10 +205,12 @@ hi def link cssFontProp cssProp
 hi def link cssWidthProp cssProp
 hi def link cssListProp cssProp
 hi def link cssTextProp cssProp
+hi def link cssButtonProp cssProp
 
 hi def link cssFontAttr cssAttr
 hi def link cssGradientAttr cssAttr
 hi def link cssCommonAttr cssAttr
+hi def link cssButtonAttr cssAttr
 
 hi def link cssValueLength Number
 hi def link cssValueInteger Number

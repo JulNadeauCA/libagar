@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2025 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,7 +22,7 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd February 20, 2023
+.Dd December 13, 2025
 .Dt AG_BUTTON 3
 .Os Agar 1.7
 .Sh NAME
@@ -160,7 +160,7 @@ In Momentary mode, the button springs back to its former state when released.
 Default is Sticky.
 .Pp
 .Fn AG_ButtonJustify
-sets the justification mode for the text label.
+sets the justification mode for the text label (equivalent to the "text-align" style attribute).
 The
 .Fa justify
 argument can be
@@ -170,7 +170,7 @@ or
 .Dv AG_TEXT_RIGHT .
 .Pp
 .Fn AG_ButtonValign
-sets the vertical alignment for the text label.
+sets the vertical alignment for the text label (equivalent to the "vertical-align" style attribute).
 The
 .Fa valign
 argument can be
@@ -279,8 +279,10 @@ argument indicates the new state of the button.
 The
 .Nm
 widget provides the following bindings.
-In all cases, a value of 1 is considered boolean TRUE, and a value of 0
-is considered boolean FALSE.
+A value of 1 is considered boolean TRUE, and a value of 0 is considered FALSE
+(unless
+.Dv AG_BUTTON_INVERTED
+is in effect, in which case the opposite is true).
 .Pp
 .Bl -tag -compact -width "FLAGS32 *state "
 .It Va BOOL *state
@@ -304,7 +306,44 @@ Bits in 16-bit word
 .It Va FLAGS32 *state
 Bits in 32-bit word
 .El
+.Sh STYLE ATTRIBUTES
+.Nm
+honors the following style attributes:
+.Pp
+.Bl -tag -width "vertical-align "
+.It color
+Primary color for the button surface.
+.It high-color
+Highlight color (for the default 3D-style shading).
+.It low-color
+Lowlight color (for the default 3D-style shading).
+.It margin
+Margin around the widget in pixels.
+.It padding
+Padding around the text label in pixels.
+.It text-align
+( "start" | "center" | "end" | "justify" )
+Horizontal alignment of the button's text label.
+"start", "center" and "end" align to the left, middle and right, respectively.
+"justify" stretches whitespaces to fill all available space.
+.It text-color
+Color for the text label inside the button.
+.It vertical-align
+( "top" | "middle" | "bottom" )
+Vertical alignment of the button's text label
+.El
 .Sh EXAMPLES
+The following code creates a red button with bold text:
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+AG_Button *btn;
+
+btn = AG_ButtonNew(parent, 0, "Hello");
+AG_SetStyle(btn, "color", "red");
+AG_SetStyle(btn, "text-color", "white");
+AG_SetStyle(btn, "font-weight", "bold");
+.Ed
+.Pp
 The following code fragment creates a button and sets a handler function
 for the
 .Sq button-pushed

@@ -57,6 +57,7 @@ typedef struct ag_widget_class {
 	void (*_Nullable touch)(void *_Nonnull, void *_Nonnull, const AG_DriverEvent *_Nonnull);
 	void (*_Nullable ctrl)(void *_Nonnull, void *_Nonnull, const AG_DriverEvent *_Nonnull);
 	void (*_Nullable joy)(void *_Nonnull, void *_Nonnull, const AG_DriverEvent *_Nonnull);
+	void (*_Nullable style)(void *_Nonnull, const char *_Nonnull, const char *_Nonnull);
 } AG_WidgetClass;
 
 /* A constant size for some visual element (possibly a relative to a parent) */
@@ -265,19 +266,19 @@ typedef struct ag_widget {
 	                                    /* (TODO use a Variable) */
 
 	enum ag_widget_state state;         /* Style-effecting state */
-	int marginTop, marginRight;         /* Margin (px outside of border) */
-	int marginBottom, marginLeft;
-	int paddingTop, paddingRight;       /* Padding (px around contents) */
-	int paddingBottom, paddingLeft;
-	Uint spacingHoriz, spacingVert;     /* Spacing (px between items) */
-
-	struct ag_font *_Nullable font;    /* Active font (style-generated) */
-	AG_WidgetPalette pal;              /* Color palette (style-generated) */
+	int marginTop, marginRight;         /* Pixels of margin outside border */
+	int marginBottom, marginLeft;        /* ("margin" attribute) */
+	int paddingTop, paddingRight;       /* Pixels of padding around contents */
+	int paddingBottom, paddingLeft;      /* ("padding" attribute) */
+	Uint spacingHoriz, spacingVert;     /* Pixels of spacing between child widgets */
+	                                     /* ("spacing" attribute) */
+	struct ag_font *_Nullable font;     /* Active font ("font-*" attributes) */
+	AG_WidgetPalette pal;               /* Color palette ("*color" attributes) */
 #ifdef HAVE_OPENGL
-	AG_WidgetGL *_Nullable gl;      /* Saved GL context (for USE_OPENGL) */
+	AG_WidgetGL *_Nullable gl;          /* Saved GL context (for USE_OPENGL) */
 #endif
-	AG_ActionVec actions;           /* Registered Widget Actions */
-	AG_WidgetPvt pvt;               /* Private data */
+	AG_ActionVec actions;               /* Registered Widget Actions */
+	AG_WidgetPvt pvt;                   /* Private data */
 } AG_Widget;
 
 typedef AG_VEC_HEAD(AG_Widget *) AG_WidgetVec;

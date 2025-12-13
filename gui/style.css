@@ -18,49 +18,49 @@
 /*
 Defaults {
 	font-family: algue;
-	font-size: 14pt;
+	font-size:   14pt;
 
-	color: 70,70,70;
-	color#disabled: 160,160,160;
-	color#focused: 100,100,100;
-	color#hover: 130,130,130;
+	color:          rgb(70,70,70);
+	color#disabled: rgb(160,160,160);
+	color#focused:  rgb(100,100,100);
+	color#hover:    rgb(130,130,130);
 
-	background-color: #0000;
+	background-color:          #0000;
 	background-color#disabled: #0000;
-	background-color#focused: #0000;
-	background-color#hover: #0000;
+	background-color#focused:  #0000;
+	background-color#hover:    #0000;
 
-	text-color: 200,200,200;
-	text-color#disabled: 240,240,240;
-	text-color#focused: 240,240,240;
-	text-color#hover: 240,240,240;
+	text-color:          rgb(200,200,200);
+	text-color#disabled: rgb(240,240,240);
+	text-color#focused:  rgb(240,240,240);
+	text-color#hover:    rgb(240,240,240);
 
-	line-color: 50,50,50;
-	line-color#disabled: 150,150,150;
-	line-color#focused: 50,50,70;
-	line-color#hover: 50,50,50;
+	line-color:          rgb(50,50,50);
+	line-color#disabled: rgb(150,150,150);
+	line-color#focused:  rgb(50,50,70);
+	line-color#hover:    rgb(50,50,50);
 
-	high-color: 100,100,100;
-	high-color#disabled: 120,120,120;
-	high-color#focused: 110,110,110;
-	high-color#hover: 120,120,120;
+	high-color:          rgb(100,100,100);
+	high-color#disabled: rgb(120,120,120);
+	high-color#focused:  rgb(110,110,110);
+	high-color#hover:    rgb(120,120,120);
 
-	low-color: 60,60,60;
-	low-color#disabled: 90,90,90;
-	low-color#focused: 60,60,60;
-	low-color#hover: 60,60,60;
+	low-color:          rgb(60,60,60);
+	low-color#disabled: rgb(90,90,90);
+	low-color#focused:  rgb(60,60,60);
+	low-color#hover:    rgb(60,60,60);
 
-	selection-color: 0,0,80;
-	selection-color#disabled: 80,80,120;
-	selection-color#focused: 0,0,120;
-	selection-color#hover: 0,0,120;
+	selection-color:          rgb(0,0,80);
+	selection-color#disabled: rgb(80,80,120);
+	selection-color#focused:  rgb(0,0,120);
+	selection-color#hover:    rgb(0,0,120);
 }
 */
 
 AG_Window {
-	padding: 0 3 4 3;
+	padding:          0 3 4 3;
 	background-color: rgb(70,70,70);
-	text-color: rgb(200,200,200);
+	text-color:       rgb(200,200,200);
 	text-color#hover: rgb(240,240,240);
 }
 
@@ -70,16 +70,42 @@ AG_Box {
 }
 AG_Button {
 	padding: 5 10 5 10;
-	text-color: rgb(255,255,255);
-	color: #787878;
-	color#focused: rgb(128,128,129);
-	color#hover: rgb(133,133,136);
-	selection-color#focused: #646496;
-	selection-color#hover: #969664;
+
+	text-color:              rgb(255,255,255);
+	color:                   rgb(120,120,120);
+	color#focused:           rgb(128,128,129);
+	color#hover:             rgb(133,133,136);
+	selection-color#focused: rgb(100,100,150);
+	selection-color#hover:   rgb(150,150,100);
+
+	text-align: center;         /* center | start | end | justify */
+	vertical-align: middle;     /* middle | top | bottom */
+
+	/*
+	background:                 "button-bg.svg";
+	background#focused:         "button-bg-focused.svg";
+	background#hover:           "button-bg-hover.svg";
+	background#disabled:        "button-bg-disabled.svg";
+
+	background-pushed:          "button-bg-pushed.svg";
+	background-pushed#focused:  "button-bg-pushed-focused.svg";
+	background-pushed#hover:    "button-bg-pushed-hover.svg";
+	background-pushed#disabled: "button-bg-pushed-disabled.svg";
+
+	foreground:                 "button-fg.svg";
+	foreground#focused:         "button-fg-focused.svg";
+	foreground#hover:           "button-fg-hover.svg";
+	foreground#disabled:        "button-fg-disabled.svg";
+
+	foreground-pushed:          "button-fg-pushed.svg";
+	foreground-pushed#focused:  "button-fg-pushed-focused.svg";
+	foreground-pushed#hover:    "button-fg-pushed-hover.svg";
+	foreground-pushed#disabled: "button-fg-pushed-disabled.svg";
+	*/
 }
 AG_Checkbox {
 	spacing: 5;
-	background-color: rgb(80,80,120);
+	background-color:       rgb(80,80,120);
 	background-color#hover: rgb(100,100,140);
 }
 AG_Combo > "input" {
@@ -90,19 +116,21 @@ AG_Combo > "trigger" {
 	padding: 2;
 }
 AG_Console {
-	font-family: monoalgue;
 	padding: 4;
 	spacing: 3;
-	background-color: #000;
+	font-family: monoalgue;
+	background-color:          #000;
+	background-color#focused:  #000;
 	background-color#disabled: #222;
-	text-color: #f0f0f0;
-	text-color#disabled: #ccc;
+	text-color:                #f0f0f0;
+	text-color#focused:        #fff;
+	text-color#disabled:       #ccc;
 }
 AG_Console > AG_Scrollbar {
 	font-size: 60%;
-	color: #444;
+	color:       #444;
 	color#hover: #40404a;
-	text-color: #aaa;
+	text-color:  #aaa;
 }
 AG_Editable {
 	padding: 1 3 1 3;
@@ -117,31 +145,31 @@ AG_Icon {
 }
 AG_Label {
 	padding: 2 6 2 6;
-	background-color: #0000;
+	background-color:         #0000;
 	background-color#focused: #0000;
 }
 AG_Menu {
 	padding: 2 5 2 5;
-	color: rgb(60,60,60);
-	color#disabled: rgb(40,40,110);
-	selection-color: rgb(40,40,110);
+	color:               rgb(60,60,60);
+	color#disabled:      rgb(40,40,110);
+	selection-color:     rgb(40,40,110);
 	text-color#disabled: rgb(170,170,170);
 }
 AG_Menu (zoom = 0-9) {
-	font-family: league-spartan;
-	font-size: 140%;
 	padding: 1 2 1 2;
+	font-family: league-spartan;
+	font-size:   140%;
 }
 AG_Menu (zoom > 24) {
-	font-family: fira-sans-condensed;
 	padding: 2 5 10 5;
+	font-family: fira-sans-condensed;
 }
 AG_MenuView {
 	padding: 4 8 4 8;
 	spacing: 8 0;
-	color: rgb(60,60,60);
-	selection-color: rgb(40,40,110);
-	color#disabled: rgb(40,40,110);
+	color:               rgb(60,60,60);
+	selection-color:     rgb(40,40,110);
+	color#disabled:      rgb(40,40,110);
 	text-color#disabled: rgb(170,170,170);
 }
 AG_MenuView (zoom = 0-9) {
@@ -159,31 +187,31 @@ AG_Numerical > AG_UCombo {
 AG_Numerical > AG_Button {
 	padding: 0;
 	font-size: 55%;
-	text-color: #bebebe;
+	text-color:  #bebebe;
 	color#hover: #969590;
 }
 AG_HSVPal {
 	font-family: league-gothic;
-	font-size: 140%;
+	font-size:   140%;
 }
 AG_HSVPal (width < 50) {
 	font-family: league-gothic-condensed;
-	font-size: 90%;
+	font-size:   90%;
 }
 AG_HSVPal (width < 90) {
 	font-family: league-gothic-condensed;
-	font-size: 120%;
+	font-size:   120%;
 }
 AG_Pane {
-	color: #666;
-	color#hover: #777;
+	color:            #666;
+	color#hover:      #777;
 	line-color#hover: rgb(200,200,180);
 }
 AG_ProgressBar {
+	padding: 2;
 	/* width: font-height + 10; */
 	font-family: league-gothic;
-	font-size: 90%;
-	padding: 2;
+	font-size:   90%;
 }
 AG_Radio {
 	spacing: 1;
@@ -195,20 +223,20 @@ AG_Textbox {
 	background-color: rgb(80,80,80);
 }
 AG_Titlebar {
-	font-size: 90%;
 	padding: 3;
 	spacing: 1;
-	color: rgb(40,50,60);
+	font-size: 90%;
+	color:          rgb(40,50,60);
 	color#disabled: rgb(35,35,35);
 }
 AG_Titlebar > AG_Label {
-	background-color: #0000;
-	background-color#focused: #0000;
 	padding: 2 0 0 2;
+	background-color:         #0000;
+	background-color#focused: #0000;
 }
 AG_Titlebar > AG_Button {
 	padding: 0 5 0 5;
-	color: #0000;
+	color:       #0000;
 	color#hover: #868580;
 }
 AG_Toolbar {
@@ -218,14 +246,14 @@ AG_Toolbar {
 AG_Scrollbar {
 	font-size: 60%;
 	background-color: rgb(65,65,65);
-	color: rgb(80,80,80);
-	color#hover: rgb(90,90,90);
-	high-color: rgb(120,120,120);
-	text-color: #bebebe;
+	color:            rgb(80,80,80);
+	color#hover:      rgb(90,90,90);
+	high-color:       rgb(120,120,120);
+	text-color:       #bebebe;
 }
 AG_Separator {
-	line-color: #888;
 	padding: 8 10 8 10;
+	line-color: #888;
 }
 AG_Statusbar {
 	padding: 2;

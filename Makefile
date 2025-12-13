@@ -136,10 +136,22 @@ post-package:
 function-list:
 	find . -name \*.3 -exec grep ^\.Fn {} \; |awk '{print $$2}' |uniq
 
+configure:
+	cat configure.in | mkconfigure ${MKCONFIGURE_FLAGS} > configure
+	@if [ ! -e configure ]; then \
+		echo "mkconfigure failed. Is BSDBuild installed?"; \
+		exit 1; \
+	fi
+	@if [ ! -x configure ]; then \
+		echo "chmod 755 configure"; \
+		chmod 755 configure; \
+	fi
+	
+
 .PHONY: clean cleandir install deinstall depend regress includes
 .PHONY: cleandir-config release
 .PHONY: install-includes deinstall-includes install-config deinstall-config
-.PHONY: pre-package post-package function-list
+.PHONY: pre-package post-package function-list configure
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.subdir.mk

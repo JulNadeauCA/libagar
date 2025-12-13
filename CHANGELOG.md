@@ -1,6 +1,20 @@
 # Changelog
 All notable changes to Agar will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - Unreleased
+### Added
+- [**AG_Button**](https://libagar.org/man3/AG_Button): New style attributes `text-align` and `vertical-align`.
+- [**AG_Widget**](https://libagar.org/man3/AG_Widget): Introduce the `style()` method, called by the style compiler to parse widget-specific style attributes into an efficient binary representation.
+- [**AG_Object**](https://libagar.org/man3/AG_Object): New function `AG_AccessVariable_NoLock()` (lockless variant of `AG_AccessVariable()`).
+
+### Removed
+
+### Changed
+- Major performance improvements in the style compiler. Since it runs whenever widgets are resized, this should lead to better fluidity and overall lower CPU usage when Agar windows and container widgets are resized.
+- In `AG_WidgetCopyStyle()`, prevent redundant locking by using `AG_AccessVariable_NoLock()`.
+
+### Fixed
+
 ## [1.7.1] - 2025-11-15
 ### Added
 - An awesome new Agar logo. Thanks [eightbit](https://8bitprodigy.github.io)!

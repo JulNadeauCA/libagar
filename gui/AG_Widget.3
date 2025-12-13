@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2025 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -115,6 +115,8 @@ typedef struct ag_widget_class {
 	             const AG_DriverEvent *event);
 	void (*joy)(void *obj, void *inputDevice,
 	            const AG_DriverEvent *event);
+
+	void (*style)(void *obj, const char *key, const char *value);
 } AG_WidgetClass;
 .Ed
 .Pp
@@ -207,7 +209,23 @@ The widget must hold focus (or a
 .Dv AG_WIDGET_UNFOCUSED_KEYUP
 grab).
 .Pp
-
+The
+.Fn touch
+method is invoked to process touch events.
+.Fn ctrl
+is invoked to process game controller events.
+.Fn joy
+is invoked to process joystick events.
+.Pp
+The
+.Fn style
+method is invoked by the style compiler to parse widget-specific style attributes,
+compiling them into an efficient binary representation.
+The name of the attribute is passed under
+.Fa key
+and the contents of the attribute under
+.Fa 
+.Fa value .
 .\" MANLINK(AG_SizeReq)
 .\" MANLINK(AG_SizeAlloc)
 .Sh SIZING
@@ -1548,12 +1566,6 @@ Actions were introduced in Agar 1.4.0.
 .Dv AG_WIDGET_USE_OPENGL
 first appeared in Agar 1.5, replacing
 .Xr AG_GLView 3 .
-Agar 1.6.0 first made the
-.Va actions ,
-.Va pal
-and
-.Va rSens
-structure members public.
 The
 .Fn AG_SetStyleF ,
 .Fn AG_PushBlendingMode
@@ -1566,3 +1578,12 @@ The "font-changed" and "palette-changed" events appeared in Agar 1.6.0.
 the
 .Dv AG_WIDGET_DISABLE_ON_ATTACH
 flag and the "padding-changed" event appeared in Agar 1.7.0.
+The
+.Fn touch ,
+.Fn ctrl
+and
+.Fn joy
+methods appeared in Agar 1.7.0.
+The
+.Fn style
+method appeared in Agar 1.8.0.

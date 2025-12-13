@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2023 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2025 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,7 @@
 #include <ctype.h>
 
 /*
- * Agar style attributes.
+ * Global style attributes.
  */
 const char *agStyleAttributes[] = {
 	/*
@@ -192,15 +192,6 @@ AG_Widget *_Nullable agStyleEditorTgt = NULL;
 
 static void FocusWidget(AG_Widget *_Nonnull);
 static void UnfocusWidget(AG_Widget *_Nonnull);
-static void Apply_Font_Size(float *_Nonnull, float, const char *_Nonnull);
-static void Apply_Font_Weight(Uint *_Nonnull, Uint, const char *_Nonnull);
-static void Apply_Font_Style(Uint *_Nonnull, Uint, const char *_Nonnull);
-static void Apply_Font_Stretch(Uint *_Nonnull, Uint, const char *_Nonnull);
-static void Apply_Padding(AG_Widget *_Nonnull, const char *_Nonnull);
-static void Inherit_Padding(AG_Widget *_Nonnull, char *_Nonnull, AG_Size);
-static void Inherit_Margin(AG_Widget *_Nonnull, char *_Nonnull, AG_Size);
-static void Apply_Margin(AG_Widget *_Nonnull, const char *_Nonnull);
-static void Apply_Spacing(AG_Widget *_Nonnull, const char *_Nonnull);
 
 /* Set the parent window/driver pointers on a widget and its children. */
 static void
@@ -2175,243 +2166,21 @@ AG_WidgetReplaceSurface(void *obj, int id, AG_Surface *S)
 }
 
 static void
-CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFace,
-    float parentFontSize, Uint parentFontFlags, const AG_WidgetPalette *parentPalette)
+Inherit_Padding(AG_Widget *_Nonnull wid, char *_Nonnull buf, AG_Size bufSize)
 {
-	AG_StyleSheet *css = &agDefaultCSS;
-	char *fontFace, *cssData;
-	AG_Widget *chld;
-	AG_Variable *V;
-	AG_Object *po;
-	float fontSize;
-	Uint fontFlags = parentFontFlags;
-	int i, j, paletteChanged=0;
-	
-	AG_OBJECT_ISA(wid, "AG_Widget:*");
+	if (AG_Defined(wid, "padding")) {
+		AG_GetString(wid, "padding", buf, sizeof(buf));
 
-	/* TODO make alt stylesheet a per-window attribute */
-	for (po = OBJECT(wid);
-	     po->parent != NULL && AG_WIDGET_ISA(po->parent);
-	     po = po->parent) {
-		if (WIDGET(po)->css != NULL) {     /* alternate stylesheet? */
-			css = WIDGET(po)->css;
-			break;
-		}
-	}
-
-	/*
-	 * Font face (fontconfig name or specific filename under font-path).
-	 */
-	if ((V = AG_AccessVariable(wid, "font-family")) != NULL) {
-		fontFace = Strdup(V->data.s);
-		AG_UnlockVariable(V);
-	} else if (AG_LookupStyleSheet(css, wid, "font-family", &cssData)) {
-		fontFace = Strdup(cssData);
+		if (Strcasecmp(buf, "inherit") == 0)
+			Inherit_Padding(OBJECT(wid)->parent, buf, sizeof(buf));
 	} else {
-		fontFace = Strdup(parentFace);
+		if (bufSize > 0)
+			buf[0] = '\0';
 	}
-
-	/*
-	 * Font size (points, pixels, or % relative to parent).
-	 * Fractional point sizes (e.g., "10.5" are allowed).
-	 */
-	if ((V = AG_AccessVariable(wid, "font-size")) != NULL) {
-		Apply_Font_Size(&fontSize, parentFontSize, V->data.s);
-		AG_UnlockVariable(V);
-	} else if (AG_LookupStyleSheet(css, wid, "font-size", &cssData)) {
-		Apply_Font_Size(&fontSize, parentFontSize, cssData);
-	} else {
-		fontSize = parentFontSize;
-	}
-
-	/*
-	 * Font weight (thin, extralight, light, semibold, bold, extrabold,
-	 * black or !parent).
-	 */
-	if ((V = AG_AccessVariable(wid, "font-weight")) != NULL) {
-		Apply_Font_Weight(&fontFlags, parentFontFlags, V->data.s);
-		AG_UnlockVariable(V);
-	} else if (AG_LookupStyleSheet(css, wid, "font-weight", &cssData)) {
-		Apply_Font_Weight(&fontFlags, parentFontFlags, cssData);
-	} else {
-		fontFlags &= ~(AG_FONT_WEIGHTS);
-		fontFlags |= (parentFontFlags & AG_FONT_WEIGHTS);
-	}
-
-	/*
-	 * Font style (normal, oblique, italic or !parent).
-	 */
-	if ((V = AG_AccessVariable(wid, "font-style")) != NULL) {
-		Apply_Font_Style(&fontFlags, parentFontFlags, V->data.s);
-		AG_UnlockVariable(V);
-	} else if (AG_LookupStyleSheet(css, wid, "font-style", &cssData)) {
-		Apply_Font_Style(&fontFlags, parentFontFlags, cssData);
-	} else {
-		fontFlags &= ~(AG_FONT_STYLES);
-		fontFlags |= (parentFontFlags & AG_FONT_STYLES);
-	}
-
-	/*
-	 * Width variant (normal, ultracondensed, condensed, semicondensed,
-	 * semiexpanded, expanded, ultraexpanded or !parent).
-	 */
-	if ((V = AG_AccessVariable(wid, "font-stretch")) != NULL) {
-		Apply_Font_Stretch(&fontFlags, parentFontFlags, V->data.s);
-		AG_UnlockVariable(V);
-	} else if (AG_LookupStyleSheet(css, wid, "font-stretch", &cssData)) {
-		Apply_Font_Stretch(&fontFlags, parentFontFlags, cssData);
-	} else {
-		fontFlags &= ~(AG_FONT_WD_VARIANTS);
-		fontFlags |= (parentFontFlags & AG_FONT_WD_VARIANTS);
-	}
-
-	/*
-	 * Padding and margin (in pixels) for box model.
-	 *
-	 * The margin is applied by the size_allocate() routine of container
-	 * widgets. The padding is widget-specific in its implementation.
-	 */
-	if ((V = AG_AccessVariable(wid, "padding")) != NULL) {
-		Apply_Padding(wid, V->data.s);
-		AG_UnlockVariable(V);
-	} else if (AG_LookupStyleSheet(css, wid, "padding", &cssData)) {
-		Apply_Padding(wid, cssData);
-	}
-	if ((V = AG_AccessVariable(wid, "margin")) != NULL) {
-		Apply_Margin(wid, V->data.s);
-		AG_UnlockVariable(V);
-	} else if (AG_LookupStyleSheet(css, wid, "margin", &cssData)) {
-		Apply_Margin(wid, cssData);
-	}
-
-	/*
-	 * Spacing between widget-specific elements (in pixels).
-	 */
-	if ((V = AG_AccessVariable(wid, "spacing")) != NULL) {
-		Apply_Spacing(wid, V->data.s);
-		AG_UnlockVariable(V);
-	} else if (AG_LookupStyleSheet(css, wid, "spacing", &cssData)) {
-		Apply_Spacing(wid, cssData);
-	}
-	
-	/*
-	 * Color palette.
-	 */
-	for (i = 0; i < AG_WIDGET_NSTATES; i++) {
-		for (j = 0; j < AG_WIDGET_NCOLORS; j++) {
-			char nameFull[AG_VARIABLE_NAME_MAX];
-			const AG_Color *cParent = &parentPalette->c[i][j];
-			const char *name = agStyleAttributes[j];
-			AG_Color cNew;
-
-			Strlcpy(nameFull, name, sizeof(nameFull));
-			if (i != 0)
-				Strlcat(nameFull, agWidgetStateNames[i],
-				    sizeof(nameFull));
-
-			if (((V = AG_AccessVariable(wid, nameFull)) != NULL ||
-			     (V = AG_AccessVariable(wid, name)) != NULL) &&
-			      V->data.s[0] != '\0') {
-				AG_ColorFromString(&cNew, V->data.s, cParent);
-				AG_UnlockVariable(V);
-			} else if ((AG_LookupStyleSheet(css, wid, nameFull, &cssData) ||
-			            AG_LookupStyleSheet(css, wid, name, &cssData)) &&
-			           cssData[0] != '\0') {
-				AG_ColorFromString(&cNew, cssData, cParent);
-			} else {
-				cNew = *cParent;
-			}
-			if (AG_ColorCompare(&cNew, &wid->pal.c[i][j]) != 0) {
-				wid->pal.c[i][j] = cNew;
-				paletteChanged = 1;
-			}
-		}
-	}
-	if (paletteChanged)
-		AG_PostEvent(wid, "palette-changed", NULL);
-
-	if (wid->flags & AG_WIDGET_USE_TEXT) {    /* Load any fonts required */
-		AG_Font *fontNew;
-
-		fontNew = AG_FetchFontFromList(fontFace, fontSize, fontFlags);
-		if (wid->font != fontNew) {
-			wid->font = fontNew;
-
-			AG_PushTextState();
-			AG_TextFont(wid->font);
-			AG_PostEvent(wid, "font-changed", NULL);
-			AG_PopTextState();
-
-			AG_Redraw(wid);
-		}
-	}
-
-	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
-		CompileStyleRecursive(chld,
-		    fontFace, fontSize, fontFlags,
-		    &wid->pal);
-	}
-	free(fontFace);
 }
 
 static void
-Apply_Font_Size(float *fontSize, float parentFontSize, const char *spec)
-{
-	char *ep;
-	float v, pts;
-
-	v = (float)strtod(spec, &ep);
-	pts = ((*ep == '%') ? parentFontSize * (v / 100.0f) : v);
-	*fontSize = AG_FontGetStandardSize(pts);
-}
-
-static void
-Apply_Font_Weight(Uint *fontFlags, Uint parentFontFlags, const char *weight)
-{
-	Uint flags;
-
-	if ((flags = AG_FontGetStyleByName(weight)) == 0) {
-		if (AG_Strcasecmp(weight, "!parent") == 0) {
-			if ((parentFontFlags & AG_FONT_WEIGHTS) == 0)
-				flags = AG_FONT_BOLD;
-		}
-	}
-	*fontFlags &= ~(AG_FONT_WEIGHTS);
-	*fontFlags |= flags;
-}
-	
-static void
-Apply_Font_Style(Uint *fontFlags, Uint parentFontFlags, const char *style)
-{
-	Uint flags;
-
-	if ((flags = AG_FontGetStyleByName(style)) == 0) {
-		if (AG_Strcasecmp(style, "!parent") == 0) {
-			if ((parentFontFlags & AG_FONT_STYLES) == 0)
-				flags = AG_FONT_ITALIC;
-		}
-	}
-	*fontFlags &= ~(AG_FONT_STYLES);
-	*fontFlags |= flags;
-}
-
-static void
-Apply_Font_Stretch(Uint *fontFlags, Uint parentFontFlags, const char *wdVariant)
-{
-	Uint flags;
-
-	if ((flags = AG_FontGetStyleByName(wdVariant)) == 0) {
-		if (AG_Strcasecmp(wdVariant, "!parent") == 0) {
-			if ((parentFontFlags & AG_FONT_WD_VARIANTS) == 0)
-				flags = AG_FONT_CONDENSED;
-		}
-	}
-	*fontFlags &= ~(AG_FONT_WD_VARIANTS);
-	*fontFlags |= flags;
-}
-
-static void
-Apply_Padding(AG_Widget *wid, const char *spec)
+Compile_Padding(AG_Widget *_Nonnull wid, const char *_Nonnull spec)
 {
 	char buf[16], *s=&buf[0], *sTop, *sRight;
 	int nChanges=0;
@@ -2474,13 +2243,13 @@ Apply_Padding(AG_Widget *wid, const char *spec)
 }
 
 static void
-Inherit_Padding(AG_Widget *wid, char *buf, AG_Size bufSize)
+Inherit_Margin(AG_Widget *_Nonnull wid, char *_Nonnull buf, AG_Size bufSize)
 {
-	if (AG_Defined(wid, "padding")) {
-		AG_GetString(wid, "padding", buf, sizeof(buf));
+	if (AG_Defined(wid, "margin")) {
+		AG_GetString(wid, "margin", buf, sizeof(buf));
 
 		if (Strcasecmp(buf, "inherit") == 0)
-			Inherit_Padding(OBJECT(wid)->parent, buf, sizeof(buf));
+			Inherit_Margin(OBJECT(wid)->parent, buf, sizeof(buf));
 	} else {
 		if (bufSize > 0)
 			buf[0] = '\0';
@@ -2488,7 +2257,7 @@ Inherit_Padding(AG_Widget *wid, char *buf, AG_Size bufSize)
 }
 
 static void
-Apply_Margin(AG_Widget *wid, const char *spec)
+Compile_Margin(AG_Widget *_Nonnull wid, const char *_Nonnull spec)
 {
 	char buf[16], *s=&buf[0], *sTop, *sRight;
 
@@ -2520,21 +2289,7 @@ Apply_Margin(AG_Widget *wid, const char *spec)
 }
 
 static void
-Inherit_Margin(AG_Widget *wid, char *buf, AG_Size bufSize)
-{
-	if (AG_Defined(wid, "margin")) {
-		AG_GetString(wid, "margin", buf, sizeof(buf));
-
-		if (Strcasecmp(buf, "inherit") == 0)
-			Inherit_Margin(OBJECT(wid)->parent, buf, sizeof(buf));
-	} else {
-		if (bufSize > 0)
-			buf[0] = '\0';
-	}
-}
-
-static void
-Apply_Spacing(AG_Widget *wid, const char *spec)
+Compile_Spacing(AG_Widget *_Nonnull wid, const char *_Nonnull spec)
 {
 	char buf[8], *s=&buf[0], *sHoriz, *sVert;
 
@@ -2550,6 +2305,293 @@ Apply_Spacing(AG_Widget *wid, const char *spec)
 		wid->spacingVert = wid->spacingHoriz;
 	}
 }
+
+static void
+Compile_Attribute(AG_Widget *_Nonnull wid, const char *_Nonnull key, const char *_Nonnull val,
+    char *_Nonnull *_Nonnull fontFace, float *_Nonnull fontSize, Uint *_Nonnull fontFlags,
+    const char *_Nonnull parentFontFace, float parentFontSize, Uint parentFontFlags,
+    const AG_WidgetPalette *_Nonnull parentPalette, int *paletteChanged)
+{
+	int i,j;
+
+	switch (key[0]) {
+	case 'f':
+		if (strcmp(key, "font-family") == 0) {
+			Free(*fontFace);
+			*fontFace = Strdup(val);
+			return;
+		} else if (strcmp(key, "font-size") == 0) {
+			char *ep;
+			float v = (float)strtod(val, &ep);
+			float pts = ((*ep == '%') ? parentFontSize * (v / 100.0f) : v);
+
+			*fontSize = AG_FontGetStandardSize(pts);
+			return;
+		} else if (strcmp(key, "font-stretch") == 0) {
+			Uint flags;
+
+			if ((flags = AG_FontGetStyleByName(val)) == 0) {
+				if (AG_Strcasecmp(val, "!parent") == 0) {
+					if ((parentFontFlags & AG_FONT_WD_VARIANTS) == 0)
+						flags = AG_FONT_CONDENSED;
+				}
+			}
+			*fontFlags &= ~(AG_FONT_WD_VARIANTS);
+			*fontFlags |= flags;
+			return;
+		} else if (strcmp(key, "font-style") == 0) {
+			Uint flags;
+
+			if ((flags = AG_FontGetStyleByName(val)) == 0) {
+				if (AG_Strcasecmp(val, "!parent") == 0) {
+					if ((parentFontFlags & AG_FONT_STYLES) == 0)
+						flags = AG_FONT_ITALIC;
+				}
+			}
+			*fontFlags &= ~(AG_FONT_STYLES);
+			*fontFlags |= flags;
+			return;
+		} else if (strcmp(key, "font-weight") == 0) {
+			Uint flags;
+
+			if ((flags = AG_FontGetStyleByName(val)) == 0) {
+				if (AG_Strcasecmp(val, "!parent") == 0) {
+					if ((parentFontFlags & AG_FONT_WEIGHTS) == 0)
+						flags = AG_FONT_BOLD;
+				}
+			}
+			*fontFlags &= ~(AG_FONT_WEIGHTS);
+			*fontFlags |= flags;
+			return;
+		}
+		break;
+	case 'm':
+		if (strcmp(key, "margin") == 0) {
+			Compile_Margin(wid, val);
+			return;
+		}
+		break;
+	case 'p':
+		if (strcmp(key, "padding") == 0) {
+			Compile_Padding(wid, val);
+			return;
+		}
+		break;
+	case 's':
+		if (strcmp(key, "spacing") == 0) {
+			Compile_Spacing(wid, val);
+			return;
+		}
+		break;
+	default:
+		break;
+	}
+
+	for (i = 0; i < AG_WIDGET_NSTATES; i++) {
+		for (j = 0; j < AG_UNUSED_COLOR; j++) {
+			char name[AG_VARIABLE_NAME_MAX];
+
+			Strlcpy(name, agStyleAttributes[j], sizeof(name));
+			if (i != 0)
+				Strlcat(name, agWidgetStateNames[i], sizeof(name));
+	
+			if (strcmp(key, name) == 0) {
+				AG_Color c;
+			
+				AG_ColorFromString(&c, val, &parentPalette->c[i][j]);
+				if (AG_ColorCompare(&c, &wid->pal.c[i][j]) != 0) {
+					wid->pal.c[i][j] = c;
+					*paletteChanged = 1;
+				}
+				return;
+			}
+		}
+	}
+
+	if (WIDGET_OPS(wid)->style != NULL)
+		WIDGET_OPS(wid)->style(wid, key, val);
+}
+
+/* Test the condition of a stylesheet block against widget obj. */
+static __inline__ int
+TestSelectorCondition(AG_StyleBlock *blk, void *obj)
+{
+	switch (blk->cond) {
+	case AG_SELECTOR_COND_ZOOM:
+		return (WIDGET(obj)->window->zoom >= blk->x &&
+		        WIDGET(obj)->window->zoom <= blk->y);
+	case AG_SELECTOR_COND_WIDTH:
+		return (WIDTH(obj) >= blk->x &&
+		        WIDTH(obj) <= blk->y);
+	case AG_SELECTOR_COND_HEIGHT:
+		return (HEIGHT(obj) >= blk->x &&
+		        HEIGHT(obj) <= blk->y);
+	default:
+		break;
+	}
+	return (0);
+}
+
+/*
+ * Compile run-time style attributes for the widget wid and its children.
+ * The widget must be locked.
+ */
+static void
+CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFontFace,
+    float parentFontSize, Uint parentFontFlags, const AG_WidgetPalette *_Nonnull parentPalette)
+{
+	const AG_Object *parent = OBJECT(wid)->parent;
+	AG_StyleSheet *css;
+	AG_StyleBlock *blk;
+	AG_StyleEntry *ent;
+	const char *widClass;
+	AG_Widget *chld;
+	AG_Variable *V;
+	char *fontFace = Strdup(parentFontFace);
+	float fontSize = parentFontSize;
+	Uint fontFlags = parentFontFlags;
+	int paletteChanged=0;
+	
+	AG_OBJECT_ISA(wid, "AG_Widget:*");
+	widClass = OBJECT(wid)->cls->name;
+
+	if (wid->css != NULL) {						/* Alt stylesheet by widget? */
+		css = wid->css;
+	} else {
+		css = &agDefaultCSS;
+	}
+
+	/* Inherit the parent widget's color palette by default. */
+	memcpy(&wid->pal, parentPalette, sizeof(AG_WidgetPalette));
+
+	/* Level 1: `E' blocks with no condition (lowest precedence). */
+	TAILQ_FOREACH(blk, &css->blks, blks) {
+		if (blk->selector == AG_SELECTOR_CLASS_NAME) {
+			if (strcmp(blk->e, widClass) == 0)
+				break;
+		} else if (blk->selector == AG_SELECTOR_CLASS_PATTERN) {
+			if (AG_OfClass(wid, blk->e))
+				break;
+		}
+	}
+ 	if (blk != NULL) {
+		TAILQ_FOREACH(ent, &blk->ents, ents)
+			Compile_Attribute(wid, ent->key, ent->value,
+			    &fontFace, &fontSize, &fontFlags,
+			    parentFontFace, parentFontSize, parentFontFlags,
+			    parentPalette, &paletteChanged);
+	}
+
+	/* Level 2: `E > F' blocks with no condition. */
+	if (parent != NULL) {
+		TAILQ_FOREACH(blk, &css->blks, blks) {
+			if (blk->selector == AG_SELECTOR_CHILD_NAMED) {
+				if (strcmp(blk->f, OBJECT(wid)->name) == 0 &&
+				    strcmp(blk->e, AGOBJECT_CLASS(parent)->name) == 0)
+					break;
+			} else if (blk->selector == AG_SELECTOR_CHILD_OF_CLASS) {
+				if (strcmp(blk->f, AGOBJECT_CLASS(wid)->name) == 0 &&
+				    strcmp(blk->e, AGOBJECT_CLASS(parent)->name) == 0)
+					break;
+			}
+		}
+ 		if (blk != NULL) {
+			TAILQ_FOREACH(ent, &blk->ents, ents)
+				Compile_Attribute(wid, ent->key, ent->value,
+				    &fontFace, &fontSize, &fontFlags,
+				    parentFontFace, parentFontSize, parentFontFlags,
+				    parentPalette, &paletteChanged);
+		}
+	}
+
+	/* Level 3: `E' blocks with a condition. */
+	TAILQ_FOREACH(blk, &css->blksCond, blks) {
+		if (blk->selector == AG_SELECTOR_CLASS_NAME) {
+			if (strcmp(blk->e, widClass) == 0 &&
+			    TestSelectorCondition(blk, wid)) {
+				break;
+			}
+		} else if (blk->selector == AG_SELECTOR_CLASS_PATTERN) {
+			if (AG_OfClass(wid, blk->e) &&
+			    TestSelectorCondition(blk, wid)) {
+				break;
+			}
+		}
+	}
+ 	if (blk != NULL) {
+		TAILQ_FOREACH(ent, &blk->ents, ents)
+			Compile_Attribute(wid, ent->key, ent->value,
+			    &fontFace, &fontSize, &fontFlags,
+			    parentFontFace, parentFontSize, parentFontFlags,
+			    parentPalette, &paletteChanged);
+	}
+
+	/* Level 4: `E > F' blocks with a condition. */
+	if (parent != NULL) {
+		TAILQ_FOREACH(blk, &css->blksCond, blks) {
+			if (blk->selector == AG_SELECTOR_CHILD_NAMED) {
+				if (strcmp(blk->f, OBJECT(wid)->name) == 0 &&
+				    strcmp(blk->e, AGOBJECT_CLASS(parent)->name) == 0 &&
+				    TestSelectorCondition(blk, wid)) {
+					break;
+				}
+			} else if (blk->selector == AG_SELECTOR_CHILD_OF_CLASS) {
+				if (strcmp(blk->f, AGOBJECT_CLASS(wid)->name) == 0 &&
+				    strcmp(blk->e, AGOBJECT_CLASS(parent)->name) == 0 &&
+				    TestSelectorCondition(blk, wid)) {
+					break;
+				}
+			}
+		}
+ 		if (blk != NULL) {
+			TAILQ_FOREACH(ent, &blk->ents, ents)
+				Compile_Attribute(wid, ent->key, ent->value,
+				    &fontFace, &fontSize, &fontFlags,
+				    parentFontFace, parentFontSize, parentFontFlags,
+				    parentPalette, &paletteChanged);
+		}
+	}
+
+	/* Level 5: Variable override by the Widget instance. */
+	TAILQ_FOREACH(V, &OBJECT(wid)->vars, vars) {
+		if (V->type != AG_VARIABLE_STRING) {
+			continue;
+		}
+		Compile_Attribute(wid, V->name, V->data.s,
+		    &fontFace, &fontSize, &fontFlags,
+		    parentFontFace, parentFontSize, parentFontFlags,
+		    parentPalette, &paletteChanged);
+	}
+
+	/* Raise "palette-changed" if a color palette entry has been modified. */
+	if (paletteChanged) {
+		AG_PostEvent(wid, "palette-changed", NULL);
+	}
+
+	/* Raise "font-changed" and fetch/load a new font if needed. */
+	if (wid->flags & AG_WIDGET_USE_TEXT) {
+		AG_Font *fontNew;
+
+		fontNew = AG_FetchFontFromList(fontFace, fontSize, fontFlags);
+		if (wid->font != fontNew) {
+			wid->font = fontNew;
+
+			AG_PushTextState();
+			AG_TextFont(wid->font);
+			AG_PostEvent(wid, "font-changed", NULL);
+			AG_PopTextState();
+		}
+	}
+
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+		AG_ObjectLock(chld);
+		CompileStyleRecursive(chld, fontFace, fontSize, fontFlags, &wid->pal);
+		AG_ObjectUnlock(chld);
+	}
+
+	free(fontFace);
+}
+
 
 /*
  * Update run-time style information for a widget (and its children). Use
@@ -2624,9 +2666,8 @@ AG_WidgetCopyStyle(void *objDst, void *objSrc)
 
 	Debug_Mute(debugLvlSave);
 	for (s = &agStyleAttributes[0]; *s != NULL; s++) {
-		if ((V = AG_AccessVariable(widSrc, *s)) != NULL) {
+		if ((V = AG_AccessVariable_NoLock(widSrc, *s)) != NULL) {
 			AG_SetString(widDst, *s, V->data.s);
-			AG_UnlockVariable(V);
 		}
 	}
 	Debug_Unmute(debugLvlSave);
