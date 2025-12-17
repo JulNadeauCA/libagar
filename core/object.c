@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2023 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2025 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -802,10 +802,8 @@ AG_ObjectFreeEvents(AG_Object *ob)
 }
 
 /*
- * Release all resources allocated by an object and its children.
- * Invokes the object reset() and destroy() operations.
- * 
- * None of the objects must be in use.
+ * Release all resources allocated by an (unattached) object and its children.
+ * Invokes the reset() and destroy() methods of every class in the inheritance hierarchy.
  */
 void
 AG_ObjectDestroy(void *p)
@@ -815,6 +813,7 @@ AG_ObjectDestroy(void *p)
 	AG_Object *child, *childNext;
 	AG_Variable *V, *Vnext;
 	AG_Event *ev, *evNext;
+	AG_Timer *to, *toNext;
 	int i, nHier;
 
 #ifdef AG_TYPE_SAFETY
@@ -828,7 +827,7 @@ AG_ObjectDestroy(void *p)
 	}
 #endif
 	/*
-	 * Release the child objects.
+	 * Release the child objects first.
 	 */
 	for (child = TAILQ_FIRST(&ob->children);
 	     child != TAILQ_END(&ob->children);
@@ -841,7 +840,19 @@ AG_ObjectDestroy(void *p)
 			Debug(ob, "Freeing child: <%p>\n", child);
 		}
 #endif
-		AG_ObjectDetachLockless(child);
+#ifdef AG_TIMERS
+		/* Cancel any running timer associated with the object. */
+		AG_LockTiming();
+		for (to = TAILQ_FIRST(&child->timers);
+		     to != TAILQ_END(&child->timers);
+		     to = toNext) {
+			toNext = TAILQ_NEXT(to, pvt.timers);
+			AG_DelTimer(child, to);
+		}
+		AG_UnlockTiming();
+#endif
+		/* Release the child object. */
+		child->parent = NULL;
 		AG_ObjectDestroy(child);
 	}
 

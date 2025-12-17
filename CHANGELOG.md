@@ -6,10 +6,13 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Button**](https://libagar.org/man3/AG_Button): New style attributes `text-align` and `vertical-align`.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Introduce the `style()` method, called by the style compiler to parse widget-specific style attributes into an efficient binary representation.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): New function `AG_AccessVariable_NoLock()` (lockless variant of `AG_AccessVariable()`).
+- [**AG_Object**](https://libagar.org/man3/AG_Object): Document the `AG_OBJECT_BOUND_EVENTS` flag.
 
 ### Removed
 
 ### Changed
+- [**AG_Object**](https://libagar.org/man3/AG_Object): In `AG_ObjectDestroy()`, do not call `AG_ObjectDetach()` on child objects. Instead, just cancel any active timers and null their parent pointers without raising a "detached" event. This allows us to perform garbage collection more efficiently.
+- [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Make `AG_TLIST_NO_BGLINES` the default.
 - Major performance improvements in the style compiler. Since it runs whenever widgets are resized, this should lead to better fluidity and overall lower CPU usage when Agar windows and container widgets are resized.
 - In `AG_WidgetCopyStyle()`, prevent redundant locking by using `AG_AccessVariable_NoLock()`.
 

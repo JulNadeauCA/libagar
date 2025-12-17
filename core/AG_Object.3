@@ -1,4 +1,4 @@
-.\" Copyright (c) 2001-2023 Julien Nadeau Carriere <vedge@csoft.net>.
+.\" Copyright (c) 2001-2025 Julien Nadeau Carriere <vedge@csoft.net>.
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,9 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd December 21, 2022
+.Dd December 16, 2025
 .Dt AG_OBJECT 3
-.Os Agar 1.7
+.Os Agar 1.8
 .Sh NAME
 .Nm AG_Object
 .Nd agar object system
@@ -784,22 +784,17 @@ deserialization (before
 .Fn load ) .
 .Pp
 .Fn AG_ObjectDestroy
-frees all resources allocated by an object.
+frees all resources allocated by an object and its children.
 It invokes the
 .Fn reset
 and
 .Fn destroy
-methods over each class in the inheritance hierarchy.
+methods of each class in the object's inheritance hierarchy.
 .Fn AG_ObjectDestroy
-also cancels any scheduled
+frees the object's dynamically-allocated resources (such as Variables and Events).
+It also cancels any scheduled
 .Xr AG_Timer 3
 expiration.
-.Fn AG_ObjectDestroy
-implies
-.Fn AG_ObjectFreeEvents ,
-.Fn AG_ObjectFreeVariables
-and
-.Fn AG_ObjectFreeChildren .
 Unless
 .Dv AG_OBJECT_STATIC
 is set,
@@ -935,6 +930,10 @@ Application-specific debugging flag.
 Automatically generate a unique name for the object as soon as
 .Fn AG_ObjectAttach
 occurs.
+.It AG_OBJECT_BOUND_EVENTS
+Raise "bound" events whenever
+.Fn AG_Bind*()
+is called to set up a Variable reference.
 .El
 .Sh EVENTS
 The
