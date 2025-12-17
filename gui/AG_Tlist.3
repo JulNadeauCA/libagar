@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2025 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -125,6 +125,10 @@ The
 variant sets the update rate to
 .Fa ms
 milliseconds.
+If
+.Fa ms
+is 0, the polling routine is not run periodically (though the caller
+may still trigger updates by posting "tlist-poll" events).
 .Pp
 Acceptable
 .Fa flags
@@ -149,7 +153,9 @@ Implied by
 .It AG_TLIST_FIXED_HEIGHT
 Don't reset the item height on "font-changed".
 .It AG_TLIST_NO_LINES
-Don't draw lines between nodes.
+Don't draw lines to connect nodes.
+.It AG_TLIST_NO_BGLINES
+Don't draw lines between items (the default).
 .It AG_TLIST_NO_KEYREPEAT
 Disable keyrepeat behavior.
 .It AG_TLIST_NO_SELECTED

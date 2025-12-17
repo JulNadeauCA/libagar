@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2023 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2002-2025 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -104,7 +104,9 @@ AG_TlistNewPolledMs(void *parent, Uint flags, int ms, AG_EventFn fn,
 	tl->pollDelay = ms;
 	AG_ObjectUnlock(tl);
 
-	AG_RedrawOnTick(tl, ms);
+	if (ms > 0) {
+		AG_RedrawOnTick(tl, ms);
+	}
 	return (tl);
 }
 
@@ -119,7 +121,7 @@ PollRefreshTimeout(AG_Timer *_Nonnull to, AG_Event *_Nonnull event)
 	return (to->ival);
 }
 
-/* Set the refresh rate for Polled mode in milliseconds (-1 = disable) */
+/* Set the refresh rate for Polled mode in milliseconds (-1 = disable, 0 = never) */
 void
 AG_TlistSetRefresh(AG_Tlist *tl, int ms)
 {
@@ -128,12 +130,12 @@ AG_TlistSetRefresh(AG_Tlist *tl, int ms)
 
 	if (ms == -1) {
 		AG_DelTimer(tl, &tl->refreshTo);
-	} else {
+	} else if (ms > 0) {
 		AG_AddTimer(tl, &tl->refreshTo, ms, PollRefreshTimeout, NULL);
+		AG_RedrawOnTick(tl, ms);
 	}
 	tl->pollDelay = ms;
 
-	AG_RedrawOnTick(tl, ms);
 	AG_ObjectUnlock(tl);
 }
 
@@ -381,11 +383,13 @@ StyleChanged(AG_Event *_Nonnull event)
 		             WIDGET(tl)->paddingBottom;
 		tl->icon_w = tl->item_h + 1;
 	}
-	for (i = 0; i < AG_WIDGET_NSTATES; i++) {
-		AG_ColorInterpolate(&tl->cBgLine[i],
-		    &WIDGET(tl)->pal.c[i][AG_BG_COLOR],
-		    &WIDGET(tl)->pal.c[i][AG_LINE_COLOR],
-		    1,5);
+	if ((tl->flags & AG_TLIST_NO_BGLINES) == 0) {
+		for (i = 0; i < AG_WIDGET_NSTATES; i++) {
+			AG_ColorInterpolate(&tl->cBgLine[i],
+			    &WIDGET(tl)->pal.c[i][AG_BG_COLOR],
+			    &WIDGET(tl)->pal.c[i][AG_LINE_COLOR],
+			    1,5);
+		}
 	}
 
 }
@@ -397,8 +401,10 @@ OnShow(AG_Event *_Nonnull event)
 
 	if (tl->flags & AG_TLIST_POLL) {
 		tl->flags |= AG_TLIST_REFRESH;
-		AG_AddTimer(tl, &tl->refreshTo, tl->pollDelay,
-		    PollRefreshTimeout, NULL);
+		if (tl->pollDelay > 0) {
+			AG_AddTimer(tl, &tl->refreshTo, tl->pollDelay,
+			    PollRefreshTimeout, NULL);
+		}
 	}
 }
 
@@ -742,16 +748,13 @@ Draw(void *_Nonnull obj)
 				if (Sicon->w > hItem || Sicon->h > hItem) {
 					AG_Surface *SiconPr;
 
-					SiconPr = AG_SurfaceScale(Sicon,
-					    tl->icon_w, hItem, 0);
+					SiconPr = AG_SurfaceScale(Sicon, tl->icon_w, hItem, 0);
 					if (SiconPr != NULL) {
-						yAligned = hItem_2 -
-						           (SiconPr->h >> 1);
+						yAligned = hItem_2 - (SiconPr->h >> 1);
 						if (yAligned < 0)
 							yAligned = 0;
 
-						AG_SurfaceBlit(SiconPr, NULL,
-						    S, x,yAligned);
+						AG_SurfaceBlit(SiconPr, NULL, S, x,yAligned);
 						AG_SurfaceFree(SiconPr);
 					}
 					x += hItem + spacingHoriz;
@@ -760,9 +763,7 @@ Draw(void *_Nonnull obj)
 					if (yAligned < 0)
 						yAligned = 0;
 
-					AG_SurfaceBlit(Sicon, NULL, S,
-					    x,yAligned);
-
+					AG_SurfaceBlit(Sicon, NULL, S, x,yAligned);
 					x += Sicon->w + spacingHoriz;
 				}
 			}
@@ -802,39 +803,36 @@ Draw(void *_Nonnull obj)
 		}
 
 		/*
-		 * Tree lines (forward).
+		 * Lines connecting nodes.
 		 */
-		if (it->depth > 0 && drawLines) {
-			for (j = 0; j < it->depth - 1; j++) {
-				if (!tl->expLevels[j]) {
-					continue;
-				}
-				AG_DrawLineV(tl,
-				    (j * hItem) + hItem_2,             /* x */
-				    y,                                /* y1 */
-				    y+hItem,                          /* y2 */
-				    cLine);
-			}
-			if (itNext == NULL || itNext->depth < it->depth) {
-				AG_DrawLineV(tl,
-				    (it->depth - 1)*hItem + hItem_2,   /* x */
-				    y,                                /* y1 */
-				    y + hItem_2,                      /* y2 */
-				    cLine);
-			} else {
-				AG_DrawLineV(tl,
-				    (it->depth - 1)*hItem + hItem_2,   /* x */
-				    y,                                /* y1 */
-				    y + hItem,                        /* y2 */
-				    cLine);
-			}
-		}
-
 		if (drawLines) {
-			/*
-			 * Tree lines (backtracking).
-			 */
-			if (itNext != NULL) {
+			if (it->depth > 0) {                              /* Forward */
+				for (j = 0; j < it->depth - 1; j++) {
+					if (!tl->expLevels[j]) {
+						continue;
+					}
+					AG_DrawLineV(tl,
+					    (j * hItem) + hItem_2,             /* x */
+					    y,                                /* y1 */
+					    y+hItem,                          /* y2 */
+					    cLine);
+				}
+				if (itNext == NULL || itNext->depth < it->depth) {
+					AG_DrawLineV(tl,
+					    (it->depth - 1)*hItem + hItem_2,   /* x */
+					    y,                                /* y1 */
+					    y + hItem_2,                      /* y2 */
+					    cLine);
+				} else {
+					AG_DrawLineV(tl,
+					    (it->depth - 1)*hItem + hItem_2,   /* x */
+					    y,                                /* y1 */
+					    y + hItem,                        /* y2 */
+					    cLine);
+				}
+			}
+
+			if (itNext != NULL) {                           /* Backtrack */
 				if (itNext->depth > it->depth) {
 					SetExpansionLevel(tl, it->depth, y+hItem_2+1);
 				} else if (itNext->depth < it->depth) {
@@ -1823,7 +1821,7 @@ Init(void *_Nonnull obj)
 
 	WIDGET(tl)->flags |= AG_WIDGET_FOCUSABLE | AG_WIDGET_USE_TEXT;
 
-	tl->flags = 0;
+	tl->flags = AG_TLIST_NO_BGLINES;
 	tl->item_h = agTextFontHeight;
 	tl->selected = NULL;
 	tl->wHint = 0;

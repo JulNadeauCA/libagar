@@ -86,7 +86,7 @@ typedef struct ag_tlist {
 	int  *expLevels;                /* Tree expansion state for draw() */
 	Uint nExpLevels;
 	int icon_w;                     /* Item icon width */
-	Uint pollDelay;                 /* Refresh rate for POLL mode */
+	Uint pollDelay;                 /* Refresh rate for POLL mode (0=disable) */
 	int rOffs;                      /* Row display offset */
 	void *_Nullable dblClicked;     /* For double click test */
 	AG_TlistItemQ items;            /* Current Items */

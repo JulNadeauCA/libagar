@@ -13,6 +13,7 @@ All notable changes to Agar will be documented in this file. The format is based
 ### Changed
 - [**AG_Object**](https://libagar.org/man3/AG_Object): In `AG_ObjectDestroy()`, do not call `AG_ObjectDetach()` on child objects. Instead, just cancel any active timers and null their parent pointers without raising a "detached" event. This allows us to perform garbage collection more efficiently.
 - [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): Make `AG_TLIST_NO_BGLINES` the default.
+- [**AG_Tlist**](https://libagar.org/man3/AG_Tlist): In `AG_TlistNewPolledMs()`, accept a `ms` argument of 0 to disable periodical updates (the caller may still trigger updates with "tlist-poll").
 - Major performance improvements in the style compiler. Since it runs whenever widgets are resized, this should lead to better fluidity and overall lower CPU usage when Agar windows and container widgets are resized.
 - In `AG_WidgetCopyStyle()`, prevent redundant locking by using `AG_AccessVariable_NoLock()`.
 
