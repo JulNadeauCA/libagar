@@ -10,9 +10,24 @@
  *   Widget(s) of class (exact)   AG_Box
  *   Widget(s) of class (pattern) AG_Widget:AG_Box:*
  *   Child widget(s) of class     AG_FontSelector > AG_Tlist
- *   Child widget named           AG_Combo > "trigger"
+ *   Child widget instance name   AG_Combo > "trigger"
  *
- * See: AG_StyleSheet(3) and "STYLE ATTRIBUTES" section of AG_Widget(3).
+ * Selectors support the "width" and "height" conditions for styling based
+ * on the current size of the widget in pixels. For example:
+ *
+ *  AG_Button (width < 50) { font-stretch: condensed; }
+ *  AG_Button (height > 50) { ... }
+ *
+ * Selectors also support the "zoom" condition for styling based on the
+ * current zoom level (the zoom level is an integer from 0 to 32, where
+ * level 16 corresponds to 1:1). For example:
+ *
+ *  AG_Button (zoom = 0-16) { font-stretch: condensed; }
+ *  AG_Button (zoom > 16) { ... }
+ *
+ * SEE ALSO: AG_StyleSheet(3) and the "STYLE ATTRIBUTES" section of AG_Widget(3).
+ * Widget-specific style attributes are documented under "STYLE ATTRIBUTES" in
+ * each widget's respective manual page.
  */
 
 /*
@@ -58,10 +73,15 @@ Defaults {
 */
 
 AG_Window {
-	padding:          0 3 4 3;
-	background-color: rgb(70,70,70);
-	text-color:       rgb(200,200,200);
-	text-color#hover: rgb(240,240,240);
+	padding:                   0 3 4 3;
+	background-color:          rgb(70,70,70);
+	background-color#disabled: rgb(70,70,70);
+	background-color#focused:  rgb(70,70,70);
+	background-color#hover:    rgb(70,70,70);
+	text-color:                rgb(200,200,200);
+	text-color#disabled:       rgb(200,200,200);
+	text-color#focused:        rgb(200,200,200);
+	text-color#hover:          rgb(240,240,240);
 }
 
 AG_Box {
@@ -72,41 +92,55 @@ AG_Button {
 	padding: 5 10 5 10;
 
 	text-color:              rgb(255,255,255);
+	text-color#disabled:     rgb(255,255,255);
+	text-color#focused:      rgb(255,255,255);
+	text-color#hover:        rgb(255,255,255);
+
 	color:                   rgb(120,120,120);
+	color#disabled:          rgb(120,120,120);
 	color#focused:           rgb(128,128,129);
 	color#hover:             rgb(133,133,136);
-	selection-color#focused: rgb(100,100,150);
-	selection-color#hover:   rgb(150,150,100);
+
+	selection-color:          rgb(0,0,80);
+	selection-color#disabled: rgb(80,80,120);
+	selection-color#focused:  rgb(100,100,150);
+	selection-color#hover:    rgb(150,150,100);
 
 	text-align: center;         /* center | start | end | justify */
 	vertical-align: middle;     /* middle | top | bottom */
 
 	/*
 	background:                 "button-bg.svg";
+	background#disabled:        "button-bg-disabled.svg";
 	background#focused:         "button-bg-focused.svg";
 	background#hover:           "button-bg-hover.svg";
-	background#disabled:        "button-bg-disabled.svg";
 
 	background-pushed:          "button-bg-pushed.svg";
+	background-pushed#disabled: "button-bg-pushed-disabled.svg";
 	background-pushed#focused:  "button-bg-pushed-focused.svg";
 	background-pushed#hover:    "button-bg-pushed-hover.svg";
-	background-pushed#disabled: "button-bg-pushed-disabled.svg";
 
 	foreground:                 "button-fg.svg";
+	foreground#disabled:        "button-fg-disabled.svg";
 	foreground#focused:         "button-fg-focused.svg";
 	foreground#hover:           "button-fg-hover.svg";
-	foreground#disabled:        "button-fg-disabled.svg";
 
 	foreground-pushed:          "button-fg-pushed.svg";
+	foreground-pushed#disabled: "button-fg-pushed-disabled.svg";
 	foreground-pushed#focused:  "button-fg-pushed-focused.svg";
 	foreground-pushed#hover:    "button-fg-pushed-hover.svg";
-	foreground-pushed#disabled: "button-fg-pushed-disabled.svg";
 	*/
 }
 AG_Checkbox {
 	spacing: 5;
 	background-color:       rgb(80,80,120);
-	background-color#hover: rgb(100,100,140);
+	background-color#hover: rgb(0,0,80);
+}
+AG_Checkbox (zoom = 0-15) {
+	spacing: 3;
+}
+AG_Checkbox (zoom = 20-32) {
+	spacing: 8;
 }
 AG_Combo > "input" {
 	padding: 0 0 2 0;

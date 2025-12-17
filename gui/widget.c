@@ -79,6 +79,12 @@ const char *agStyleAttributes[] = {
 	 */
 	"spacing",                   /* Spacing between elements (px) */
 
+	/*
+	 * Text Element Alignment
+	 */
+	"text-align",                /* Horizontal alignment of text in a space */
+	"vertical-align",            /* Vertical alignment of text in a space */
+
 	NULL
 };
 
@@ -179,11 +185,13 @@ AG_WidgetPalette agDefaultPalette = {{
 #endif /* AG_LARGE */
 }};
 
-#if defined(AG_DEBUG) && defined(AG_WIDGETS)
-AG_Widget *_Nullable agDebuggerTgt = NULL;
-#endif
-#if defined(AG_WIDGETS)
-AG_Widget *_Nullable agStyleEditorTgt = NULL;
+#ifdef AG_WIDGETS
+# ifdef AG_DEBUG
+AG_Widget *_Nullable agDebuggerTgt = NULL;     /* Debugger instrumentation target */
+# endif
+AG_Widget *_Nullable agStyleEditorTgt = NULL;  /* Style Editor instrumentation target */
+void *_Nullable agStyleEditorVarList = NULL;   /* Target widget style variable overrides list */
+void *_Nullable agStyleEditorRuleList = NULL;  /* Target widget computed style attributes list */
 #endif
 
 /* Import inlinables */
@@ -195,70 +203,60 @@ static void UnfocusWidget(AG_Widget *_Nonnull);
 
 /* Set the parent window/driver pointers on a widget and its children. */
 static void
-SetParentWindow(AG_Widget *_Nonnull wid, AG_Window *_Nullable win)
+SetParentWindow(AG_Widget *_Nonnull wid, AG_Window *_Nonnull win)
 {
 	AG_Widget *chld;
 	AG_CursorArea *ca, *caNext;
-	
+
 	wid->window = win;
 
-	if (win) {
-		wid->drv = AGDRIVER( OBJECT(win)->parent );
-		wid->drvOps = AGDRIVER_CLASS(wid->drv);
+	wid->drv = AGDRIVER( OBJECT(win)->parent );
+	wid->drvOps = AGDRIVER_CLASS(wid->drv);
 
-		if (wid->flags & AG_WIDGET_USE_TEXT)
-			win->flags |= AG_WINDOW_USE_TEXT;
+	if (wid->flags & AG_WIDGET_USE_TEXT)
+		win->flags |= AG_WINDOW_USE_TEXT;
 
-		/*
-		 * Commit any previously deferred AG_MapStockCursor()
-		 * operation.
-		 */
-		for (ca = TAILQ_FIRST(&wid->pvt.cursorAreas);
-		     ca != TAILQ_END(&wid->pvt.cursorAreas);
-		     ca = caNext) {
-			caNext = TAILQ_NEXT(ca, cursorAreas);
-			if (ca->stock >= 0 &&
-			    ca->stock < wid->drv->nCursors) {
-				AG_Cursor *ac;
-				int i = 0;
+	/*
+	 * Commit any previously deferred AG_MapStockCursor() operation.
+	 */
+	for (ca = TAILQ_FIRST(&wid->pvt.cursorAreas);
+	     ca != TAILQ_END(&wid->pvt.cursorAreas);
+	     ca = caNext) {
+		caNext = TAILQ_NEXT(ca, cursorAreas);
+		if (ca->stock >= 0 &&
+		    ca->stock < wid->drv->nCursors) {
+			AG_Cursor *ac;
+			int i = 0;
 
-				TAILQ_FOREACH(ac, &wid->drv->cursors, cursors) {
-					if (i++ == ca->stock)
-						break;
-				}
-				if (ac) {
-					ca->c = ac;
-					TAILQ_INSERT_TAIL(&win->pvt.cursorAreas,
-					    ca, cursorAreas);
-				} else {
-					free(ca);
-				}
+			TAILQ_FOREACH(ac, &wid->drv->cursors, cursors) {
+				if (i++ == ca->stock)
+					break;
+			}
+			if (ac) {
+				ca->c = ac;
+				TAILQ_INSERT_TAIL(&win->pvt.cursorAreas, ca, cursorAreas);
 			} else {
 				free(ca);
 			}
+		} else {
+			free(ca);
 		}
-		TAILQ_INIT(&wid->pvt.cursorAreas);
-	} else {
-		wid->drv = NULL;
-		wid->drvOps = NULL;
 	}
+	TAILQ_INIT(&wid->pvt.cursorAreas);
+
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
 		SetParentWindow(chld, win);
 }
 
 /* Set the parent driver pointers on a widget and its children. */
 static void
-SetParentDriver(AG_Widget *_Nonnull wid, AG_Driver *_Nullable drv)
+SetParentDriver(AG_Widget *_Nonnull wid, AG_Driver *_Nonnull drv)
 {
 	AG_Widget *chld;
 
-	if (drv) {
-		wid->drv = AGDRIVER(drv);
-		wid->drvOps = AGDRIVER_CLASS(drv);
-	} else {
-		wid->drv = NULL;
-		wid->drvOps = NULL;
-	}
+	wid->drv = AGDRIVER(drv);
+	wid->drvOps = AGDRIVER_CLASS(drv);
+
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
 		SetParentDriver(chld, drv);
 }
@@ -295,10 +293,10 @@ OnAttach(AG_Event *_Nonnull event)
 		AG_Widget *wParent = WIDGET(parent);
 		AG_Window *window = wParent->window;
 
-		SetParentWindow(wid, window);
-
 		if (window != NULL) {
 			AG_OBJECT_ISA(window, "AG_Widget:AG_Window:*");
+		
+			SetParentWindow(wid, window);
 
 			if (window->visible)
 				AG_PostEvent(wid, "widget-shown", NULL);
@@ -332,22 +330,28 @@ OnDetach(AG_Event *_Nonnull event)
 	AG_InputDevice *id;
 
 	/*
-	 * Forward the "detached" event to child widgets.
+	 * Forward the "detached" event to child widgets first.
 	 */
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
 		event->argv[1].data.p = chld;                      /* SENDER */
 		AG_ForwardEvent(chld, event);
 	}
 
-#if defined(AG_DEBUG) && defined(AG_WIDGETS)
+#if defined(AG_WIDGETS)
+	/*
+	 * If this widget is currently in use as a Debugger or Style Editor
+	 * instrumentation target, make sure it is no longer referenced.
+	 */
+# if defined(AG_DEBUG)
 	if (wid == agDebuggerTgt)
 		AG_GuiDebuggerDetachTarget();
-#endif
-#if defined(AG_WIDGETS)
+# endif
 	if (wid == agStyleEditorTgt)
 		AG_StyleEditorDetachTarget();
 #endif
-	if (wid->drv != NULL) {                           /* Unmap textures */
+
+	/* Delete all textures managed by the widget since they are driver-specific. */
+	if (wid->drv != NULL) {
 		Uint id;
 		int tex;
 
@@ -360,6 +364,7 @@ OnDetach(AG_Event *_Nonnull event)
 		}
 	}
 
+	/* Ungrab any currently attached input device (also driver-specific). */
 	AG_LockVFS(&agInputDevices);
 detach_input_devs:
 	AGOBJECT_FOREACH_CHILD(id, &agInputDevices, ag_input_device) {
@@ -375,25 +380,29 @@ detach_input_devs:
 	}
 	AG_UnlockVFS(&agInputDevices);
 
-	if (AG_WIDGET_ISA(parent) && AG_WIDGET_ISA(wid)) {
-		if (wid->window) {
-			if (wid->window->visible) {
+	if (AG_WIDGET_ISA(parent) && AG_WIDGET_ISA(wid)) {          /* Widget > Widget */
+
+		if (wid->window != NULL) {
+			/* Raise "widget-hidden" if the parent window is still visible. */
+			if (wid->window->visible)
 				AG_PostEvent(wid, "widget-hidden", NULL);
-			}
+
+			/* Unmap cursors mapped by the widget since they are driver-specific. */
 			AG_UnmapAllCursors(wid->window, wid);
+
+			/* Detach widget from its parent window. */
+			wid->window = NULL;
 		}
-		SetParentWindow(wid, NULL);
-	} else if (AG_DRIVER_ISA(parent) && AG_WINDOW_ISA(wid)) {
-		SetParentDriver(wid, NULL);
-	} else {
-#ifdef AG_VERBOSITY
-		AG_FatalErrorF("Unexpected parent on detach. "
-		               "Why is %s attached to %s?",
-			       OBJECT(wid)->name, OBJECT(parent)->name);
-#else
-		AG_FatalError("Unexpected parent on detach");
+
+#ifdef AG_DEBUG
+		if (wid->drv == NULL)
+			AG_FatalError("drv is already NULL. Double detach?");
 #endif
 	}
+
+	/* Detach widget from its parent window's driver. */
+	wid->drv = NULL;
+	wid->drvOps = NULL;
 }
 
 static Uint32
@@ -2418,8 +2427,13 @@ TestSelectorCondition(AG_StyleBlock *blk, void *obj)
 {
 	switch (blk->cond) {
 	case AG_SELECTOR_COND_ZOOM:
-		return (WIDGET(obj)->window->zoom >= blk->x &&
-		        WIDGET(obj)->window->zoom <= blk->y);
+		{
+			const AG_Window *win = WIDGET(obj)->window;
+
+			return (win != NULL &&
+				win->zoom >= blk->x &&
+			        win->zoom <= blk->y);
+		}
 	case AG_SELECTOR_COND_WIDTH:
 		return (WIDTH(obj) >= blk->x &&
 		        WIDTH(obj) <= blk->y);
@@ -2552,7 +2566,7 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFontFa
 		}
 	}
 
-	/* Level 5: Variable override by the Widget instance. */
+	/* Level 5: Variable overrides by the Widget instance. */
 	TAILQ_FOREACH(V, &OBJECT(wid)->vars, vars) {
 		if (V->type != AG_VARIABLE_STRING) {
 			continue;
@@ -2592,7 +2606,6 @@ CompileStyleRecursive(AG_Widget *_Nonnull wid, const char *_Nonnull parentFontFa
 	free(fontFace);
 }
 
-
 /*
  * Update run-time style information for a widget (and its children). Use
  * both stylesheet definitions and per-widget attributes to update the color
@@ -2628,6 +2641,14 @@ AG_WidgetCompileStyle(void *obj)
 
 	AG_MutexUnlock(&agTextLock);
 	AG_UnlockVFS(wid);
+
+#ifdef AG_WIDGETS
+	/* Notify the Style Editor instrumentation of a change in computed rules. */
+	if (agStyleEditorTgt != NULL && agStyleEditorRuleList != NULL) {
+		AG_PostEvent(agStyleEditorRuleList, "tlist-poll", NULL);
+		AG_Redraw(agStyleEditorRuleList);
+	}
+#endif
 }
 
 /*
@@ -2647,6 +2668,18 @@ AG_WidgetFreeStyle(void *obj)
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
 		AG_WidgetFreeStyle(chld);
 }
+
+/*
+ * Test whether the selector condition (i.e., "width", "height" or "zoom") of
+ * the style block blk matches the widget obj given its current size and the
+ * current zoom level.
+ */
+int
+AG_WidgetStyleConditionTest(AG_StyleBlock *blk, void *obj)
+{
+	return TestSelectorCondition(blk, obj);
+}
+
 
 /* Copy all style properties from one widget to another. */
 void

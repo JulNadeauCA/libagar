@@ -19,6 +19,7 @@
 #include <agar/config/have_jpeg.h>
 #include <agar/config/have_opengl.h>
 #include <agar/config/have_png.h>
+#include <agar/config/have_plutosvg.h>
 #include <agar/config/have_portaudio.h>
 #include <agar/config/have_sdl2.h>
 #include <agar/config/have_sdl.h>
@@ -211,6 +212,9 @@ const char *agarBuildLibs[] = {
 #endif
 #ifdef HAVE_PNG
 	"PNG  ",
+#endif
+#ifdef HAVE_PLUTOSVG
+	"PLUTOSVG  ",
 #endif
 #ifdef HAVE_PORTAUDIO
 	"PORTAUDIO  ",
@@ -449,7 +453,7 @@ static void
 TestWindowDetached(AG_Event *event)
 {
 	AG_TestInstance *ti = AG_PTR(1);
-	
+
 	TAILQ_REMOVE(&tests, ti, instances);
 	if (ti->tc->destroy != NULL) {
 		ti->tc->destroy(ti);
@@ -464,7 +468,7 @@ TestWindowClose(AG_Event *event)
 	AG_TestInstance *ti = AG_PTR(1);
 	
 	AG_ConsoleMsg(console, _("Test %s: terminated"), ti->name);
-	AG_SetEvent(ti->win, "window-detached", TestWindowDetached, "%p", ti);
+	AG_AddEvent(ti->win, "detached", TestWindowDetached, "%p", ti);
 	AG_ObjectDetach(ti->win);
 }
 
@@ -1110,7 +1114,7 @@ main(int argc, char *argv[])
 		AG_ConsoleMsgS(console, "");
 		AG_ConsoleMsg(console,
 		    _("Press " AGSI_BOLD "Ctrl-[-]" AGSI_RST
-		       " and " AGSI_BOLD "Ctrl-[+]" AGSI_RST " to zoom"));
+		       " and " AGSI_BOLD "Ctrl-[+]" AGSI_RST " (or use Ctrl + mouse wheel) to zoom"));
 # if defined(AG_DEBUG) && defined(AG_TIMERS)
 		AG_ConsoleMsg(console,
 		    _("Press " AGSI_BOLD "Ctrl-Shift-D or F7" AGSI_RST " to start Debugger"));

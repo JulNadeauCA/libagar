@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2019-2025 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -59,13 +59,13 @@
 extern int agFontconfigInited;		/* text.c */
 #endif
 
-static char                 agStyleEditorFilter[AG_TLIST_LABEL_MAX];
-static AG_Window *_Nullable agStyleEditorWindow = NULL;
-static AG_Tlist  *_Nullable agStyleEditorTlist = NULL;
-static AG_Box    *_Nullable agStyleEditorBox = NULL;
+static AG_Window *_Nullable agStyleEditorWindow = NULL;   /* Style editor window instance */
+static AG_Tlist  *_Nullable agStyleEditorTlist = NULL;    /* List of windows and widgets */
+static AG_Box    *_Nullable agStyleEditorBox = NULL;      /* Target widget edit container */
 
-static int agStyleEditorCapture = 0;           /* Capture graphics surfaces */
-static int agStyleEdListChldWindows = 0;     /* Include sub-windows in list */
+static char agStyleEditorFilter[AG_TLIST_LABEL_MAX];  /* Style editor widget filter pattern */
+static int agStyleEditorCapture = 0;                  /* Capture graphics surfaces */
+static int agStyleEdListChldWindows = 0;              /* Include sub-windows in list */
 
 static int
 FindWidgets(AG_Widget *_Nonnull wid, AG_Tlist *_Nonnull tl, int depth)
@@ -212,10 +212,11 @@ InputAttribute(AG_Event *_Nonnull event)
 {
 	AG_Textbox *tb = AG_TEXTBOX_PTR(1);
 	AG_Widget *tgt = AG_WIDGET_PTR(2);
-	AG_Tlist *tlAttrs = AG_TLIST_PTR(3);
+	AG_Tlist *tlVars = AG_TLIST_PTR(3);
 	char *s = AG_TextboxDupString(tb), *ps = s;
 	const char *key = Strsep(&ps, ":=");
 	const char *val = Strsep(&ps, ":=");
+	int i;
 
 	if (tgt == NULL || !AG_OBJECT_VALID(tgt) || !AG_WIDGET_ISA(tgt))
 		return;
@@ -227,51 +228,266 @@ InputAttribute(AG_Event *_Nonnull event)
 
 	AG_SetStyle(tgt, key, (val[0] != '\0') ? val : NULL);
 
+	for (i = 0; i < AG_WIDGET_NCOLORS; i++) {
+		if (strcmp(agStyleAttributes[i], key) == 0)
+			break;
+	}
+	if (i < AG_WIDGET_NCOLORS) {
+		for (i = 0; i < AG_WIDGET_NSTATES; i++) {
+			char keyState[AG_VARIABLE_NAME_MAX];
+
+			Strlcpy(keyState, key, sizeof(keyState));
+			Strlcat(keyState, agWidgetStateNames[i], sizeof(keyState));
+			if (!AG_Defined(tgt, keyState)) {
+				AG_SetStyle(tgt, keyState, (val[0] != '\0') ? val : NULL);
+			}
+		}
+	}
+
 	AG_WindowUpdate(AG_ParentWindow(tgt));
 /*	AG_TextboxClearString(tb); */
 
-	tlAttrs->flags |= AG_TLIST_REFRESH;
-	AG_Redraw(tlAttrs);
+	tlVars->flags |= AG_TLIST_REFRESH;
+	AG_Redraw(tlVars);
 
 	free(s);
 }
 
 static void
-PollAttributes(AG_Event *_Nonnull event)
+PollStyleVariables(AG_Event *_Nonnull event)
 {
 	AG_Tlist *tl = AG_TLIST_SELF();
 	AG_Widget *tgt = AG_PTR(1);
-	const char **attr;
+	AG_Variable *V;
 
 	if (!AG_OBJECT_VALID(tgt) || !AG_WIDGET_ISA(tgt))
 		return;
 
 	AG_TlistBegin(tl);
 
-	for (attr = &agStyleAttributes[0]; *attr != NULL; attr++) {
+	TAILQ_FOREACH(V, &OBJECT(tgt)->vars, vars) {
 		AG_Surface *S;
-		char *value;
+		char *val;
 		AG_TlistItem *it;
 
-		if (!AG_Defined(tgt, *attr)) {
+		if (V->type != AG_VARIABLE_STRING)
 			continue;
-		}
-		value = AG_GetStringP(tgt, *attr);
-		if (strcmp(*attr, "color") == 0 ||
-		    strstr(*attr, "-color") != NULL) {
+
+		val = AG_GetStringP(tgt, V->name);
+		if (strcmp(V->name, "color") == 0 ||
+		    strstr(V->name, "-color") != NULL) {
 			AG_Color c;
 
 			S = AG_SurfaceStdRGB(tl->icon_w, tl->icon_w);
-			AG_ColorFromString(&c, value, NULL);
+			AG_ColorFromString(&c, val, NULL);
 			AG_FillRect(S, NULL, &c);
 		} else {
 			S = NULL;
 		}
-		it = AG_TlistAdd(tl, S, "%s: %s", *attr, value);
-		it->p1 = value;
+		it = AG_TlistAdd(tl, S, "%s: %s", V->name, val);
+		it->p1 = val;
 		if (S)
 			AG_SurfaceFree(S);
 	}
+
+	AG_TlistEnd(tl);
+}
+
+static void
+PollStyleBlock(AG_Tlist *_Nonnull tl, AG_StyleBlock *_Nonnull blk)
+{
+	AG_StyleEntry *ent;
+
+	TAILQ_FOREACH(ent, &blk->ents, ents) {
+		AG_Surface *S;
+		AG_TlistItem *it;
+
+		if (strcmp(ent->key, "color") == 0 ||
+		    strstr(ent->key, "-color") != NULL) {
+			AG_Color c;
+
+			S = AG_SurfaceStdRGB(tl->icon_w, tl->icon_w);
+			AG_ColorFromString(&c, ent->value, NULL);
+			AG_FillRect(S, NULL, &c);
+		} else {
+			S = NULL;
+		}
+		it = AG_TlistAdd(tl, S, "%s: %s", ent->key, ent->value);
+		it->p1 = ent->value;
+		it->depth = 1;
+		if (S)
+			AG_SurfaceFree(S);
+	}
+}
+
+static __inline__ void
+PrintCondition(char *_Nonnull dst, size_t dstLen, const AG_StyleBlock *_Nonnull blk)
+{
+	switch (blk->cond) {
+	case AG_SELECTOR_COND_WIDTH:
+		if (blk->y == (AG_INT_MAX - 1)) {
+			Snprintf(dst, dstLen, "width %d - " AGSI_INFINITY, blk->x);
+			break;
+		} else {
+			Snprintf(dst, dstLen, "width %d - %d", blk->x, blk->y);
+			break;
+		}
+		break;
+	case AG_SELECTOR_COND_HEIGHT:
+		if (blk->y == (AG_INT_MAX - 1)) {
+			Snprintf(dst, dstLen, "height %d - " AGSI_INFINITY, blk->x);
+			break;
+		} else {
+			Snprintf(dst, dstLen, "height %d - %d", blk->x, blk->y);
+			break;
+		}
+		break;
+	case AG_SELECTOR_COND_ZOOM:
+		if (blk->y == (AG_INT_MAX - 1)) {
+			Snprintf(dst, dstLen, "zoom %d - " AGSI_INFINITY, blk->x);
+			break;
+		} else {
+			Snprintf(dst, dstLen, "zoom %d - %d", blk->x, blk->y);
+			break;
+		}
+		break;
+	default:
+		Strlcpy(dst, "?", dstLen);
+		break;
+	}
+}
+
+static void
+PollStyleComputedRules(AG_Event *_Nonnull event)
+{
+	AG_Tlist *tl = AG_TLIST_SELF();
+	AG_Widget *tgt = AG_PTR(1);
+	const AG_Object *tgtParent;
+	AG_StyleSheet *css;
+	AG_StyleBlock *blk;
+	const char *tgtClass;
+	AG_TlistItem *it;
+	char cond[32];
+
+	if (!AG_OBJECT_VALID(tgt) || !AG_WIDGET_ISA(tgt))
+		return;
+
+	tgtParent = OBJECT(tgt)->parent;
+	tgtClass = OBJECT(tgt)->cls->name;
+	css = (tgt->css != NULL) ? tgt->css : &agDefaultCSS;
+
+	AG_TlistBegin(tl);
+
+	/* Level 4: `E > F' blocks with a condition. */
+	if (tgtParent != NULL) {
+		TAILQ_FOREACH(blk, &css->blksCond, blks) {
+			if (blk->selector == AG_SELECTOR_CHILD_NAMED) {
+				if (strcmp(blk->f, OBJECT(tgt)->name) == 0 &&
+				    strcmp(blk->e, AGOBJECT_CLASS(tgtParent)->name) == 0 &&
+				    AG_WidgetStyleConditionTest(blk, tgt)) {
+					break;
+				}
+			} else if (blk->selector == AG_SELECTOR_CHILD_OF_CLASS) {
+				if (strcmp(blk->f, AGOBJECT_CLASS(tgt)->name) == 0 &&
+				    strcmp(blk->e, AGOBJECT_CLASS(tgtParent)->name) == 0 &&
+				    AG_WidgetStyleConditionTest(blk, tgt)) {
+					break;
+				}
+			}
+		}
+ 		if (blk != NULL) {
+			PrintCondition(cond, sizeof(cond), blk);
+			if (blk->selector == AG_SELECTOR_CHILD_NAMED) {
+				it = AG_TlistAdd(tl, NULL, "%s > \"%s\" (%s) {", blk->e, blk->f, cond);
+			} else {
+				it = AG_TlistAdd(tl, NULL, "%s > %s (%s) {", blk->e, blk->f, cond);
+			}
+			it->depth = 0;
+			it->flags |= (AG_TLIST_HAS_CHILDREN | AG_TLIST_NO_SELECT);
+		
+			PollStyleBlock(tl, blk);
+
+			it = AG_TlistAddS(tl, NULL, "}");
+			it->flags |= AG_TLIST_NO_SELECT;
+		}
+	}
+
+	/* Level 3: `E' blocks with a condition. */
+	TAILQ_FOREACH(blk, &css->blksCond, blks) {
+		if (blk->selector == AG_SELECTOR_CLASS_NAME) {
+			if (strcmp(blk->e, tgtClass) == 0 &&
+			    AG_WidgetStyleConditionTest(blk, tgt)) {
+				break;
+			}
+		} else if (blk->selector == AG_SELECTOR_CLASS_PATTERN) {
+			if (AG_OfClass(tgt, blk->e) &&
+			    AG_WidgetStyleConditionTest(blk, tgt)) {
+				break;
+			}
+		}
+	}
+ 	if (blk != NULL) {
+		PrintCondition(cond, sizeof(cond), blk);
+		it = AG_TlistAdd(tl, NULL, "%s (%s) {", blk->e, cond);
+		it->depth = 0;
+		it->flags |= (AG_TLIST_HAS_CHILDREN | AG_TLIST_NO_SELECT);
+		
+		PollStyleBlock(tl, blk);
+
+		it = AG_TlistAddS(tl, NULL, "}");
+		it->flags |= AG_TLIST_NO_SELECT;
+	}
+
+	/* Level 2: `E > F' blocks with no condition. */
+	if (tgtParent != NULL) {
+		TAILQ_FOREACH(blk, &css->blks, blks) {
+			if (blk->selector == AG_SELECTOR_CHILD_NAMED) {
+				if (strcmp(blk->f, OBJECT(tgt)->name) == 0 &&
+				    strcmp(blk->e, AGOBJECT_CLASS(tgtParent)->name) == 0)
+					break;
+			} else if (blk->selector == AG_SELECTOR_CHILD_OF_CLASS) {
+				if (strcmp(blk->f, AGOBJECT_CLASS(tgt)->name) == 0 &&
+				    strcmp(blk->e, AGOBJECT_CLASS(tgtParent)->name) == 0)
+					break;
+			}
+		}
+ 		if (blk != NULL) {
+			if (blk->selector == AG_SELECTOR_CHILD_NAMED) {
+				it = AG_TlistAdd(tl, NULL, "%s > \"%s\" {", blk->e, blk->f);
+			} else {
+				it = AG_TlistAdd(tl, NULL, "%s > %s {", blk->e, blk->f);
+			}
+			it->depth = 0;
+			it->flags |= (AG_TLIST_HAS_CHILDREN | AG_TLIST_NO_SELECT);
+		
+			PollStyleBlock(tl, blk);
+		
+			it = AG_TlistAddS(tl, NULL, "}");
+			it->flags |= AG_TLIST_NO_SELECT;
+		}
+	}
+
+	/* Level 1: `E' blocks with no condition (lowest precedence). */
+	TAILQ_FOREACH(blk, &css->blks, blks) {
+		if (blk->selector == AG_SELECTOR_CLASS_NAME) {
+			if (strcmp(blk->e, tgtClass) == 0)
+				break;
+		} else if (blk->selector == AG_SELECTOR_CLASS_PATTERN) {
+			if (AG_OfClass(tgt, blk->e))
+				break;
+		}
+	}
+ 	if (blk != NULL) {
+		it = AG_TlistAdd(tl, NULL, "%s {", blk->e);
+		it->depth = 0;
+		it->flags |= (AG_TLIST_HAS_CHILDREN | AG_TLIST_NO_SELECT);
+
+		PollStyleBlock(tl, blk);
+
+		it = AG_TlistAddS(tl, NULL, "}");
+		it->flags |= AG_TLIST_NO_SELECT;
+	}
+
 
 	AG_TlistEnd(tl);
 }
@@ -445,6 +661,32 @@ CompleteFontFamily(const char *_Nonnull key, const char *_Nonnull val,
 }
 
 static void
+CompleteTextAlign(const char *_Nonnull key, const char *_Nonnull val, AG_Tlist *_Nonnull tl)
+{
+	const char *values[] = {
+		"center", "start", "end", "justify", NULL
+	}, **vp;
+
+	for (vp = values; *vp != NULL; vp++)
+		if (val[0] == '\0' || val[0] == '*' ||
+		    Strncasecmp(*vp, val, strlen(val)) == 0)
+			AG_TlistAdd(tl, NULL, "%s: %s", key, *vp);
+}
+
+static void
+CompleteVerticalAlign(const char *_Nonnull key, const char *_Nonnull val, AG_Tlist *_Nonnull tl)
+{
+	const char *values[] = {
+		"middle", "top", "bottom",  NULL
+	}, **vp;
+
+	for (vp = values; *vp != NULL; vp++)
+		if (val[0] == '\0' || val[0] == '*' ||
+		    Strncasecmp(*vp, val, strlen(val)) == 0)
+			AG_TlistAdd(tl, NULL, "%s: %s", key, *vp);
+}
+
+static void
 CompleteAttribute(AG_Event *_Nonnull event)
 {
 	static const struct {
@@ -466,6 +708,8 @@ CompleteAttribute(AG_Event *_Nonnull event)
 #if 0
 		{ "font-size",        CompleteFontSize },
 #endif
+		{ "text-align",       CompleteTextAlign },
+		{ "vertical-align",   CompleteVerticalAlign },
 		{ NULL,               NULL }
 	}, *dp;
 	AG_Editable *ed = AG_EDITABLE_SELF();
@@ -542,6 +786,18 @@ SelectedAttribute(AG_Event *_Nonnull event)
 }
 
 static void
+ClearVarListPointer(AG_Event *_Nonnull event)
+{
+	agStyleEditorVarList = NULL;
+}
+
+static void
+ClearRuleListPointer(AG_Event *_Nonnull event)
+{
+	agStyleEditorRuleList = NULL;
+}
+
+static void
 TargetWidget(AG_Event *_Nonnull event)
 {
 	AG_Box *box = agStyleEditorBox;
@@ -549,7 +805,6 @@ TargetWidget(AG_Event *_Nonnull event)
 	AG_Widget *tgt = ti->p1;
 	AG_Notebook *nb;
 	AG_NotebookTab *nt;
-	AG_Tlist *tlAttrs;
 	int savedTabID;
 
 	if (tgt == NULL || !AG_OBJECT_VALID(tgt) || !AG_WIDGET_ISA(tgt))
@@ -571,6 +826,8 @@ TargetWidget(AG_Event *_Nonnull event)
 	AG_SetFontSize(nt, "90%");
 	{
 		AG_Textbox *tb;
+		AG_Pane *vPane;
+		AG_Tlist *tl;
 
 		tb = AG_TextboxNewS(nt, AG_TEXTBOX_HFILL |
 		                        AG_TEXTBOX_RETURN_BUTTON, "+ ");
@@ -578,14 +835,22 @@ TargetWidget(AG_Event *_Nonnull event)
 
 		AG_TextboxAutocomplete(tb, CompleteAttribute, NULL);
 
-		tlAttrs = AG_TlistNewPolledMs(nt, AG_TLIST_EXPAND, 500,
-		    PollAttributes, "%p", tgt);
+		vPane = AG_PaneNewVert(nt, AG_PANE_EXPAND);
 
-		AG_SetEvent(tlAttrs, "tlist-selected",
-		    SelectedAttribute, "%p", tb);
+		agStyleEditorVarList = tl = AG_TlistNewPolledMs(vPane->div[0], AG_TLIST_EXPAND, 500,
+		    PollStyleVariables, "%p", tgt);
+		AG_SetEvent(tl, "tlist-selected", SelectedAttribute, "%p", tb);
+		AG_AddEvent(tl, "detached", ClearVarListPointer, NULL);
 
-		AG_SetEvent(tb, "textbox-return",
-		    InputAttribute, "%p,%p,%p", tb, tgt, tlAttrs);
+		agStyleEditorRuleList = tl = AG_TlistNewPolledMs(vPane->div[1], AG_TLIST_EXPAND, 0,
+		    PollStyleComputedRules, "%p", tgt);
+		AG_SetEvent(tl, "tlist-selected", SelectedAttribute, "%p", tb);
+		AG_AddEvent(tl, "detached", ClearRuleListPointer, NULL);
+
+		AG_SetEvent(tb, "textbox-return", InputAttribute, "%p,%p,%p", tb, tgt, agStyleEditorVarList);
+
+		AG_PaneMoveDividerPct(vPane, 50);
+		AG_PaneResizeAction(vPane, AG_PANE_DIVIDE_EVEN);
 	}
 
 	nt = AG_NotebookAdd(nb, _("Capture"), AG_BOX_VERT);
@@ -746,7 +1011,7 @@ AG_StyleEditor(AG_Window *_Nonnull tgt)
 
 	tl = agStyleEditorTlist = AG_TlistNewPolledMs(NULL,
 	    AG_TLIST_EXPAND, 80,
-	    PollWidgets,NULL);
+	    PollWidgets, NULL);
 
 	AG_TlistSizeHint(tl, "<XXXXXXXXXXXXXXXX>", 25);
 	AG_SetFontSize(tl, "90%");

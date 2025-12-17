@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2023 Julien Nadeau Carriere <vedge@csoft.net>
+ * Copyright (c) 2001-2025 Julien Nadeau Carriere <vedge@csoft.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -2448,9 +2448,7 @@ AG_WindowProcessDetachQueue(void)
 	AG_Window *win, *winNext;
 	AG_Driver *drv;
 	int closedMain = 0, nHidden = 0;
-#ifdef AG_DEBUG
-	int debugLvlSave;
-#endif
+
 	TAILQ_FOREACH(win, &agWindowDetachQ, pvt.detach) {
 		AG_OBJECT_ISA(win, "AG_Widget:AG_Window:*");
 		if (!win->visible) {
@@ -2481,9 +2479,12 @@ AG_WindowProcessDetachQueue(void)
 		AG_OBJECT_ISA(drv, "AG_Driver:*");
 
 		/*
-		 * Raise the window's "detached" event. The "detached" handlers
-		 * of AG_Window and AG_Widget are both expected to recursively
-		 * forward the "detached" event to their children.
+		 * Raise the window's "detached" event while the Driver window is still open
+		 * so that the "detached" handlers of its child widgets have a chance to free
+		 * any resources tied to the Driver window.
+		 * 
+		 * The "detached" handlers of AG_Window and AG_Widget are both expected
+		 * to recursively forward the "detached" event to their children.
 		 */
 		AG_PostEvent(win, "detached", "%p", drv);
 
@@ -2498,11 +2499,29 @@ AG_WindowProcessDetachQueue(void)
 			AGDRIVERSW(drv)->flags |= AG_DRIVER_SW_REDRAW;
 		}
 
-		/* Unset detach-fn and perform a generic Object detach. */
-		Debug_Mute(debugLvlSave);
-		AG_SetFn(win, "detach-fn", NULL, NULL);
-		Debug_Unmute(debugLvlSave);
-		AG_ObjectDetachLockless(win);
+		/*
+		 * Perform the equivalent to a standard AG_ObjectDetach(), except that we
+		 * don't raise the "detached" event (which was raised previously).
+		 */
+#ifdef AG_TIMERS
+		{
+			AG_Timer *to, *toNext;
+
+			/* Cancel any running timer associated with the object. */
+			AG_LockTiming();
+			for (to = TAILQ_FIRST(&OBJECT(win)->timers);
+			     to != TAILQ_END(&OBJECT(win)->timers);
+			     to = toNext) {
+				toNext = TAILQ_NEXT(to, pvt.timers);
+				AG_DelTimer(win, to);
+			}
+			AG_UnlockTiming();
+		}
+#endif
+		/* Remove the object from the parent's children list. */
+		TAILQ_REMOVE(&OBJECT(drv)->children, OBJECT(win), cobjs);
+		OBJECT(win)->parent = NULL;
+		OBJECT(win)->root = OBJECT(win);
 
 		if (AGDRIVER_MULTIPLE(drv)) {
 			/* Destroy the AG_Driver object. */
@@ -2513,9 +2532,11 @@ AG_WindowProcessDetachQueue(void)
 		if (win->flags & AG_WINDOW_MAIN) {
 			closedMain++;
 		}
-		AG_PostEvent(win, "window-detached", NULL);
+
+		/* Destroy the window and its child widgets. */
 		AG_ObjectDestroy(win);
 	}
+
 	TAILQ_INIT(&agWindowDetachQ);
 	
 #ifdef AG_EVENT_LOOP

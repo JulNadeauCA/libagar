@@ -344,11 +344,14 @@ extern AG_WidgetClass agWidgetClass;
 extern const char *_Nullable agStyleAttributes[];
 extern const char *_Nullable agWidgetStateNames[];
 extern AG_WidgetPalette agDefaultPalette;
-#if defined(AG_DEBUG) && defined(AG_WIDGETS)
+
+#ifdef AG_WIDGETS
+# ifdef AG_DEBUG
 extern AG_Widget *_Nullable agDebuggerTgt;
-#endif
-#if defined(AG_WIDGETS)
-extern AG_Widget *_Nullable agStyleEditorTgt;
+# endif
+extern AG_Widget *_Nullable agStyleEditorTgt;       /* Style editor instrumentation target */
+extern void *_Nullable      agStyleEditorVarList;   /* Target widget style variable overrides list */
+extern void *_Nullable      agStyleEditorRuleList;  /* Target widget computed style attributes list */
 #endif
 
 void AG_WidgetDraw(void *_Nonnull);
@@ -427,6 +430,7 @@ void AG_PopDisabledState(void *_Nonnull);
 void AG_WidgetCompileStyle(void *_Nonnull);
 void AG_WidgetCopyStyle(void *_Nonnull, void *_Nonnull);
 void AG_WidgetFreeStyle(void *_Nonnull);
+int  AG_WidgetStyleConditionTest(AG_StyleBlock *_Nonnull, void *_Nonnull);
 
 void AG_SetFont(void *_Nonnull, const struct ag_font *_Nonnull);
 void AG_SetStyle(void *_Nonnull, const char *_Nonnull, const char *_Nullable);

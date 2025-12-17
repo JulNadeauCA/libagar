@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2022 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2002-2025 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -831,12 +831,6 @@ The request can also be ignored.
 It is safe to create new windows in from a "window-close" handler.
 See:
 .Fn AG_WindowSetCloseAction .
-.It Fn window-detached "void"
-The window has been successfully detached (as per a previous
-.Xr AG_ObjectDetach 3
-request), and is about to be freed.
-This handler can be used (and should only be used) to release any additional
-resources associated with the window.
 .It Fn window-shown "void"
 The window is now visible.
 See:
@@ -879,6 +873,29 @@ AG_Window *win;
 win = AG_WindowNew(0);
 AG_SetStyle(win, "background-color", "green");
 AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 320, 240);
+AG_WindowShow(win);
+.Ed
+.Pp
+The following code fragment arranges for
+.Fn MyDetachHandler
+to run whenever a window is about to be destroyed:
+.Bd -literal -offset indent
+.\" SYNTAX(c)
+static void
+MyDetachHandler(AG_Event *event)
+{
+	AG_Window *win = AG_WINDOW_SELF();
+
+	AG_Verbose("Window %s is being detached\n", AGOBJECT(win)->name);
+
+	/* Free some resources */
+}
+
+AG_Window *win;
+
+win = AG_WindowNew(0);
+AG_LabelNew(win, 0, "Close me!");
+AG_AddEvent(win, "detached", MyDetachHandler, NULL);
 AG_WindowShow(win);
 .Ed
 .Sh SEE ALSO
