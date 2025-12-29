@@ -46,8 +46,6 @@
 #include <errno.h>
 #include <ctype.h>
 
-static AG_ConsoleLine *AppendMultiLine(AG_Console *_Nonnull, const char *_Nonnull);
-
 #define RETURN_IF_INVALID(cons) \
 	if (!AG_OBJECT_VALID(cons) || !AG_CONSOLE_ISA(cons)) \
 		return
@@ -55,6 +53,8 @@ static AG_ConsoleLine *AppendMultiLine(AG_Console *_Nonnull, const char *_Nonnul
 #define RETURN_NULL_IF_INVALID(cons) \
 	if (!AG_OBJECT_VALID(cons) || !AG_CONSOLE_ISA(cons)) \
 		return (NULL)
+
+static AG_ConsoleLine *AppendLine(AG_Console *_Nonnull, const char *_Nonnull);
 
 AG_Console *
 AG_ConsoleNew(void *parent, Uint flags)
@@ -965,14 +965,62 @@ AG_ConsoleSetPadding(AG_Console *cons, int padding)
 }
 #endif /* AG_LEGACY */
 
-/* Append a line to the console; backend to AG_ConsoleMsg(). */
-AG_ConsoleLine *
-AG_ConsoleAppendLine(AG_Console *cons, const char *s)
+/*
+ * Create and append a multi-line entry. Called conditionally by AppendLine().
+ * The console must be locked.
+ */
+static AG_ConsoleLine *
+AppendMultiLine(AG_Console *cons, const char *s)
+{
+	const AG_NewlineFormat *newline = &agNewlineFormats[AG_NEWLINE_NATIVE];
+	AG_ConsoleLine *ln;
+	char *tok = NULL, *dup, *pDup;
+	int first = 1;
+
+	ln = Malloc(sizeof(AG_ConsoleLine));
+
+	/* top level / standalone line by default */
+	ln->parent = NULL;
+
+	dup = pDup = Strdup(s);
+
+	while ((tok = Strsep(&dup, newline->s)) != NULL) {
+		if (newline->len == 2 && tok[0] != '\0') { 	/* XXX */
+			tok[strlen(tok)-1] = '\0';
+		}	
+		if (first == 1) {
+			first = 0;
+
+			/* populate this line with the first slice */
+			ln->text = Strdup(tok);
+			ln->len = strlen(tok);
+		} else {
+			AG_ConsoleLine *lnChld;
+
+			/* create a child line */
+			lnChld = AppendLine(cons, tok);
+			if (lnChld != NULL)
+				lnChld->parent = ln;
+		}
+	}
+	free(pDup);
+
+	/* we only return the parent, but that's ok since the children take
+	 * it's style */
+	return (ln);
+}
+
+/*
+ * Create and append a line (or fail and return NULL). Called by AG_ConsoleMsg().
+ * Perform garbage collection on cached graphics for lines no longer visible.
+ * The console must be locked.
+ */
+static AG_ConsoleLine *
+AppendLine(AG_Console *_Nonnull cons, const char *_Nonnull s)
 {
 	AG_ConsoleLine *ln;
 
 	RETURN_NULL_IF_INVALID(cons);
-	AG_ObjectLock(cons);
 
 	if (s && (strchr(s, agNewlineFormats[AG_NEWLINE_NATIVE].s[0]))) {
 		ln = AppendMultiLine(cons, s);
@@ -1008,12 +1056,14 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 	if ((cons->flags & AG_CONSOLE_NOAUTOSCROLL) == 0)
 		cons->scrollTo = &cons->nLines;
 
+	/*
+	 * Routinely perform garbage collection on cached graphics for lines
+	 * which are no longer visible.
+	 */
 	if (++cons->gcCounter > cons->gcTrigger) {
 		Uint i;
 
-		for (i = 0;
-		     i < cons->nLines;
-		     i++) {
+		for (i = 0; i < cons->nLines; i++) {
 			AG_ConsoleLine *ln = cons->lines[i];
 			int j;
 
@@ -1023,8 +1073,7 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 
 			for (j = 0; j < 2; j++) {
 				if (ln->surface[j] != -1) {
-					AG_WidgetUnmapSurface(cons,
-					    ln->surface[j]);
+					AG_WidgetUnmapSurface(cons, ln->surface[j]);
 					ln->surface[j] = -1;
 				}
 			}
@@ -1034,46 +1083,7 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 	}
 
 	AG_Redraw(cons);
-	AG_ObjectUnlock(cons);
 	return (ln);
-}
-
-/* Append a line to the console; backend to AG_ConsoleMsg(). */
-static AG_ConsoleLine *
-AppendMultiLine(AG_Console *cons, const char *s)
-{
-	const AG_NewlineFormat *newline = &agNewlineFormats[AG_NEWLINE_NATIVE];
-	AG_ConsoleLine *ln;
-	char *tok = NULL, *dup, *pDup;
-	int first = 1;
-
-	ln = Malloc(sizeof(AG_ConsoleLine));
-
-	/* top level / standalone line by default */
-	ln->parent = NULL;
-
-	dup = pDup = Strdup(s);
-
-	while ((tok = Strsep(&dup, newline->s)) != NULL) {
-		if (newline->len == 2 && tok[0] != '\0') { 	/* XXX */
-			tok[strlen(tok)-1] = '\0';
-		}	
-		if (first == 1) {
-			first = 0;
-
-			/* populate this line with the first slice */
-			ln->text = Strdup(tok);
-			ln->len = strlen(tok);
-		} else {
-			/* create a child line */
-			(AG_ConsoleAppendLine(cons, tok))->parent = ln;
-		}
-	}
-	free(pDup);
-	/* we only return the parent, but that's ok since the children take
-	 * it's style */
-	return (ln);
-
 }
 
 /* Append a message to the console (format string). */
@@ -1087,7 +1097,7 @@ AG_ConsoleMsg(AG_Console *cons, const char *fmt, ...)
 	RETURN_NULL_IF_INVALID(cons);
 	AG_ObjectLock(cons);
 
-	if ((ln = AG_ConsoleAppendLine(cons, NULL)) == NULL) {
+	if ((ln = AppendLine(cons, NULL)) == NULL) {
 		goto fail;
 	}
 	va_start(args, fmt);
@@ -1117,7 +1127,7 @@ AG_ConsoleMsgS(AG_Console *cons, const char *s)
 	RETURN_NULL_IF_INVALID(cons);
 	AG_ObjectLock(cons);
 
-	if ((ln = AG_ConsoleAppendLine(cons, s)) == NULL) {
+	if ((ln = AppendLine(cons, s)) == NULL) {
 		goto fail;
 	}
 	len = ln->len;
@@ -1163,6 +1173,9 @@ AG_ConsoleBinary(AG_Console *cons, const void *data, AG_Size size,
 	} else {
 		buf[0] = '\0';
 	}
+
+	AG_ObjectLock(cons);
+
 	for (pos=0; pos < size; pos++) {
 		const Uint8 val = ((const Uint8 *)data)[pos];
 		char num[4];
@@ -1189,9 +1202,9 @@ AG_ConsoleBinary(AG_Console *cons, const void *data, AG_Size size,
 			}
 			Strlcat(buf, "|", bufSize);
 
-			if (AG_ConsoleAppendLine(cons, buf) == NULL) {
+			if (AppendLine(cons, buf) == NULL) {
 				Verbose("Console: %s", AG_GetError());
-				return;
+				goto out;
 			}
 			lineWd = 0;
 			buf[0] = '\0';
@@ -1207,6 +1220,8 @@ AG_ConsoleBinary(AG_Console *cons, const void *data, AG_Size size,
 			AG_Strlcat(buf, " ", bufSize);
 		}
 	}
+out:
+	AG_ObjectUnlock(cons);
 }
 
 static void

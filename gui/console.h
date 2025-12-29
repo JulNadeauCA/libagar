@@ -86,8 +86,6 @@ extern AG_WidgetClass agConsoleClass;
 
 AG_Console *_Nonnull AG_ConsoleNew(void *_Nullable, Uint);
 
-AG_ConsoleLine *_Nonnull AG_ConsoleAppendLine(AG_Console *_Nonnull,
-                                              const char *_Nullable);
 AG_ConsoleLine *_Nonnull AG_ConsoleMsgS(AG_Console *_Nonnull, const char *_Nonnull);
 AG_ConsoleLine *_Nonnull AG_ConsoleMsg(AG_Console *_Nonnull, const char *_Nonnull, ...)
                                       FORMAT_ATTRIBUTE(printf,2,3);
