@@ -23,11 +23,11 @@
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
 .Dd January 5, 2026
-.Dt AG_INITVIDEOSDL 3
-.Os Agar 1.7
+.Dt AG_INITVIDEOSDL2 3
+.Os Agar 1.8
 .Sh NAME
-.Nm AG_InitVideoSDL
-.Nd agar SDL 1.x video initialization
+.Nm AG_InitVideoSDL2
+.Nd agar SDL2 video initialization
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -35,62 +35,31 @@
 .Ed
 .Sh DESCRIPTION
 .\" IMAGE(/widgets/AG_DriverSDLFB.png, "The sdlfb driver")
-If Agar was compiled with SDL 1.x support (--with-sdl),
-the "sdlfb" (frame-buffer) and "sdlgl" (single-window GL) drivers become available.
-.Pp
-Note: For SDL 2.x series, refer to:
-.Xr AG_InitVideoSDL2 3 .
+If Agar was compiled with SDL 2.x support (--with-sdl2), the "sdl2fb" (frame-buffer), "sdl2gl" (single-window GL)
+and "sdl2mw" (multi-window GL) drivers become available.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "int"
-.Fn AG_InitVideoSDL "SDL_Surface *display" "Uint flags"
+.Fn AG_InitVideoSDL2 "SDL_Surface *display" "Uint flags"
 .Pp
 .Ft "int"
-.Fn AG_SetVideoSurfaceSDL "SDL_Surface *display"
-.Pp
-.Ft "int"
-.Fn AG_ResizeDisplay "int w" "int h"
-.Pp
-.Ft "void"
-.Fn AG_SetVideoResizeCallback "void (*fn)(Uint w, Uint h))"
+.Fn AG_SetVideoSurfaceSDL2 "SDL_Surface *display"
 .Pp
 .nr nS 0
 The
 .Fn AG_InitVideoSDL
-function initializes the GUI to attach to an existing SDL display surface.
-If the specified surface has the
-.Dv SDL_OPENGL
-flag then the GL-capable driver "sdlgl" is used.
-Otherwise, the direct frame-buffer driver "sdlfb" is used instead.
-The
-.Fn AG_InitVideoSDL
-function accepts the following
+function initializes the GUI to attach to an existing SDL2 display surface.
+It accepts the following
 .Fa flags
 options:
 .Bl -tag -width "AG_VIDEO_OPENGL_OR_SDL "
-.It AG_VIDEO_HWSURFACE
-Request a hardware frame buffer (SDL1 only, sets
-.Dv SDL_HWSURFACE ) .
-.It AG_VIDEO_ASYNCBLIT
-Enable asynchronous blitting updates (SDL1 only, sets
-.Dv SDL_ASYNCBLIT ) .
-.It AG_VIDEO_ANYFORMAT
-Disable emulation of surface depth (SDL1 only, sets
-.Dv SDL_ANYFORMAT ) .
-.It AG_VIDEO_HWPALETTE
-Exclusive palette access (SDL1 only, sets
-.Dv SDL_HWPALETTE ) .
-.It AG_VIDEO_DOUBLEBUF
-Enable double-buffering in frame buffer mode (SDL1 only).
 .It AG_VIDEO_FULLSCREEN
 Start up application in full-screen mode
 .It AG_VIDEO_RESIZABLE
-If a window manager is available, request that the application be
-resizable.
-This is the default with SDL2.
+If a window manager is available, request that the application be resizable.
+This is the default.
 .It AG_VIDEO_FIXED
 If a window manager is available, request that the window be non-resizable.
-This is the default with SDL1.
 .It AG_VIDEO_BORDERLESS
 If a window manager is available, disable window decorations.
 .It AG_VIDEO_NOFRAME
@@ -115,33 +84,26 @@ option to be set (see
 .Xr AG_DriverSw 3 ) .
 .El
 .Pp
+Note: When creating a new SDL display (as opposed to attaching to an existing one),
+consider calling
+.Xr AG_InitGraphics 3
+with the "<SDL2>" argument instead of using
+.Fn AG_InitVideoSDL2 .
+.Pp
 The
-.Fn AG_SetVideoSurfaceSDL
+.Fn AG_SetVideoSurfaceSDL2
 function can be used to reattach to a different (e.g., a newly resized)
 SDL display surface without reinitializing the GUI.
 .Pp
 Note: The
-.Fn AG_InitVideoSDL
+.Fn AG_InitVideoSDL2
 and
-.Fn AG_SetVideoSurfaceSDL
-functions are only available if Agar has been compiled with SDL1 support
-(to find out at compile-time, include "<agar/config/have_sdl.h>" and test
+.Fn AG_SetVideoSurfaceSDL2
+functions are only available if Agar has been compiled with SDL2 support
+(to find out at compile-time, include "<agar/config/have_sdl2.h>" and test
 for
-.Dv HAVE_SDL ) .
+.Dv HAVE_SDL2 ) .
 .Pp
-Note: When creating a new SDL display (as opposed to attaching to an existing one),
-consider calling
-.Xr AG_InitGraphics 3
-with the "<SDL>" argument instead of using
-.Fn AG_InitVideoSDL .
-.Pp
-The
-.Fn AG_ResizeDisplay
-function resizes the video display to the specified dimensions in pixels.
-.Fn AG_SetVideoResizeCallback
-registers a callback function which will be invoked whenever the display is
-resized.
-Both of these functions are only applicable to single-window drivers.
 .Sh SEE ALSO
 .Xr AG_Core 3 ,
 .Xr AG_DriverSDLFB 3 ,
@@ -150,7 +112,7 @@ Both of these functions are only applicable to single-window drivers.
 .Xr AG_DriverSDL2GL 3 ,
 .Xr AG_DriverSDL2MW 3 ,
 .Xr AG_InitGraphics 3 ,
-.Xr AG_InitVideoSDL2 3 ,
+.Xr AG_InitVideoSDL 3 ,
 .Xr AG_Intro 3
 .Pp
 .Bl -tag -compact

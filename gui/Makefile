@@ -25,12 +25,12 @@ MAN3=	AG_AlphaFn.3 AG_Box.3 AG_Button.3 AG_Checkbox.3 AG_Color.3 AG_Combo.3 \
 	AG_Editable.3 AG_FileDlg.3 AG_Fixed.3 AG_FixedPlotter.3 \
 	AG_FontSelector.3 AG_GL.3 AG_GLView.3 AG_GlobalKeys.3 AG_Graph.3 \
 	AG_GuiDebugger.3 AG_HSVPal.3 AG_Icon.3 AG_InitGraphics.3 \
-	AG_InitVideoSDL.3 AG_KeyMod.3 AG_KeySym.3 AG_Keyboard.3 AG_Label.3 \
-	AG_MPane.3 AG_Menu.3 AG_MouseButton.3 AG_Notebook.3 AG_Numerical.3 \
-	AG_Pane.3 AG_Pixmap.3 AG_ProgressBar.3 AG_Radio.3 AG_Rect.3 \
-	AG_Scrollbar.3 AG_Scrollview.3 AG_Separator.3 AG_SizeSpec.3 \
-	AG_Slider.3 AG_Socket.3 AG_StyleSheet.3 AG_Surface.3 AG_Table.3 \
-	AG_Text.3 AG_Textbox.3 AG_Titlebar.3 AG_Tlist.3 AG_Toolbar.3 \
+	AG_InitVideoSDL.3 AG_InitVideoSDL2.3 AG_KeyMod.3 AG_KeySym.3 \
+	AG_Keyboard.3 AG_Label.3 AG_MPane.3 AG_Menu.3 AG_MouseButton.3 \
+	AG_Notebook.3 AG_Numerical.3 AG_Pane.3 AG_Pixmap.3 AG_ProgressBar.3 \
+	AG_Radio.3 AG_Rect.3 AG_Scrollbar.3 AG_Scrollview.3 AG_Separator.3 \
+	AG_SizeSpec.3 AG_Slider.3 AG_Socket.3 AG_StyleSheet.3 AG_Surface.3 \
+	AG_Table.3 AG_Text.3 AG_Textbox.3 AG_Titlebar.3 AG_Tlist.3 AG_Toolbar.3 \
 	AG_Treetbl.3 AG_UCombo.3 AG_Units.3 AG_Widget.3 AG_WidgetPrimitives.3 \
 	AG_Window.3
 

@@ -22,6 +22,7 @@ All notable changes to Agar will be documented in this file. The format is based
 ### Fixed
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Fix redundant "detached" handler invocations. Improve overall efficiency of the garbage-collection step after windows are destroyed.
 - [**AG_Console**](https://libagar.org/man3/AG_Console): Prevent a redundant lock operation in the backend of `AG_ConsoleMsg()`.
+- [**AG_InitVideoSDL2**](https://libagar.org/man3/AG_InitVideoSDL2): Added missing manual page. Thanks Coleman!
 
 ## [1.7.1] - 2025-11-15
 ### Added

@@ -37,7 +37,7 @@ Simple DirectMedia Layer (SDL) library version 2 (SDL2), and renders
 Agar GUI elements directly to the frame-buffer.
 .Pp
 Using
-.Xr AG_InitVideoSDL 3
+.Xr AG_InitVideoSDL2 3
 as opposed to
 .Xr AG_InitGraphics 3 ,
 it is possible to attach Agar to an existing SDL2 display surface.
@@ -51,7 +51,7 @@ it is possible to attach Agar to an existing SDL2 display surface.
 AG_InitGraphics("sdl2fb(width=640:height=480)");
 AG_InitGraphics("sdl2fb(width=60%:height=80%)");
 
-AG_InitVideoSDL(an_existing_SDL_screen, 0);
+AG_InitVideoSDL2(an_existing_SDL_screen, 0);
 .Ed
 .Sh OPTIONS
 .Bl -tag -compact -width "clampOnResize "

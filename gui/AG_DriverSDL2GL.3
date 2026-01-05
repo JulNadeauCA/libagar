@@ -36,7 +36,7 @@ driver provides an interface to the Simple DirectMedia Layer (SDL) library
 version 2, and renders GUI elements as OpenGL primitives and managed textures.
 .Pp
 Using
-.Xr AG_InitVideoSDL 3
+.Xr AG_InitVideoSDL2 3
 as opposed to
 .Xr AG_InitGraphics 3 ,
 it is possible to attach Agar to an existing SDL display surface.
@@ -58,7 +58,7 @@ AG_InitGraphics("sdl2gl(bgColor=0/120/120)");
 AG_InitGraphics("sdl2gl(out=%08d.jpg:jpegQual=100)");
 AG_InitGraphics("sdl2gl(depth=64:stereo)");
 
-AG_InitVideoSDL(an_existing_SDL_screen, 0);
+AG_InitVideoSDL2(an_existing_SDL_screen, 0);
 .Ed
 .Sh OPTIONS
 .Bl -tag -compact -width "clampOnResize "
