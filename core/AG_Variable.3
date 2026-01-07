@@ -1,4 +1,4 @@
-.\" Copyright (c) 2009-2022 Julien Nadeau Carriere <vedge@csoft.net>
+.\" Copyright (c) 2009-2026 Julien Nadeau Carriere <vedge@csoft.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,9 +22,9 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd December 13, 2025
+.Dd January 4, 2026
 .Dt AG_VARIABLE 3
-.Os Agar 1.7
+.Os Agar 1.8
 .Sh NAME
 .Nm AG_Variable
 .Nd agar object variables
@@ -104,6 +104,9 @@ in an external
 .Fn AG_GetVariable "AG_Object *obj" "const char *name" "void **data"
 .Pp
 .Ft "AG_Variable *"
+.Fn AG_GetVariable_NoLock "AG_Object *obj" "const char *name" "void **data"
+.Pp
+.Ft "AG_Variable *"
 .Fn AG_AccessVariable "AG_Object *obj" "const char *name"
 .Pp
 .Ft "AG_Variable *"
@@ -155,16 +158,21 @@ searches for a variable
 .Fa name
 under
 .Fa obj
-and returns a pointer to the corresponding
-.Ft AG_Variable
-in a locked condition.
-The caller must use
+and returns a pointer to the corresponding variable in a locked state
+(the caller must use
 .Fn AG_UnlockVariable
-when finished accessing the variable data.
+when finished accessing the variable data).
 A pointer to the data itself is also returned in the
 .Fa data
-argument.
+pointer.
 If the variable is undefined, a fatal exception is raised.
+.Pp
+The
+.Fn AG_GetVariable_NoLock
+variant assumes that the object is locked.
+The variable itself is still returned in a locked state (the caller should use
+.Fn AG_UnlockVariable
+when finished).
 .Pp
 The
 .Fn AG_AccessVariable
@@ -176,30 +184,32 @@ in a locked condition.
 The caller must use
 .Fn AG_UnlockVariable
 when done accessing the data.
+.Pp
 The
 .Fn AG_AccessVariable_NoLock
-variant assumes the caller has alreayd locked the object and returns the
-.Ft AG_Variable
-without locking.
+variant assumes that the object is locked.
+The variable itself is still returned in a locked state (the caller should use
+.Fn AG_UnlockVariable
+when finished).
 .Pp
 .Fn AG_GetVariable ,
+.Fn AG_GetVariable_NoLock ,
 .Fn AG_AccessVariable
 and
 .Fn AG_AccessVariable_NoLock
-all return NULL if the named variable is undefined.
+return NULL if the variable is undefined.
 .Pp
-The
 .Fn AG_FetchVariable
-function searches for a variable by
+searches for a variable by
 .Fa name
 and
 .Fa type .
-If found, return the corresponding
-.Ft AG_Variable .
+If the variable is found, it returns a pointer to the existing
+.Ft AG_Variable
+structure.
 If the variable is undefined then a new one of the specified
 .Fa type
-is automatically created and returned.
-Raises an exception if insufficient memory is available.
+is automatically created and a pointer to the new structure is returned instead.
 .Pp
 The
 .Fn AG_FetchVariableOfType
@@ -210,22 +220,25 @@ mutated into
 .Fa type
 and returned.
 .Pp
-Note: Unlike
+Unlike
 .Fn AG_GetVariable
 and
 .Fn AG_AccessVariable ,
+the
 .Fn AG_FetchVariable
 and
 .Fn AG_FetchVariableOfType
-do not return the
-.Ft AG_Variable
-locked.
+functions do not return the variables in a locked state.
+The caller should therefore use
+.Fn AG_LockVariable
+before accessing variable data and call
+.Fn AG_UnlockVariable
+when finished.
 .Pp
 .Fn AG_LockVariable
 and
 .Fn AG_UnlockVariable
-acquire and release any locking device associated with the
-specified variable.
+acquire and release any locking device associated with the variable.
 .Pp
 .Fn AG_PrintVariable
 generates a string from the value of variable
@@ -572,10 +585,11 @@ The returned string should be freed with
 .Xr AG_Free 3
 after use.
 .Pp
-The potentially-unsafe
+The
 .Fn AG_GetStringP
-returns a direct pointer to the buffer containing the string.
-It is not free-threaded (so the object must be locked, and calls protected by
+function returns a direct pointer to the buffer containing the string.
+This function is not free-threaded (the caller must ensure that both the
+object is locked and the variable is locked with
 .Fn AG_LockVariable ) .
 Auto-allocated strings set by
 .Fn AG_SetString
@@ -610,13 +624,19 @@ variant accepts a
 .Xr printf 3
 style format string argument.
 .Pp
-The potentially-unsafe
+The (potentially dangerous)
 .Fn AG_SetStringNODUP
-variant accepts a pointer to a dynamically-allocated string buffer which
-will be free'd whenever the parent object is destroyed.
+variant steals a pointer to a dynamically-allocated string and arranges for it to
+be later free'd automatically by
+.Fn free
+whenever the object is destroyed.
+.Em DANGER:
+Do not free() the string
+.Fa s
+after having made this call.
 .Pp
 .Fn AG_BindString
-creates or modifies a variable referencing a fixed-size string buffer
+creates or updates a variable referencing a fixed-size string buffer
 .Fa s ,
 of size
 .Fa len .

@@ -215,9 +215,11 @@ AG_CompareVariables(const AG_Variable *a, const AG_Variable *b)
 
 /*
  * Lookup a variable by name and return a generic pointer to its current value.
- * If the variable is a reference, the target is accessed.
+ * If the variable is a reference, any associated mutex is acquired before
+ * accessing the target.
  *
- * The variable is returned locked. Returns NULL if the variable is undefined.
+ * The variable is returned locked (the caller should use AG_UnlockVariable()
+ * when done). Returns NULL if the variable is undefined.
  */
 AG_Variable *
 AG_GetVariable(void *pObj, const char *name, void **p)
@@ -324,10 +326,6 @@ AG_Unset(void *pObj, const char *name)
 	if (OBJECT(obj)->flags & AG_OBJECT_BOUND_EVENTS) \
 		AG_PostEvent((obj), "bound", "%p", (V))
 
-#define FN_VARIABLE_GET_ACCESS_VARIABLE				\
-	if ((V = AG_AccessVariable(obj,name)) == NULL) 		\
-		AG_FatalErrorV("E20", "No such variable")
-
 /* Body of AG_GetFoo() routines. */
 #undef  FN_VARIABLE_GET
 #define FN_VARIABLE_GET(_memb,_type) {				\
@@ -335,7 +333,9 @@ AG_Unset(void *pObj, const char *name)
 	AG_Variable *V;						\
 								\
 	AG_ObjectLock(obj);					\
-	FN_VARIABLE_GET_ACCESS_VARIABLE;			\
+	if ((V = AG_AccessVariable(obj,name)) == NULL) 		\
+		AG_FatalErrorV("E20", "No such variable");      \
+								\
 	if (agVariableTypes[V->type].indirLvl > 0) {		\
 		rv = *(_type *)V->data.p;			\
 	} else {						\
@@ -1417,8 +1417,14 @@ AG_SetStringF(void *obj, const char *name, const char *fmt, ...)
 }
 
 /*
- * Potentially-unsafe variant of AG_SetString() where s is assumed to be
- * a freeable, auto-allocated string (which must not be freed externally).
+ * Variant of AG_SetString() which, instead of copying the string argument s, steals
+ * a pointer to an auto-allocated string and arranges for it to be later free()d when
+ * the object is destroyed.
+ * 
+ * If the variable exists and is a pointer to a fixed-size buffer (P_STRING), the
+ * contents of s are copied (and safely truncated if the buffer is too small).
+ *
+ * After this call, the caller must never attempt to free() the string.
  */
 AG_Variable *
 AG_SetStringNODUP(void *obj, const char *name, char *s)

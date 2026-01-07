@@ -205,6 +205,11 @@ AG_Variable *_Nullable AG_GetVariable(void *_Nonnull, const char *_Nonnull,
                                       void *_Nonnull *_Nonnull)
                                      _Pure_Attribute_If_Unthreaded
                                      _Warn_Unused_Result;
+
+AG_Variable *_Nullable AG_GetVariable_NoLock(void *_Nonnull, const char *_Nonnull,
+                                      void *_Nonnull *_Nonnull)
+                                     _Pure_Attribute
+                                     _Warn_Unused_Result;
 #ifdef AG_ENABLE_STRING
 AG_Size AG_PrintVariable(char *_Nonnull, AG_Size, AG_Variable *_Nonnull);
 void    AG_VariableSubst(void *_Nonnull, const char *_Nonnull, char *_Nonnull,

@@ -7,6 +7,7 @@ All notable changes to Agar will be documented in this file. The format is based
 - [**AG_Button**](https://libagar.org/man3/AG_Button): New style attributes `text-align` and `vertical-align`.
 - [**AG_Widget**](https://libagar.org/man3/AG_Widget): Introduce the `style()` method, called by the style compiler to parse widget-specific style attributes into an efficient binary representation.
 - [**AG_Object**](https://libagar.org/man3/AG_Object): New function `AG_AccessVariable_NoLock()` (lockless variant of `AG_AccessVariable()`).
+- [**AG_Object**](https://libagar.org/man3/AG_Object): New function `AG_GetVariable_NoLock()` (lockless variant of `AG_GetVariable()`).
 - [**AG_Object**](https://libagar.org/man3/AG_Object): Document the `AG_OBJECT_BOUND_EVENTS` flag.
 
 ### Removed

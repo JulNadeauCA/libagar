@@ -338,10 +338,10 @@ ag_fetch_variable_of_type(void *obj, const char *name,
 }
 
 /*
- * Lookup a Variable by name and return a locked handle for it.
- * The caller must use AG_UnlockVariable() when finished.
+ * Lookup a Variable by name and return a handle for it.
+ * Variables of P_* type with an associated mutex are returned locked
+ * (the caller must use AG_UnlockVariable() when finished).
  * Proxy variables (P_VARIABLE type Variables) are dereferenced.
- *
  * The object must be locked.
  */
 #ifdef AG_INLINE_HEADER
@@ -377,8 +377,8 @@ ag_access_variable(void *pObj, const char *name)
 
 /*
  * Lookup a Variable by name and return a handle for it, without locking.
+ * The associated mutex of P_* type variables is ignored.
  * Proxy variables (P_VARIABLE type Variables) are not dereferenced.
- *
  * The object must be locked.
  */
 #ifdef AG_INLINE_HEADER
@@ -399,5 +399,34 @@ ag_access_variable_nolock(void *pObj, const char *name)
 	if (V == NULL) {
 		return (NULL);
 	}
+	return (V);
+}
+
+/*
+ * Lookup a variable by name and return a generic pointer to its current value.
+ * If the variable is a reference, any associated mutex is acquired before
+ * accessing the target.
+ *
+ * The variable is returned locked (the caller should use AG_UnlockVariable()
+ * when done). Returns NULL if the variable is undefined.
+ *
+ * The object must be locked.
+ */
+#ifdef AG_INLINE_HEADER
+static __inline__ AG_Variable *_Nullable
+AG_GetVariable_NoLock(void *_Nonnull pObj, const char *_Nonnull name, void *_Nonnull *_Nonnull p)
+#else
+AG_Variable *
+ag_get_variable_nolock(void *pObj, const char *name, void **p)
+#endif
+{
+	AG_Object *obj = pObj;
+	AG_Variable *V;
+	
+	if ((V = AG_AccessVariable(obj, name)) == NULL) {
+		AG_FatalErrorV("E20", "No such variable");
+	}
+	*p = (agVariableTypes[V->type].indirLvl > 0) ? V->data.p :
+	                                               (void *)&V->data;
 	return (V);
 }
