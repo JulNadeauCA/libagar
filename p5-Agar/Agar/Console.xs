@@ -32,7 +32,7 @@ msg(self, text)
 	Agar::Console self
 	const char * text
 CODE:
-	AG_ConsoleAppendLine(self, text);
+	AG_ConsoleMsgS(self, text);
 
 Agar::Scrollbar
 scrollBar(self)
